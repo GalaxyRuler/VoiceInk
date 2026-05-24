@@ -50,6 +50,14 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        AddRegistration(
+            settings.OpenHistoryHotkey,
+            GlobalShortcutAction.OpenHistoryWindow,
+            "Open History Window",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }

@@ -88,7 +88,8 @@ public sealed class GlobalShortcutTests
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
             RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
-            CancelRecordingHotkey = "Ctrl+Alt+C"
+            CancelRecordingHotkey = "Ctrl+Alt+C",
+            OpenHistoryHotkey = "Ctrl+Alt+H"
         };
 
         var result = GlobalShortcutSettings.BuildRegistrations(settings);
@@ -120,6 +121,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.CancelRecording, item.Action);
                 Assert.Equal("Ctrl+Alt+C", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.OpenHistoryWindow, item.Action);
+                Assert.Equal("Ctrl+Alt+H", item.Shortcut.DisplayText);
             });
     }
 
@@ -190,5 +196,19 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Cancel Recording already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateOpenHistoryAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            OpenHistoryHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Open History Window already uses Ctrl+Alt+Space.");
     }
 }

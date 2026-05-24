@@ -71,6 +71,10 @@
                     x:Name="CancelHotkeyTextBox"
                     Header="Cancel Recording"
                     PlaceholderText="Ctrl+Alt+C" />
+                <TextBox
+                    x:Name="OpenHistoryHotkeyTextBox"
+                    Header="Open History Window"
+                    PlaceholderText="Ctrl+Alt+H" />
                 <Button
                     x:Name="ApplyShortcutsButton"
                     Content="Apply Shortcuts"

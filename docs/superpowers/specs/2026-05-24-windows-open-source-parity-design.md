@@ -58,7 +58,7 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
-- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, and cancel recording.
+- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, and open history.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
@@ -93,6 +93,7 @@ Windows gaps:
 - Tray-first shell.
 - Navigation sidebar.
 - Dedicated settings pages.
+- Dedicated multi-window History surface.
 - About/Open Source replacement.
 
 ### Floating Recorder
@@ -113,14 +114,14 @@ macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hy
 
 Implemented:
 
-- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, and cancel active recording.
+- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, and open history.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
 
 Windows gaps:
 
 - Press-and-hold key-up handling.
 - Secondary shortcut.
-- Open-history, quick-add, toggle-enhancement, and Power Mode shortcuts.
+- Quick-add, toggle-enhancement, and Power Mode shortcuts.
 - Canceling in-flight transcription/enhancement after recording has already stopped.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
@@ -380,8 +381,8 @@ Status on 2026-05-24:
 - Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, retry-last-to-clipboard through the local transcription pipeline, active-recording cancel history, history search, and confirmed single-item delete.
-- Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, and cancel active recording.
-- Active slice: Open History Window shortcut, adapted to restore/focus the current Windows shell and inline History area until a dedicated history window exists.
+- Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel active recording, and open history.
+- Completed Open History Window shortcut as a Windows MVP adaptation that restores/focuses the main shell and inline History area until a dedicated history window exists.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.

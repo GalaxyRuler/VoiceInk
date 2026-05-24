@@ -253,6 +253,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.CancelRecording:
                     await CancelCurrentRecordingAsync();
                     break;
+                case GlobalShortcutAction.OpenHistoryWindow:
+                    await OpenHistoryWindowAsync();
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -380,6 +383,7 @@ public sealed partial class MainWindow : Window
             PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
             RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
             CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
+            OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -791,6 +795,30 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task OpenHistoryWindowAsync()
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            RestoreAndActivateWindow();
+            await RefreshHistoryAsync(windowLifetime.Token);
+            HistorySearchTextBox.Focus(FocusState.Programmatic);
+            RefreshUiFromControllerState("History opened");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Open history failed: {ex.Message}");
+        }
+    }
+
     private async Task RetryLastHistoryAsync()
     {
         if (!settingsLoaded
@@ -1052,6 +1080,22 @@ public sealed partial class MainWindow : Window
         return Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
     }
 
+    private void RestoreAndActivateWindow()
+    {
+        var windowHandle = WindowNative.GetWindowHandle(this);
+        if (windowHandle != IntPtr.Zero)
+        {
+            if (IsIconic(windowHandle))
+            {
+                ShowWindow(windowHandle, ShowWindowRestore);
+            }
+
+            _ = SetForegroundWindow(windowHandle);
+        }
+
+        Activate();
+    }
+
     private async Task ApplyShortcutsAsync()
     {
         if (!settingsLoaded)
@@ -1219,6 +1263,9 @@ public sealed partial class MainWindow : Window
             CancelRecordingHotkey = includeShortcutFields
                 ? CancelHotkeyTextBox.Text.Trim()
                 : settings.CancelRecordingHotkey,
+            OpenHistoryHotkey = includeShortcutFields
+                ? OpenHistoryHotkeyTextBox.Text.Trim()
+                : settings.OpenHistoryHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
@@ -1452,8 +1499,15 @@ public sealed partial class MainWindow : Window
         windowLifetime.Dispose();
     }
 
+    private const int ShowWindowRestore = 9;
     private const int ShowWindowMinimize = 6;
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hWnd);
 }
