@@ -238,6 +238,11 @@ public sealed partial class MainWindow : Window
         await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
     }
 
+    private async void ApplyShortcutsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyShortcutsAsync();
+    }
+
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSelectedHistoryDetails();
@@ -255,6 +260,9 @@ public sealed partial class MainWindow : Window
                 suppressModelPathChanged = false;
             }
 
+            RecordingHotkeyTextBox.Text = settings.Hotkey;
+            PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
+            PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -578,7 +586,45 @@ public sealed partial class MainWindow : Window
         return Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
     }
 
+    private async Task ApplyShortcutsAsync()
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token);
+            var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
+            if (shortcutRegistration.Errors.Count > 0)
+            {
+                hotkeyRegistrationError = string.Join(" ", shortcutRegistration.Errors);
+                RefreshUiFromControllerState(hotkeyRegistrationError);
+                return;
+            }
+
+            await settingsStore.SaveAsync(settings, windowLifetime.Token);
+            RegisterGlobalHotkeys(settings);
+            RefreshUiFromControllerState(hotkeyRegistrationError ?? "Shortcuts updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Shortcut update failed: {ex.Message}");
+        }
+    }
+
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
+    {
+        var settings = await CurrentSettingsAsync(cancellationToken);
+        await settingsStore.SaveAsync(settings, cancellationToken);
+    }
+
+    private async Task<AppSettings> CurrentSettingsAsync(CancellationToken cancellationToken)
     {
         AppSettings settings;
         try
@@ -594,14 +640,17 @@ public sealed partial class MainWindow : Window
             settings = new AppSettings();
         }
 
-        await settingsStore.SaveAsync(settings with
+        return settings with
         {
             ModelPath = ModelPathTextBox.Text,
+            Hotkey = RecordingHotkeyTextBox.Text.Trim(),
+            PasteLastTranscriptionHotkey = PasteLastHotkeyTextBox.Text.Trim(),
+            PasteLastEnhancementHotkey = PasteLastEnhancedHotkeyTextBox.Text.Trim(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
             PunctuationCleanupMode = SelectedPunctuationCleanupMode()
-        }, cancellationToken);
+        };
     }
 
     private DictationController CreateController(NAudioCaptureService captureService) =>
@@ -674,6 +723,7 @@ public sealed partial class MainWindow : Window
         PasteLastEnhancedButton.IsEnabled = settingsLoaded && !operationActive;
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
+        ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
 
         var stateStatus = StateToStatusText(controller.State);
         var idleHotkeyWarning = controller.State == DictationState.Idle && !operationActive

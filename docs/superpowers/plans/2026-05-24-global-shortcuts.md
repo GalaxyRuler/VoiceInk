@@ -164,7 +164,7 @@ feat(windows): register global shortcut actions
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 - Modify: `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/Settings/JsonSettingsStoreTests.cs`
 
-- [ ] **Step 1: Add settings persistence test**
+- [x] **Step 1: Add settings persistence test**
 
 Extend the existing `SaveAsync_PersistsSettings` test so `AppSettings` includes:
 
@@ -175,7 +175,7 @@ PasteLastEnhancementHotkey = "Ctrl+Alt+E"
 
 Expected: the round-trip equality assertion verifies JSON persistence.
 
-- [ ] **Step 2: Verify RED or targeted coverage**
+- [x] **Step 2: Verify RED or targeted coverage**
 
 Run:
 
@@ -185,7 +185,7 @@ Run:
 
 Expected before `AppSettings` fields exist: build fails. If Task 1 already added fields, this verifies persistence coverage.
 
-- [ ] **Step 3: Add shell controls**
+- [x] **Step 3: Add shell controls**
 
 Add a `Shortcuts` section with:
 
@@ -196,7 +196,7 @@ Add a `Shortcuts` section with:
 
 `ApplyShortcutsButton_Click` validates registrations, saves settings, re-registers hotkeys, and reports `Shortcuts updated` or validation errors.
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run:
 
@@ -207,7 +207,7 @@ Run:
 
 Expected: targeted settings test passes and build succeeds.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 

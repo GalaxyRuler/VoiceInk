@@ -35,7 +35,9 @@ public sealed class JsonSettingsStoreTests
             Language = "en",
             AppendTrailingSpace = true,
             RestoreClipboard = false,
-            Hotkey = "Ctrl+Shift+D"
+            Hotkey = "Ctrl+Shift+D",
+            PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
+            PasteLastEnhancementHotkey = "Ctrl+Alt+E"
         };
 
         await store.SaveAsync(expected, CancellationToken.None);
