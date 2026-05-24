@@ -122,7 +122,7 @@ feat(windows): add dictionary backup format
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.Infrastructure/Dictionary/JsonDictionaryStore.cs`
 - Modify: `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/Dictionary/JsonDictionaryStoreTests.cs`
 
-- [ ] **Step 1: Write failing store tests**
+- [x] **Step 1: Write failing store tests**
 
 Add tests:
 
@@ -169,7 +169,7 @@ public async Task ImportBackupAsync_MergesNewEntriesAndSkipsDuplicates()
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -179,7 +179,7 @@ Run:
 
 Expected: build fails because the methods and result type do not exist.
 
-- [ ] **Step 3: Extend store contract**
+- [x] **Step 3: Extend store contract**
 
 Add to `IWritableDictionaryStore`:
 
@@ -199,7 +199,7 @@ public sealed record DictionaryImportResult(
     int SkippedDuplicateCount);
 ```
 
-- [ ] **Step 4: Implement store export/import**
+- [x] **Step 4: Implement store export/import**
 
 In `JsonDictionaryStore`:
 
@@ -210,7 +210,7 @@ In `JsonDictionaryStore`:
 - Duplicate errors are counted as skipped duplicates and do not fail the import.
 - If at least one item is imported, save once at the end.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run the same filtered Infrastructure test command.
 

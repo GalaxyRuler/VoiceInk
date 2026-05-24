@@ -76,6 +76,56 @@ public sealed class JsonDictionaryStoreTests
         Assert.Empty(await store.ListReplacementsAsync(CancellationToken.None));
     }
 
+    [Fact]
+    public async Task ExportBackupAsync_WritesCurrentDictionaryAsBackupJson()
+    {
+        using var temp = new TempDirectory();
+        var store = new JsonDictionaryStore(Path.Combine(temp.Path, "dictionary.json"));
+        await store.AddVocabularyWordsAsync("VoiceInk, Whisper", CancellationToken.None);
+        await store.AddWordReplacementAsync("Voice ink", "VoiceInk", CancellationToken.None);
+
+        var json = await store.ExportBackupAsync(CancellationToken.None);
+
+        Assert.Contains("\"vocabularyWords\"", json);
+        Assert.Contains("\"word\": \"VoiceInk\"", json);
+        Assert.Contains("\"Voice ink\": \"VoiceInk\"", json);
+    }
+
+    [Fact]
+    public async Task ImportBackupAsync_MergesNewEntriesAndSkipsDuplicates()
+    {
+        using var temp = new TempDirectory();
+        var store = new JsonDictionaryStore(Path.Combine(temp.Path, "dictionary.json"));
+        await store.AddVocabularyWordsAsync("VoiceInk", CancellationToken.None);
+        await store.AddWordReplacementAsync("Voice ink", "VoiceInk", CancellationToken.None);
+
+        var result = await store.ImportBackupAsync(
+            """
+            {
+              "version": "1.0",
+              "vocabularyWords": [{ "word": "voiceink" }, { "word": "WinUI" }],
+              "wordReplacements": {
+                "voice ink": "VoiceInk",
+                "codex": "Codex"
+              }
+            }
+            """,
+            CancellationToken.None);
+
+        Assert.Equal(1, result.ImportedVocabularyCount);
+        Assert.Equal(1, result.ImportedReplacementCount);
+        Assert.Equal(2, result.SkippedDuplicateCount);
+        Assert.Equal(
+            ["VoiceInk", "WinUI"],
+            (await store.ListVocabularyAsync(CancellationToken.None)).Select(word => word.Word).ToArray());
+        Assert.Equal(
+            ["codex", "Voice ink"],
+            (await store.ListReplacementsAsync(CancellationToken.None))
+                .Select(replacement => replacement.OriginalText)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToArray());
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"voiceink-{Guid.NewGuid():N}");

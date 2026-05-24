@@ -133,6 +133,89 @@ public sealed class JsonDictionaryStore(string filePath) : IWritableDictionarySt
         }
     }
 
+    public async Task<string> ExportBackupAsync(CancellationToken cancellationToken)
+    {
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var data = await LoadUnlockedAsync(cancellationToken);
+            return DictionaryBackup.Export(data.Vocabulary, data.Replacements);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<DictionaryImportResult> ImportBackupAsync(string json, CancellationToken cancellationToken)
+    {
+        var backup = DictionaryBackup.Parse(json);
+
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var data = await LoadUnlockedAsync(cancellationToken);
+            var importedVocabularyCount = 0;
+            var importedReplacementCount = 0;
+            var skippedDuplicateCount = 0;
+            var now = DateTimeOffset.UtcNow;
+
+            foreach (var word in backup.VocabularyWords)
+            {
+                var additions = DictionaryService.AddVocabularyWords(
+                    word,
+                    data.Vocabulary,
+                    now,
+                    out var error);
+
+                if (error is not null)
+                {
+                    skippedDuplicateCount++;
+                    continue;
+                }
+
+                data.Vocabulary.AddRange(additions);
+                importedVocabularyCount += additions.Count;
+            }
+
+            foreach (var replacement in backup.WordReplacements)
+            {
+                var addition = DictionaryService.AddWordReplacement(
+                    replacement.OriginalText,
+                    replacement.ReplacementText,
+                    data.Replacements,
+                    now,
+                    out var error);
+
+                if (error is not null)
+                {
+                    skippedDuplicateCount++;
+                    continue;
+                }
+
+                if (addition is not null)
+                {
+                    data.Replacements.Add(addition);
+                    importedReplacementCount++;
+                }
+            }
+
+            if (importedVocabularyCount > 0 || importedReplacementCount > 0)
+            {
+                await SaveUnlockedAsync(data, cancellationToken);
+            }
+
+            return new DictionaryImportResult(
+                importedVocabularyCount,
+                importedReplacementCount,
+                skippedDuplicateCount);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     private async Task<DictionaryData> LoadUnlockedAsync(CancellationToken cancellationToken)
     {
         if (!File.Exists(filePath))
