@@ -10,6 +10,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock
@@ -25,14 +26,26 @@
             PlaceholderText="C:\Models\ggml-base.en.bin"
             TextChanged="ModelPathTextBox_TextChanged" />
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+        <StackPanel Grid.Row="2" Spacing="8">
+            <TextBlock Text="Cleanup" FontWeight="SemiBold" />
+            <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
+            <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
+            <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
+            <ComboBox x:Name="PunctuationCleanupComboBox" Header="Punctuation cleanup" SelectedIndex="0">
+                <ComboBoxItem Content="Keep" />
+                <ComboBoxItem Content="Remove all" />
+                <ComboBoxItem Content="Remove trailing period" />
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
             <Button x:Name="StartButton" Content="Start Recording" Click="StartButton_Click" />
             <Button x:Name="StopButton" Content="Stop And Insert" Click="StopButton_Click" IsEnabled="False" />
         </StackPanel>
 
         <TextBlock
             x:Name="StatusTextBlock"
-            Grid.Row="3"
+            Grid.Row="4"
             Text="Idle"
             TextWrapping="Wrap" />
     </Grid>

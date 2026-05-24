@@ -8,6 +8,7 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Services;
+using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
@@ -181,6 +182,11 @@ public sealed partial class MainWindow : Window
                 suppressModelPathChanged = false;
             }
 
+            RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
+            LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
+            AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
+            PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+
             settingsLoaded = true;
             RefreshUiFromControllerState();
         }
@@ -216,7 +222,11 @@ public sealed partial class MainWindow : Window
 
         await settingsStore.SaveAsync(settings with
         {
-            ModelPath = ModelPathTextBox.Text
+            ModelPath = ModelPathTextBox.Text,
+            RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
+            LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
+            AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
+            PunctuationCleanupMode = SelectedPunctuationCleanupMode()
         }, cancellationToken);
     }
 
@@ -287,6 +297,22 @@ public sealed partial class MainWindow : Window
             DictationState.Inserting => "Inserting",
             DictationState.Error => "Error",
             _ => state.ToString()
+        };
+
+    private PunctuationCleanupMode SelectedPunctuationCleanupMode() =>
+        PunctuationCleanupComboBox.SelectedIndex switch
+        {
+            1 => PunctuationCleanupMode.RemoveAll,
+            2 => PunctuationCleanupMode.RemoveTrailingPeriod,
+            _ => PunctuationCleanupMode.Keep
+        };
+
+    private static int PunctuationCleanupModeToSelectedIndex(PunctuationCleanupMode mode) =>
+        mode switch
+        {
+            PunctuationCleanupMode.RemoveAll => 1,
+            PunctuationCleanupMode.RemoveTrailingPeriod => 2,
+            _ => 0
         };
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
