@@ -19,6 +19,8 @@ using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Transcription;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace VoiceInk.Windows.App;
@@ -26,7 +28,6 @@ namespace VoiceInk.Windows.App;
 public sealed partial class MainWindow : Window
 {
     private readonly string recordingsDirectory;
-    private readonly string exportDirectory;
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
     private readonly JsonSettingsStore settingsStore;
@@ -56,7 +57,6 @@ public sealed partial class MainWindow : Window
             "VoiceInk.Windows");
         recordingsDirectory = Path.Combine(appData, "Recordings");
         var historyPath = Path.Combine(appData, "history.db");
-        exportDirectory = Path.Combine(appData, "Exports");
 
         dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
         historyStore = new SqliteHistoryStore(historyPath);
@@ -496,14 +496,24 @@ public sealed partial class MainWindow : Window
                 await RefreshHistoryAsync(windowLifetime.Token);
             }
 
-            Directory.CreateDirectory(exportDirectory);
             var fileName = $"VoiceInk-history-{DateTimeOffset.Now:yyyyMMdd-HHmmss}.csv";
-            var exportPath = Path.Combine(exportDirectory, fileName);
-            await File.WriteAllTextAsync(
-                exportPath,
-                HistoryCsvExporter.Export(historyItems),
-                windowLifetime.Token);
-            RefreshUiFromControllerState($"History exported: {exportPath}");
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = Path.GetFileNameWithoutExtension(fileName)
+            };
+            picker.FileTypeChoices.Add("CSV file", [".csv"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                RefreshUiFromControllerState("History export canceled");
+                return;
+            }
+
+            await FileIO.WriteTextAsync(file, HistoryCsvExporter.Export(historyItems));
+            RefreshUiFromControllerState($"History exported: {file.Name}");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {

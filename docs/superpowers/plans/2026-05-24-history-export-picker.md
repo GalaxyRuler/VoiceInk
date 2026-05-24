@@ -28,7 +28,7 @@
 
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Implement picker export**
+- [x] **Step 1: Implement picker export**
 
 Implementation rules:
 
@@ -42,7 +42,7 @@ Implementation rules:
 - Write `HistoryCsvExporter.Export(historyItems)` to the selected file with `FileIO.WriteTextAsync`.
 - Report `History exported: <file name>`.
 
-- [ ] **Step 2: Build**
+- [x] **Step 2: Build**
 
 Run:
 
@@ -52,7 +52,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 Commit message:
 
