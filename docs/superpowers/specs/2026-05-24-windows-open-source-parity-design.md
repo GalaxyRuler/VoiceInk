@@ -252,6 +252,14 @@ Windows gaps:
 
 macOS has providers for Cerebras, Groq, Gemini, Anthropic, OpenAI, OpenRouter, Mistral, Ollama, Local CLI, custom, and several speech providers where applicable. Enhancement supports prompt templates, assistant mode, custom prompts, trigger words, clipboard context, selected text context, screen/OCR context, retries, timeout, and output filtering.
 
+Planned Windows AI Enhancement MVP slice:
+
+- Add Core prompt catalog, prompt rendering, trigger detection, output filtering, and provider-agnostic enhancement orchestration.
+- Add an OpenAI-compatible chat-completions HTTP adapter with sanitized errors and no secret logging.
+- Store the provider API key in Windows Credential Manager rather than JSON settings.
+- Add an Enhancement navigation section for enable/disable, endpoint/model, prompt selection, timeout, skip-short, retry-on-timeout settings, and key save/clear.
+- Run enhancement after local transcription cleanup and before insertion. Store original cleaned text as history `Text`, successful enhancement as `EnhancedText`, plus enhancement provider/model, prompt, duration, and rendered request messages for local diagnostics. Paste the enhanced text. On enhancement failure, paste original cleaned text and keep enhanced text empty so paste-last-enhanced never pastes an error string.
+
 Windows gaps:
 
 - Enhancement contracts.
