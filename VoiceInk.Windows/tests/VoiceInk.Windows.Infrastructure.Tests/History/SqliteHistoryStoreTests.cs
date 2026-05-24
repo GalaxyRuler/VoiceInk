@@ -71,6 +71,38 @@ public sealed class SqliteHistoryStoreTests
     }
 
     [Fact]
+    public async Task ListRecentAsync_OrdersNewestFirstWhenInstantsDifferWithinSameMillisecond()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var createdAt = new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.Zero).AddTicks(1_234);
+        var older = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            createdAt,
+            "older same millisecond",
+            "local-whisper",
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromMilliseconds(200));
+        var newer = older with
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = createdAt.AddTicks(5),
+            Text = "newer same millisecond"
+        };
+
+        await store.SaveAsync(older, CancellationToken.None);
+        await store.SaveAsync(newer, CancellationToken.None);
+
+        var results = await store.ListRecentAsync(10, CancellationToken.None);
+
+        Assert.Collection(
+            results,
+            item => Assert.Equal(newer, item),
+            item => Assert.Equal(older, item));
+    }
+
+    [Fact]
     public async Task ListRecentAsync_WithLimitOne_ReturnsOnlyNewestItem()
     {
         using var temp = new TempDirectory();

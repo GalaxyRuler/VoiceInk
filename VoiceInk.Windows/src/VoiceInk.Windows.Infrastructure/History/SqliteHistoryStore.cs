@@ -29,13 +29,13 @@ public sealed class SqliteHistoryStore : IHistoryStore
         using var command = connection.CreateCommand();
         command.CommandText = """
             INSERT INTO transcriptions
-                (id, created_at, created_at_unix_ms, text, provider_name, audio_duration_ms, transcription_duration_ms)
+                (id, created_at, created_at_utc_ticks, text, provider_name, audio_duration_ms, transcription_duration_ms)
             VALUES
-                ($id, $created_at, $created_at_unix_ms, $text, $provider_name, $audio_duration_ms, $transcription_duration_ms);
+                ($id, $created_at, $created_at_utc_ticks, $text, $provider_name, $audio_duration_ms, $transcription_duration_ms);
             """;
         command.Parameters.AddWithValue("$id", item.Id.ToString());
         command.Parameters.AddWithValue("$created_at", item.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
-        command.Parameters.AddWithValue("$created_at_unix_ms", item.CreatedAt.ToUnixTimeMilliseconds());
+        command.Parameters.AddWithValue("$created_at_utc_ticks", item.CreatedAt.UtcDateTime.Ticks);
         command.Parameters.AddWithValue("$text", item.Text);
         command.Parameters.AddWithValue("$provider_name", item.ProviderName);
         command.Parameters.AddWithValue("$audio_duration_ms", item.AudioDuration.TotalMilliseconds);
@@ -63,7 +63,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         command.CommandText = """
             SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms
             FROM transcriptions
-            ORDER BY created_at_unix_ms DESC
+            ORDER BY created_at_utc_ticks DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$limit", limit);
@@ -94,14 +94,14 @@ public sealed class SqliteHistoryStore : IHistoryStore
             CREATE TABLE IF NOT EXISTS transcriptions (
                 id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
-                created_at_unix_ms INTEGER NOT NULL,
+                created_at_utc_ticks INTEGER NOT NULL,
                 text TEXT NOT NULL,
                 provider_name TEXT NOT NULL,
                 audio_duration_ms REAL NOT NULL,
                 transcription_duration_ms REAL NOT NULL
             );
-            CREATE INDEX IF NOT EXISTS idx_transcriptions_created_at_unix_ms
-                ON transcriptions(created_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_transcriptions_created_at_utc_ticks
+                ON transcriptions(created_at_utc_ticks DESC);
             """;
         command.ExecuteNonQuery();
     }
