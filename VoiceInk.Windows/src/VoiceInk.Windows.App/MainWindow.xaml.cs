@@ -9,8 +9,10 @@ using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
+using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Transcription;
+using WinRT.Interop;
 
 namespace VoiceInk.Windows.App;
 
@@ -20,6 +22,7 @@ public sealed partial class MainWindow : Window
     private readonly string historyPath;
     private readonly JsonSettingsStore settingsStore;
     private readonly CancellationTokenSource windowLifetime = new();
+    private GlobalHotkeyService? hotkeyService;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private bool isStarting;
@@ -27,6 +30,7 @@ public sealed partial class MainWindow : Window
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
+    private string? hotkeyRegistrationError;
 
     public MainWindow()
     {
@@ -43,11 +47,22 @@ public sealed partial class MainWindow : Window
         controller = CreateController(audioCapture);
 
         Closed += MainWindow_Closed;
+        RegisterGlobalHotkey();
         RefreshUiFromControllerState("Loading settings");
         _ = InitializeAsync();
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
+    {
+        await StartCurrentRecordingAsync();
+    }
+
+    private async void StopButton_Click(object sender, RoutedEventArgs e)
+    {
+        await StopCurrentRecordingAsync();
+    }
+
+    private async Task StartCurrentRecordingAsync()
     {
         if (isStarting || isStopping || !settingsLoaded)
         {
@@ -90,7 +105,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void StopButton_Click(object sender, RoutedEventArgs e)
+    private async Task StopCurrentRecordingAsync()
     {
         if (isStarting || isStopping || controller.State != DictationState.Recording)
         {
@@ -118,6 +133,29 @@ public sealed partial class MainWindow : Window
         {
             isStopping = false;
             RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task ToggleCurrentRecordingAsync()
+    {
+        if (controller.State == DictationState.Recording)
+        {
+            await StopCurrentRecordingAsync();
+            return;
+        }
+
+        await StartCurrentRecordingAsync();
+    }
+
+    private async void HotkeyService_HotkeyPressed(object? sender, EventArgs e)
+    {
+        try
+        {
+            await ToggleCurrentRecordingAsync();
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Hotkey failed: {ex.Message}");
         }
     }
 
@@ -188,6 +226,23 @@ public sealed partial class MainWindow : Window
             new SqliteHistoryStore(historyPath),
             settingsStore);
 
+    private void RegisterGlobalHotkey()
+    {
+        try
+        {
+            var windowHandle = WindowNative.GetWindowHandle(this);
+            hotkeyService = new GlobalHotkeyService(windowHandle);
+            hotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
+            hotkeyService.RegisterCtrlAltSpace();
+        }
+        catch (Exception ex)
+        {
+            hotkeyService?.Dispose();
+            hotkeyService = null;
+            hotkeyRegistrationError = $"Ctrl+Alt+Space hotkey unavailable: {ex.Message}";
+        }
+    }
+
     private void RecreateController()
     {
         audioCapture.Dispose();
@@ -211,6 +266,7 @@ public sealed partial class MainWindow : Window
         StatusTextBlock.Text = statusOverride
             ?? controller.LastError
             ?? controller.LastWarning
+            ?? hotkeyRegistrationError
             ?? StateToStatusText(controller.State);
     }
 
@@ -228,6 +284,13 @@ public sealed partial class MainWindow : Window
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
         windowLifetime.Cancel();
+        if (hotkeyService is not null)
+        {
+            hotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
+            hotkeyService.Dispose();
+            hotkeyService = null;
+        }
+
         audioCapture.Dispose();
         windowLifetime.Dispose();
     }
