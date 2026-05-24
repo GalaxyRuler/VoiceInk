@@ -8,6 +8,7 @@ public static class ShellNavigationPresenter
         new("Transcribe Audio", "Transcribe Audio", "Audio"),
         new("History", "History", "Document"),
         new("AI Models", "AI Models", "Library"),
+        new("Enhancement", "Enhancement", "Edit"),
         new("Audio Input", "Audio Input", "Microphone"),
         new("Dictionary", "Dictionary", "Character"),
         new("Settings", "Settings", "Setting"),

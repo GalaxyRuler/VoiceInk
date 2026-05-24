@@ -22,6 +22,14 @@ public sealed record AppSettings
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;
+    public bool IsEnhancementEnabled { get; init; }
+    public string EnhancementEndpoint { get; init; } = string.Empty;
+    public string EnhancementModel { get; init; } = string.Empty;
+    public Guid? SelectedEnhancementPromptId { get; init; }
+    public int EnhancementTimeoutSeconds { get; init; } = 7;
+    public bool EnhancementRetryOnTimeout { get; init; } = true;
+    public bool SkipShortEnhancement { get; init; } = true;
+    public int ShortEnhancementWordThreshold { get; init; } = 3;
     public bool RemoveFillerWords { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
@@ -46,6 +54,14 @@ public sealed record AppSettings
             AudioInputDeviceName == other.AudioInputDeviceName &&
             ImportedWhisperModels.SequenceEqual(other.ImportedWhisperModels) &&
             TranscriptionProvider == other.TranscriptionProvider &&
+            IsEnhancementEnabled == other.IsEnhancementEnabled &&
+            EnhancementEndpoint == other.EnhancementEndpoint &&
+            EnhancementModel == other.EnhancementModel &&
+            SelectedEnhancementPromptId == other.SelectedEnhancementPromptId &&
+            EnhancementTimeoutSeconds == other.EnhancementTimeoutSeconds &&
+            EnhancementRetryOnTimeout == other.EnhancementRetryOnTimeout &&
+            SkipShortEnhancement == other.SkipShortEnhancement &&
+            ShortEnhancementWordThreshold == other.ShortEnhancementWordThreshold &&
             RemoveFillerWords == other.RemoveFillerWords &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription;
@@ -75,6 +91,14 @@ public sealed record AppSettings
         }
 
         hash.Add(TranscriptionProvider);
+        hash.Add(IsEnhancementEnabled);
+        hash.Add(EnhancementEndpoint);
+        hash.Add(EnhancementModel);
+        hash.Add(SelectedEnhancementPromptId);
+        hash.Add(EnhancementTimeoutSeconds);
+        hash.Add(EnhancementRetryOnTimeout);
+        hash.Add(SkipShortEnhancement);
+        hash.Add(ShortEnhancementWordThreshold);
         hash.Add(RemoveFillerWords);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);

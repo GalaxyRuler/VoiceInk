@@ -19,6 +19,10 @@ public sealed record TranscriptionHistoryItem
     public TimeSpan? EnhancementDuration { get; init; }
     public string? ErrorMessage { get; init; }
     public string? AudioFilePath { get; init; }
+    public string? EnhancementProviderName { get; init; }
+    public string? EnhancementModelName { get; init; }
+    public string? AiRequestSystemMessage { get; init; }
+    public string? AiRequestUserMessage { get; init; }
 
     public TranscriptionHistoryItem(
         Guid id,
@@ -35,7 +39,11 @@ public sealed record TranscriptionHistoryItem
         string? promptName = null,
         TimeSpan? enhancementDuration = null,
         string? errorMessage = null,
-        string? audioFilePath = null)
+        string? audioFilePath = null,
+        string? enhancementProviderName = null,
+        string? enhancementModelName = null,
+        string? aiRequestSystemMessage = null,
+        string? aiRequestUserMessage = null)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -52,5 +60,9 @@ public sealed record TranscriptionHistoryItem
         EnhancementDuration = enhancementDuration;
         ErrorMessage = errorMessage;
         AudioFilePath = string.IsNullOrWhiteSpace(audioFilePath) ? null : audioFilePath;
+        EnhancementProviderName = string.IsNullOrWhiteSpace(enhancementProviderName) ? null : enhancementProviderName;
+        EnhancementModelName = string.IsNullOrWhiteSpace(enhancementModelName) ? null : enhancementModelName;
+        AiRequestSystemMessage = string.IsNullOrWhiteSpace(aiRequestSystemMessage) ? null : aiRequestSystemMessage;
+        AiRequestUserMessage = string.IsNullOrWhiteSpace(aiRequestUserMessage) ? null : aiRequestUserMessage;
     }
 }

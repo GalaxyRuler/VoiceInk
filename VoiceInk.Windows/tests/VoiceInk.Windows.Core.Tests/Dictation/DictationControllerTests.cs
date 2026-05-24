@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -198,6 +199,86 @@ public sealed class DictationControllerTests
 
         Assert.NotNull(transcription.LastOptions);
         Assert.Equal("Important Vocabulary: VoiceInk, Whisper", transcription.LastOptions.Prompt);
+    }
+
+    [Fact]
+    public async Task StopAsync_InsertsEnhancedTextAndSavesEnhancementMetadata()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello world", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            EnhancementEndpoint = "https://example.test/v1/chat/completions",
+            EnhancementModel = "test-model",
+            IsEnhancementEnabled = true,
+            SkipShortEnhancement = false
+        });
+        var enhancement = new FakeTextEnhancementService("Hello, world.");
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            settings,
+            enhancementPipeline: new TextEnhancementPipeline(enhancement));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("Hello, world.", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("hello world", saved.Text);
+        Assert.Equal("hello world", saved.OriginalText);
+        Assert.Equal("Hello, world.", saved.EnhancedText);
+        Assert.Equal("Default", saved.PromptName);
+        Assert.Equal("openai-compatible", saved.EnhancementProviderName);
+        Assert.Equal("test-model", saved.EnhancementModelName);
+        Assert.Equal(TimeSpan.FromMilliseconds(42), saved.EnhancementDuration);
+        Assert.Contains("TRANSCRIPTION ENHANCER", saved.AiRequestSystemMessage);
+        Assert.Contains("<TRANSCRIPT>", saved.AiRequestUserMessage);
+    }
+
+    [Fact]
+    public async Task StopAsync_WhenEnhancementFailsInsertsOriginalAndSavesWarning()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            EnhancementEndpoint = "https://example.test/v1/chat/completions",
+            EnhancementModel = "test-model",
+            IsEnhancementEnabled = true,
+            SkipShortEnhancement = false
+        });
+        var enhancement = new FakeTextEnhancementService("unused")
+        {
+            Exception = new InvalidOperationException("provider unavailable")
+        };
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            settings,
+            enhancementPipeline: new TextEnhancementPipeline(enhancement));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Contains("Enhancement failed: provider unavailable", controller.LastWarning);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("hello", saved.Text);
+        Assert.Null(saved.EnhancedText);
+        Assert.Contains("Enhancement failed: provider unavailable", saved.ErrorMessage);
     }
 
     [Fact]
@@ -879,6 +960,27 @@ public sealed class DictationControllerTests
         public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(Replacements);
+        }
+    }
+
+    private sealed class FakeTextEnhancementService(string text) : ITextEnhancementService
+    {
+        public Exception? Exception { get; init; }
+
+        public Task<TextEnhancementResult> EnhanceAsync(
+            TextEnhancementRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (Exception is not null)
+            {
+                throw Exception;
+            }
+
+            return Task.FromResult(new TextEnhancementResult(
+                text,
+                "openai-compatible",
+                request.Model,
+                TimeSpan.FromMilliseconds(42)));
         }
     }
 }

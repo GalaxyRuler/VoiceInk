@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Dictionary;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Text;
@@ -11,7 +12,8 @@ public sealed class AudioFileTranscriptionService(
     ITranscriptionService transcriptionService,
     IHistoryStore historyStore,
     ISettingsStore settingsStore,
-    IDictionaryStore? dictionaryStore = null)
+    IDictionaryStore? dictionaryStore = null,
+    TextEnhancementPipeline? enhancementPipeline = null)
 {
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
 
@@ -50,6 +52,9 @@ public sealed class AudioFileTranscriptionService(
                 return new AudioFileTranscriptionResult(false, "File transcription produced no text");
             }
 
+            var enhancement = enhancementPipeline is null
+                ? null
+                : await enhancementPipeline.EnhanceAsync(finalText, settings, vocabulary, cancellationToken);
             var item = new TranscriptionHistoryItem(
                 Guid.NewGuid(),
                 DateTimeOffset.UtcNow,
@@ -61,7 +66,15 @@ public sealed class AudioFileTranscriptionService(
                 status: TranscriptionHistoryStatus.Completed,
                 language: settings.Language,
                 modelPath: settings.ModelPath,
-                audioFilePath: audio.FilePath);
+                promptName: enhancement?.PromptName,
+                enhancementDuration: enhancement?.EnhancementDuration,
+                errorMessage: enhancement?.WarningMessage,
+                audioFilePath: audio.FilePath,
+                enhancedText: enhancement?.EnhancedText,
+                enhancementProviderName: enhancement?.EnhancementProviderName,
+                enhancementModelName: enhancement?.EnhancementModelName,
+                aiRequestSystemMessage: enhancement?.SystemMessage,
+                aiRequestUserMessage: enhancement?.UserMessage);
             await historyStore.SaveAsync(item, cancellationToken);
 
             return new AudioFileTranscriptionResult(true, "File transcription saved", item);

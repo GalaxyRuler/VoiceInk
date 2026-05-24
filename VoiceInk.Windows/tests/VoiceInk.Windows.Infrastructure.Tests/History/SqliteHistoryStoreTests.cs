@@ -184,7 +184,11 @@ public sealed class SqliteHistoryStoreTests
             modelPath: "C:\\Models\\ggml-base.en.bin",
             promptName: "Default",
             enhancementDuration: TimeSpan.FromMilliseconds(250),
-            errorMessage: null);
+            errorMessage: null,
+            enhancementProviderName: "openai-compatible",
+            enhancementModelName: "gpt-compatible",
+            aiRequestSystemMessage: "system prompt",
+            aiRequestUserMessage: "user prompt");
 
         await store.SaveAsync(item, CancellationToken.None);
 

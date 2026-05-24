@@ -65,7 +65,7 @@ Record the macOS enhancement behavior and this Windows MVP adaptation:
 - History stores enhancement provider/model, prompt name, duration, and the rendered system/user request messages for local diagnostics.
 - API key stored outside JSON settings in Windows Credential Manager.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -78,7 +78,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Prompt And Trigger Red/Green
 
-- [ ] **Step 1: Add failing prompt/filter/detection tests**
+- [x] **Step 1: Add failing prompt/filter/detection tests**
 
 Create focused tests covering:
 
@@ -89,7 +89,7 @@ Create focused tests covering:
 - Output filter strips thinking/reasoning tags and trims output.
 - Trigger detection strips leading/trailing trigger words, handles punctuation, and uses longest trigger first.
 
-- [ ] **Step 2: Run red tests**
+- [x] **Step 2: Run red tests**
 
 Run:
 
@@ -99,17 +99,17 @@ Run:
 
 Expected: compile failure because Core enhancement types do not exist.
 
-- [ ] **Step 3: Add Core prompt/filter/detection implementation**
+- [x] **Step 3: Add Core prompt/filter/detection implementation**
 
 Implement the files listed for prompt catalog, rendering, output filtering, and trigger detection.
 
-- [ ] **Step 4: Verify prompt/filter/detection tests**
+- [x] **Step 4: Verify prompt/filter/detection tests**
 
 Run the focused Core enhancement test command. Expected: tests pass.
 
 ## Task 3: Core Enhancement Pipeline Red/Green
 
-- [ ] **Step 1: Add failing pipeline tests**
+- [x] **Step 1: Add failing pipeline tests**
 
 Cover:
 
@@ -120,7 +120,7 @@ Cover:
 - Enhancement failure returns original text, leaves enhanced text empty, and returns a warning/error message.
 - Retry settings retry transient provider failures and timeout failures only when enabled.
 
-- [ ] **Step 2: Implement `TextEnhancementPipeline`**
+- [x] **Step 2: Implement `TextEnhancementPipeline`**
 
 Implementation details:
 
@@ -132,13 +132,13 @@ Implementation details:
 - Filter provider output.
 - Return original/enhanced/final-for-insertion metadata without throwing on provider failures.
 
-- [ ] **Step 3: Verify pipeline tests**
+- [x] **Step 3: Verify pipeline tests**
 
 Run the focused Core enhancement test command. Expected: tests pass.
 
 ## Task 4: OpenAI-Compatible Provider And Secret Store
 
-- [ ] **Step 1: Add failing infrastructure provider tests**
+- [x] **Step 1: Add failing infrastructure provider tests**
 
 Use a fake `HttpMessageHandler` and fake `ISecretStore` to assert:
 
@@ -150,15 +150,15 @@ Use a fake `HttpMessageHandler` and fake `ISecretStore` to assert:
 - Missing API key returns a not-configured error before HTTP.
 - HTTP 429 and 5xx responses are retried up to the configured retry count.
 
-- [ ] **Step 2: Implement provider**
+- [x] **Step 2: Implement provider**
 
 Create `OpenAICompatibleTextEnhancementService` using `HttpClient`, `ISecretStore`, `System.Text.Json`, timeout handling, transient retry/backoff behavior, and sanitized errors.
 
-- [ ] **Step 3: Add Windows Credential Manager store**
+- [x] **Step 3: Add Windows Credential Manager store**
 
 Create `WindowsCredentialSecretStore` with generic credential read/write/delete/exists. Do not add automated tests that write real user credentials; keep automated tests on the provider with a fake secret store.
 
-- [ ] **Step 4: Verify provider tests**
+- [x] **Step 4: Verify provider tests**
 
 Run:
 
@@ -170,7 +170,7 @@ Expected: provider tests pass.
 
 ## Task 5: Pipeline Integration
 
-- [ ] **Step 1: Add failing dictation and file-transcription tests**
+- [x] **Step 1: Add failing dictation and file-transcription tests**
 
 Cover:
 
@@ -179,24 +179,24 @@ Cover:
 - File transcription saves `EnhancedText` and enhancement metadata when enhancement succeeds.
 - Enhancement is not attempted when disabled/unconfigured.
 
-- [ ] **Step 2: Integrate Core services**
+- [x] **Step 2: Integrate Core services**
 
 Modify `DictationController` and `AudioFileTranscriptionService` to use optional `TextEnhancementPipeline`.
 
 - Add migration-safe nullable history fields for enhancement provider/model and request messages.
 - Keep API keys out of history, logs, diagnostics, and error strings.
 
-- [ ] **Step 3: Verify focused tests**
+- [x] **Step 3: Verify focused tests**
 
 Run focused Dictation/AudioFiles tests. Expected: tests pass.
 
 ## Task 6: WinUI Enhancement Settings
 
-- [ ] **Step 1: Update navigation tests**
+- [x] **Step 1: Update navigation tests**
 
 Add `Enhancement` after `AI Models` and before `Audio Input`.
 
-- [ ] **Step 2: Add settings UI**
+- [x] **Step 2: Add settings UI**
 
 Add a WinUI `Enhancement` section with:
 
@@ -208,17 +208,17 @@ Add a WinUI `Enhancement` section with:
 - Retry-on-timeout setting.
 - Status text for whether a key is stored.
 
-- [ ] **Step 3: Wire app services**
+- [x] **Step 3: Wire app services**
 
 Instantiate `WindowsCredentialSecretStore`, `OpenAICompatibleTextEnhancementService`, and `TextEnhancementPipeline`. Persist non-secret settings to JSON. Store/clear only the key in Credential Manager.
 
-- [ ] **Step 4: Verify navigation tests and build**
+- [x] **Step 4: Verify navigation tests and build**
 
 Run focused navigation tests and Debug x64 build.
 
 ## Task 7: Docs, Review, Commit
 
-- [ ] **Step 1: Update README/spec/plan**
+- [x] **Step 1: Update README/spec/plan**
 
 Document:
 
@@ -228,7 +228,7 @@ Document:
 - Manual API-key smoke requires a user-supplied key and network.
 - Remaining gaps: provider cards, Ollama/local CLI, clipboard/selected-text/OCR context, custom prompt editing, dynamic provider model lists, and toggle-enhancement shortcut.
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 Run:
 
@@ -239,11 +239,11 @@ Run:
 
 Expected: all tests pass and Debug x64 build passes with 0 warnings/errors.
 
-- [ ] **Step 3: Request review and fix findings**
+- [x] **Step 3: Request review and fix findings**
 
 Request subagent review against this plan, the macOS enhancement source, and the OpenAI-compatible/secret-storage implementation. Fix all Critical and Important findings before committing.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Run:
 

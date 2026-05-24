@@ -14,6 +14,7 @@ using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.AudioFiles;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
@@ -23,10 +24,12 @@ using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.Dictionary;
+using VoiceInk.Windows.Infrastructure.Enhancement;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
+using VoiceInk.Windows.Native.Security;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Tray;
 using VoiceInk.Windows.Native.Transcription;
@@ -47,6 +50,7 @@ public sealed partial class MainWindow : Window
     private const string HistorySectionTag = "History";
     private const string SettingsSectionTag = "Settings";
     private const string AboutSectionTag = "About";
+    private const string EnhancementSectionTag = "Enhancement";
 
     private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
@@ -62,6 +66,9 @@ public sealed partial class MainWindow : Window
     private readonly HistoryRetryService historyRetryService;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
+    private readonly WindowsCredentialSecretStore secretStore;
+    private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
+    private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
@@ -79,6 +86,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<AudioFileQueueItem> audioFileQueueItems = [];
     private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
     private IReadOnlyList<LocalWhisperModel> modelChoices = [];
+    private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
@@ -88,6 +96,7 @@ public sealed partial class MainWindow : Window
     private bool isQuickAdding;
     private bool isImportingModel;
     private bool isTranscribingAudioFiles;
+    private bool isSavingEnhancementKey;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -121,6 +130,9 @@ public sealed partial class MainWindow : Window
         settingsStore = new JsonSettingsStore(settingsPath);
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
+        secretStore = new WindowsCredentialSecretStore();
+        textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
+        textEnhancementPipeline = new TextEnhancementPipeline(textEnhancementService, enhancementPrompts);
         historyRetryService = new HistoryRetryService(
             new WhisperNetTranscriptionService(),
             historyStore,
@@ -131,7 +143,8 @@ public sealed partial class MainWindow : Window
             new WhisperNetTranscriptionService(),
             historyStore,
             settingsStore,
-            dictionaryStore);
+            dictionaryStore,
+            textEnhancementPipeline);
         dictionaryQuickAddService = new DictionaryQuickAddService(dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
@@ -467,6 +480,21 @@ public sealed partial class MainWindow : Window
         OpenModelDownloads();
     }
 
+    private async void ApplyEnhancementSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyEnhancementSettingsAsync();
+    }
+
+    private async void SaveEnhancementKeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await SaveEnhancementKeyAsync();
+    }
+
+    private async void ClearEnhancementKeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ClearEnhancementKeyAsync();
+    }
+
     private void OpenDiagnosticsFolderButton_Click(object sender, RoutedEventArgs e)
     {
         OpenDiagnosticsFolder();
@@ -638,10 +666,19 @@ public sealed partial class MainWindow : Window
             CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
             OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
             QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
+            EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
+            EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
+            EnhancementModelTextBox.Text = settings.EnhancementModel;
+            EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
+            ShortEnhancementThresholdTextBox.Text = ShortEnhancementThreshold(settings).ToString(CultureInfo.InvariantCulture);
+            SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
+            EnhancementRetryOnTimeoutCheckBox.IsChecked = settings.EnhancementRetryOnTimeout;
+            RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+            await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
             var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
             await RefreshDictionaryAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
@@ -2299,6 +2336,118 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
+    private async Task ApplyEnhancementSettingsAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            if (!TryParsePositiveInt(EnhancementTimeoutTextBox.Text, out var timeoutSeconds))
+            {
+                RefreshUiFromControllerState("Enhancement timeout must be a positive number.");
+                return;
+            }
+
+            if (!TryParsePositiveInt(ShortEnhancementThresholdTextBox.Text, out var shortThreshold))
+            {
+                RefreshUiFromControllerState("Short enhancement threshold must be a positive number.");
+                return;
+            }
+
+            EnhancementTimeoutTextBox.Text = timeoutSeconds.ToString(CultureInfo.InvariantCulture);
+            ShortEnhancementThresholdTextBox.Text = shortThreshold.ToString(CultureInfo.InvariantCulture);
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Enhancement settings updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Enhancement settings update failed: {ex.Message}");
+        }
+    }
+
+    private async Task SaveEnhancementKeyAsync()
+    {
+        if (!settingsLoaded || IsOperationActive(includeCurrentEnhancementKeySave: false))
+        {
+            return;
+        }
+
+        var secret = EnhancementApiKeyPasswordBox.Password.Trim();
+        if (secret.Length == 0)
+        {
+            RefreshUiFromControllerState("Enter an API key to save");
+            return;
+        }
+
+        isSavingEnhancementKey = true;
+        var statusOverride = "Saving enhancement API key";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await secretStore.SaveSecretAsync(
+                OpenAICompatibleTextEnhancementService.SecretName,
+                secret,
+                windowLifetime.Token);
+            EnhancementApiKeyPasswordBox.Password = string.Empty;
+            await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
+            statusOverride = "Enhancement API key saved";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Enhancement API key save failed: {ex.Message}";
+        }
+        finally
+        {
+            isSavingEnhancementKey = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task ClearEnhancementKeyAsync()
+    {
+        if (!settingsLoaded || IsOperationActive(includeCurrentEnhancementKeySave: false))
+        {
+            return;
+        }
+
+        isSavingEnhancementKey = true;
+        var statusOverride = "Clearing enhancement API key";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await secretStore.DeleteSecretAsync(
+                OpenAICompatibleTextEnhancementService.SecretName,
+                windowLifetime.Token);
+            EnhancementApiKeyPasswordBox.Password = string.Empty;
+            await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
+            statusOverride = "Enhancement API key cleared";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Enhancement API key clear failed: {ex.Message}";
+        }
+        finally
+        {
+            isSavingEnhancementKey = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private async Task ApplyShortcutsAsync()
     {
         if (!settingsLoaded)
@@ -2478,6 +2627,14 @@ public sealed partial class MainWindow : Window
                 : settings.QuickAddDictionaryHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
+            IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
+            EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
+            EnhancementModel = EnhancementModelTextBox.Text.Trim(),
+            SelectedEnhancementPromptId = SelectedEnhancementPromptId(),
+            EnhancementTimeoutSeconds = ParsedPositiveOrDefault(EnhancementTimeoutTextBox.Text, 7),
+            EnhancementRetryOnTimeout = EnhancementRetryOnTimeoutCheckBox.IsChecked == true,
+            SkipShortEnhancement = SkipShortEnhancementCheckBox.IsChecked == true,
+            ShortEnhancementWordThreshold = ParsedPositiveOrDefault(ShortEnhancementThresholdTextBox.Text, 3),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
@@ -2492,7 +2649,8 @@ public sealed partial class MainWindow : Window
             textInjectionService,
             historyStore,
             settingsStore,
-            dictionaryStore);
+            dictionaryStore,
+            textEnhancementPipeline);
 
     private int? SelectedAudioInputDeviceNumber() =>
         SelectedAudioInputDeviceChoice()?.DeviceNumber;
@@ -2519,6 +2677,14 @@ public sealed partial class MainWindow : Window
             : null;
     }
 
+    private Guid? SelectedEnhancementPromptId()
+    {
+        var selectedIndex = EnhancementPromptComboBox.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < enhancementPrompts.Count
+            ? enhancementPrompts[selectedIndex].Id
+            : EnhancementPromptCatalog.DefaultPromptId;
+    }
+
     private void RefreshModelChoices(string? selectedPath = null)
     {
         var modelPath = selectedPath ?? ModelPathTextBox.Text;
@@ -2537,7 +2703,43 @@ public sealed partial class MainWindow : Window
                 string.Equals(model.Path, trimmedPath, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool IsOperationActive(bool includeCurrentModelImport = true) =>
+    private void RefreshEnhancementPromptChoices(Guid? selectedPromptId)
+    {
+        EnhancementPromptComboBox.ItemsSource = enhancementPrompts
+            .Select(prompt => prompt.Title)
+            .ToArray();
+
+        var promptId = selectedPromptId ?? EnhancementPromptCatalog.DefaultPromptId;
+        var selectedIndex = enhancementPrompts.ToList().FindIndex(prompt => prompt.Id == promptId);
+        EnhancementPromptComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    }
+
+    private async Task RefreshEnhancementKeyStatusAsync(CancellationToken cancellationToken)
+    {
+        var hasKey = await secretStore.HasSecretAsync(
+            OpenAICompatibleTextEnhancementService.SecretName,
+            cancellationToken);
+        EnhancementKeyStatusTextBlock.Text = hasKey
+            ? "API key stored in Windows Credential Manager"
+            : "No API key stored";
+    }
+
+    private static int EnhancementTimeoutSeconds(AppSettings settings) =>
+        settings.EnhancementTimeoutSeconds > 0 ? settings.EnhancementTimeoutSeconds : 7;
+
+    private static int ShortEnhancementThreshold(AppSettings settings) =>
+        settings.ShortEnhancementWordThreshold > 0 ? settings.ShortEnhancementWordThreshold : 3;
+
+    private static int ParsedPositiveOrDefault(string text, int fallback) =>
+        TryParsePositiveInt(text, out var value) ? value : fallback;
+
+    private static bool TryParsePositiveInt(string text, out int value) =>
+        int.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out value)
+        && value > 0;
+
+    private bool IsOperationActive(
+        bool includeCurrentModelImport = true,
+        bool includeCurrentEnhancementKeySave = true) =>
         isStarting
         || isStopping
         || isCanceling
@@ -2546,6 +2748,7 @@ public sealed partial class MainWindow : Window
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
+        || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentModelImport && isImportingModel);
 
     private bool IsControllerBusy() =>
@@ -2589,6 +2792,7 @@ public sealed partial class MainWindow : Window
         DashboardSectionPanel.Visibility = tag == DashboardSectionTag ? Visibility.Visible : Visibility.Collapsed;
         TranscribeAudioSectionPanel.Visibility = tag == TranscribeAudioSectionTag ? Visibility.Visible : Visibility.Collapsed;
         ModelsSectionPanel.Visibility = tag == ModelsSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        EnhancementSectionPanel.Visibility = tag == EnhancementSectionTag ? Visibility.Visible : Visibility.Collapsed;
         AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
         DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
         HistorySectionPanel.Visibility = tag == HistorySectionTag ? Visibility.Visible : Visibility.Collapsed;
@@ -2763,6 +2967,10 @@ public sealed partial class MainWindow : Window
         var operationActive = IsOperationActive();
         var controllerBusy = IsControllerBusy();
         var modelControlsEnabled = CanEditModelLibrary();
+        var enhancementControlsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
         var audioFileQueueEditable = CanEditAudioFileQueue();
         var selectedAudioFileQueueItem = SelectedAudioFileQueueItem();
@@ -2806,6 +3014,18 @@ public sealed partial class MainWindow : Window
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
+        EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementApiKeyPasswordBox.IsEnabled = enhancementControlsEnabled;
+        SaveEnhancementKeyButton.IsEnabled = enhancementControlsEnabled;
+        ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled;
+        EnhancementPromptComboBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementTimeoutTextBox.IsEnabled = enhancementControlsEnabled;
+        ShortEnhancementThresholdTextBox.IsEnabled = enhancementControlsEnabled;
+        SkipShortEnhancementCheckBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementRetryOnTimeoutCheckBox.IsEnabled = enhancementControlsEnabled;
+        ApplyEnhancementSettingsButton.IsEnabled = enhancementControlsEnabled;
         ChooseAudioFilesButton.IsEnabled = audioFileQueueEditable;
         StartAudioFileQueueButton.IsEnabled = audioFileQueueEditable && hasPendingAudioFiles;
         CancelAudioFileQueueButton.IsEnabled = isTranscribingAudioFiles;

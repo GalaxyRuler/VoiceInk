@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.AudioFiles;
 using VoiceInk.Windows.Core.Dictionary;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -112,6 +113,44 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Equal("Unsupported media", result.Message);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_SavesEnhancedTextAndEnhancementMetadata()
+    {
+        var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 16000, 1);
+        var importer = new FakeAudioFileImportService(importedAudio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            "file text",
+            TimeSpan.FromMilliseconds(250),
+            "local-whisper"));
+        var history = new FakeHistoryStore();
+        var enhancement = new FakeTextEnhancementService("Enhanced file text.");
+        var service = new AudioFileTranscriptionService(
+            importer,
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                EnhancementEndpoint = "https://example.test/v1/chat/completions",
+                EnhancementModel = "test-model",
+                IsEnhancementEnabled = true,
+                SkipShortEnhancement = false
+            }),
+            enhancementPipeline: new TextEnhancementPipeline(enhancement));
+
+        var result = await service.TranscribeAsync("source.mp3", "recordings", CancellationToken.None);
+
+        Assert.True(result.Success);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("file text", saved.Text);
+        Assert.Equal("Enhanced file text.", saved.EnhancedText);
+        Assert.Equal("Default", saved.PromptName);
+        Assert.Equal("openai-compatible", saved.EnhancementProviderName);
+        Assert.Equal("test-model", saved.EnhancementModelName);
+        Assert.Equal(TimeSpan.FromMilliseconds(42), saved.EnhancementDuration);
+        Assert.Contains("<TRANSCRIPT>", saved.AiRequestUserMessage);
+    }
+
     private sealed class FakeAudioFileImportService(
         AudioCaptureResult? result = null) : IAudioFileImportService
     {
@@ -213,5 +252,17 @@ public sealed class AudioFileTranscriptionServiceTests
 
         public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Replacements);
+    }
+
+    private sealed class FakeTextEnhancementService(string text) : ITextEnhancementService
+    {
+        public Task<TextEnhancementResult> EnhanceAsync(
+            TextEnhancementRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new TextEnhancementResult(
+                text,
+                "openai-compatible",
+                request.Model,
+                TimeSpan.FromMilliseconds(42)));
     }
 }

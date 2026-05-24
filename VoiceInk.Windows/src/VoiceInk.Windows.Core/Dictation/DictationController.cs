@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Dictionary;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -13,7 +14,8 @@ public sealed class DictationController(
     ITextInjectionService textInjection,
     IHistoryStore historyStore,
     ISettingsStore settingsStore,
-    IDictionaryStore? dictionaryStore = null)
+    IDictionaryStore? dictionaryStore = null,
+    TextEnhancementPipeline? enhancementPipeline = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
@@ -118,8 +120,16 @@ public sealed class DictationController(
                     return;
                 }
 
+                var enhancement = enhancementPipeline is null
+                    ? null
+                    : await enhancementPipeline.EnhanceAsync(finalText, settings, vocabulary, cancellationToken);
+                if (enhancement?.WarningMessage is not null)
+                {
+                    LastWarning = enhancement.WarningMessage;
+                }
+
                 State = DictationState.Inserting;
-                await textInjection.InsertAsync(finalText, cancellationToken);
+                await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
 
                 try
                 {
@@ -135,7 +145,15 @@ public sealed class DictationController(
                             status: TranscriptionHistoryStatus.Completed,
                             language: settings.Language,
                             modelPath: settings.ModelPath,
-                            audioFilePath: audio.FilePath),
+                            promptName: enhancement?.PromptName,
+                            enhancementDuration: enhancement?.EnhancementDuration,
+                            errorMessage: enhancement?.WarningMessage,
+                            audioFilePath: audio.FilePath,
+                            enhancedText: enhancement?.EnhancedText,
+                            enhancementProviderName: enhancement?.EnhancementProviderName,
+                            enhancementModelName: enhancement?.EnhancementModelName,
+                            aiRequestSystemMessage: enhancement?.SystemMessage,
+                            aiRequestUserMessage: enhancement?.UserMessage),
                         cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

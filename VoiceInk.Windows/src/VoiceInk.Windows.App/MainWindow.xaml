@@ -116,6 +116,85 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <StackPanel x:Name="EnhancementSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Enhancement" FontSize="24" FontWeight="SemiBold" />
+                        <CheckBox
+                            x:Name="EnhancementEnabledCheckBox"
+                            Content="Enable Enhancement" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="EnhancementEndpointTextBox"
+                                Grid.Column="0"
+                                Header="OpenAI-compatible endpoint"
+                                PlaceholderText="https://api.example.com/v1/chat/completions" />
+                            <TextBox
+                                x:Name="EnhancementModelTextBox"
+                                Grid.Column="1"
+                                Header="Model"
+                                PlaceholderText="model-name" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <PasswordBox
+                                x:Name="EnhancementApiKeyPasswordBox"
+                                Grid.Column="0"
+                                Header="API key" />
+                            <Button
+                                x:Name="SaveEnhancementKeyButton"
+                                Grid.Column="1"
+                                Content="Save Key"
+                                Click="SaveEnhancementKeyButton_Click" />
+                            <Button
+                                x:Name="ClearEnhancementKeyButton"
+                                Grid.Column="2"
+                                Content="Clear Key"
+                                Click="ClearEnhancementKeyButton_Click" />
+                        </Grid>
+                        <TextBlock
+                            x:Name="EnhancementKeyStatusTextBlock"
+                            Text="API key not checked"
+                            TextWrapping="Wrap" />
+                        <ComboBox
+                            x:Name="EnhancementPromptComboBox"
+                            Header="Prompt" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="EnhancementTimeoutTextBox"
+                                Grid.Column="0"
+                                Header="Timeout seconds"
+                                PlaceholderText="7" />
+                            <TextBox
+                                x:Name="ShortEnhancementThresholdTextBox"
+                                Grid.Column="1"
+                                Header="Short enhancement threshold"
+                                PlaceholderText="3" />
+                        </Grid>
+                        <StackPanel Spacing="8">
+                            <CheckBox
+                                x:Name="SkipShortEnhancementCheckBox"
+                                Content="Skip enhancement for short phrases" />
+                            <CheckBox
+                                x:Name="EnhancementRetryOnTimeoutCheckBox"
+                                Content="Retry on timeout" />
+                        </StackPanel>
+                        <Button
+                            x:Name="ApplyEnhancementSettingsButton"
+                            Content="Apply Enhancement Settings"
+                            Click="ApplyEnhancementSettingsButton_Click" />
+                    </StackPanel>
+
                     <StackPanel x:Name="AudioInputSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Audio Input" FontSize="24" FontWeight="SemiBold" />
                         <ComboBox

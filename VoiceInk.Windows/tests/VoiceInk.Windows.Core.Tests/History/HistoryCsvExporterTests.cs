@@ -21,15 +21,17 @@ public sealed class HistoryCsvExporterTests
             language: "en",
             modelPath: "C:\\Models\\ggml-base.en.bin",
             promptName: "Default",
-            enhancementDuration: TimeSpan.FromMilliseconds(250));
+            enhancementDuration: TimeSpan.FromMilliseconds(250),
+            enhancementProviderName: "openai-compatible",
+            enhancementModelName: "test-model");
 
         var csv = HistoryCsvExporter.Export([item]);
 
         Assert.StartsWith(
-            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message",
+            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Enhancement Provider,Enhancement Model,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message",
             csv);
         Assert.Contains(
-            "original text,final text,enhanced text,Default,C:\\Models\\ggml-base.en.bin,local-whisper,Completed,en,0.700,0.250,2026-05-24T12:00:00.0000000+00:00,4.000,",
+            "original text,final text,enhanced text,Default,C:\\Models\\ggml-base.en.bin,local-whisper,openai-compatible,test-model,Completed,en,0.700,0.250,2026-05-24T12:00:00.0000000+00:00,4.000,",
             csv);
     }
 
@@ -66,7 +68,7 @@ public sealed class HistoryCsvExporterTests
         var csv = HistoryCsvExporter.Export([item]);
 
         Assert.StartsWith(
-            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path",
+            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Enhancement Provider,Enhancement Model,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path",
             csv);
         Assert.Contains(@",2.000,,C:\Recordings\sample.wav", csv);
     }
@@ -105,7 +107,7 @@ public sealed class HistoryCsvExporterTests
         var csv = HistoryCsvExporter.Export([failed]);
 
         Assert.Contains(
-            ",local-whisper,Failed,auto,0.000,,1970-01-01T00:00:00.0000000+00:00,2.000,model failed",
+            ",local-whisper,,,Failed,auto,0.000,,1970-01-01T00:00:00.0000000+00:00,2.000,model failed",
             csv);
     }
 }

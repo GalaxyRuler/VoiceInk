@@ -62,6 +62,7 @@ The Windows MVP already has:
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
+- Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, original-text fallback, and successful enhancement insertion.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
@@ -99,7 +100,7 @@ macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarVie
 
 Implemented:
 
-- Sidebar navigation with Dashboard, Transcribe Audio, History, AI Models, Audio Input, Dictionary, Settings, and About / Open Source sections.
+- Sidebar navigation with Dashboard, Transcribe Audio, History, AI Models, Enhancement, Audio Input, Dictionary, Settings, and About / Open Source sections.
 - Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk commands.
 - Close-to-tray behavior for the main window, with explicit Quit from the tray.
 - Tray state presenter for recording/busy/loading labels and enabled states.
@@ -109,7 +110,7 @@ Windows gaps:
 
 - Dedicated settings pages beyond grouped existing shortcut/cleanup controls.
 - Dedicated multi-window History surface.
-- Transcribe Audio, Enhancement, Power Mode, and Permissions sections.
+- Power Mode and Permissions sections.
 - Tray submenus for model/provider/enhancement/language/audio/context/settings once those Windows subsystems exist.
 
 Tray-shell slice completed on 2026-05-24:
@@ -125,7 +126,7 @@ Navigation-settings-shell slice completed on 2026-05-25:
 - Move existing source-runnable controls into macOS-aligned active sections: Dashboard, History, AI Models, Audio Input, Dictionary, and Settings.
 - Replace the commercial `VoiceInk Pro` sidebar destination with `About / Open Source`.
 - Add local-only diagnostics actions under About/Open Source.
-- Keep Enhancement, Power Mode, and Permissions as later slices until their real Windows subsystems have usable controls.
+- Keep Power Mode and Permissions as later slices until their real Windows subsystems have usable controls.
 
 ### Floating Recorder
 
@@ -187,7 +188,7 @@ Windows gaps:
 
 - macOS-style formatting pass beyond cleanup preferences.
 - Prompt trigger detection.
-- AI enhancement and enhanced-vs-original paste selection.
+- Prompt-triggered toggle-enhancement shortcut and canceling in-flight enhancement after recording has already stopped.
 - Metrics persistence and views.
 - Dictation-controller history writes for failed recording/transcription sessions and canceled in-flight transcription/enhancement sessions.
 
@@ -227,14 +228,14 @@ Transcribe Audio slice completed on 2026-05-25:
 - Added a source-runnable in-memory queue with pending, processing, completed, failed, remove, retry, clear, start, and cancel behavior.
 - Convert/import selected media into app-owned WAV recordings before transcription, then run the existing local Whisper transcription path with dictionary prompt biasing and text cleanup.
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
-- Leave drag/drop, optional AI enhancement, per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.
+- Leave drag/drop, per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.
 
 Windows gaps:
 
 - Drag/drop import.
 - Per-file save/copy controls in the queue.
 - Persistent queue restoration across launches.
-- Optional enhancement in file transcription.
+- Per-file enhancement controls independent of the global Enhancement setting.
 
 ### Cloud Transcription
 
@@ -252,7 +253,7 @@ Windows gaps:
 
 macOS has providers for Cerebras, Groq, Gemini, Anthropic, OpenAI, OpenRouter, Mistral, Ollama, Local CLI, custom, and several speech providers where applicable. Enhancement supports prompt templates, assistant mode, custom prompts, trigger words, clipboard context, selected text context, screen/OCR context, retries, timeout, and output filtering.
 
-Planned Windows AI Enhancement MVP slice:
+AI Enhancement slice completed on 2026-05-25:
 
 - Add Core prompt catalog, prompt rendering, trigger detection, output filtering, and provider-agnostic enhancement orchestration.
 - Add an OpenAI-compatible chat-completions HTTP adapter with sanitized errors and no secret logging.
@@ -262,14 +263,13 @@ Planned Windows AI Enhancement MVP slice:
 
 Windows gaps:
 
-- Enhancement contracts.
 - Prompt template persistence.
-- OpenAI-compatible provider.
 - Ollama and Local CLI hooks.
 - Trigger detection.
 - Context capture.
-- Retry and timeout settings.
-- Original text fallback on enhancement failure.
+- Named provider cards and dynamic model lists.
+- Toggle-enhancement shortcut and recorder prompt picker activation.
+- AI re-enhance from History.
 
 ### Context
 
@@ -326,6 +326,7 @@ macOS history stores original and enhanced text, timestamp, audio duration, audi
 Implemented core:
 
 - SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, error message, and audio file path.
+- SQLite schema now stores enhancement provider/model and rendered AI request system/user messages for local diagnostics.
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
 - Core CSV export formatting for stored metadata, including audio file path.
 - Core selected-history retry service for existing audio files using current local transcription settings, dictionary prompt, replacements, and cleanup options.
@@ -337,7 +338,6 @@ Implemented core:
 
 Windows gaps:
 
-- Enhancement model and AI request messages.
 - Power Mode name/emoji.
 - Waveform/rate controls and AI re-enhance from the macOS audio player.
 - Batch actions.
