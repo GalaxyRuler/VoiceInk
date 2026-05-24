@@ -64,6 +64,43 @@ As an open-source project, you can build VoiceInk yourself by following the inst
 - [Contributing Guidelines](CONTRIBUTING.md) - How to contribute to VoiceInk
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Our community standards
 
+## Windows Fork Development
+
+The Windows implementation lives under `VoiceInk.Windows/` and is separate from the macOS SwiftUI app.
+
+### Requirements
+
+- Windows 11
+- .NET 10 SDK
+- Visual Studio with Windows App SDK support, or equivalent Build Tools
+- A local whisper.cpp-compatible `.bin` model file
+
+### Build
+
+```powershell
+dotnet restore VoiceInk.Windows\VoiceInk.Windows.sln
+dotnet build VoiceInk.Windows\VoiceInk.Windows.sln -c Debug -p:Platform=x64
+```
+
+### Run
+
+```powershell
+dotnet run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
+```
+
+After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording when that global hotkey is available.
+
+### Current Windows MVP Scope
+
+- WinUI 3 shell
+- Local whisper.cpp transcription through Whisper.net
+- Microphone capture
+- Clipboard-based text insertion into the active app
+- JSON settings and SQLite transcription history
+- Global `Ctrl+Alt+Space` recording toggle
+
+Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+
 ## Contributing
 
 This project is **not accepting pull requests** at this time. You're welcome to fork and modify VoiceInk for your own use.
