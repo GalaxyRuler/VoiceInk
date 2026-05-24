@@ -37,7 +37,7 @@
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Core/Dictionary/DictionaryBackup.cs`
 - Create: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Dictionary/DictionaryBackupTests.cs`
 
-- [ ] **Step 1: Write failing backup format tests**
+- [x] **Step 1: Write failing backup format tests**
 
 Create tests for:
 
@@ -72,7 +72,7 @@ Assert.Equal(["VoiceInk", "Whisper"], parsed.VocabularyWords);
 Assert.Equal(("Voice ink, Voicing", "VoiceInk"), parsed.WordReplacements.Single());
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -82,7 +82,7 @@ Run:
 
 Expected: build fails because `DictionaryBackup` does not exist.
 
-- [ ] **Step 3: Implement backup serializer**
+- [x] **Step 3: Implement backup serializer**
 
 Implement:
 
@@ -100,7 +100,7 @@ public sealed record DictionaryBackupData(
 
 `DictionaryBackup.Parse(string json)` reads the same shape, trims blank values, ignores blank vocabulary words, and ignores replacements with blank original or replacement text.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same filtered Core test command.
 
