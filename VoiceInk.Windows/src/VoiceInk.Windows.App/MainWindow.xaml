@@ -1,0 +1,38 @@
+<Window
+    x:Class="VoiceInk.Windows.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="VoiceInk for Windows">
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Text="VoiceInk for Windows"
+            FontSize="24"
+            FontWeight="SemiBold" />
+
+        <TextBox
+            x:Name="ModelPathTextBox"
+            Grid.Row="1"
+            Header="Local whisper model path"
+            PlaceholderText="C:\Models\ggml-base.en.bin" />
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+            <Button x:Name="StartButton" Content="Start Recording" Click="StartButton_Click" />
+            <Button x:Name="StopButton" Content="Stop And Insert" Click="StopButton_Click" IsEnabled="False" />
+        </StackPanel>
+
+        <TextBlock
+            x:Name="StatusTextBlock"
+            Grid.Row="3"
+            Text="Idle"
+            TextWrapping="Wrap" />
+    </Grid>
+</Window>
