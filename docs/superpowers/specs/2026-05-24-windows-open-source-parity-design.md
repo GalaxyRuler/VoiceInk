@@ -252,12 +252,22 @@ Cloud Transcription Windows MVP target:
 - Use the provider in dictation, Transcribe Audio, and history retry through the existing Core transcription interface.
 - Keep named provider cards, streaming providers, and provider-specific payloads for later slices.
 
+Cloud Transcription slice completed on 2026-05-25:
+
+- Added `OpenAI-compatible` as a default-off transcription provider selection in AI Models.
+- Added Core provider-aware settings, validation, transcription options, and history model metadata for dictation, Transcribe Audio, and history retry.
+- Added an Infrastructure multipart HTTP adapter that sends `file`, `model`, `response_format=json`, optional language, and optional vocabulary/prompt context to a user-supplied endpoint, with bearer auth from Windows Credential Manager.
+- Require HTTPS for remote cloud transcription endpoints, allow HTTP only for loopback/local development endpoints, and reject endpoint URLs that embed credentials or common key/token query parameters.
+- Added sanitized configuration, HTTP, and JSON response errors that do not include provider response bodies or API keys.
+- Added a router between local Whisper and OpenAI-compatible transcription so the existing UI workflows use the selected provider.
+- Added WinUI endpoint/model/key controls and key save/clear/status actions without storing API keys in JSON settings.
+
 Windows gaps:
 
 - Named provider cards.
 - Streaming adapters.
-- API key verification and secure local storage.
-- Provider-specific payloads and API-key verification.
+- Provider-specific payloads.
+- In-app provider test requests and API-key verification.
 
 ### AI Enhancement
 

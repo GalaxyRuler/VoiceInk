@@ -47,6 +47,9 @@ public sealed class JsonSettingsStoreTests
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
             HasCompletedOnboarding = true,
+            TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+            CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
+            CloudTranscriptionModel = "gpt-4o-transcribe",
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(

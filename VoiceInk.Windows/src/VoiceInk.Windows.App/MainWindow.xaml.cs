@@ -24,10 +24,12 @@ using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
 using VoiceInk.Windows.Core.Text;
+using VoiceInk.Windows.Core.Transcription;
 using VoiceInk.Windows.Infrastructure.Dictionary;
 using VoiceInk.Windows.Infrastructure.Enhancement;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
+using VoiceInk.Windows.Infrastructure.Transcription;
 using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.PowerMode;
@@ -72,6 +74,8 @@ public sealed partial class MainWindow : Window
     private readonly WindowsCredentialSecretStore secretStore;
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
+    private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
+    private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
     private readonly CancellationTokenSource windowLifetime = new();
@@ -102,6 +106,7 @@ public sealed partial class MainWindow : Window
     private bool isImportingModel;
     private bool isTranscribingAudioFiles;
     private bool isSavingEnhancementKey;
+    private bool isSavingCloudTranscriptionKey;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -138,14 +143,18 @@ public sealed partial class MainWindow : Window
         secretStore = new WindowsCredentialSecretStore();
         textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
         textEnhancementPipeline = new TextEnhancementPipeline(textEnhancementService, enhancementPrompts);
-        historyRetryService = new HistoryRetryService(
+        cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
+        transcriptionService = new TranscriptionServiceRouter(
             new WhisperNetTranscriptionService(),
+            cloudTranscriptionService);
+        historyRetryService = new HistoryRetryService(
+            transcriptionService,
             historyStore,
             settingsStore,
             dictionaryStore);
         audioFileTranscriptionService = new AudioFileTranscriptionService(
             new MediaFoundationAudioFileImportService(),
-            new WhisperNetTranscriptionService(),
+            transcriptionService,
             historyStore,
             settingsStore,
             dictionaryStore,
@@ -298,9 +307,20 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            if (string.IsNullOrWhiteSpace(ModelPathTextBox.Text))
+            var currentSettings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            var configurationError = TranscriptionConfiguration.ValidateRequiredSettings(currentSettings);
+            if (configurationError is not null)
             {
-                statusOverride = "Local whisper model path is required.";
+                statusOverride = configurationError;
+                return;
+            }
+
+            if (currentSettings.TranscriptionProvider == TranscriptionProviderKind.OpenAICompatible
+                && !await secretStore.HasSecretAsync(
+                    OpenAICompatibleCloudTranscriptionService.SecretName,
+                    windowLifetime.Token))
+            {
+                statusOverride = "Cloud transcription API key is required.";
                 return;
             }
 
@@ -470,6 +490,11 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private void TranscriptionProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshUiFromControllerState();
+    }
+
     private async void ImportModelButton_Click(object sender, RoutedEventArgs e)
     {
         await ImportLocalModelAsync();
@@ -483,6 +508,21 @@ public sealed partial class MainWindow : Window
     private void OpenModelDownloadsButton_Click(object sender, RoutedEventArgs e)
     {
         OpenModelDownloads();
+    }
+
+    private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyTranscriptionProviderSettingsAsync();
+    }
+
+    private async void SaveCloudTranscriptionKeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await SaveCloudTranscriptionKeyAsync();
+    }
+
+    private async void ClearCloudTranscriptionKeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ClearCloudTranscriptionKeyAsync();
     }
 
     private async void ApplyEnhancementSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -704,6 +744,9 @@ public sealed partial class MainWindow : Window
 
             localWhisperModels = settings.ImportedWhisperModels;
             RefreshModelChoices(settings.ModelPath);
+            TranscriptionProviderComboBox.SelectedIndex = TranscriptionProviderToSelectedIndex(settings.TranscriptionProvider);
+            CloudTranscriptionEndpointTextBox.Text = settings.CloudTranscriptionEndpoint;
+            CloudTranscriptionModelTextBox.Text = settings.CloudTranscriptionModel;
             RecordingHotkeyTextBox.Text = settings.Hotkey;
             SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
@@ -727,6 +770,7 @@ public sealed partial class MainWindow : Window
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+            await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
             await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
             var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
             await RefreshDictionaryAsync(windowLifetime.Token);
@@ -2386,6 +2430,112 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
+    private async Task ApplyTranscriptionProviderSettingsAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            var configurationError = TranscriptionConfiguration.ValidateRequiredSettings(settings);
+            if (configurationError is not null)
+            {
+                RefreshUiFromControllerState(configurationError);
+                return;
+            }
+
+            await settingsStore.SaveAsync(settings, windowLifetime.Token);
+            RefreshUiFromControllerState("Transcription provider settings updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Transcription provider settings update failed: {ex.Message}");
+        }
+    }
+
+    private async Task SaveCloudTranscriptionKeyAsync()
+    {
+        if (!settingsLoaded || IsOperationActive(includeCurrentCloudTranscriptionKeySave: false))
+        {
+            return;
+        }
+
+        var secret = CloudTranscriptionApiKeyPasswordBox.Password.Trim();
+        if (secret.Length == 0)
+        {
+            RefreshUiFromControllerState("Enter a cloud transcription API key to save");
+            return;
+        }
+
+        isSavingCloudTranscriptionKey = true;
+        var statusOverride = "Saving cloud transcription API key";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await secretStore.SaveSecretAsync(
+                OpenAICompatibleCloudTranscriptionService.SecretName,
+                secret,
+                windowLifetime.Token);
+            CloudTranscriptionApiKeyPasswordBox.Password = string.Empty;
+            await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
+            statusOverride = "Cloud transcription API key saved";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Cloud transcription API key save failed: {ex.Message}";
+        }
+        finally
+        {
+            isSavingCloudTranscriptionKey = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task ClearCloudTranscriptionKeyAsync()
+    {
+        if (!settingsLoaded || IsOperationActive(includeCurrentCloudTranscriptionKeySave: false))
+        {
+            return;
+        }
+
+        isSavingCloudTranscriptionKey = true;
+        var statusOverride = "Clearing cloud transcription API key";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await secretStore.DeleteSecretAsync(
+                OpenAICompatibleCloudTranscriptionService.SecretName,
+                windowLifetime.Token);
+            CloudTranscriptionApiKeyPasswordBox.Password = string.Empty;
+            await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
+            statusOverride = "Cloud transcription API key cleared";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Cloud transcription API key clear failed: {ex.Message}";
+        }
+        finally
+        {
+            isSavingCloudTranscriptionKey = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private async Task ApplyEnhancementSettingsAsync()
     {
         if (!settingsLoaded || IsOperationActive())
@@ -2653,6 +2803,9 @@ public sealed partial class MainWindow : Window
         {
             ModelPath = ModelPathTextBox.Text,
             ImportedWhisperModels = localWhisperModels.ToArray(),
+            TranscriptionProvider = SelectedTranscriptionProvider(),
+            CloudTranscriptionEndpoint = CloudTranscriptionEndpointTextBox.Text.Trim(),
+            CloudTranscriptionModel = CloudTranscriptionModelTextBox.Text.Trim(),
             Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
             SecondaryRecordingHotkey = includeShortcutFields
                 ? SecondaryRecordingHotkeyTextBox.Text.Trim()
@@ -2696,7 +2849,7 @@ public sealed partial class MainWindow : Window
     private DictationController CreateController(NAudioCaptureService captureService) =>
         new(
             captureService,
-            new WhisperNetTranscriptionService(),
+            transcriptionService,
             textInjectionService,
             historyStore,
             settingsStore,
@@ -2728,6 +2881,11 @@ public sealed partial class MainWindow : Window
             ? modelChoices[selectedIndex]
             : null;
     }
+
+    private TranscriptionProviderKind SelectedTranscriptionProvider() =>
+        TranscriptionProviderComboBox.SelectedIndex == 1
+            ? TranscriptionProviderKind.OpenAICompatible
+            : TranscriptionProviderKind.LocalWhisper;
 
     private Guid? SelectedEnhancementPromptId()
     {
@@ -3038,6 +3196,16 @@ public sealed partial class MainWindow : Window
             : "No API key stored";
     }
 
+    private async Task RefreshCloudTranscriptionKeyStatusAsync(CancellationToken cancellationToken)
+    {
+        var hasKey = await secretStore.HasSecretAsync(
+            OpenAICompatibleCloudTranscriptionService.SecretName,
+            cancellationToken);
+        CloudTranscriptionKeyStatusTextBlock.Text = hasKey
+            ? "Cloud transcription API key stored in Windows Credential Manager"
+            : "No cloud transcription API key stored";
+    }
+
     private static int EnhancementTimeoutSeconds(AppSettings settings) =>
         settings.EnhancementTimeoutSeconds > 0 ? settings.EnhancementTimeoutSeconds : 7;
 
@@ -3051,9 +3219,13 @@ public sealed partial class MainWindow : Window
         int.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out value)
         && value > 0;
 
+    private static int TranscriptionProviderToSelectedIndex(TranscriptionProviderKind provider) =>
+        provider == TranscriptionProviderKind.OpenAICompatible ? 1 : 0;
+
     private bool IsOperationActive(
         bool includeCurrentModelImport = true,
-        bool includeCurrentEnhancementKeySave = true) =>
+        bool includeCurrentEnhancementKeySave = true,
+        bool includeCurrentCloudTranscriptionKeySave = true) =>
         isStarting
         || isStopping
         || isCanceling
@@ -3063,6 +3235,7 @@ public sealed partial class MainWindow : Window
         || isOnboardingOpen
         || isTranscribingAudioFiles
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
+        || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
         || (includeCurrentModelImport && isImportingModel);
 
     private bool IsControllerBusy() =>
@@ -3283,6 +3456,8 @@ public sealed partial class MainWindow : Window
         var operationActive = IsOperationActive();
         var controllerBusy = IsControllerBusy();
         var modelControlsEnabled = CanEditModelLibrary();
+        var cloudTranscriptionControlsEnabled = modelControlsEnabled
+            && SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible;
         var enhancementControlsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
@@ -3327,10 +3502,18 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        ModelPathTextBox.IsEnabled = modelControlsEnabled;
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
+        TranscriptionProviderComboBox.IsEnabled = modelControlsEnabled;
+        CloudTranscriptionEndpointTextBox.IsEnabled = cloudTranscriptionControlsEnabled;
+        CloudTranscriptionModelTextBox.IsEnabled = cloudTranscriptionControlsEnabled;
+        CloudTranscriptionApiKeyPasswordBox.IsEnabled = cloudTranscriptionControlsEnabled;
+        SaveCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
+        ClearCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
+        ApplyTranscriptionProviderSettingsButton.IsEnabled = modelControlsEnabled;
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;

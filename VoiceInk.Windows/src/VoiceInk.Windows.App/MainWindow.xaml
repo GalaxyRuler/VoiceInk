@@ -30,7 +30,7 @@
                     <StackPanel x:Name="TranscribeAudioSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Transcribe Audio" FontSize="24" FontWeight="SemiBold" />
                         <TextBlock
-                            Text="Choose audio or video files, then process them sequentially with the current local model and cleanup settings."
+                            Text="Choose audio or video files, then process them sequentially with the current transcription provider and cleanup settings."
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button
@@ -114,6 +114,58 @@
                                 Content="Open GGML Model Downloads"
                                 Click="OpenModelDownloadsButton_Click" />
                         </StackPanel>
+                        <ComboBox
+                            x:Name="TranscriptionProviderComboBox"
+                            Header="Transcription Provider"
+                            SelectionChanged="TranscriptionProviderComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Local Whisper" />
+                            <ComboBoxItem Content="OpenAI-compatible" />
+                        </ComboBox>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="CloudTranscriptionEndpointTextBox"
+                                Grid.Column="0"
+                                Header="Cloud transcription endpoint"
+                                PlaceholderText="https://api.example.com/v1/audio/transcriptions" />
+                            <TextBox
+                                x:Name="CloudTranscriptionModelTextBox"
+                                Grid.Column="1"
+                                Header="Cloud transcription model"
+                                PlaceholderText="gpt-4o-transcribe" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <PasswordBox
+                                x:Name="CloudTranscriptionApiKeyPasswordBox"
+                                Grid.Column="0"
+                                Header="Cloud transcription API key" />
+                            <Button
+                                x:Name="SaveCloudTranscriptionKeyButton"
+                                Grid.Column="1"
+                                Content="Save Key"
+                                Click="SaveCloudTranscriptionKeyButton_Click" />
+                            <Button
+                                x:Name="ClearCloudTranscriptionKeyButton"
+                                Grid.Column="2"
+                                Content="Clear Key"
+                                Click="ClearCloudTranscriptionKeyButton_Click" />
+                        </Grid>
+                        <TextBlock
+                            x:Name="CloudTranscriptionKeyStatusTextBlock"
+                            Text="Cloud transcription API key not checked"
+                            TextWrapping="Wrap" />
+                        <Button
+                            x:Name="ApplyTranscriptionProviderSettingsButton"
+                            Content="Apply Transcription Provider Settings"
+                            Click="ApplyTranscriptionProviderSettingsButton_Click" />
                     </StackPanel>
 
                     <StackPanel x:Name="EnhancementSectionPanel" Spacing="12" Visibility="Collapsed">

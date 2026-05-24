@@ -25,9 +25,10 @@ public sealed class AudioFileTranscriptionService(
         try
         {
             var settings = await settingsStore.LoadAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(settings.ModelPath))
+            var configurationError = TranscriptionConfiguration.ValidateRequiredSettings(settings);
+            if (configurationError is not null)
             {
-                return new AudioFileTranscriptionResult(false, "Local whisper model path is required.");
+                return new AudioFileTranscriptionResult(false, configurationError);
             }
 
             var vocabulary = await dictionaryStore.ListVocabularyAsync(cancellationToken);
@@ -36,7 +37,7 @@ public sealed class AudioFileTranscriptionService(
             var audio = await audioFileImportService.PrepareAsync(sourcePath, recordingsDirectory, cancellationToken);
             var transcription = await transcriptionService.TranscribeAsync(
                 audio,
-                new TranscriptionOptions(settings.ModelPath, settings.Language, vocabularyPrompt),
+                TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
                 cancellationToken);
             var finalText = TextPostProcessor.Process(
                 transcription.Text,
@@ -65,7 +66,7 @@ public sealed class AudioFileTranscriptionService(
                 originalText: transcription.Text,
                 status: TranscriptionHistoryStatus.Completed,
                 language: settings.Language,
-                modelPath: settings.ModelPath,
+                modelPath: TranscriptionConfiguration.ModelMetadata(settings),
                 promptName: enhancement?.PromptName,
                 enhancementDuration: enhancement?.EnhancementDuration,
                 errorMessage: enhancement?.WarningMessage,

@@ -33,9 +33,10 @@ public sealed class HistoryRetryService(
         }
 
         var settings = await settingsStore.LoadAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(settings.ModelPath))
+        var configurationError = TranscriptionConfiguration.ValidateRequiredSettings(settings);
+        if (configurationError is not null)
         {
-            return new HistoryRetryResult(false, "Local whisper model path is required.");
+            return new HistoryRetryResult(false, configurationError);
         }
 
         var vocabulary = await dictionaryStore.ListVocabularyAsync(cancellationToken);
@@ -49,7 +50,7 @@ public sealed class HistoryRetryService(
             ChannelCount: 1);
         var transcription = await transcriptionService.TranscribeAsync(
             audio,
-            new TranscriptionOptions(settings.ModelPath, settings.Language, vocabularyPrompt),
+            TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
             cancellationToken);
         var finalText = TextPostProcessor.Process(
             transcription.Text,
@@ -75,7 +76,7 @@ public sealed class HistoryRetryService(
             originalText: transcription.Text,
             status: TranscriptionHistoryStatus.Completed,
             language: settings.Language,
-            modelPath: settings.ModelPath,
+            modelPath: TranscriptionConfiguration.ModelMetadata(settings),
             audioFilePath: source.AudioFilePath);
 
         await historyStore.SaveAsync(item, cancellationToken);

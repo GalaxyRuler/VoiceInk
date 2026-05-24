@@ -203,6 +203,51 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_PassesCloudTranscriptionOptionsAndSavesCloudModelMetadata()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            "VoiceInk",
+            TimeSpan.FromMilliseconds(150),
+            "openai-compatible"));
+        var history = new FakeHistoryStore();
+        var dictionary = new FakeDictionaryStore
+        {
+            Vocabulary =
+            [
+                new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+            ]
+        };
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
+                CloudTranscriptionModel = "gpt-4o-transcribe",
+                Language = "en"
+            }),
+            dictionary);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.NotNull(transcription.LastOptions);
+        Assert.Equal(TranscriptionProviderKind.OpenAICompatible, transcription.LastOptions.Provider);
+        Assert.Equal("https://api.example.test/v1/audio/transcriptions", transcription.LastOptions.CloudEndpoint);
+        Assert.Equal("gpt-4o-transcribe", transcription.LastOptions.CloudModel);
+        Assert.Equal("en", transcription.LastOptions.Language);
+        Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions.Prompt);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("openai-compatible", saved.ProviderName);
+        Assert.Equal("gpt-4o-transcribe", saved.ModelPath);
+    }
+
+    [Fact]
     public async Task StopAsync_InsertsEnhancedTextAndSavesEnhancementMetadata()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
@@ -435,6 +480,31 @@ public sealed class DictationControllerTests
         Assert.Equal(DictationState.Error, controller.State);
         Assert.Equal("Local whisper model path is required.", controller.LastError);
         Assert.False(capture.Started);
+        Assert.Equal(0, transcription.CallCount);
+    }
+
+    [Fact]
+    public async Task StartAsync_StartsRecordingForCloudProviderWithoutLocalModelPath()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "openai-compatible"));
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
+                CloudTranscriptionModel = "gpt-4o-transcribe"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Recording, controller.State);
+        Assert.True(capture.Started);
+        Assert.Null(controller.LastError);
         Assert.Equal(0, transcription.CallCount);
     }
 

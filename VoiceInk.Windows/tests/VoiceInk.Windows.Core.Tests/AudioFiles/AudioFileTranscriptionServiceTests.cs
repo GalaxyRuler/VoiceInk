@@ -35,6 +35,71 @@ public sealed class AudioFileTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_ReturnsFailureWhenCloudProviderConfigurationMissing()
+    {
+        var importer = new FakeAudioFileImportService();
+        var transcription = new FakeTranscriptionService();
+        var history = new FakeHistoryStore();
+        var service = new AudioFileTranscriptionService(
+            importer,
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions"
+            }));
+
+        var result = await service.TranscribeAsync("source.wav", "recordings", CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Cloud transcription endpoint and model are required.", result.Message);
+        Assert.Equal(0, importer.CallCount);
+        Assert.Equal(0, transcription.CallCount);
+        Assert.Empty(history.Items);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_UsesCloudProviderSettingsWithoutLocalModelPath()
+    {
+        var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 44100, 2);
+        var importer = new FakeAudioFileImportService(importedAudio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            "VoiceInk",
+            TimeSpan.FromMilliseconds(250),
+            "openai-compatible"));
+        var history = new FakeHistoryStore();
+        var dictionary = new FakeDictionaryStore
+        {
+            Vocabulary = [new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)]
+        };
+        var service = new AudioFileTranscriptionService(
+            importer,
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
+                CloudTranscriptionModel = "gpt-4o-transcribe",
+                Language = "en"
+            }),
+            dictionary);
+
+        var result = await service.TranscribeAsync("source.mp3", "recordings", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.NotNull(transcription.LastOptions);
+        Assert.Equal(TranscriptionProviderKind.OpenAICompatible, transcription.LastOptions.Provider);
+        Assert.Equal("https://api.example.test/v1/audio/transcriptions", transcription.LastOptions.CloudEndpoint);
+        Assert.Equal("gpt-4o-transcribe", transcription.LastOptions.CloudModel);
+        Assert.Equal("en", transcription.LastOptions.Language);
+        Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions.Prompt);
+        Assert.Equal("openai-compatible", result.Item?.ProviderName);
+        Assert.Equal("gpt-4o-transcribe", result.Item?.ModelPath);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_ImportsTranscribesCleansAndSavesHistory()
     {
         var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 44100, 2);

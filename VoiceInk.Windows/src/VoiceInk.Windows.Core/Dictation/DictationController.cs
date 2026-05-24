@@ -48,10 +48,12 @@ public sealed class DictationController(
             {
                 var settings = await settingsStore.LoadAsync(cancellationToken);
                 var powerModeResolution = await ResolvePowerModeAsync(settings, cancellationToken);
-                if (string.IsNullOrWhiteSpace(powerModeResolution.EffectiveSettings.ModelPath))
+                var configurationError = TranscriptionConfiguration.ValidateRequiredSettings(
+                    powerModeResolution.EffectiveSettings);
+                if (configurationError is not null)
                 {
                     State = DictationState.Error;
-                    LastError = "Local whisper model path is required.";
+                    LastError = configurationError;
                     return;
                 }
 
@@ -111,7 +113,7 @@ public sealed class DictationController(
                 State = DictationState.Transcribing;
                 var transcription = await transcriptionService.TranscribeAsync(
                     audio,
-                    new TranscriptionOptions(settings.ModelPath, settings.Language, vocabularyPrompt),
+                    TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
                     cancellationToken);
 
                 var finalText = TextPostProcessor.Process(
@@ -153,7 +155,7 @@ public sealed class DictationController(
                             originalText: transcription.Text,
                             status: TranscriptionHistoryStatus.Completed,
                             language: settings.Language,
-                            modelPath: settings.ModelPath,
+                            modelPath: TranscriptionConfiguration.ModelMetadata(settings),
                             promptName: enhancement?.PromptName,
                             enhancementDuration: enhancement?.EnhancementDuration,
                             errorMessage: enhancement?.WarningMessage,
@@ -233,13 +235,13 @@ public sealed class DictationController(
                             Guid.NewGuid(),
                             DateTimeOffset.UtcNow,
                             TranscriptionHistoryItem.CanceledTranscriptionText,
-                            ProviderName(settings),
+                            TranscriptionConfiguration.ProviderName(settings),
                             audio.Duration,
                             TimeSpan.Zero,
                             originalText: TranscriptionHistoryItem.CanceledTranscriptionText,
                             status: TranscriptionHistoryStatus.Canceled,
                             language: settings.Language,
-                            modelPath: settings.ModelPath,
+                            modelPath: TranscriptionConfiguration.ModelMetadata(settings),
                             audioFilePath: audio.FilePath,
                             powerModeName: powerModeResolution.PowerModeName,
                             powerModeEmoji: powerModeResolution.PowerModeEmoji),
@@ -277,13 +279,6 @@ public sealed class DictationController(
             lifecycleGate.Release();
         }
     }
-
-    private static string ProviderName(AppSettings settings) =>
-        settings.TranscriptionProvider switch
-        {
-            TranscriptionProviderKind.LocalWhisper => "local-whisper",
-            _ => settings.TranscriptionProvider.ToString()
-        };
 
     private async Task<PowerModeResolution> ResolvePowerModeAsync(
         AppSettings settings,

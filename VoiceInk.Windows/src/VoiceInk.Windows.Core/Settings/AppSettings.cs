@@ -23,6 +23,8 @@ public sealed record AppSettings
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;
+    public string CloudTranscriptionEndpoint { get; init; } = string.Empty;
+    public string CloudTranscriptionModel { get; init; } = string.Empty;
     public bool IsEnhancementEnabled { get; init; }
     public string EnhancementEndpoint { get; init; } = string.Empty;
     public string EnhancementModel { get; init; } = string.Empty;
@@ -56,6 +58,8 @@ public sealed record AppSettings
             AudioInputDeviceName == other.AudioInputDeviceName &&
             ImportedWhisperModels.SequenceEqual(other.ImportedWhisperModels) &&
             TranscriptionProvider == other.TranscriptionProvider &&
+            CloudTranscriptionEndpoint == other.CloudTranscriptionEndpoint &&
+            CloudTranscriptionModel == other.CloudTranscriptionModel &&
             IsEnhancementEnabled == other.IsEnhancementEnabled &&
             EnhancementEndpoint == other.EnhancementEndpoint &&
             EnhancementModel == other.EnhancementModel &&
@@ -94,6 +98,8 @@ public sealed record AppSettings
         }
 
         hash.Add(TranscriptionProvider);
+        hash.Add(CloudTranscriptionEndpoint);
+        hash.Add(CloudTranscriptionModel);
         hash.Add(IsEnhancementEnabled);
         hash.Add(EnhancementEndpoint);
         hash.Add(EnhancementModel);

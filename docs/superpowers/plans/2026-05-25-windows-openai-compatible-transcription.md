@@ -50,7 +50,7 @@ Record the Windows cloud transcription MVP contract:
 - Parse JSON `text`.
 - Keep named cards and streaming later.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -63,7 +63,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Option And Pipeline Red/Green
 
-- [ ] **Step 1: Add failing Core tests**
+- [x] **Step 1: Add failing Core tests**
 
 Cover:
 
@@ -72,7 +72,7 @@ Cover:
 - Transcribe Audio and History Retry use the same provider validation and options.
 - local provider still requires model path.
 
-- [ ] **Step 2: Run red Core tests**
+- [x] **Step 2: Run red Core tests**
 
 Run:
 
@@ -82,7 +82,7 @@ Run:
 
 Expected: compile/test failures until provider fields and validation exist.
 
-- [ ] **Step 3: Implement Core settings/options validation**
+- [x] **Step 3: Implement Core settings/options validation**
 
 Add:
 
@@ -91,13 +91,13 @@ Add:
 - `TranscriptionOptions.Provider`, `CloudEndpoint`, and `CloudModel`.
 - provider-aware required-configuration validation in dictation, Transcribe Audio, and history retry.
 
-- [ ] **Step 4: Verify Core tests pass**
+- [x] **Step 4: Verify Core tests pass**
 
 Run the same focused Core command. Expected: tests pass.
 
 ## Task 3: Infrastructure Provider Red/Green
 
-- [ ] **Step 1: Add failing HTTP adapter/router tests**
+- [x] **Step 1: Add failing HTTP adapter/router tests**
 
 Cover:
 
@@ -107,7 +107,7 @@ Cover:
 - non-success HTTP status returns sanitized status-only errors.
 - router dispatches local vs OpenAI-compatible provider by `TranscriptionOptions.Provider`.
 
-- [ ] **Step 2: Run red Infrastructure tests**
+- [x] **Step 2: Run red Infrastructure tests**
 
 Run:
 
@@ -117,7 +117,7 @@ Run:
 
 Expected: compile failure until provider/router exist.
 
-- [ ] **Step 3: Implement provider and router**
+- [x] **Step 3: Implement provider and router**
 
 Implement:
 
@@ -126,25 +126,25 @@ Implement:
 - `TranscriptionServiceRouter` with local and cloud services.
 - sanitized errors and no response-body logging.
 
-- [ ] **Step 4: Verify Infrastructure tests pass**
+- [x] **Step 4: Verify Infrastructure tests pass**
 
 Run the same focused Infrastructure command. Expected: tests pass.
 
 ## Task 4: WinUI Wiring
 
-- [ ] **Step 1: Add AI Models controls**
+- [x] **Step 1: Add AI Models controls**
 
 Add provider ComboBox, cloud endpoint/model fields, cloud API key PasswordBox, save/clear key buttons, key status, and apply provider settings.
 
-- [ ] **Step 2: Persist and load settings**
+- [x] **Step 2: Persist and load settings**
 
 Load `TranscriptionProvider`, `CloudTranscriptionEndpoint`, and `CloudTranscriptionModel`, save them through `SaveSettingsAsync`, and wire key save/clear through `WindowsCredentialSecretStore`.
 
-- [ ] **Step 3: Use router in dictation, Transcribe Audio, and retry**
+- [x] **Step 3: Use router in dictation, Transcribe Audio, and retry**
 
 Replace direct `WhisperNetTranscriptionService` injections with `TranscriptionServiceRouter(new WhisperNetTranscriptionService(), new OpenAICompatibleCloudTranscriptionService(...))`.
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run:
 
@@ -156,11 +156,11 @@ Expected: build succeeds with zero errors.
 
 ## Task 5: Docs, Review, And Commit
 
-- [ ] **Step 1: Update README and parity spec**
+- [x] **Step 1: Update README and parity spec**
 
 Document the source-runnable OpenAI-compatible transcription path and remaining named-provider/streaming gaps.
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 Run:
 
@@ -172,11 +172,11 @@ Run:
 
 Expected: focused tests pass, full tests pass, build succeeds.
 
-- [ ] **Step 3: Request review and fix Critical/Important findings**
+- [x] **Step 3: Request review and fix Critical/Important findings**
 
 Ask a subagent to review provider request construction, secret safety, settings persistence, and pipeline integration.
 
-- [ ] **Step 4: Commit implementation**
+- [x] **Step 4: Commit implementation**
 
 Run:
 
