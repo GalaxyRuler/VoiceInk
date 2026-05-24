@@ -166,11 +166,11 @@ feat(windows): add history search and delete controls
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-history-search-delete.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document history search and confirmed delete. Keep retry-last, audio playback, batch actions, and picker-based export as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -180,7 +180,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -190,11 +190,14 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from this plan commit through HEAD. Fix Critical and Important findings before proceeding.
 
-- [ ] **Step 5: Commit docs**
+Review result: no Critical or Important findings. Minor findings were addressed by updating
+the fresh verification count and adding `_` plus backslash LIKE escape coverage.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 

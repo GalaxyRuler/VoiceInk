@@ -69,6 +69,7 @@ The Windows MVP already has:
 - Recent history list/detail shell view for original, final, enhanced, status, timing, model, prompt, and error metadata.
 - Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`.
 - Paste-last final and enhanced-preferred history actions.
+- History search and confirmed single-item delete.
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
 
 Fresh baseline verification on 2026-05-24:
@@ -77,7 +78,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 71 Core tests and 22 Infrastructure tests passed after the shortcut slice.
+Result: 74 Core tests and 26 Infrastructure tests passed after the history search/delete slice.
 
 ## Parity Inventory
 
@@ -262,6 +263,7 @@ Implemented core:
 - Core CSV export formatting for stored metadata.
 - Shell recent-history list/detail and local CSV export.
 - Paste-last final and enhanced-preferred Core primitives with shell buttons.
+- Search and confirmed single-item delete in the shell.
 
 Windows gaps:
 
@@ -269,7 +271,7 @@ Windows gaps:
 - Enhancement model and AI request messages.
 - Power Mode name/emoji.
 - Retry-last flow.
-- Search, delete, picker-based export, and batch actions.
+- Picker-based export and batch actions.
 
 ### Metrics
 
@@ -363,10 +365,11 @@ Status on 2026-05-24:
 - Completed core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
+- Completed history search and confirmed single-item delete.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, and history search/delete/audio playback.
+- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, history batch actions, picker export, and audio playback.
 - Add focused tests and docs.
 
 ## Verification

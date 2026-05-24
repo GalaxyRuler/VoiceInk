@@ -317,7 +317,7 @@ public sealed class SqliteHistoryStoreTests
     }
 
     [Fact]
-    public async Task SearchAsync_EscapesLikeWildcards()
+    public async Task SearchAsync_EscapesPercentLikeWildcard()
     {
         using var temp = new TempDirectory();
         var dbPath = Path.Combine(temp.Path, "history.db");
@@ -343,6 +343,64 @@ public sealed class SqliteHistoryStoreTests
 
         var item = Assert.Single(results);
         Assert.Equal(literalPercent, item);
+    }
+
+    [Fact]
+    public async Task SearchAsync_EscapesUnderscoreLikeWildcard()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var literalUnderscore = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "literal voice_ink value",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var unrelated = literalUnderscore with
+        {
+            Id = Guid.NewGuid(),
+            Text = "literal voiceXink value",
+            OriginalText = "literal voiceXink value"
+        };
+
+        await store.SaveAsync(unrelated, CancellationToken.None);
+        await store.SaveAsync(literalUnderscore, CancellationToken.None);
+
+        var results = await store.SearchAsync("voice_ink", 10, CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal(literalUnderscore, item);
+    }
+
+    [Fact]
+    public async Task SearchAsync_EscapesBackslashLikeEscapeCharacter()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var literalBackslash = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "path C:\\Models\\ggml-base.en.bin",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var unrelated = literalBackslash with
+        {
+            Id = Guid.NewGuid(),
+            Text = "path C:Modelsggml-base.en.bin",
+            OriginalText = "path C:Modelsggml-base.en.bin"
+        };
+
+        await store.SaveAsync(unrelated, CancellationToken.None);
+        await store.SaveAsync(literalBackslash, CancellationToken.None);
+
+        var results = await store.SearchAsync(@"C:\Models", 10, CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal(literalBackslash, item);
     }
 
     [Fact]
