@@ -44,7 +44,8 @@ public sealed class JsonSettingsStoreTests
             OpenHistoryHotkey = "Ctrl+Alt+H",
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
             AudioInputDeviceNumber = 2,
-            AudioInputDeviceName = "USB Microphone"
+            AudioInputDeviceName = "USB Microphone",
+            HasCompletedOnboarding = true
         };
 
         await store.SaveAsync(expected, CancellationToken.None);

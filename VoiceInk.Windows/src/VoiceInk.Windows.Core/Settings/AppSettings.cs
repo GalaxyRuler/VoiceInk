@@ -4,6 +4,7 @@ namespace VoiceInk.Windows.Core.Settings;
 
 public sealed record AppSettings
 {
+    public bool HasCompletedOnboarding { get; init; }
     public string ModelPath { get; init; } = string.Empty;
     public string Language { get; init; } = "auto";
     public bool AppendTrailingSpace { get; init; }

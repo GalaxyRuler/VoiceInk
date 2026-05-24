@@ -12,6 +12,7 @@ using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
@@ -58,6 +59,7 @@ public sealed partial class MainWindow : Window
     private bool isPastingLast;
     private bool isRetryingHistory;
     private bool isQuickAdding;
+    private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
@@ -288,6 +290,11 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            if (isOnboardingOpen)
+            {
+                return;
+            }
+
             switch (e.Action)
             {
                 case GlobalShortcutAction.PasteLastTranscription:
@@ -491,6 +498,7 @@ public sealed partial class MainWindow : Window
 
             settingsLoaded = true;
             RefreshUiFromControllerState(audioInputWarning);
+            await ShowOnboardingIfNeededAsync(settings);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -503,6 +511,306 @@ public sealed partial class MainWindow : Window
         finally
         {
             suppressModelPathChanged = false;
+        }
+    }
+
+    private async Task ShowOnboardingIfNeededAsync(AppSettings settings)
+    {
+        if (settings.HasCompletedOnboarding || isOnboardingOpen || windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        isOnboardingOpen = true;
+        RefreshUiFromControllerState("Opening first-run setup");
+
+        try
+        {
+            await ShowFirstRunOnboardingDialogAsync();
+        }
+        finally
+        {
+            isOnboardingOpen = false;
+            RefreshUiFromControllerState();
+        }
+    }
+
+    private async Task ShowFirstRunOnboardingDialogAsync()
+    {
+        var modelPathTextBox = new TextBox
+        {
+            Header = "Local whisper model path",
+            PlaceholderText = "C:\\Models\\ggml-base.en.bin",
+            Text = ModelPathTextBox.Text
+        };
+        var browseModelButton = new Button
+        {
+            Content = "Browse .bin"
+        };
+        browseModelButton.Click += async (_, _) => await BrowseOnboardingModelAsync(modelPathTextBox);
+
+        var audioInputComboBox = new ComboBox
+        {
+            Header = "Microphone",
+            ItemsSource = audioInputChoices,
+            SelectedIndex = audioInputChoices.Count == 0
+                ? -1
+                : Math.Clamp(AudioInputComboBox.SelectedIndex, 0, audioInputChoices.Count - 1)
+        };
+        var microphoneSettingsButton = new Button
+        {
+            Content = "Open Windows Microphone Settings"
+        };
+        microphoneSettingsButton.Click += (_, _) => OpenWindowsMicrophoneSettings();
+
+        var shortcutTextBox = new TextBox
+        {
+            Header = "Primary shortcut",
+            PlaceholderText = "Ctrl+Alt+Space",
+            Text = RecordingHotkeyTextBox.Text
+        };
+        var statusTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
+        RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
+
+        modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
+        shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
+
+        var content = new StackPanel
+        {
+            Spacing = 12
+        };
+        content.Children.Add(new TextBlock
+        {
+            Text = "Set up the essentials once, then use the tray icon or shortcut from anywhere.",
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(modelPathTextBox);
+        content.Children.Add(browseModelButton);
+        content.Children.Add(audioInputComboBox);
+        content.Children.Add(microphoneSettingsButton);
+        content.Children.Add(shortcutTextBox);
+        content.Children.Add(new TextBlock
+        {
+            Text = "Try it after setup: click a text field, press your shortcut, speak, then press the shortcut again.",
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(statusTextBlock);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Welcome to VoiceInk",
+            PrimaryButtonText = "Save Setup",
+            SecondaryButtonText = "Skip For Now",
+            CloseButtonText = string.Empty,
+            DefaultButton = ContentDialogButton.Primary,
+            Content = content,
+            XamlRoot = Content.XamlRoot
+        };
+
+        dialog.PrimaryButtonClick += async (sender, args) =>
+        {
+            args.Cancel = true;
+            var deferral = args.GetDeferral();
+            try
+            {
+                var saved = await TrySaveOnboardingSetupAsync(
+                    modelPathTextBox.Text,
+                    shortcutTextBox.Text,
+                    audioInputComboBox.SelectedIndex,
+                    statusTextBlock);
+                if (saved)
+                {
+                    ((ContentDialog)sender).Hide();
+                }
+            }
+            catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+            {
+                statusTextBlock.Text = "Closing";
+            }
+            catch (Exception ex)
+            {
+                statusTextBlock.Text = $"Setup save failed: {ex.Message}";
+                RefreshUiFromControllerState(statusTextBlock.Text);
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        };
+
+        dialog.SecondaryButtonClick += async (sender, args) =>
+        {
+            args.Cancel = true;
+            var deferral = args.GetDeferral();
+            try
+            {
+                await MarkOnboardingCompleteAsync();
+                RefreshUiFromControllerState("First-run setup skipped");
+                ((ContentDialog)sender).Hide();
+            }
+            catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+            {
+                statusTextBlock.Text = "Closing";
+            }
+            catch (Exception ex)
+            {
+                statusTextBlock.Text = $"Setup skip failed: {ex.Message}";
+                RefreshUiFromControllerState(statusTextBlock.Text);
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    private async Task BrowseOnboardingModelAsync(TextBox modelPathTextBox)
+    {
+        try
+        {
+            var picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".bin");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+            {
+                return;
+            }
+
+            modelPathTextBox.Text = file.Path;
+            ModelPathTextBox.Text = file.Path;
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Model picker failed: {ex.Message}");
+        }
+    }
+
+    private async Task<bool> TrySaveOnboardingSetupAsync(
+        string modelPath,
+        string primaryShortcut,
+        int selectedAudioInputIndex,
+        TextBlock statusTextBlock)
+    {
+        var trimmedModelPath = modelPath.Trim();
+        var trimmedShortcut = primaryShortcut.Trim();
+        var setupStatus = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = trimmedModelPath,
+                Hotkey = trimmedShortcut
+            },
+            HasPhysicalAudioInputChoices());
+
+        if (!setupStatus.HasModelPath)
+        {
+            statusTextBlock.Text = "Choose a local whisper.cpp .bin model file, or skip for now.";
+            return false;
+        }
+
+        if (!File.Exists(trimmedModelPath))
+        {
+            statusTextBlock.Text = "Choose an existing whisper.cpp .bin model file, or skip for now.";
+            return false;
+        }
+
+        if (!setupStatus.HasPrimaryShortcut)
+        {
+            statusTextBlock.Text = "Set a primary shortcut, or skip for now.";
+            return false;
+        }
+
+        var previousSettings = await settingsStore.LoadAsync(windowLifetime.Token);
+        var previousModelPath = ModelPathTextBox.Text;
+        var previousRecordingHotkey = RecordingHotkeyTextBox.Text;
+        var previousAudioInputIndex = AudioInputComboBox.SelectedIndex;
+
+        ModelPathTextBox.Text = trimmedModelPath;
+        RecordingHotkeyTextBox.Text = trimmedShortcut;
+        if (selectedAudioInputIndex >= 0 && selectedAudioInputIndex < audioInputChoices.Count)
+        {
+            AudioInputComboBox.SelectedIndex = selectedAudioInputIndex;
+        }
+
+        var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: true);
+        settings = settings with
+        {
+            ModelPath = trimmedModelPath,
+            Hotkey = trimmedShortcut,
+            HasCompletedOnboarding = true
+        };
+
+        if (!TryReplaceGlobalHotkeys(settings, previousSettings))
+        {
+            statusTextBlock.Text = hotkeyRegistrationError ?? "Global shortcut unavailable.";
+            return false;
+        }
+
+        try
+        {
+            await settingsStore.SaveAsync(settings, windowLifetime.Token);
+        }
+        catch
+        {
+            TryReplaceGlobalHotkeys(previousSettings, rollbackSettings: null);
+            ModelPathTextBox.Text = previousModelPath;
+            RecordingHotkeyTextBox.Text = previousRecordingHotkey;
+            AudioInputComboBox.SelectedIndex = previousAudioInputIndex;
+            throw;
+        }
+
+        if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
+        {
+            RecreateController();
+        }
+
+        RefreshUiFromControllerState("First-run setup saved");
+        return true;
+    }
+
+    private async Task MarkOnboardingCompleteAsync()
+    {
+        var settings = await settingsStore.LoadAsync(windowLifetime.Token);
+        await settingsStore.SaveAsync(settings with { HasCompletedOnboarding = true }, windowLifetime.Token);
+    }
+
+    private void RefreshOnboardingStatus(TextBlock statusTextBlock, string modelPath, string primaryShortcut)
+    {
+        var status = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = modelPath,
+                Hotkey = primaryShortcut
+            },
+            HasPhysicalAudioInputChoices());
+
+        statusTextBlock.Text = status.CanCompleteSetup
+            ? "Ready to save setup."
+            : "Model path and primary shortcut are required to save setup.";
+    }
+
+    private bool HasPhysicalAudioInputChoices() =>
+        audioInputChoices.Any(choice => choice.DeviceNumber is not null);
+
+    private void OpenWindowsMicrophoneSettings()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-settings:privacy-microphone",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Microphone settings failed: {ex.Message}");
         }
     }
 
@@ -1842,7 +2150,13 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting || isStopping || isCanceling || isPastingLast || isRetryingHistory || isQuickAdding;
+        var operationActive = isStarting
+            || isStopping
+            || isCanceling
+            || isPastingLast
+            || isRetryingHistory
+            || isQuickAdding
+            || isOnboardingOpen;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
         var selectedReplacement = ReplacementListView.SelectedIndex >= 0 && ReplacementListView.SelectedIndex < replacementItems.Count

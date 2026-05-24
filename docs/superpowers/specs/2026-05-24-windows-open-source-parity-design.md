@@ -60,6 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
+- First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -83,7 +84,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 118 Core tests and 35 Infrastructure tests passed after the tray shell slice.
+Result: 121 Core tests and 35 Infrastructure tests passed after the first-run onboarding slice.
 
 ## Parity Inventory
 
@@ -339,20 +340,26 @@ Windows gaps:
 
 macOS first-run onboarding covers introduction, microphone/device/accessibility/screen/shortcut permissions, model download, and tutorial.
 
-Active onboarding slice on 2026-05-24:
+Implemented:
 
-- Add a Windows first-run setup dialog after settings and audio devices load.
-- Guide the user through local whisper model path selection, microphone privacy/settings, audio input selection, primary shortcut, and a short try-it path.
-- Persist onboarding completion locally in JSON settings.
-- Keep direct model download/import cards, permission health checks, and reset-onboarding settings as later model-management/settings work.
+- First-run setup dialog after settings and audio devices load.
+- Local JSON `HasCompletedOnboarding` flag.
+- Local whisper model path selection with `.bin` picker.
+- Windows microphone privacy settings link and audio input selection.
+- Primary shortcut setup and basic try-it instructions.
 
 Windows gaps:
 
-- First-run flow.
-- Microphone permission guidance.
-- Model import/download guidance.
-- Shortcut setup.
-- Basic usage tutorial.
+- Model catalog/download/import cards.
+- Permission health checks beyond opening Windows microphone settings.
+- Reset-onboarding setting.
+
+Onboarding slice completed on 2026-05-24:
+
+- Added a Windows first-run setup dialog after settings and audio devices load.
+- Guided local whisper model path selection, microphone privacy/settings, audio input selection, primary shortcut, and a short try-it path.
+- Persisted onboarding completion locally in JSON settings.
+- Kept direct model download/import cards, deeper permission health checks, and reset-onboarding settings as later model-management/settings work.
 
 ### Packaging
 
@@ -411,6 +418,7 @@ Status on 2026-05-24:
 - Completed Quick Add to Dictionary as a Windows MVP dialog adaptation of the macOS floating quick-add panel, with Vocabulary and Word Replacement modes.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed native Windows tray shell with show/hide, recording toggle, Quick Add, History, Quit, and close-to-tray behavior.
+- Completed first-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
 - Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
