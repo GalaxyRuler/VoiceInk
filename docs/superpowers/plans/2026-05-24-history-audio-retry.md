@@ -260,11 +260,11 @@ feat(windows): expose history audio controls
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: this plan
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document history audio path storage, playback/open controls, selected retry, and remaining gaps: waveform/rate controls, AI re-enhance, global retry-last shortcut, batch actions, and Power Mode metadata.
 
-- [ ] **Step 2: Full tests**
+- [x] **Step 2: Full tests**
 
 Run:
 
@@ -274,7 +274,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Debug x64 build**
+- [x] **Step 3: Debug x64 build**
 
 Run:
 
@@ -284,11 +284,13 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Critical/Important findings**
+- [x] **Step 4: Request review and fix Critical/Important findings**
 
 Review the slice from `a56b404` through HEAD. Fix Critical and Important findings before moving on.
 
-- [ ] **Step 5: Commit docs**
+Review result: no Critical, Important, or Minor findings. Reviewer verified the repo-local .NET 10 full test suite and Debug x64 build.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 

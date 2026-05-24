@@ -126,7 +126,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
 - Vocabulary prompt biasing for local Whisper transcription
-- Expanded history metadata for original text, final text, status, language, model path, prompt name, and enhancement timing
+- Expanded history metadata for original text, final text, status, language, model path, prompt name, enhancement timing, and audio file path
 - Shell controls for filler-word removal, punctuation cleanup, lowercase output, and trailing spaces
 - Shell controls for adding/removing vocabulary words and word replacements
 - Dictionary JSON import/export for vocabulary words and word replacements
@@ -134,9 +134,9 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Shell recent-history list/detail view for original, final, enhanced, status, timing, model, prompt, and error metadata
 - Picker-based CSV history export
 - Paste-last final and enhanced-preferred history actions in the shell
-- History search and confirmed single-item delete
+- History search, selected-row audio playback/open, selected-row retry, and confirmed single-item delete
 
-The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, quick add shortcuts, retry history actions, prioritized audio input failover, audio playback, or batch history actions. The Dictionary add/remove/import/export path, recent-history metadata view, paste-last actions, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, quick add shortcuts, global retry-last shortcut, prioritized audio input failover, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export path, recent-history metadata view, paste-last actions, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 

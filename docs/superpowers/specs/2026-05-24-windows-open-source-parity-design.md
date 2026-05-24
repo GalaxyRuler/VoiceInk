@@ -80,7 +80,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 84 Core tests and 30 Infrastructure tests passed after the dictionary import/export slice and review hardening.
+Result: 91 Core tests and 32 Infrastructure tests passed after the history audio/retry slice.
 
 ## Parity Inventory
 
@@ -261,22 +261,21 @@ macOS history stores original and enhanced text, timestamp, audio duration, audi
 
 Implemented core:
 
-- SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, and error message.
+- SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, error message, and audio file path.
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
-- Core CSV export formatting for stored metadata.
+- Core CSV export formatting for stored metadata, including audio file path.
+- Core selected-history retry service for existing audio files using current local transcription settings, dictionary prompt, replacements, and cleanup options.
 - Shell recent-history list/detail and picker-based CSV export.
 - Paste-last final and enhanced-preferred Core primitives with shell buttons.
-- Search and confirmed single-item delete in the shell.
+- Search, selected-row audio playback/open, selected-row retry, and confirmed single-item delete in the shell.
 
 Windows gaps:
 
-- Audio file URL and playback.
 - Enhancement model and AI request messages.
 - Power Mode name/emoji.
-- Retry-last flow.
+- Waveform/rate controls and AI re-enhance from the macOS audio player.
+- Global retry-last shortcut flow.
 - Batch actions.
-
-Next slice: persist Windows recording file paths in history, expose selected-row audio playback/open actions, and add selected-row retry through the local transcription pipeline. Waveform/rate controls, AI re-enhance, global retry-last shortcut, Power Mode metadata, and batch actions remain separate follow-on work.
 
 ### Metrics
 
@@ -374,16 +373,16 @@ Status on 2026-05-24:
 - Completed vocabulary prompt pass-through to local Whisper transcription.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
-- Completed core CSV formatting for history export.
+- Completed history audio file path persistence and core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
 - Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
-- Completed history search and confirmed single-item delete.
+- Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, history search, and confirmed single-item delete.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, retry-last, prioritized audio input failover, history batch actions, and audio playback.
+- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, global retry-last shortcut, prioritized audio input failover, waveform/rate controls, AI re-enhance, and history batch actions.
 - Add focused tests and docs.
 
 ## Verification
