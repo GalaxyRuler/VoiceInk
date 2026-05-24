@@ -98,6 +98,20 @@ If `dotnet` reports `NETSDK1045` because the system SDK is older than .NET 10, e
 & ..\.dotnet-sdk-10\dotnet.exe run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
 ```
 
+If the command exits without showing a window from a very long checkout path, the Windows App SDK bootstrapper may be hitting a path-length limit. Move the checkout to a shorter path, or map the long parent directory to a temporary drive with `subst` and run from there:
+
+```powershell
+cmd /c 'subst W: "C:\path\to\worktrees-parent"'
+Set-Location W:\your-checkout
+& W:\.dotnet-sdk-10\dotnet.exe run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
+```
+
+Remove the temporary drive mapping with:
+
+```powershell
+cmd /c "subst W: /D"
+```
+
 After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording when that global hotkey is available.
 
 ### Current Windows MVP Scope
