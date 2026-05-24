@@ -29,17 +29,29 @@ public sealed class SqliteHistoryStore : IHistoryStore
         using var command = connection.CreateCommand();
         command.CommandText = """
             INSERT INTO transcriptions
-                (id, created_at, created_at_utc_ticks, text, provider_name, audio_duration_ms, transcription_duration_ms)
+                (id, created_at, created_at_utc_ticks, text, original_text, enhanced_text, status,
+                 provider_name, language, model_path, prompt_name, audio_duration_ms,
+                 transcription_duration_ms, enhancement_duration_ms, error_message)
             VALUES
-                ($id, $created_at, $created_at_utc_ticks, $text, $provider_name, $audio_duration_ms, $transcription_duration_ms);
+                ($id, $created_at, $created_at_utc_ticks, $text, $original_text, $enhanced_text, $status,
+                 $provider_name, $language, $model_path, $prompt_name, $audio_duration_ms,
+                 $transcription_duration_ms, $enhancement_duration_ms, $error_message);
             """;
         command.Parameters.AddWithValue("$id", item.Id.ToString());
         command.Parameters.AddWithValue("$created_at", item.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$created_at_utc_ticks", item.CreatedAt.UtcDateTime.Ticks);
         command.Parameters.AddWithValue("$text", item.Text);
+        command.Parameters.AddWithValue("$original_text", item.OriginalText);
+        command.Parameters.AddWithValue("$enhanced_text", ValueOrDbNull(item.EnhancedText));
+        command.Parameters.AddWithValue("$status", StatusToStorage(item.Status));
         command.Parameters.AddWithValue("$provider_name", item.ProviderName);
+        command.Parameters.AddWithValue("$language", item.Language);
+        command.Parameters.AddWithValue("$model_path", ValueOrDbNull(item.ModelPath));
+        command.Parameters.AddWithValue("$prompt_name", ValueOrDbNull(item.PromptName));
         command.Parameters.AddWithValue("$audio_duration_ms", item.AudioDuration.TotalMilliseconds);
         command.Parameters.AddWithValue("$transcription_duration_ms", item.TranscriptionDuration.TotalMilliseconds);
+        command.Parameters.AddWithValue("$enhancement_duration_ms", ValueOrDbNull(item.EnhancementDuration?.TotalMilliseconds));
+        command.Parameters.AddWithValue("$error_message", ValueOrDbNull(item.ErrorMessage));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -61,7 +73,9 @@ public sealed class SqliteHistoryStore : IHistoryStore
 
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms
+            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
+                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
+                   model_path, prompt_name, enhancement_duration_ms, error_message
             FROM transcriptions
             ORDER BY created_at_utc_ticks DESC
             LIMIT $limit;
@@ -78,7 +92,15 @@ public sealed class SqliteHistoryStore : IHistoryStore
                 reader.GetString(2),
                 reader.GetString(3),
                 TimeSpan.FromMilliseconds(reader.GetDouble(4)),
-                TimeSpan.FromMilliseconds(reader.GetDouble(5))));
+                TimeSpan.FromMilliseconds(reader.GetDouble(5)),
+                originalText: reader.GetString(6),
+                enhancedText: GetNullableString(reader, 7),
+                status: ParseStatus(reader.GetString(8)),
+                language: reader.GetString(9),
+                modelPath: GetNullableString(reader, 10),
+                promptName: GetNullableString(reader, 11),
+                enhancementDuration: GetNullableTimeSpan(reader, 12),
+                errorMessage: GetNullableString(reader, 13)));
         }
 
         return items;
@@ -96,13 +118,85 @@ public sealed class SqliteHistoryStore : IHistoryStore
                 created_at TEXT NOT NULL,
                 created_at_utc_ticks INTEGER NOT NULL,
                 text TEXT NOT NULL,
+                original_text TEXT NOT NULL DEFAULT '',
+                enhanced_text TEXT NULL,
+                status TEXT NOT NULL DEFAULT 'completed',
                 provider_name TEXT NOT NULL,
+                language TEXT NOT NULL DEFAULT 'auto',
+                model_path TEXT NULL,
+                prompt_name TEXT NULL,
                 audio_duration_ms REAL NOT NULL,
-                transcription_duration_ms REAL NOT NULL
+                transcription_duration_ms REAL NOT NULL,
+                enhancement_duration_ms REAL NULL,
+                error_message TEXT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_transcriptions_created_at_utc_ticks
                 ON transcriptions(created_at_utc_ticks DESC);
             """;
         command.ExecuteNonQuery();
+
+        EnsureColumn(connection, "original_text", "original_text TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "enhanced_text", "enhanced_text TEXT NULL");
+        EnsureColumn(connection, "status", "status TEXT NOT NULL DEFAULT 'completed'");
+        EnsureColumn(connection, "language", "language TEXT NOT NULL DEFAULT 'auto'");
+        EnsureColumn(connection, "model_path", "model_path TEXT NULL");
+        EnsureColumn(connection, "prompt_name", "prompt_name TEXT NULL");
+        EnsureColumn(connection, "enhancement_duration_ms", "enhancement_duration_ms REAL NULL");
+        EnsureColumn(connection, "error_message", "error_message TEXT NULL");
     }
+
+    private static void EnsureColumn(SqliteConnection connection, string columnName, string definition)
+    {
+        if (ColumnExists(connection, columnName))
+        {
+            return;
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $"ALTER TABLE transcriptions ADD COLUMN {definition};";
+        command.ExecuteNonQuery();
+    }
+
+    private static bool ColumnExists(SqliteConnection connection, string columnName)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(transcriptions);";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static object ValueOrDbNull(string? value) =>
+        string.IsNullOrEmpty(value) ? DBNull.Value : value;
+
+    private static object ValueOrDbNull(double? value) =>
+        value is null ? DBNull.Value : value.Value;
+
+    private static string? GetNullableString(SqliteDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+
+    private static TimeSpan? GetNullableTimeSpan(SqliteDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : TimeSpan.FromMilliseconds(reader.GetDouble(ordinal));
+
+    private static string StatusToStorage(TranscriptionHistoryStatus status) =>
+        status switch
+        {
+            TranscriptionHistoryStatus.Pending => "pending",
+            TranscriptionHistoryStatus.Completed => "completed",
+            TranscriptionHistoryStatus.Failed => "failed",
+            TranscriptionHistoryStatus.Canceled => "canceled",
+            _ => "completed"
+        };
+
+    private static TranscriptionHistoryStatus ParseStatus(string value) =>
+        Enum.TryParse<TranscriptionHistoryStatus>(value, ignoreCase: true, out var status)
+            ? status
+            : TranscriptionHistoryStatus.Completed;
 }

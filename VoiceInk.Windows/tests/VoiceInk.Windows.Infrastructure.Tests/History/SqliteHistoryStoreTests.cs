@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Infrastructure.History;
 using Xunit;
@@ -163,6 +164,89 @@ public sealed class SqliteHistoryStoreTests
             () => store.ListRecentAsync(-1, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task SaveAndListRecentAsync_RoundTripsRichMetadata()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero),
+            "final text",
+            "local-whisper",
+            TimeSpan.FromSeconds(4),
+            TimeSpan.FromMilliseconds(700),
+            originalText: " original text ",
+            enhancedText: "enhanced text",
+            status: TranscriptionHistoryStatus.Completed,
+            language: "en",
+            modelPath: "C:\\Models\\ggml-base.en.bin",
+            promptName: "Default",
+            enhancementDuration: TimeSpan.FromMilliseconds(250),
+            errorMessage: null);
+
+        await store.SaveAsync(item, CancellationToken.None);
+
+        var loaded = await store.ListRecentAsync(1, CancellationToken.None);
+
+        Assert.Equal(item, Assert.Single(loaded));
+    }
+
+    [Fact]
+    public async Task ListRecentAsync_MigratesMvpSchemaAndMapsOriginalTextToText()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        CreateMvpHistoryDatabase(dbPath);
+
+        var store = new SqliteHistoryStore(dbPath);
+        var results = await store.ListRecentAsync(10, CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal("legacy text", item.Text);
+        Assert.Equal("legacy text", item.OriginalText);
+        Assert.Equal("legacy-provider", item.ProviderName);
+        Assert.Equal(TranscriptionHistoryStatus.Completed, item.Status);
+        Assert.Equal("auto", item.Language);
+        Assert.Null(item.EnhancedText);
+        Assert.Null(item.ModelPath);
+    }
+
+    [Fact]
+    public async Task SaveAndListRecentAsync_RoundTripsFailedAndCanceledStatuses()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var failed = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-1),
+            "Transcription Failed: model failed",
+            "local-whisper",
+            TimeSpan.FromSeconds(3),
+            TimeSpan.Zero,
+            status: TranscriptionHistoryStatus.Failed,
+            errorMessage: "model failed");
+        var canceled = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "The transcription was canceled.",
+            "local-whisper",
+            TimeSpan.FromSeconds(1),
+            TimeSpan.Zero,
+            status: TranscriptionHistoryStatus.Canceled);
+
+        await store.SaveAsync(failed, CancellationToken.None);
+        await store.SaveAsync(canceled, CancellationToken.None);
+
+        var results = await store.ListRecentAsync(10, CancellationToken.None);
+
+        Assert.Equal(TranscriptionHistoryStatus.Canceled, results[0].Status);
+        Assert.Equal(TranscriptionHistoryStatus.Failed, results[1].Status);
+        Assert.Equal("model failed", results[1].ErrorMessage);
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"voiceink-{Guid.NewGuid():N}");
@@ -179,5 +263,33 @@ public sealed class SqliteHistoryStoreTests
                 Directory.Delete(Path, recursive: true);
             }
         }
+    }
+
+    private static void CreateMvpHistoryDatabase(string dbPath)
+    {
+        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = dbPath,
+            Pooling = false
+        }.ToString());
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE transcriptions (
+                id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                created_at_utc_ticks INTEGER NOT NULL,
+                text TEXT NOT NULL,
+                provider_name TEXT NOT NULL,
+                audio_duration_ms REAL NOT NULL,
+                transcription_duration_ms REAL NOT NULL
+            );
+            INSERT INTO transcriptions
+                (id, created_at, created_at_utc_ticks, text, provider_name, audio_duration_ms, transcription_duration_ms)
+            VALUES
+                ('11111111-1111-1111-1111-111111111111', '2026-05-24T12:00:00.0000000+00:00', 638837136000000000, 'legacy text', 'legacy-provider', 1200, 340);
+            """;
+        command.ExecuteNonQuery();
     }
 }
