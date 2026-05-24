@@ -14,56 +14,110 @@ public sealed class DictationController(
 {
     public DictationState State { get; private set; } = DictationState.Idle;
     public string? LastError { get; private set; }
+    public string? LastWarning { get; private set; }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        LastError = null;
-        var settings = await settingsStore.LoadAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(settings.ModelPath))
+        if (State is DictationState.Recording or DictationState.Transcribing or DictationState.Inserting)
         {
-            State = DictationState.Error;
-            LastError = "Select a local whisper model before dictating.";
             return;
         }
 
-        State = DictationState.Recording;
-        await audioCapture.StartAsync(cancellationToken);
+        LastError = null;
+        LastWarning = null;
+
+        try
+        {
+            var settings = await settingsStore.LoadAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(settings.ModelPath))
+            {
+                State = DictationState.Error;
+                LastError = "Select a local whisper model before dictating.";
+                return;
+            }
+
+            State = DictationState.Recording;
+            await audioCapture.StartAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            State = DictationState.Idle;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            State = DictationState.Error;
+            LastError = ex.Message;
+        }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        var audio = await audioCapture.StopAsync(cancellationToken);
-        var settings = await settingsStore.LoadAsync(cancellationToken);
-
-        State = DictationState.Transcribing;
-        var transcription = await transcriptionService.TranscribeAsync(
-            audio,
-            new TranscriptionOptions(settings.ModelPath, settings.Language),
-            cancellationToken);
-
-        var finalText = TextPostProcessor.Process(
-            transcription.Text,
-            new TextPostProcessingOptions(settings.AppendTrailingSpace));
-
-        if (finalText.Length == 0)
+        if (State != DictationState.Recording)
         {
-            State = DictationState.Idle;
             return;
         }
 
-        State = DictationState.Inserting;
-        await textInjection.InsertAsync(finalText, cancellationToken);
+        LastError = null;
+        LastWarning = null;
 
-        await historyStore.SaveAsync(
-            new TranscriptionHistoryItem(
-                Guid.NewGuid(),
-                DateTimeOffset.UtcNow,
-                finalText,
-                transcription.ProviderName,
-                audio.Duration,
-                transcription.Duration),
-            cancellationToken);
+        try
+        {
+            var audio = await audioCapture.StopAsync(cancellationToken);
+            var settings = await settingsStore.LoadAsync(cancellationToken);
 
-        State = DictationState.Idle;
+            State = DictationState.Transcribing;
+            var transcription = await transcriptionService.TranscribeAsync(
+                audio,
+                new TranscriptionOptions(settings.ModelPath, settings.Language),
+                cancellationToken);
+
+            var finalText = TextPostProcessor.Process(
+                transcription.Text,
+                new TextPostProcessingOptions(settings.AppendTrailingSpace));
+
+            if (finalText.Length == 0)
+            {
+                State = DictationState.Idle;
+                return;
+            }
+
+            State = DictationState.Inserting;
+            await textInjection.InsertAsync(finalText, cancellationToken);
+
+            try
+            {
+                await historyStore.SaveAsync(
+                    new TranscriptionHistoryItem(
+                        Guid.NewGuid(),
+                        DateTimeOffset.UtcNow,
+                        finalText,
+                        transcription.ProviderName,
+                        audio.Duration,
+                        transcription.Duration),
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                State = DictationState.Idle;
+                throw;
+            }
+            catch (Exception ex)
+            {
+                LastWarning = $"History save failed: {ex.Message}";
+            }
+
+            State = DictationState.Idle;
+        }
+        catch (OperationCanceledException)
+        {
+            State = DictationState.Idle;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            State = DictationState.Error;
+            LastError = ex.Message;
+        }
     }
 }
