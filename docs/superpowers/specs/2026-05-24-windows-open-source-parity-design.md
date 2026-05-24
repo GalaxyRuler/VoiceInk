@@ -83,6 +83,10 @@ Fresh baseline verification on 2026-05-24:
 
 Result: 107 Core tests and 33 Infrastructure tests passed after the secondary recording shortcut slice.
 
+Active slice:
+
+- Dictionary edit/sorting will add macOS-style vocabulary/replacement sort controls and word-replacement edit/enabled-state management to the current Windows shell. A dedicated Dictionary page with the full macOS layout remains a later shell/navigation gap.
+
 ## Parity Inventory
 
 ### Shell And Navigation
