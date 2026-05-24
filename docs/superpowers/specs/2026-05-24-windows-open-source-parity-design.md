@@ -66,6 +66,8 @@ The Windows MVP already has:
 - Vocabulary prompt biasing for local Whisper transcription.
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
+- Recent history list/detail shell view for original, final, enhanced, status, timing, model, prompt, and error metadata.
+- Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`.
 
 Fresh baseline verification on 2026-05-24:
 
@@ -246,20 +248,20 @@ Windows gaps:
 
 macOS history stores original and enhanced text, timestamp, audio duration, audio file URL, transcription model, enhancement model, prompt name, transcription and enhancement duration, AI request messages, Power Mode name/emoji, and status pending/completed/failed/canceled. UI supports list/detail, retry, copy/paste, audio playback, inline history, and CSV export.
 
-Windows gaps:
-
-- UI for original vs enhanced text.
-- UI for failed/canceled rows.
-- Audio file URL and playback.
-- Enhancement model and AI request messages.
-- Power Mode name/emoji.
-- Retry and paste-last flows.
-- CSV export.
-
 Implemented core:
 
 - SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, and error message.
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
+- Core CSV export formatting for stored metadata.
+- Shell recent-history list/detail and local CSV export.
+
+Windows gaps:
+
+- Audio file URL and playback.
+- Enhancement model and AI request messages.
+- Power Mode name/emoji.
+- Retry and paste-last flows.
+- Search, delete, picker-based export, and batch actions.
 
 ### Metrics
 
@@ -350,9 +352,11 @@ Status on 2026-05-24:
 - Completed vocabulary prompt pass-through to local Whisper transcription.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
+- Completed core CSV formatting for history export.
+- Completed shell recent-history list/detail and local CSV export.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add and history metadata views.
+- Remaining for this slice: dictionary edit/import/export/quick-add and history search/delete/retry/audio playback.
 - Add focused tests and docs.
 
 ## Verification

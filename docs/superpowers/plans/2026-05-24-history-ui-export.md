@@ -32,7 +32,7 @@
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Core/History/HistoryCsvExporter.cs`
 - Create: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/History/HistoryCsvExporterTests.cs`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add tests with these behaviors:
 
@@ -100,7 +100,7 @@ public void Export_IncludesFailedAndCanceledMetadata()
 }
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -110,7 +110,7 @@ Run:
 
 Expected: build fails because `HistoryCsvExporter` does not exist.
 
-- [ ] **Step 3: Implement formatter**
+- [x] **Step 3: Implement formatter**
 
 Create a static exporter that:
 
@@ -119,13 +119,13 @@ Create a static exporter that:
 - Quotes values containing comma, double quote, CR, or LF.
 - Doubles embedded double quotes.
 
-- [ ] **Step 4: Run tests to verify GREEN**
+- [x] **Step 4: Run tests to verify GREEN**
 
 Run the same filtered Core test command.
 
 Expected: all `HistoryCsvExporterTests` pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -140,7 +140,7 @@ feat(windows): add history csv exporter
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add history controls**
+- [x] **Step 1: Add history controls**
 
 Add a `History` shell section with:
 
@@ -149,11 +149,11 @@ Add a `History` shell section with:
 - Recent transcription `ListView`.
 - Read-only detail fields for original, final, enhanced, and metadata.
 
-- [ ] **Step 2: Wire store and selection**
+- [x] **Step 2: Wire store and selection**
 
 Keep one `SqliteHistoryStore` instance on the window, pass it to `DictationController`, refresh the history list after initialization and after recording stop, and update detail text on selection.
 
-- [ ] **Step 3: Wire CSV export**
+- [x] **Step 3: Wire CSV export**
 
 Export the current loaded history rows to:
 
@@ -163,7 +163,7 @@ Export the current loaded history rows to:
 
 Set the status text to the exported path.
 
-- [ ] **Step 4: Build app**
+- [x] **Step 4: Build app**
 
 Run:
 
@@ -173,7 +173,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -189,11 +189,11 @@ feat(windows): show recent transcription history
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-history-ui-export.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document recent history list/detail and local CSV export. Keep search, delete, retry, audio playback, selected batch export, and polished split-view History page as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -203,7 +203,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -213,7 +213,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from the docs plan commit through HEAD. Fix Critical and Important findings before proceeding.
 

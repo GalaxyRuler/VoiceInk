@@ -26,11 +26,29 @@ public sealed class HistoryCsvExporterTests
         var csv = HistoryCsvExporter.Export([item]);
 
         Assert.StartsWith(
-            "Original Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message",
+            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message",
             csv);
         Assert.Contains(
-            "original text,enhanced text,Default,C:\\Models\\ggml-base.en.bin,local-whisper,Completed,en,0.700,0.250,2026-05-24T12:00:00.0000000+00:00,4.000,",
+            "original text,final text,enhanced text,Default,C:\\Models\\ggml-base.en.bin,local-whisper,Completed,en,0.700,0.250,2026-05-24T12:00:00.0000000+00:00,4.000,",
             csv);
+    }
+
+    [Fact]
+    public void Export_IncludesFinalTranscriptWhenEnhancedTextIsMissing()
+    {
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UnixEpoch,
+            "voiceink cleaned",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero,
+            originalText: "voice ink raw",
+            enhancedText: null);
+
+        var csv = HistoryCsvExporter.Export([item]);
+
+        Assert.Contains("voice ink raw,voiceink cleaned,,", csv);
     }
 
     [Fact]
