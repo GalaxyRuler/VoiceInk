@@ -52,6 +52,9 @@ public sealed class GlobalShortcutTests
     [InlineData("Ctrl+Alt")]
     [InlineData("Ctrl+Alt+Space+V")]
     [InlineData("Ctrl+Alt+Unknown")]
+    [InlineData("Ctrl++A")]
+    [InlineData("+Ctrl+A")]
+    [InlineData("Ctrl+A+")]
     public void TryParse_RejectsInvalidShortcuts(string value)
     {
         var parsed = GlobalShortcut.TryParse(value, out var shortcut, out var error);

@@ -27,9 +27,13 @@ public sealed record GlobalShortcut(
         string? keyName = null;
 
         var tokens = value
-            .Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(token => token.Length > 0)
+            .Split('+', StringSplitOptions.TrimEntries)
             .ToArray();
+        if (tokens.Any(token => token.Length == 0))
+        {
+            error = "A global shortcut must not contain empty parts.";
+            return false;
+        }
 
         foreach (var token in tokens)
         {

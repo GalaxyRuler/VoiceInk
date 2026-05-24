@@ -112,7 +112,7 @@ Remove the temporary drive mapping with:
 cmd /c "subst W: /D"
 ```
 
-After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording when that global hotkey is available.
+After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, and paste last enhanced.
 
 ### Current Windows MVP Scope
 
@@ -121,7 +121,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Microphone capture
 - Clipboard-based text insertion into the active app
 - JSON settings and SQLite transcription history
-- Global `Ctrl+Alt+Space` recording toggle
+- Configurable global key+modifier shortcuts for recording toggle, paste last, and paste last enhanced
 - Core dictionary models for vocabulary words and word replacements
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
@@ -133,7 +133,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`
 - Paste-last final and enhanced-preferred history actions in the shell
 
-The current shell does not yet expose full macOS-style Dictionary editing, import/export, quick add shortcuts, configurable global utility shortcuts, retry history actions, audio playback, or a picker-based CSV export location. The Dictionary add/remove path, recent-history metadata view, and paste-last actions are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, import/export, secondary/push-to-talk shortcuts, quick add shortcuts, retry history actions, audio playback, or a picker-based CSV export location. The Dictionary add/remove path, recent-history metadata view, paste-last actions, and configurable global key+modifier shortcuts are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 

@@ -269,7 +269,7 @@ public sealed partial class MainWindow : Window
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
             await RefreshDictionaryAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
-            RegisterGlobalHotkeys(settings);
+            TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
             RefreshUiFromControllerState();
@@ -595,7 +595,8 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            var settings = await CurrentSettingsAsync(windowLifetime.Token);
+            var persistedSettings = await settingsStore.LoadAsync(windowLifetime.Token);
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: true);
             var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
             if (shortcutRegistration.Errors.Count > 0)
             {
@@ -604,9 +605,36 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            await settingsStore.SaveAsync(settings, windowLifetime.Token);
-            RegisterGlobalHotkeys(settings);
-            RefreshUiFromControllerState(hotkeyRegistrationError ?? "Shortcuts updated");
+            if (!TryReplaceGlobalHotkeys(settings, persistedSettings))
+            {
+                RefreshUiFromControllerState(hotkeyRegistrationError);
+                return;
+            }
+
+            try
+            {
+                await settingsStore.SaveAsync(settings, windowLifetime.Token);
+            }
+            catch (Exception saveEx)
+            {
+                TryReplaceGlobalHotkeys(persistedSettings, rollbackSettings: null);
+                if (hotkeyRegistrationError is not null)
+                {
+                    throw new InvalidOperationException(
+                        $"Shortcut settings save failed: {saveEx.Message} {hotkeyRegistrationError}",
+                        saveEx);
+                }
+
+                throw;
+            }
+
+            if (hotkeyRegistrationError is not null)
+            {
+                RefreshUiFromControllerState(hotkeyRegistrationError);
+                return;
+            }
+
+            RefreshUiFromControllerState("Shortcuts updated");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -620,11 +648,13 @@ public sealed partial class MainWindow : Window
 
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await CurrentSettingsAsync(cancellationToken);
+        var settings = await CurrentSettingsAsync(cancellationToken, includeShortcutFields: false);
         await settingsStore.SaveAsync(settings, cancellationToken);
     }
 
-    private async Task<AppSettings> CurrentSettingsAsync(CancellationToken cancellationToken)
+    private async Task<AppSettings> CurrentSettingsAsync(
+        CancellationToken cancellationToken,
+        bool includeShortcutFields)
     {
         AppSettings settings;
         try
@@ -643,9 +673,13 @@ public sealed partial class MainWindow : Window
         return settings with
         {
             ModelPath = ModelPathTextBox.Text,
-            Hotkey = RecordingHotkeyTextBox.Text.Trim(),
-            PasteLastTranscriptionHotkey = PasteLastHotkeyTextBox.Text.Trim(),
-            PasteLastEnhancementHotkey = PasteLastEnhancedHotkeyTextBox.Text.Trim(),
+            Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
+            PasteLastTranscriptionHotkey = includeShortcutFields
+                ? PasteLastHotkeyTextBox.Text.Trim()
+                : settings.PasteLastTranscriptionHotkey,
+            PasteLastEnhancementHotkey = includeShortcutFields
+                ? PasteLastEnhancedHotkeyTextBox.Text.Trim()
+                : settings.PasteLastEnhancementHotkey,
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
@@ -662,29 +696,73 @@ public sealed partial class MainWindow : Window
             settingsStore,
             dictionaryStore);
 
-    private void RegisterGlobalHotkeys(AppSettings settings)
+    private bool TryReplaceGlobalHotkeys(AppSettings settings, AppSettings? rollbackSettings)
     {
         try
         {
-            DisposeGlobalHotkeyService();
-            hotkeyRegistrationError = null;
-
             var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
             if (shortcutRegistration.Errors.Count > 0)
             {
                 hotkeyRegistrationError = string.Join(" ", shortcutRegistration.Errors);
-                return;
+                return false;
             }
 
-            var windowHandle = WindowNative.GetWindowHandle(this);
-            hotkeyService = new GlobalHotkeyService(windowHandle);
-            hotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
-            hotkeyService.RegisterHotkeys(shortcutRegistration.Registrations);
+            ReplaceGlobalHotkeyService(shortcutRegistration.Registrations);
+            hotkeyRegistrationError = null;
+            return true;
         }
         catch (Exception ex)
         {
+            var originalError = $"Global shortcut unavailable: {ex.Message}";
+            hotkeyRegistrationError = originalError;
+
+            if (rollbackSettings is not null)
+            {
+                TryRestoreGlobalHotkeys(rollbackSettings, originalError);
+            }
+
+            return false;
+        }
+    }
+
+    private void TryRestoreGlobalHotkeys(AppSettings settings, string originalError)
+    {
+        try
+        {
+            var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
+            if (shortcutRegistration.Errors.Count == 0)
+            {
+                ReplaceGlobalHotkeyService(shortcutRegistration.Registrations);
+                hotkeyRegistrationError = originalError;
+                return;
+            }
+
             DisposeGlobalHotkeyService();
-            hotkeyRegistrationError = $"Global shortcut unavailable: {ex.Message}";
+            hotkeyRegistrationError = $"{originalError} Previous shortcuts could not be restored: {string.Join(" ", shortcutRegistration.Errors)}";
+        }
+        catch (Exception restoreEx)
+        {
+            DisposeGlobalHotkeyService();
+            hotkeyRegistrationError = $"{originalError} Previous shortcuts could not be restored: {restoreEx.Message}";
+        }
+    }
+
+    private void ReplaceGlobalHotkeyService(IReadOnlyList<GlobalShortcutRegistration> registrations)
+    {
+        DisposeGlobalHotkeyService();
+        var windowHandle = WindowNative.GetWindowHandle(this);
+        var newHotkeyService = new GlobalHotkeyService(windowHandle);
+        try
+        {
+            newHotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
+            newHotkeyService.RegisterHotkeys(registrations);
+            hotkeyService = newHotkeyService;
+        }
+        catch
+        {
+            newHotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
+            newHotkeyService.Dispose();
+            throw;
         }
     }
 

@@ -58,7 +58,7 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
-- Global `Ctrl+Alt+Space` toggle.
+- Configurable global key+modifier shortcuts for recording toggle, paste last, and paste last enhanced.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
@@ -69,6 +69,7 @@ The Windows MVP already has:
 - Recent history list/detail shell view for original, final, enhanced, status, timing, model, prompt, and error metadata.
 - Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`.
 - Paste-last final and enhanced-preferred history actions.
+- Shortcut parser validation and duplicate detection for supported global shortcut actions.
 
 Fresh baseline verification on 2026-05-24:
 
@@ -76,7 +77,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 33 tests passed.
+Result: 71 Core tests and 22 Infrastructure tests passed after the shortcut slice.
 
 ## Parity Inventory
 
@@ -107,14 +108,18 @@ Windows gaps:
 
 macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hybrid modes, paste last original, paste last enhanced, retry last transcription, cancel recording, open history, quick add to dictionary, toggle enhancement, per-Power Mode shortcuts, and mini-recorder numeric shortcuts.
 
+Implemented:
+
+- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, and paste last enhanced transcription.
+- Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
+
 Windows gaps:
 
-- Configurable shortcut model.
 - Press-and-hold key-up handling.
 - Secondary shortcut.
-- Utility shortcuts.
-- Shortcut validation and conflict handling.
-- Paste-last actions exist as shell buttons and Core primitives, but not yet configurable global shortcuts.
+- Retry-last, cancel-recording, open-history, quick-add, toggle-enhancement, and Power Mode shortcuts.
+- Shortcut recorder UI instead of text entry.
+- Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
 
 ### Transcription Pipeline
 
@@ -283,7 +288,7 @@ macOS settings cover shortcuts, middle-click recording, sound feedback, mute/pau
 
 Windows gaps:
 
-- Most settings beyond model path and default hotkey.
+- Most settings beyond model path, cleanup, and the supported global shortcut fields.
 - Windows equivalents for launch at login, tray behavior, audio device selection, privacy cleanup, backup, diagnostics, and paste method.
 
 ### Audio Input
@@ -358,9 +363,10 @@ Status on 2026-05-24:
 - Completed core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
+- Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add, global paste-last shortcuts, retry-last, and history search/delete/audio playback.
+- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, and history search/delete/audio playback.
 - Add focused tests and docs.
 
 ## Verification

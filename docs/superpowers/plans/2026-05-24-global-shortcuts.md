@@ -223,11 +223,11 @@ feat(windows): expose configurable shortcut settings
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-global-shortcuts.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document supported configurable shortcuts: recording toggle, paste last transcription, and paste last enhanced transcription. Keep secondary shortcuts, push-to-talk/hybrid key-up behavior, retry-last, cancel-recording, quick-add, toggle enhancement, and Power Mode shortcuts as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -237,7 +237,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -247,11 +247,15 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from this plan commit through HEAD. Fix Critical and Important findings before proceeding.
 
-- [ ] **Step 5: Commit docs**
+Review result: one Important transactional-registration finding was fixed by restoring
+persisted live shortcuts on registration/save failure. One Minor parser validation gap was
+fixed by rejecting empty shortcut parts.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 
