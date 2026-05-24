@@ -276,6 +276,8 @@ Windows gaps:
 - Retry-last flow.
 - Batch actions.
 
+Next slice: persist Windows recording file paths in history, expose selected-row audio playback/open actions, and add selected-row retry through the local transcription pipeline. Waveform/rate controls, AI re-enhance, global retry-last shortcut, Power Mode metadata, and batch actions remain separate follow-on work.
+
 ### Metrics
 
 macOS metrics include session metrics, model speed factors, enhancement timing, dashboard summaries, model performance panels, and system diagnostics.
