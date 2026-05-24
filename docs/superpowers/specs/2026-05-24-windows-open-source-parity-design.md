@@ -74,6 +74,10 @@ The Windows MVP already has:
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
 - Refreshable audio input list with System Default/custom microphone selection.
 
+Active slice:
+
+- Quick Add to Dictionary will be implemented as a WinUI dialog equivalent to the macOS floating quick-add panel. It will support Vocabulary and Word Replacement modes, open from a button or global shortcut, and reuse the existing dictionary store and validation rules.
+
 Fresh baseline verification on 2026-05-24:
 
 ```powershell
