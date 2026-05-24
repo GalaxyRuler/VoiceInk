@@ -28,7 +28,7 @@ Key macOS references inspected:
 - `VoiceInk/Views/History/*`: history list, detail, retry, copy, paste behavior.
 - `VoiceInk/Views/Metrics/*`: session and model performance views.
 - `VoiceInk/Views/Settings/SettingsView.swift`: general settings, shortcuts, privacy, backup, diagnostics.
-- `VoiceInk/Views/Onboarding/*`: first-run setup.
+- `VoiceInk/Views/Onboarding/*`: first-run welcome, permissions, model download, and try-it tutorial flow.
 
 ## Open-Source Rule
 
@@ -337,7 +337,14 @@ Windows gaps:
 
 ### Onboarding
 
-macOS first-run onboarding covers introduction, permissions, model download, and tutorial.
+macOS first-run onboarding covers introduction, microphone/device/accessibility/screen/shortcut permissions, model download, and tutorial.
+
+Active onboarding slice on 2026-05-24:
+
+- Add a Windows first-run setup dialog after settings and audio devices load.
+- Guide the user through local whisper model path selection, microphone privacy/settings, audio input selection, primary shortcut, and a short try-it path.
+- Persist onboarding completion locally in JSON settings.
+- Keep direct model download/import cards, permission health checks, and reset-onboarding settings as later model-management/settings work.
 
 Windows gaps:
 
