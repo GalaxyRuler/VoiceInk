@@ -63,6 +63,7 @@ The Windows MVP already has:
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
 - Shell add/remove controls for vocabulary words and word replacements.
+- Dictionary JSON import/export for vocabulary words and word replacements.
 - Vocabulary prompt biasing for local Whisper transcription.
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
@@ -79,7 +80,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 80 Core tests and 28 Infrastructure tests passed after the audio input selection slice.
+Result: 84 Core tests and 30 Infrastructure tests passed after the dictionary import/export slice and review hardening.
 
 ## Parity Inventory
 
@@ -137,17 +138,18 @@ macOS pipeline order:
 8. Paste original or enhanced text.
 9. Save history and metrics.
 
+Implemented core:
+
+- Hallucination marker cleanup, filler-word filtering, whitespace normalization, word replacements, punctuation cleanup, lowercase output, and trailing-space handling.
+- History model/storage/export support for completed, failed, and canceled statuses.
+
 Windows gaps:
 
-- Filler-word filtering.
-- Formatting.
-- Word replacements.
-- Punctuation cleanup.
-- Lowercase option.
-- Prompt detection.
-- Enhancement.
-- Metrics.
-- Canceled and failed history states.
+- macOS-style formatting pass beyond cleanup preferences.
+- Prompt trigger detection.
+- AI enhancement and enhanced-vs-original paste selection.
+- Metrics persistence and views.
+- Dictation-controller history writes for failed and canceled recording/transcription sessions.
 
 ### Model Management
 
@@ -246,11 +248,11 @@ Implemented core:
 - Vocabulary prompt rendering.
 - Vocabulary prompt pass-through to local Whisper transcription.
 - Shell add/delete controls for vocabulary and replacements.
+- Dictionary-only JSON backup export/import using macOS backup field names for vocabulary and word replacements.
 
 Windows gaps:
 
 - Dedicated macOS-style Dictionary page with edit flow, sorting controls, and richer guidance.
-- Import/export.
 - Quick add shortcut.
 
 ### History
@@ -366,6 +368,7 @@ Status on 2026-05-24:
 - Completed Core dictionary records, validation, vocabulary prompt rendering, and global longest-trigger-first replacement application.
 - Completed persistent JSON dictionary storage.
 - Completed basic shell add/remove controls for vocabulary and word replacements.
+- Completed dictionary JSON import/export for vocabulary words and word replacements.
 - Completed vocabulary prompt pass-through to local Whisper transcription.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
@@ -378,7 +381,7 @@ Status on 2026-05-24:
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, prioritized audio input failover, history batch actions, and audio playback.
+- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, retry-last, prioritized audio input failover, history batch actions, and audio playback.
 - Add focused tests and docs.
 
 ## Verification

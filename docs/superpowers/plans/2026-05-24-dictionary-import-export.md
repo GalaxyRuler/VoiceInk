@@ -255,7 +255,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Commit message:
 
@@ -271,11 +271,11 @@ feat(windows): expose dictionary import export
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-dictionary-import-export.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document dictionary JSON import/export. Keep edit flow, sorting controls, and quick-add shortcut as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -285,7 +285,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -295,11 +295,13 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from this plan commit through HEAD. Fix Critical and Important findings before proceeding.
 
-- [ ] **Step 5: Commit docs**
+Review result: no Critical or Important findings. Minor fixes applied for duplicate replacement-key backup export and stale pipeline gaps in the parity spec.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 
