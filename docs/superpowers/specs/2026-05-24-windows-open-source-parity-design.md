@@ -304,6 +304,15 @@ Windows gaps:
 
 macOS can use clipboard context, selected text, active window/screen OCR, browser URL, and app-specific context.
 
+Clipboard enhancement context Windows MVP target:
+
+- Add a default-off `UseClipboardContext` setting matching macOS `useClipboardContext`.
+- Capture current plain-text clipboard content only when enhancement is about to run, never modifying clipboard contents.
+- Add captured text to the enhancement system message inside `<CLIPBOARD_CONTEXT>` tags, matching the macOS prompt contract.
+- Gracefully skip context when the clipboard is empty, unavailable, non-text, or cannot be read.
+- Keep context capture local to the enhancement request and persist only the rendered AI request messages already saved for local History diagnostics.
+- Leave selected-text context, screen/OCR context, and browser URL context for later Windows context slices.
+
 Windows gaps:
 
 - Clipboard context capture.
