@@ -127,11 +127,11 @@ feat(windows): add history search and delete store methods
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add controls**
+- [x] **Step 1: Add controls**
 
 Add a history toolbar `TextBox` named `HistorySearchTextBox` with placeholder `Search transcriptions...`, a `Search` button, a `Clear` button, and a `Delete` button.
 
-- [ ] **Step 2: Wire behavior**
+- [x] **Step 2: Wire behavior**
 
 Implementation rules:
 
@@ -140,7 +140,7 @@ Implementation rules:
 - `Delete` requires a selected history row, opens a `ContentDialog` with `XamlRoot = Content.XamlRoot`, primary button `Delete`, secondary `Cancel`, and only deletes after primary result.
 - After delete, refresh the current search and clear details if the deleted row was selected.
 
-- [ ] **Step 3: Build**
+- [x] **Step 3: Build**
 
 Run:
 
@@ -150,7 +150,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Commit message:
 

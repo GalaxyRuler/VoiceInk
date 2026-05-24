@@ -223,6 +223,17 @@ public sealed partial class MainWindow : Window
         await RefreshHistoryWithStatusAsync("History refreshed");
     }
 
+    private async void SearchHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshHistoryWithStatusAsync("History search updated");
+    }
+
+    private async void ClearHistorySearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        HistorySearchTextBox.Text = string.Empty;
+        await RefreshHistoryWithStatusAsync("History search cleared");
+    }
+
     private async void ExportHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await ExportHistoryAsync();
@@ -236,6 +247,11 @@ public sealed partial class MainWindow : Window
     private async void PasteLastEnhancedButton_Click(object sender, RoutedEventArgs e)
     {
         await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
+    }
+
+    private async void DeleteHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await DeleteSelectedHistoryAsync();
     }
 
     private async void ApplyShortcutsButton_Click(object sender, RoutedEventArgs e)
@@ -456,7 +472,10 @@ public sealed partial class MainWindow : Window
             ? historyItems[HistoryListView.SelectedIndex].Id
             : (Guid?)null;
 
-        historyItems = await historyStore.ListRecentAsync(50, cancellationToken);
+        var searchText = HistorySearchTextBox.Text.Trim();
+        historyItems = string.IsNullOrWhiteSpace(searchText)
+            ? await historyStore.ListRecentAsync(50, cancellationToken)
+            : await historyStore.SearchAsync(searchText, 50, cancellationToken);
         HistoryListView.ItemsSource = historyItems
             .Select(HistoryListItem)
             .ToArray();
@@ -493,6 +512,48 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"History export failed: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteSelectedHistoryAsync()
+    {
+        if (HistoryListView.SelectedIndex < 0 || HistoryListView.SelectedIndex >= historyItems.Count)
+        {
+            RefreshUiFromControllerState("Select a transcription to delete");
+            return;
+        }
+
+        var item = historyItems[HistoryListView.SelectedIndex];
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Delete transcription?",
+            Content = "This action cannot be undone.",
+            PrimaryButtonText = "Delete",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            RefreshUiFromControllerState("Delete canceled");
+            return;
+        }
+
+        try
+        {
+            var deleted = await historyStore.DeleteAsync(item.Id, windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(deleted ? "Transcription deleted" : "Transcription was already deleted");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"History delete failed: {ex.Message}");
         }
     }
 
@@ -802,6 +863,9 @@ public sealed partial class MainWindow : Window
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
+        SearchHistoryButton.IsEnabled = settingsLoaded && !operationActive;
+        ClearHistorySearchButton.IsEnabled = settingsLoaded && !operationActive;
+        DeleteHistoryButton.IsEnabled = settingsLoaded && !operationActive;
 
         var stateStatus = StateToStatusText(controller.State);
         var idleHotkeyWarning = controller.State == DictationState.Idle && !operationActive
