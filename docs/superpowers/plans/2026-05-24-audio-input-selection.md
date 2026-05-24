@@ -38,7 +38,7 @@
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.Core/Settings/AppSettings.cs`
 - Modify: `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/Settings/JsonSettingsStoreTests.cs`
 
-- [ ] **Step 1: Write failing settings persistence test**
+- [x] **Step 1: Write failing settings persistence test**
 
 Extend `SaveAsync_PersistsSettings` so the expected settings include:
 
@@ -49,7 +49,7 @@ AudioInputDeviceName = "USB Microphone"
 
 The existing `Assert.Equal(expected, actual)` should prove the new fields round-trip through JSON.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -59,7 +59,7 @@ Run:
 
 Expected before implementation: build fails because `AudioInputDeviceNumber` and `AudioInputDeviceName` do not exist.
 
-- [ ] **Step 3: Add settings fields**
+- [x] **Step 3: Add settings fields**
 
 Add to `AppSettings`:
 
@@ -68,7 +68,7 @@ public int? AudioInputDeviceNumber { get; init; }
 public string AudioInputDeviceName { get; init; } = string.Empty;
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same filtered settings test.
 

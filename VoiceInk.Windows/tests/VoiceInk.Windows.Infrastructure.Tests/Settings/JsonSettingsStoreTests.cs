@@ -37,7 +37,9 @@ public sealed class JsonSettingsStoreTests
             RestoreClipboard = false,
             Hotkey = "Ctrl+Shift+D",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
-            PasteLastEnhancementHotkey = "Ctrl+Alt+E"
+            PasteLastEnhancementHotkey = "Ctrl+Alt+E",
+            AudioInputDeviceNumber = 2,
+            AudioInputDeviceName = "USB Microphone"
         };
 
         await store.SaveAsync(expected, CancellationToken.None);
