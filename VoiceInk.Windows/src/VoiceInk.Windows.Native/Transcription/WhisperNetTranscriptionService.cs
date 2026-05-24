@@ -23,17 +23,25 @@ public sealed class WhisperNetTranscriptionService : ITranscriptionService
             throw new FileNotFoundException("The recorded audio file was not found.", audio.FilePath);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var stopwatch = Stopwatch.StartNew();
         var text = new StringBuilder();
 
         using var factory = WhisperFactory.FromPath(options.ModelPath);
         var builder = factory.CreateBuilder();
-        if (!string.Equals(options.Language, "auto", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(options.Language, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.WithLanguageDetection();
+        }
+        else
         {
             builder.WithLanguage(options.Language);
         }
 
         using var processor = builder.Build();
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         await using var stream = File.OpenRead(audio.FilePath);
         await foreach (var segment in processor.ProcessAsync(stream, cancellationToken))
