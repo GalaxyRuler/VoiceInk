@@ -96,21 +96,25 @@ public static class DictionaryService
     public static string ApplyReplacements(string text, IEnumerable<WordReplacement> replacements)
     {
         var result = text;
-        var enabledReplacements = replacements
+        var replacementVariants = replacements
             .Where(replacement => replacement.IsEnabled)
-            .OrderByDescending(replacement => replacement.OriginalText.Length)
+            .SelectMany(
+                (replacement, replacementIndex) => SplitCommaSeparated(replacement.OriginalText)
+                    .Select((variant, variantIndex) => new
+                    {
+                        Variant = variant,
+                        replacement.ReplacementText,
+                        ReplacementIndex = replacementIndex,
+                        VariantIndex = variantIndex
+                    }))
+            .OrderByDescending(replacement => replacement.Variant.Length)
+            .ThenBy(replacement => replacement.ReplacementIndex)
+            .ThenBy(replacement => replacement.VariantIndex)
             .ToArray();
 
-        foreach (var replacement in enabledReplacements)
+        foreach (var replacement in replacementVariants)
         {
-            var variants = SplitCommaSeparated(replacement.OriginalText)
-                .OrderByDescending(variant => variant.Length)
-                .ToArray();
-
-            foreach (var variant in variants)
-            {
-                result = ReplaceVariant(result, variant, replacement.ReplacementText);
-            }
+            result = ReplaceVariant(result, replacement.Variant, replacement.ReplacementText);
         }
 
         return result;

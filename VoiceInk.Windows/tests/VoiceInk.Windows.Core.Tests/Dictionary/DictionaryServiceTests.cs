@@ -98,6 +98,20 @@ public sealed class DictionaryServiceTests
     }
 
     [Fact]
+    public void ApplyReplacements_UsesLongestVariantFirstAcrossReplacementGroups()
+    {
+        var replacements = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "cat, hippopotamus", "animal", Now, IsEnabled: true),
+            new WordReplacement(Guid.NewGuid(), "black cat", "panther", Now, IsEnabled: true)
+        };
+
+        var result = DictionaryService.ApplyReplacements("the black cat sleeps", replacements);
+
+        Assert.Equal("the panther sleeps", result);
+    }
+
+    [Fact]
     public void ApplyReplacements_UsesCaseInsensitiveWordBoundariesForSpacedLanguages()
     {
         var replacements = new[]
