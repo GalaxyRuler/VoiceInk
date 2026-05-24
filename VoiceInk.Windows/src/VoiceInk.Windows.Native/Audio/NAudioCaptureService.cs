@@ -5,7 +5,7 @@ using VoiceInk.Windows.Core.Services;
 
 namespace VoiceInk.Windows.Native.Audio;
 
-public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCaptureService, IDisposable
+public sealed class NAudioCaptureService(string recordingsDirectory, int? deviceNumber = null) : IAudioCaptureService, IDisposable
 {
     private readonly object writerLock = new();
 
@@ -38,6 +38,11 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
                 WaveFormat = new WaveFormat(16000, 16, 1),
                 BufferMilliseconds = 50
             };
+            if (deviceNumber is not null)
+            {
+                waveIn.DeviceNumber = deviceNumber.Value;
+            }
+
             writer = new WaveFileWriter(currentFilePath, waveIn.WaveFormat);
 
             waveIn.DataAvailable += OnDataAvailable;

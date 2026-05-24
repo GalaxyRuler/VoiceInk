@@ -91,7 +91,7 @@ feat(windows): add audio input settings
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Native/Audio/NAudioInputDeviceProvider.cs`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.Native/Audio/NAudioCaptureService.cs`
 
-- [ ] **Step 1: Add Core model and provider contract**
+- [x] **Step 1: Add Core model and provider contract**
 
 Create:
 
@@ -114,7 +114,7 @@ public interface IAudioInputDeviceProvider
 }
 ```
 
-- [ ] **Step 2: Implement NAudio enumeration**
+- [x] **Step 2: Implement NAudio enumeration**
 
 Create `NAudioInputDeviceProvider`:
 
@@ -144,7 +144,7 @@ public sealed class NAudioInputDeviceProvider : IAudioInputDeviceProvider
 }
 ```
 
-- [ ] **Step 3: Add selected device support to capture service**
+- [x] **Step 3: Add selected device support to capture service**
 
 Change the constructor to:
 
@@ -163,7 +163,7 @@ if (deviceNumber is not null)
 
 Keep the default path unchanged when `deviceNumber` is null.
 
-- [ ] **Step 4: Build**
+- [x] **Step 4: Build**
 
 Run:
 
