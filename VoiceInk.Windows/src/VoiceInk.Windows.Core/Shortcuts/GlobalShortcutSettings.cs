@@ -42,6 +42,14 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        AddRegistration(
+            settings.CancelRecordingHotkey,
+            GlobalShortcutAction.CancelRecording,
+            "Cancel Recording",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }

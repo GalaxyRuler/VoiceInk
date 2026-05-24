@@ -68,6 +68,69 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task CancelAsync_StopsCaptureAndSavesCanceledHistoryWithoutTranscribingOrInserting()
+    {
+        var audio = new AudioCaptureResult(@"C:\Recordings\canceled.wav", TimeSpan.FromSeconds(3), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                Language = "en"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.CancelAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Idle, controller.State);
+        Assert.False(capture.Started);
+        Assert.Equal(1, capture.StopCount);
+        Assert.Equal(0, transcription.CallCount);
+        Assert.Equal(0, insertion.InsertCount);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal(TranscriptionHistoryItem.CanceledTranscriptionText, saved.Text);
+        Assert.Equal(TranscriptionHistoryItem.CanceledTranscriptionText, saved.OriginalText);
+        Assert.Equal(TranscriptionHistoryStatus.Canceled, saved.Status);
+        Assert.Equal("local-whisper", saved.ProviderName);
+        Assert.Equal(TimeSpan.FromSeconds(3), saved.AudioDuration);
+        Assert.Equal(TimeSpan.Zero, saved.TranscriptionDuration);
+        Assert.Equal("en", saved.Language);
+        Assert.Equal("ggml-base.en.bin", saved.ModelPath);
+        Assert.Equal(@"C:\Recordings\canceled.wav", saved.AudioFilePath);
+    }
+
+    [Fact]
+    public async Task CancelAsync_DoesNothingWhenNotRecording()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper"));
+        var history = new FakeHistoryStore();
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.CancelAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Idle, controller.State);
+        Assert.Equal(0, capture.StopCount);
+        Assert.Equal(0, transcription.CallCount);
+        Assert.Empty(history.Items);
+    }
+
+    [Fact]
     public async Task StopAsync_AppliesCleanupSettingsAndDictionaryReplacementsToInsertedAndHistoryText()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);

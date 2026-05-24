@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
+using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
 
@@ -165,6 +166,83 @@ public sealed class DictationController(
             lifecycleGate.Release();
         }
     }
+
+    public async Task CancelAsync(CancellationToken cancellationToken)
+    {
+        if (!await lifecycleGate.WaitAsync(0, cancellationToken))
+        {
+            return;
+        }
+
+        try
+        {
+            if (State != DictationState.Recording)
+            {
+                return;
+            }
+
+            LastError = null;
+            LastWarning = null;
+
+            try
+            {
+                // Always release recorder resources before honoring caller cancellation.
+                var audio = await audioCapture.StopAsync(CancellationToken.None);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var settings = await settingsStore.LoadAsync(cancellationToken);
+                try
+                {
+                    await historyStore.SaveAsync(
+                        new TranscriptionHistoryItem(
+                            Guid.NewGuid(),
+                            DateTimeOffset.UtcNow,
+                            TranscriptionHistoryItem.CanceledTranscriptionText,
+                            ProviderName(settings),
+                            audio.Duration,
+                            TimeSpan.Zero,
+                            originalText: TranscriptionHistoryItem.CanceledTranscriptionText,
+                            status: TranscriptionHistoryStatus.Canceled,
+                            language: settings.Language,
+                            modelPath: settings.ModelPath,
+                            audioFilePath: audio.FilePath),
+                        cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    State = DictationState.Idle;
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    LastWarning = $"History save failed: {ex.Message}";
+                }
+
+                State = DictationState.Idle;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                State = DictationState.Idle;
+                throw;
+            }
+            catch (Exception ex)
+            {
+                State = DictationState.Error;
+                LastError = ex.Message;
+            }
+        }
+        finally
+        {
+            lifecycleGate.Release();
+        }
+    }
+
+    private static string ProviderName(AppSettings settings) =>
+        settings.TranscriptionProvider switch
+        {
+            TranscriptionProviderKind.LocalWhisper => "local-whisper",
+            _ => settings.TranscriptionProvider.ToString()
+        };
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {

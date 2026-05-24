@@ -87,7 +87,8 @@ public sealed class GlobalShortcutTests
             Hotkey = "Ctrl+Alt+Space",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
-            RetryLastTranscriptionHotkey = "Ctrl+Alt+R"
+            RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
+            CancelRecordingHotkey = "Ctrl+Alt+C"
         };
 
         var result = GlobalShortcutSettings.BuildRegistrations(settings);
@@ -114,6 +115,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.RetryLastTranscription, item.Action);
                 Assert.Equal("Ctrl+Alt+R", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.CancelRecording, item.Action);
+                Assert.Equal("Ctrl+Alt+C", item.Shortcut.DisplayText);
             });
     }
 
@@ -170,5 +176,19 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Retry Last Transcription already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateCancelRecordingAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            CancelRecordingHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Cancel Recording already uses Ctrl+Alt+Space.");
     }
 }

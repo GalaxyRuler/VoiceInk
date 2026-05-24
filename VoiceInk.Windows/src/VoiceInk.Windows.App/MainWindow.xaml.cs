@@ -49,6 +49,7 @@ public sealed partial class MainWindow : Window
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
+    private bool isCanceling;
     private bool isPastingLast;
     private bool isRetryingHistory;
     private bool settingsLoaded;
@@ -95,6 +96,11 @@ public sealed partial class MainWindow : Window
         await StopCurrentRecordingAsync();
     }
 
+    private async void CancelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CancelCurrentRecordingAsync();
+    }
+
     private async void RefreshAudioInputsButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshAudioInputDevicesWithStatusAsync();
@@ -107,7 +113,7 @@ public sealed partial class MainWindow : Window
 
     private async Task StartCurrentRecordingAsync()
     {
-        if (isStarting || isStopping || !settingsLoaded)
+        if (isStarting || isStopping || isCanceling || !settingsLoaded)
         {
             return;
         }
@@ -151,7 +157,12 @@ public sealed partial class MainWindow : Window
 
     private async Task StopCurrentRecordingAsync()
     {
-        if (isStarting || isStopping || controller.State != DictationState.Recording)
+        if (isStarting
+            || isStopping
+            || isCanceling
+            || isPastingLast
+            || isRetryingHistory
+            || controller.State != DictationState.Recording)
         {
             return;
         }
@@ -192,6 +203,38 @@ public sealed partial class MainWindow : Window
         await StartCurrentRecordingAsync();
     }
 
+    private async Task CancelCurrentRecordingAsync()
+    {
+        if (isStarting || isStopping || isCanceling || controller.State != DictationState.Recording)
+        {
+            return;
+        }
+
+        var statusOverride = "Canceling recording";
+        isCanceling = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await controller.CancelAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            statusOverride = controller.LastWarning ?? "Recording canceled";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Cancel failed: {ex.Message}";
+        }
+        finally
+        {
+            isCanceling = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private async void HotkeyService_HotkeyPressed(object? sender, GlobalHotkeyPressedEventArgs e)
     {
         try
@@ -206,6 +249,9 @@ public sealed partial class MainWindow : Window
                     break;
                 case GlobalShortcutAction.RetryLastTranscription:
                     await RetryLastHistoryAsync();
+                    break;
+                case GlobalShortcutAction.CancelRecording:
+                    await CancelCurrentRecordingAsync();
                     break;
                 default:
                     await ToggleCurrentRecordingAsync();
@@ -333,6 +379,7 @@ public sealed partial class MainWindow : Window
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
             PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
             RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
+            CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -749,6 +796,7 @@ public sealed partial class MainWindow : Window
         if (!settingsLoaded
             || isStarting
             || isStopping
+            || isCanceling
             || isPastingLast
             || isRetryingHistory
             || controller.State == DictationState.Recording)
@@ -819,7 +867,7 @@ public sealed partial class MainWindow : Window
 
     private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
     {
-        if (isStopping || isPastingLast || isRetryingHistory)
+        if (isStopping || isCanceling || isPastingLast || isRetryingHistory)
         {
             return;
         }
@@ -1168,6 +1216,9 @@ public sealed partial class MainWindow : Window
             RetryLastTranscriptionHotkey = includeShortcutFields
                 ? RetryLastHotkeyTextBox.Text.Trim()
                 : settings.RetryLastTranscriptionHotkey,
+            CancelRecordingHotkey = includeShortcutFields
+                ? CancelHotkeyTextBox.Text.Trim()
+                : settings.CancelRecordingHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
@@ -1302,7 +1353,7 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting || isStopping || isPastingLast || isRetryingHistory;
+        var operationActive = isStarting || isStopping || isCanceling || isPastingLast || isRetryingHistory;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
 
@@ -1313,8 +1364,15 @@ public sealed partial class MainWindow : Window
         StopButton.IsEnabled = settingsLoaded
             && !operationActive
             && controller.State == DictationState.Recording;
-        PasteLastButton.IsEnabled = settingsLoaded && !operationActive;
-        PasteLastEnhancedButton.IsEnabled = settingsLoaded && !operationActive;
+        CancelButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && controller.State == DictationState.Recording;
+        PasteLastButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && controller.State != DictationState.Recording;
+        PasteLastEnhancedButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && controller.State != DictationState.Recording;
         RetryLastButton.IsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy

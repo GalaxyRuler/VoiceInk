@@ -12,6 +12,7 @@ public sealed record AppSettings
     public string PasteLastTranscriptionHotkey { get; init; } = string.Empty;
     public string PasteLastEnhancementHotkey { get; init; } = string.Empty;
     public string RetryLastTranscriptionHotkey { get; init; } = string.Empty;
+    public string CancelRecordingHotkey { get; init; } = string.Empty;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;
