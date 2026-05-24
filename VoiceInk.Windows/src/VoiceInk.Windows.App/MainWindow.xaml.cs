@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Infrastructure.History;
@@ -15,8 +16,17 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class MainWindow : Window
 {
+    private readonly string recordingsDirectory;
+    private readonly string historyPath;
     private readonly JsonSettingsStore settingsStore;
-    private readonly DictationController controller;
+    private readonly CancellationTokenSource windowLifetime = new();
+    private NAudioCaptureService audioCapture;
+    private DictationController controller;
+    private bool isStarting;
+    private bool isStopping;
+    private bool settingsLoaded;
+    private bool modelPathEdited;
+    private bool suppressModelPathChanged;
 
     public MainWindow()
     {
@@ -25,48 +35,200 @@ public sealed partial class MainWindow : Window
         var appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VoiceInk.Windows");
-        var recordings = Path.Combine(appData, "Recordings");
+        recordingsDirectory = Path.Combine(appData, "Recordings");
+        historyPath = Path.Combine(appData, "history.db");
 
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
-        controller = new DictationController(
-            new NAudioCaptureService(recordings),
-            new WhisperNetTranscriptionService(),
-            new ClipboardTextInjectionService(restoreClipboard: true),
-            new SqliteHistoryStore(Path.Combine(appData, "history.db")),
-            settingsStore);
+        audioCapture = new NAudioCaptureService(recordingsDirectory);
+        controller = CreateController(audioCapture);
 
-        _ = LoadSettingsAsync();
+        Closed += MainWindow_Closed;
+        RefreshUiFromControllerState("Loading settings");
+        _ = InitializeAsync();
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
     {
-        await SaveSettingsAsync();
-        await controller.StartAsync(CancellationToken.None);
-        StatusTextBlock.Text = "Recording";
-        StartButton.IsEnabled = false;
-        StopButton.IsEnabled = true;
+        if (isStarting || isStopping || !settingsLoaded)
+        {
+            return;
+        }
+
+        var statusOverride = "Starting recording";
+        isStarting = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(ModelPathTextBox.Text))
+            {
+                statusOverride = "Local whisper model path is required.";
+                return;
+            }
+
+            if (controller.State == DictationState.Error)
+            {
+                RecreateController();
+            }
+
+            await SaveSettingsAsync(windowLifetime.Token);
+            await controller.StartAsync(windowLifetime.Token);
+            statusOverride = null;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Start failed: {ex.Message}";
+        }
+        finally
+        {
+            isStarting = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
     }
 
     private async void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        await controller.StopAsync(CancellationToken.None);
-        StatusTextBlock.Text = controller.LastError ?? controller.State.ToString();
-        StartButton.IsEnabled = true;
-        StopButton.IsEnabled = false;
+        if (isStarting || isStopping || controller.State != DictationState.Recording)
+        {
+            return;
+        }
+
+        var statusOverride = "Stopping and inserting";
+        isStopping = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await controller.StopAsync(windowLifetime.Token);
+            statusOverride = null;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Stop failed: {ex.Message}";
+        }
+        finally
+        {
+            isStopping = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
     }
 
-    private async Task LoadSettingsAsync()
+    private void ModelPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var settings = await settingsStore.LoadAsync(CancellationToken.None);
-        ModelPathTextBox.Text = settings.ModelPath;
+        if (!suppressModelPathChanged)
+        {
+            modelPathEdited = true;
+        }
     }
 
-    private async Task SaveSettingsAsync()
+    private async Task InitializeAsync()
     {
-        var settings = await settingsStore.LoadAsync(CancellationToken.None);
+        try
+        {
+            var settings = await settingsStore.LoadAsync(windowLifetime.Token);
+            if (!modelPathEdited)
+            {
+                suppressModelPathChanged = true;
+                ModelPathTextBox.Text = settings.ModelPath;
+                suppressModelPathChanged = false;
+            }
+
+            settingsLoaded = true;
+            RefreshUiFromControllerState();
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            settingsLoaded = true;
+            RefreshUiFromControllerState($"Settings load failed: {ex.Message}");
+        }
+        finally
+        {
+            suppressModelPathChanged = false;
+        }
+    }
+
+    private async Task SaveSettingsAsync(CancellationToken cancellationToken)
+    {
+        AppSettings settings;
+        try
+        {
+            settings = await settingsStore.LoadAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            settings = new AppSettings();
+        }
+
         await settingsStore.SaveAsync(settings with
         {
             ModelPath = ModelPathTextBox.Text
-        }, CancellationToken.None);
+        }, cancellationToken);
+    }
+
+    private DictationController CreateController(NAudioCaptureService captureService) =>
+        new(
+            captureService,
+            new WhisperNetTranscriptionService(),
+            new ClipboardTextInjectionService(restoreClipboard: true),
+            new SqliteHistoryStore(historyPath),
+            settingsStore);
+
+    private void RecreateController()
+    {
+        audioCapture.Dispose();
+        audioCapture = new NAudioCaptureService(recordingsDirectory);
+        controller = CreateController(audioCapture);
+    }
+
+    private void RefreshUiFromControllerState(string? statusOverride = null)
+    {
+        var operationActive = isStarting || isStopping;
+        var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
+
+        StartButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
+        StopButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && controller.State == DictationState.Recording;
+
+        StatusTextBlock.Text = statusOverride
+            ?? controller.LastError
+            ?? controller.LastWarning
+            ?? StateToStatusText(controller.State);
+    }
+
+    private static string StateToStatusText(DictationState state) =>
+        state switch
+        {
+            DictationState.Idle => "Idle",
+            DictationState.Recording => "Recording",
+            DictationState.Transcribing => "Transcribing",
+            DictationState.Inserting => "Inserting",
+            DictationState.Error => "Error",
+            _ => state.ToString()
+        };
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        windowLifetime.Cancel();
+        audioCapture.Dispose();
+        windowLifetime.Dispose();
     }
 }
