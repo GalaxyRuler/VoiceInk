@@ -6,45 +6,83 @@ namespace VoiceInk.Windows.Native.Audio;
 
 public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCaptureService, IDisposable
 {
+    private readonly object writerLock = new();
+
     private WaveInEvent? waveIn;
     private WaveFileWriter? writer;
+    private TaskCompletionSource<StoppedEventArgs>? recordingStopped;
     private string? currentFilePath;
     private DateTimeOffset startedAt;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(recordingsDirectory);
-
-        currentFilePath = Path.Combine(recordingsDirectory, $"{Guid.NewGuid():N}.wav");
-        startedAt = DateTimeOffset.UtcNow;
-
-        waveIn = new WaveInEvent
+        if (waveIn is not null || writer is not null)
         {
-            WaveFormat = new WaveFormat(16000, 16, 1),
-            BufferMilliseconds = 50
-        };
-        writer = new WaveFileWriter(currentFilePath, waveIn.WaveFormat);
+            throw new InvalidOperationException("Recording is already active.");
+        }
 
-        waveIn.DataAvailable += OnDataAvailable;
-        waveIn.RecordingStopped += OnRecordingStopped;
-        waveIn.StartRecording();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            Directory.CreateDirectory(recordingsDirectory);
+
+            currentFilePath = Path.Combine(recordingsDirectory, $"{Guid.NewGuid():N}.wav");
+            recordingStopped = new TaskCompletionSource<StoppedEventArgs>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            startedAt = DateTimeOffset.UtcNow;
+
+            waveIn = new WaveInEvent
+            {
+                WaveFormat = new WaveFormat(16000, 16, 1),
+                BufferMilliseconds = 50
+            };
+            writer = new WaveFileWriter(currentFilePath, waveIn.WaveFormat);
+
+            waveIn.DataAvailable += OnDataAvailable;
+            waveIn.RecordingStopped += OnRecordingStopped;
+            waveIn.StartRecording();
+        }
+        catch
+        {
+            DisposeCurrentRecording();
+            throw;
+        }
 
         return Task.CompletedTask;
     }
 
-    public Task<AudioCaptureResult> StopAsync(CancellationToken cancellationToken)
+    public async Task<AudioCaptureResult> StopAsync(CancellationToken cancellationToken)
     {
-        if (waveIn is null || writer is null || currentFilePath is null)
+        if (waveIn is null || writer is null || recordingStopped is null || currentFilePath is null)
         {
             throw new InvalidOperationException("Recording has not started.");
         }
 
-        waveIn.StopRecording();
+        var stoppedTask = recordingStopped.Task;
+        var filePath = currentFilePath;
         var duration = DateTimeOffset.UtcNow - startedAt;
-        var result = new AudioCaptureResult(currentFilePath, duration, 16000, 1);
+
+        StoppedEventArgs stoppedArgs;
+        try
+        {
+            waveIn.StopRecording();
+            stoppedArgs = await stoppedTask.ConfigureAwait(false);
+        }
+        catch
+        {
+            DisposeCurrentRecording();
+            throw;
+        }
 
         DisposeCurrentRecording();
-        return Task.FromResult(result);
+
+        if (stoppedArgs.Exception is not null)
+        {
+            throw stoppedArgs.Exception;
+        }
+
+        return new AudioCaptureResult(filePath, duration, 16000, 1);
     }
 
     public void Dispose()
@@ -54,16 +92,16 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
 
     private void OnDataAvailable(object? sender, WaveInEventArgs args)
     {
-        writer?.Write(args.Buffer, 0, args.BytesRecorded);
-        writer?.Flush();
+        lock (writerLock)
+        {
+            writer?.Write(args.Buffer, 0, args.BytesRecorded);
+            writer?.Flush();
+        }
     }
 
     private void OnRecordingStopped(object? sender, StoppedEventArgs args)
     {
-        if (args.Exception is not null)
-        {
-            DisposeCurrentRecording();
-        }
+        recordingStopped?.TrySetResult(args);
     }
 
     private void DisposeCurrentRecording()
@@ -76,7 +114,14 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
             waveIn = null;
         }
 
-        writer?.Dispose();
-        writer = null;
+        lock (writerLock)
+        {
+            writer?.Dispose();
+            writer = null;
+        }
+
+        recordingStopped = null;
+        currentFilePath = null;
+        startedAt = default;
     }
 }
