@@ -4,321 +4,345 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="VoiceInk for Windows">
 
-    <ScrollViewer>
-        <Grid Padding="24" RowSpacing="16">
+    <NavigationView
+        x:Name="RootNavigationView"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        PaneTitle="VoiceInk"
+        SelectionChanged="RootNavigationView_SelectionChanged">
+        <Grid RowSpacing="12" Padding="24">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock
-                Grid.Row="0"
-                Text="VoiceInk for Windows"
-                FontSize="24"
-                FontWeight="SemiBold" />
+            <ScrollViewer Grid.Row="0">
+                <Grid>
+                    <StackPanel x:Name="DashboardSectionPanel" Spacing="16">
+                        <TextBlock Text="Dashboard" FontSize="24" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="StartButton" Content="Start Recording" Click="StartButton_Click" />
+                            <Button x:Name="StopButton" Content="Stop And Insert" Click="StopButton_Click" IsEnabled="False" />
+                            <Button x:Name="CancelButton" Content="Cancel Recording" Click="CancelButton_Click" IsEnabled="False" />
+                        </StackPanel>
+                    </StackPanel>
 
-            <StackPanel Grid.Row="1" Spacing="8">
-                <TextBox
-                    x:Name="ModelPathTextBox"
-                    Header="Local whisper model path"
-                    PlaceholderText="C:\Models\ggml-base.en.bin"
-                    TextChanged="ModelPathTextBox_TextChanged" />
-                <ComboBox
-                    x:Name="ModelComboBox"
-                    Header="Imported Local Models"
-                    PlaceholderText="No local models imported"
-                    SelectionChanged="ModelComboBox_SelectionChanged" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button
-                        x:Name="ImportModelButton"
-                        Content="Import Model"
-                        Click="ImportModelButton_Click" />
-                    <Button
-                        x:Name="UseSelectedModelButton"
-                        Content="Use Selected Model"
-                        Click="UseSelectedModelButton_Click" />
-                    <Button
-                        x:Name="OpenModelDownloadsButton"
-                        Content="Open GGML Model Downloads"
-                        Click="OpenModelDownloadsButton_Click" />
-                </StackPanel>
-            </StackPanel>
-
-            <StackPanel Grid.Row="2" Spacing="8">
-                <TextBlock Text="Audio Input" FontWeight="SemiBold" />
-                <ComboBox
-                    x:Name="AudioInputComboBox"
-                    Header="Microphone"
-                    PlaceholderText="System Default" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button
-                        x:Name="RefreshAudioInputsButton"
-                        Content="Refresh"
-                        Click="RefreshAudioInputsButton_Click" />
-                    <Button
-                        x:Name="ApplyAudioInputButton"
-                        Content="Apply Audio Input"
-                        Click="ApplyAudioInputButton_Click" />
-                </StackPanel>
-            </StackPanel>
-
-            <StackPanel Grid.Row="3" Spacing="8">
-                <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
-                <TextBox
-                    x:Name="RecordingHotkeyTextBox"
-                    Header="Primary Shortcut"
-                    PlaceholderText="Ctrl+Alt+Space" />
-                <TextBox
-                    x:Name="SecondaryRecordingHotkeyTextBox"
-                    Header="Secondary Shortcut"
-                    PlaceholderText="Ctrl+Alt+S" />
-                <TextBox
-                    x:Name="PasteLastHotkeyTextBox"
-                    Header="Paste Last Transcription"
-                    PlaceholderText="Ctrl+Alt+V" />
-                <TextBox
-                    x:Name="PasteLastEnhancedHotkeyTextBox"
-                    Header="Paste Last Enhanced Transcription"
-                    PlaceholderText="Ctrl+Alt+E" />
-                <TextBox
-                    x:Name="RetryLastHotkeyTextBox"
-                    Header="Retry Last Transcription"
-                    PlaceholderText="Ctrl+Alt+R" />
-                <TextBox
-                    x:Name="CancelHotkeyTextBox"
-                    Header="Cancel Recording"
-                    PlaceholderText="Ctrl+Alt+C" />
-                <TextBox
-                    x:Name="OpenHistoryHotkeyTextBox"
-                    Header="Open History Window"
-                    PlaceholderText="Ctrl+Alt+H" />
-                <TextBox
-                    x:Name="QuickAddHotkeyTextBox"
-                    Header="Quick Add to Dictionary"
-                    PlaceholderText="Ctrl+Alt+D" />
-                <Button
-                    x:Name="ApplyShortcutsButton"
-                    Content="Apply Shortcuts"
-                    Click="ApplyShortcutsButton_Click" />
-            </StackPanel>
-
-            <StackPanel Grid.Row="4" Spacing="8">
-                <TextBlock Text="Cleanup" FontWeight="SemiBold" />
-                <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
-                <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
-                <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
-                <ComboBox x:Name="PunctuationCleanupComboBox" Header="Punctuation cleanup" SelectedIndex="0">
-                    <ComboBoxItem Content="Keep" />
-                    <ComboBoxItem Content="Remove all" />
-                    <ComboBoxItem Content="Remove trailing period" />
-                </ComboBox>
-            </StackPanel>
-
-            <StackPanel Grid.Row="5" Spacing="12">
-                <TextBlock Text="Dictionary" FontWeight="SemiBold" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button
-                        x:Name="ExportDictionaryButton"
-                        Content="Export Dictionary"
-                        Click="ExportDictionaryButton_Click" />
-                    <Button
-                        x:Name="ImportDictionaryButton"
-                        Content="Import Dictionary"
-                        Click="ImportDictionaryButton_Click" />
-                    <Button
-                        x:Name="QuickAddDictionaryButton"
-                        Content="Quick Add"
-                        Click="QuickAddDictionaryButton_Click" />
-                </StackPanel>
-
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Vocabulary" />
-                    <ComboBox
-                        x:Name="VocabularySortComboBox"
-                        Header="Sort"
-                        SelectedIndex="0"
-                        SelectionChanged="DictionarySortComboBox_SelectionChanged">
-                        <ComboBoxItem Content="Word A-Z" />
-                        <ComboBoxItem Content="Word Z-A" />
-                    </ComboBox>
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel x:Name="ModelsSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="AI Models" FontSize="24" FontWeight="SemiBold" />
                         <TextBox
-                            x:Name="VocabularyInputTextBox"
-                            Grid.Column="0"
-                            PlaceholderText="Add word to vocabulary" />
-                        <Button
-                            x:Name="AddVocabularyButton"
-                            Grid.Column="1"
-                            Content="Add"
-                            Click="AddVocabularyButton_Click" />
-                        <Button
-                            x:Name="RemoveVocabularyButton"
-                            Grid.Column="2"
-                            Content="Remove"
-                            Click="RemoveVocabularyButton_Click" />
-                    </Grid>
-                    <ListView
-                        x:Name="VocabularyListView"
-                        Height="120"
-                        SelectionMode="Single" />
-                </StackPanel>
+                            x:Name="ModelPathTextBox"
+                            Header="Local whisper model path"
+                            PlaceholderText="C:\Models\ggml-base.en.bin"
+                            TextChanged="ModelPathTextBox_TextChanged" />
+                        <ComboBox
+                            x:Name="ModelComboBox"
+                            Header="Imported Local Models"
+                            PlaceholderText="No local models imported"
+                            SelectionChanged="ModelComboBox_SelectionChanged" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="ImportModelButton"
+                                Content="Import Model"
+                                Click="ImportModelButton_Click" />
+                            <Button
+                                x:Name="UseSelectedModelButton"
+                                Content="Use Selected Model"
+                                Click="UseSelectedModelButton_Click" />
+                            <Button
+                                x:Name="OpenModelDownloadsButton"
+                                Content="Open GGML Model Downloads"
+                                Click="OpenModelDownloadsButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
 
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Word Replacements" />
-                    <ComboBox
-                        x:Name="ReplacementSortComboBox"
-                        Header="Sort"
-                        SelectedIndex="0"
-                        SelectionChanged="DictionarySortComboBox_SelectionChanged">
-                        <ComboBoxItem Content="Original A-Z" />
-                        <ComboBoxItem Content="Original Z-A" />
-                        <ComboBoxItem Content="Replacement A-Z" />
-                        <ComboBoxItem Content="Replacement Z-A" />
-                    </ComboBox>
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox
-                            x:Name="ReplacementOriginalTextBox"
-                            Grid.Column="0"
-                            Header="Original text"
-                            PlaceholderText="Voice ink, Voicing" />
-                        <TextBox
-                            x:Name="ReplacementTextBox"
-                            Grid.Column="1"
-                            Header="Replacement text"
-                            PlaceholderText="VoiceInk" />
-                        <Button
-                            x:Name="AddReplacementButton"
-                            Grid.Column="2"
-                            Content="Add"
-                            Click="AddReplacementButton_Click" />
-                        <Button
-                            x:Name="RemoveReplacementButton"
-                            Grid.Column="3"
-                            Content="Remove"
-                            Click="RemoveReplacementButton_Click" />
-                        <Button
-                            x:Name="EditReplacementButton"
-                            Grid.Column="4"
-                            Content="Edit"
-                            Click="EditReplacementButton_Click" />
-                        <Button
-                            x:Name="ToggleReplacementButton"
-                            Grid.Column="5"
-                            Content="Disable"
-                            Click="ToggleReplacementButton_Click" />
-                    </Grid>
-                    <ListView
-                        x:Name="ReplacementListView"
-                        Height="140"
-                        SelectionChanged="ReplacementListView_SelectionChanged"
-                        SelectionMode="Single" />
-                </StackPanel>
-            </StackPanel>
+                    <StackPanel x:Name="AudioInputSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Audio Input" FontSize="24" FontWeight="SemiBold" />
+                        <ComboBox
+                            x:Name="AudioInputComboBox"
+                            Header="Microphone"
+                            PlaceholderText="System Default" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="RefreshAudioInputsButton"
+                                Content="Refresh"
+                                Click="RefreshAudioInputsButton_Click" />
+                            <Button
+                                x:Name="ApplyAudioInputButton"
+                                Content="Apply Audio Input"
+                                Click="ApplyAudioInputButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
 
-            <StackPanel Grid.Row="6" Spacing="12">
-                <TextBlock Text="History" FontWeight="SemiBold" />
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox
-                        x:Name="HistorySearchTextBox"
-                        Grid.Column="0"
-                        PlaceholderText="Search transcriptions..." />
-                    <Button x:Name="SearchHistoryButton" Grid.Column="1" Content="Search" Click="SearchHistoryButton_Click" />
-                    <Button x:Name="ClearHistorySearchButton" Grid.Column="2" Content="Clear" Click="ClearHistorySearchButton_Click" />
-                    <Button x:Name="RefreshHistoryButton" Grid.Column="3" Content="Refresh" Click="RefreshHistoryButton_Click" />
-                    <Button x:Name="ExportHistoryButton" Grid.Column="4" Content="Export CSV" Click="ExportHistoryButton_Click" />
-                    <Button x:Name="PasteLastButton" Grid.Column="5" Content="Paste Last" Click="PasteLastButton_Click" />
-                    <Button x:Name="PasteLastEnhancedButton" Grid.Column="6" Content="Paste Last Enhanced" Click="PasteLastEnhancedButton_Click" />
-                    <Button x:Name="RetryLastButton" Grid.Column="7" Content="Retry Last" Click="RetryLastButton_Click" />
-                </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button x:Name="RetryHistoryButton" Content="Retry Selected" Click="RetryHistoryButton_Click" />
-                    <Button x:Name="OpenHistoryAudioButton" Content="Open Audio" Click="OpenHistoryAudioButton_Click" />
-                    <Button x:Name="DeleteHistoryButton" Content="Delete" Click="DeleteHistoryButton_Click" />
-                </StackPanel>
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="3*" />
-                    </Grid.ColumnDefinitions>
-                    <ListView
-                        x:Name="HistoryListView"
-                        Grid.Column="0"
-                        Height="220"
-                        SelectionChanged="HistoryListView_SelectionChanged"
-                        SelectionMode="Single" />
-                    <StackPanel Grid.Column="1" Spacing="8">
-                        <TextBlock x:Name="HistoryMetadataTextBlock" Text="Select a transcription" TextWrapping="Wrap" />
+                    <StackPanel x:Name="DictionarySectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Dictionary" FontSize="24" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="ExportDictionaryButton"
+                                Content="Export Dictionary"
+                                Click="ExportDictionaryButton_Click" />
+                            <Button
+                                x:Name="ImportDictionaryButton"
+                                Content="Import Dictionary"
+                                Click="ImportDictionaryButton_Click" />
+                            <Button
+                                x:Name="QuickAddDictionaryButton"
+                                Content="Quick Add"
+                                Click="QuickAddDictionaryButton_Click" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Vocabulary" FontWeight="SemiBold" />
+                            <ComboBox
+                                x:Name="VocabularySortComboBox"
+                                Header="Sort"
+                                SelectedIndex="0"
+                                SelectionChanged="DictionarySortComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Word A-Z" />
+                                <ComboBoxItem Content="Word Z-A" />
+                            </ComboBox>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="VocabularyInputTextBox"
+                                    Grid.Column="0"
+                                    PlaceholderText="Add word to vocabulary" />
+                                <Button
+                                    x:Name="AddVocabularyButton"
+                                    Grid.Column="1"
+                                    Content="Add"
+                                    Click="AddVocabularyButton_Click" />
+                                <Button
+                                    x:Name="RemoveVocabularyButton"
+                                    Grid.Column="2"
+                                    Content="Remove"
+                                    Click="RemoveVocabularyButton_Click" />
+                            </Grid>
+                            <ListView
+                                x:Name="VocabularyListView"
+                                Height="120"
+                                SelectionMode="Single" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Word Replacements" FontWeight="SemiBold" />
+                            <ComboBox
+                                x:Name="ReplacementSortComboBox"
+                                Header="Sort"
+                                SelectedIndex="0"
+                                SelectionChanged="DictionarySortComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Original A-Z" />
+                                <ComboBoxItem Content="Original Z-A" />
+                                <ComboBoxItem Content="Replacement A-Z" />
+                                <ComboBoxItem Content="Replacement Z-A" />
+                            </ComboBox>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="ReplacementOriginalTextBox"
+                                    Grid.Column="0"
+                                    Header="Original text"
+                                    PlaceholderText="Voice ink, Voicing" />
+                                <TextBox
+                                    x:Name="ReplacementTextBox"
+                                    Grid.Column="1"
+                                    Header="Replacement text"
+                                    PlaceholderText="VoiceInk" />
+                                <Button
+                                    x:Name="AddReplacementButton"
+                                    Grid.Column="2"
+                                    Content="Add"
+                                    Click="AddReplacementButton_Click" />
+                                <Button
+                                    x:Name="RemoveReplacementButton"
+                                    Grid.Column="3"
+                                    Content="Remove"
+                                    Click="RemoveReplacementButton_Click" />
+                                <Button
+                                    x:Name="EditReplacementButton"
+                                    Grid.Column="4"
+                                    Content="Edit"
+                                    Click="EditReplacementButton_Click" />
+                                <Button
+                                    x:Name="ToggleReplacementButton"
+                                    Grid.Column="5"
+                                    Content="Disable"
+                                    Click="ToggleReplacementButton_Click" />
+                            </Grid>
+                            <ListView
+                                x:Name="ReplacementListView"
+                                Height="140"
+                                SelectionChanged="ReplacementListView_SelectionChanged"
+                                SelectionMode="Single" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="HistorySectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="History" FontSize="24" FontWeight="SemiBold" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="HistorySearchTextBox"
+                                Grid.Column="0"
+                                PlaceholderText="Search transcriptions..." />
+                            <Button x:Name="SearchHistoryButton" Grid.Column="1" Content="Search" Click="SearchHistoryButton_Click" />
+                            <Button x:Name="ClearHistorySearchButton" Grid.Column="2" Content="Clear" Click="ClearHistorySearchButton_Click" />
+                            <Button x:Name="RefreshHistoryButton" Grid.Column="3" Content="Refresh" Click="RefreshHistoryButton_Click" />
+                            <Button x:Name="ExportHistoryButton" Grid.Column="4" Content="Export CSV" Click="ExportHistoryButton_Click" />
+                            <Button x:Name="PasteLastButton" Grid.Column="5" Content="Paste Last" Click="PasteLastButton_Click" />
+                            <Button x:Name="PasteLastEnhancedButton" Grid.Column="6" Content="Paste Last Enhanced" Click="PasteLastEnhancedButton_Click" />
+                            <Button x:Name="RetryLastButton" Grid.Column="7" Content="Retry Last" Click="RetryLastButton_Click" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="RetryHistoryButton" Content="Retry Selected" Click="RetryHistoryButton_Click" />
+                            <Button x:Name="OpenHistoryAudioButton" Content="Open Audio" Click="OpenHistoryAudioButton_Click" />
+                            <Button x:Name="DeleteHistoryButton" Content="Delete" Click="DeleteHistoryButton_Click" />
+                        </StackPanel>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="3*" />
+                            </Grid.ColumnDefinitions>
+                            <ListView
+                                x:Name="HistoryListView"
+                                Grid.Column="0"
+                                Height="220"
+                                SelectionChanged="HistoryListView_SelectionChanged"
+                                SelectionMode="Single" />
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <TextBlock x:Name="HistoryMetadataTextBlock" Text="Select a transcription" TextWrapping="Wrap" />
+                                <TextBox
+                                    x:Name="HistoryOriginalTextBox"
+                                    Header="Original"
+                                    AcceptsReturn="True"
+                                    Height="80"
+                                    IsReadOnly="True"
+                                    TextWrapping="Wrap" />
+                                <TextBox
+                                    x:Name="HistoryFinalTextBox"
+                                    Header="Final"
+                                    AcceptsReturn="True"
+                                    Height="80"
+                                    IsReadOnly="True"
+                                    TextWrapping="Wrap" />
+                                <TextBox
+                                    x:Name="HistoryEnhancedTextBox"
+                                    Header="Enhanced"
+                                    AcceptsReturn="True"
+                                    Height="80"
+                                    IsReadOnly="True"
+                                    TextWrapping="Wrap" />
+                                <MediaPlayerElement
+                                    x:Name="HistoryAudioPlayer"
+                                    Height="72"
+                                    AreTransportControlsEnabled="True"
+                                    Visibility="Collapsed" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel x:Name="SettingsSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" />
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
+                            <TextBox
+                                x:Name="RecordingHotkeyTextBox"
+                                Header="Primary Shortcut"
+                                PlaceholderText="Ctrl+Alt+Space" />
+                            <TextBox
+                                x:Name="SecondaryRecordingHotkeyTextBox"
+                                Header="Secondary Shortcut"
+                                PlaceholderText="Ctrl+Alt+S" />
+                            <TextBox
+                                x:Name="PasteLastHotkeyTextBox"
+                                Header="Paste Last Transcription"
+                                PlaceholderText="Ctrl+Alt+V" />
+                            <TextBox
+                                x:Name="PasteLastEnhancedHotkeyTextBox"
+                                Header="Paste Last Enhanced Transcription"
+                                PlaceholderText="Ctrl+Alt+E" />
+                            <TextBox
+                                x:Name="RetryLastHotkeyTextBox"
+                                Header="Retry Last Transcription"
+                                PlaceholderText="Ctrl+Alt+R" />
+                            <TextBox
+                                x:Name="CancelHotkeyTextBox"
+                                Header="Cancel Recording"
+                                PlaceholderText="Ctrl+Alt+C" />
+                            <TextBox
+                                x:Name="OpenHistoryHotkeyTextBox"
+                                Header="Open History Window"
+                                PlaceholderText="Ctrl+Alt+H" />
+                            <TextBox
+                                x:Name="QuickAddHotkeyTextBox"
+                                Header="Quick Add to Dictionary"
+                                PlaceholderText="Ctrl+Alt+D" />
+                            <Button
+                                x:Name="ApplyShortcutsButton"
+                                Content="Apply Shortcuts"
+                                Click="ApplyShortcutsButton_Click" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Cleanup" FontWeight="SemiBold" />
+                            <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
+                            <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
+                            <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
+                            <ComboBox x:Name="PunctuationCleanupComboBox" Header="Punctuation cleanup" SelectedIndex="0">
+                                <ComboBoxItem Content="Keep" />
+                                <ComboBoxItem Content="Remove all" />
+                                <ComboBoxItem Content="Remove trailing period" />
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="AboutSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="About / Open Source" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="AboutVersionTextBlock" TextWrapping="Wrap" />
+                        <TextBlock Text="GPL-3.0 open-source Windows fork" TextWrapping="Wrap" />
                         <TextBox
-                            x:Name="HistoryOriginalTextBox"
-                            Header="Original"
-                            AcceptsReturn="True"
-                            Height="80"
+                            x:Name="RuntimePathTextBox"
+                            Header="Runtime path"
                             IsReadOnly="True"
                             TextWrapping="Wrap" />
-                        <TextBox
-                            x:Name="HistoryFinalTextBox"
-                            Header="Final"
-                            AcceptsReturn="True"
-                            Height="80"
-                            IsReadOnly="True"
-                            TextWrapping="Wrap" />
-                        <TextBox
-                            x:Name="HistoryEnhancedTextBox"
-                            Header="Enhanced"
-                            AcceptsReturn="True"
-                            Height="80"
-                            IsReadOnly="True"
-                            TextWrapping="Wrap" />
-                        <MediaPlayerElement
-                            x:Name="HistoryAudioPlayer"
-                            Height="72"
-                            AreTransportControlsEnabled="True"
-                            Visibility="Collapsed" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="OpenDiagnosticsFolderButton"
+                                Content="Open Diagnostics Folder"
+                                Click="OpenDiagnosticsFolderButton_Click" />
+                            <Button
+                                x:Name="CopyDiagnosticsSummaryButton"
+                                Content="Copy Diagnostics Summary"
+                                Click="CopyDiagnosticsSummaryButton_Click" />
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
-            </StackPanel>
-
-            <StackPanel Grid.Row="7" Orientation="Horizontal" Spacing="8">
-                <Button x:Name="StartButton" Content="Start Recording" Click="StartButton_Click" />
-                <Button x:Name="StopButton" Content="Stop And Insert" Click="StopButton_Click" IsEnabled="False" />
-                <Button x:Name="CancelButton" Content="Cancel Recording" Click="CancelButton_Click" IsEnabled="False" />
-            </StackPanel>
+            </ScrollViewer>
 
             <TextBlock
                 x:Name="StatusTextBlock"
-                Grid.Row="8"
+                Grid.Row="1"
                 Text="Idle"
                 TextWrapping="Wrap" />
         </Grid>
-    </ScrollViewer>
+    </NavigationView>
 </Window>

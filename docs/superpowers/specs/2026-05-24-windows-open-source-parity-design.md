@@ -97,16 +97,17 @@ macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarVie
 
 Implemented:
 
+- Sidebar navigation with Dashboard, History, AI Models, Audio Input, Dictionary, Settings, and About / Open Source sections.
 - Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk commands.
 - Close-to-tray behavior for the main window, with explicit Quit from the tray.
 - Tray state presenter for recording/busy/loading labels and enabled states.
+- About / Open Source section with version/source information and local-only diagnostics folder/summary actions.
 
 Windows gaps:
 
-- Navigation sidebar.
-- Dedicated settings pages.
+- Dedicated settings pages beyond grouped existing shortcut/cleanup controls.
 - Dedicated multi-window History surface.
-- About/Open Source replacement.
+- Transcribe Audio, Enhancement, Power Mode, and Permissions sections.
 - Tray submenus for model/provider/enhancement/language/audio/context/settings once those Windows subsystems exist.
 
 Tray-shell slice completed on 2026-05-24:
@@ -116,10 +117,10 @@ Tray-shell slice completed on 2026-05-24:
 - macOS commercial updater/support items omitted. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray shell.
 - Model/provider/enhancement/language/audio context submenus remain later work until those Windows subsystems and view-models exist.
 
-Active navigation-settings-shell slice on 2026-05-25:
+Navigation-settings-shell slice completed on 2026-05-25:
 
 - Use WinUI `NavigationView` as the Windows-native adaptation of macOS `NavigationSplitView`.
-- Move existing source-runnable controls into macOS-aligned active sections: Dashboard, AI Models, Audio Input, Dictionary, History, and Settings.
+- Move existing source-runnable controls into macOS-aligned active sections: Dashboard, History, AI Models, Audio Input, Dictionary, and Settings.
 - Replace the commercial `VoiceInk Pro` sidebar destination with `About / Open Source`.
 - Add local-only diagnostics actions under About/Open Source.
 - Keep Transcribe Audio, Enhancement, Power Mode, and Permissions as later slices until their real Windows subsystems have usable controls.
@@ -434,6 +435,8 @@ Status on 2026-05-24:
 - Completed Quick Add to Dictionary as a Windows MVP dialog adaptation of the macOS floating quick-add panel, with Vocabulary and Word Replacement modes.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed native Windows tray shell with show/hide, recording toggle, Quick Add, History, Quit, and close-to-tray behavior.
+- Completed WinUI sidebar navigation for Dashboard, History, AI Models, Audio Input, Dictionary, Settings, and About / Open Source.
+- Completed commercial VoiceInk Pro replacement with neutral About / Open Source and local-only diagnostics actions.
 - Completed first-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.

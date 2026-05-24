@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
@@ -35,7 +36,20 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class MainWindow : Window
 {
+    private const string DashboardSectionTag = "Dashboard";
+    private const string ModelsSectionTag = "AI Models";
+    private const string AudioInputSectionTag = "Audio Input";
+    private const string DictionarySectionTag = "Dictionary";
+    private const string HistorySectionTag = "History";
+    private const string SettingsSectionTag = "Settings";
+    private const string AboutSectionTag = "About";
+
+    private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
+    private readonly string dictionaryPath;
+    private readonly string historyPath;
+    private readonly string settingsPath;
+    private readonly Dictionary<string, NavigationViewItem> navigationItemsByTag = [];
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
     private readonly JsonSettingsStore settingsStore;
@@ -68,21 +82,27 @@ public sealed partial class MainWindow : Window
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
     private bool exitRequested;
+    private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
 
     public MainWindow()
     {
         InitializeComponent();
+        InitializeNavigationItems();
+        ShowShellSection(DashboardSectionTag);
+        RefreshAboutSection();
 
-        var appData = Path.Combine(
+        appDataDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VoiceInk.Windows");
-        recordingsDirectory = Path.Combine(appData, "Recordings");
-        var historyPath = Path.Combine(appData, "history.db");
+        recordingsDirectory = Path.Combine(appDataDirectory, "Recordings");
+        dictionaryPath = Path.Combine(appDataDirectory, "dictionary.json");
+        historyPath = Path.Combine(appDataDirectory, "history.db");
+        settingsPath = Path.Combine(appDataDirectory, "settings.json");
 
-        dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
+        dictionaryStore = new JsonDictionaryStore(dictionaryPath);
         historyStore = new SqliteHistoryStore(historyPath);
-        settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
+        settingsStore = new JsonSettingsStore(settingsPath);
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         historyRetryService = new HistoryRetryService(
@@ -115,6 +135,14 @@ public sealed partial class MainWindow : Window
     private async void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         await CancelCurrentRecordingAsync();
+    }
+
+    private void RootNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        {
+            ShowShellSection(tag);
+        }
     }
 
     private void TrayIconService_ShowRequested(object? sender, EventArgs e)
@@ -357,6 +385,16 @@ public sealed partial class MainWindow : Window
     private void OpenModelDownloadsButton_Click(object sender, RoutedEventArgs e)
     {
         OpenModelDownloads();
+    }
+
+    private void OpenDiagnosticsFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenDiagnosticsFolder();
+    }
+
+    private async void CopyDiagnosticsSummaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopyDiagnosticsSummaryAsync();
     }
 
     private async void AddVocabularyButton_Click(object sender, RoutedEventArgs e)
@@ -1665,6 +1703,7 @@ public sealed partial class MainWindow : Window
         try
         {
             RestoreAndActivateWindow();
+            ShowShellSection(HistorySectionTag);
             await RefreshHistoryAsync(windowLifetime.Token);
             HistorySearchTextBox.Focus(FocusState.Programmatic);
             RefreshUiFromControllerState("History opened");
@@ -2242,6 +2281,109 @@ public sealed partial class MainWindow : Window
         && !IsOperationActive(includeCurrentModelImport)
         && !IsControllerBusy()
         && controller.State != DictationState.Recording;
+
+    private void InitializeNavigationItems()
+    {
+        RootNavigationView.MenuItems.Clear();
+        navigationItemsByTag.Clear();
+
+        foreach (var item in ShellNavigationPresenter.BuildItems())
+        {
+            var navigationItem = CreateNavigationItem(item);
+            RootNavigationView.MenuItems.Add(navigationItem);
+            navigationItemsByTag[item.Tag] = navigationItem;
+        }
+
+        RootNavigationView.SelectedItem = navigationItemsByTag[DashboardSectionTag];
+    }
+
+    private static NavigationViewItem CreateNavigationItem(ShellNavigationItem item)
+    {
+        return new NavigationViewItem
+        {
+            Content = item.Label,
+            Icon = new SymbolIcon(ParseNavigationSymbol(item.Icon)),
+            IsEnabled = item.IsEnabled,
+            Tag = item.Tag
+        };
+    }
+
+    private void ShowShellSection(string tag)
+    {
+        activeSectionTag = tag;
+        DashboardSectionPanel.Visibility = tag == DashboardSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        ModelsSectionPanel.Visibility = tag == ModelsSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
+        HistorySectionPanel.Visibility = tag == HistorySectionTag ? Visibility.Visible : Visibility.Collapsed;
+        SettingsSectionPanel.Visibility = tag == SettingsSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        AboutSectionPanel.Visibility = tag == AboutSectionTag ? Visibility.Visible : Visibility.Collapsed;
+
+        if (navigationItemsByTag.TryGetValue(tag, out var navigationItem) &&
+            !ReferenceEquals(RootNavigationView.SelectedItem, navigationItem))
+        {
+            RootNavigationView.SelectedItem = navigationItem;
+        }
+    }
+
+    private static Symbol ParseNavigationSymbol(string symbolName) =>
+        Enum.TryParse<Symbol>(symbolName, ignoreCase: false, out var symbol)
+            ? symbol
+            : Symbol.Help;
+
+    private void RefreshAboutSection()
+    {
+        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString() ?? "source build";
+        AboutVersionTextBlock.Text = $"VoiceInk for Windows {version}";
+        RuntimePathTextBox.Text = AppContext.BaseDirectory;
+    }
+
+    private void OpenDiagnosticsFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(appDataDirectory);
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = appDataDirectory,
+                UseShellExecute = true
+            });
+            RefreshUiFromControllerState("Diagnostics folder opened");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Diagnostics folder failed: {ex.Message}");
+        }
+    }
+
+    private Task CopyDiagnosticsSummaryAsync()
+    {
+        try
+        {
+            var summary = string.Join(
+                Environment.NewLine,
+                "VoiceInk for Windows diagnostics",
+                $"Version: {typeof(MainWindow).Assembly.GetName().Version?.ToString() ?? "source build"}",
+                $"App data: {appDataDirectory}",
+                $"Recordings: {recordingsDirectory}",
+                $"Settings: {settingsPath}",
+                $"History: {historyPath}",
+                $"Dictionary: {dictionaryPath}",
+                $"Active section: {activeSectionTag}",
+                $"Dictation state: {controller.State}",
+                $"Model path: {ModelPathTextBox.Text}");
+            var package = new DataPackage();
+            package.SetText(summary);
+            Clipboard.SetContent(package);
+            RefreshUiFromControllerState("Diagnostics summary copied");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Diagnostics copy failed: {ex.Message}");
+        }
+
+        return Task.CompletedTask;
+    }
 
     private bool TryReplaceGlobalHotkeys(AppSettings settings, AppSettings? rollbackSettings)
     {
