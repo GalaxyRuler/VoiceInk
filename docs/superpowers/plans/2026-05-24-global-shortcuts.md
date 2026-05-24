@@ -42,7 +42,7 @@
 - Create: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Shortcuts/GlobalShortcutTests.cs`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.Core/Settings/AppSettings.cs`
 
-- [ ] **Step 1: Write failing parser and validation tests**
+- [x] **Step 1: Write failing parser and validation tests**
 
 Add tests for:
 
@@ -77,7 +77,7 @@ var duplicates = GlobalShortcutSettings.BuildRegistrations(settings with
 Assert.Contains(duplicates.Errors, item => item.Contains("already uses Ctrl+Alt+Space", StringComparison.Ordinal));
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -87,7 +87,7 @@ Run:
 
 Expected: build fails because shortcut model types do not exist.
 
-- [ ] **Step 3: Implement Core model**
+- [x] **Step 3: Implement Core model**
 
 Implement:
 
@@ -97,13 +97,13 @@ Implement:
 - Require at least one modifier and exactly one non-modifier key.
 - `GlobalShortcutSettings.BuildRegistrations(AppSettings)` requires `Hotkey`, treats paste-last shortcut fields as optional, and reports duplicate shortcuts by display text.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same filtered Core test command.
 
 Expected: all `GlobalShortcutTests` pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
