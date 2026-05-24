@@ -242,13 +242,22 @@ Windows gaps:
 
 macOS provider catalog includes Groq, ElevenLabs, Deepgram, Mistral, Gemini, Soniox, Speechmatics, AssemblyAI, xAI, Cartesia, and custom OpenAI-compatible models. Some providers support streaming only.
 
+Cloud Transcription Windows MVP target:
+
+- Add a default-off `OpenAI-compatible` transcription provider option alongside local Whisper.
+- Keep the provider user-configured: endpoint URL, model ID, and API key supplied by the user.
+- Store the API key in Windows Credential Manager, not JSON settings.
+- Send request-based multipart audio transcription requests with `file`, `model`, `response_format=json`, optional ISO language when not `auto`, and optional vocabulary/prompt context.
+- Parse JSON responses with a `text` property and return clear sanitized errors without logging secrets or provider response bodies.
+- Use the provider in dictation, Transcribe Audio, and history retry through the existing Core transcription interface.
+- Keep named provider cards, streaming providers, and provider-specific payloads for later slices.
+
 Windows gaps:
 
-- Provider metadata.
-- Batch HTTP adapters.
+- Named provider cards.
 - Streaming adapters.
 - API key verification and secure local storage.
-- Custom OpenAI-compatible provider.
+- Provider-specific payloads and API-key verification.
 
 ### AI Enhancement
 
