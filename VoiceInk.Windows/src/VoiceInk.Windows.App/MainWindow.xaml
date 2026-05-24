@@ -15,6 +15,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock
@@ -31,6 +32,24 @@
                 TextChanged="ModelPathTextBox_TextChanged" />
 
             <StackPanel Grid.Row="2" Spacing="8">
+                <TextBlock Text="Audio Input" FontWeight="SemiBold" />
+                <ComboBox
+                    x:Name="AudioInputComboBox"
+                    Header="Microphone"
+                    PlaceholderText="System Default" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        x:Name="RefreshAudioInputsButton"
+                        Content="Refresh"
+                        Click="RefreshAudioInputsButton_Click" />
+                    <Button
+                        x:Name="ApplyAudioInputButton"
+                        Content="Apply Audio Input"
+                        Click="ApplyAudioInputButton_Click" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Spacing="8">
                 <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
                 <TextBox
                     x:Name="RecordingHotkeyTextBox"
@@ -50,7 +69,7 @@
                     Click="ApplyShortcutsButton_Click" />
             </StackPanel>
 
-            <StackPanel Grid.Row="3" Spacing="8">
+            <StackPanel Grid.Row="4" Spacing="8">
                 <TextBlock Text="Cleanup" FontWeight="SemiBold" />
                 <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
                 <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
@@ -62,7 +81,7 @@
                 </ComboBox>
             </StackPanel>
 
-            <StackPanel Grid.Row="4" Spacing="12">
+            <StackPanel Grid.Row="5" Spacing="12">
                 <TextBlock Text="Dictionary" FontWeight="SemiBold" />
 
                 <StackPanel Spacing="8">
@@ -131,7 +150,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Row="5" Spacing="12">
+            <StackPanel Grid.Row="6" Spacing="12">
                 <TextBlock Text="History" FontWeight="SemiBold" />
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
@@ -195,14 +214,14 @@
                 </Grid>
             </StackPanel>
 
-            <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="8">
+            <StackPanel Grid.Row="7" Orientation="Horizontal" Spacing="8">
                 <Button x:Name="StartButton" Content="Start Recording" Click="StartButton_Click" />
                 <Button x:Name="StopButton" Content="Stop And Insert" Click="StopButton_Click" IsEnabled="False" />
             </StackPanel>
 
             <TextBlock
                 x:Name="StatusTextBlock"
-                Grid.Row="7"
+                Grid.Row="8"
                 Text="Idle"
                 TextWrapping="Wrap" />
         </Grid>

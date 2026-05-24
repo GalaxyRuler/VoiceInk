@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
@@ -33,13 +34,16 @@ public sealed partial class MainWindow : Window
     private readonly JsonSettingsStore settingsStore;
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
+    private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
+    private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
+    private int? activeAudioInputDeviceNumber;
     private bool isStarting;
     private bool isStopping;
     private bool isPastingLast;
@@ -63,6 +67,7 @@ public sealed partial class MainWindow : Window
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
+        audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
 
@@ -79,6 +84,16 @@ public sealed partial class MainWindow : Window
     private async void StopButton_Click(object sender, RoutedEventArgs e)
     {
         await StopCurrentRecordingAsync();
+    }
+
+    private async void RefreshAudioInputsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshAudioInputDevicesWithStatusAsync();
+    }
+
+    private async void ApplyAudioInputButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyAudioInputAsync();
     }
 
     private async Task StartCurrentRecordingAsync()
@@ -100,7 +115,8 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            if (controller.State == DictationState.Error)
+            if (controller.State == DictationState.Error
+                || activeAudioInputDeviceNumber != SelectedAudioInputDeviceNumber())
             {
                 RecreateController();
             }
@@ -283,12 +299,13 @@ public sealed partial class MainWindow : Window
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+            var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
             await RefreshDictionaryAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
-            RefreshUiFromControllerState();
+            RefreshUiFromControllerState(audioInputWarning);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -717,6 +734,73 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task RefreshAudioInputDevicesWithStatusAsync()
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            var warning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
+            RefreshUiFromControllerState(warning ?? "Audio inputs refreshed");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Audio input refresh failed: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyAudioInputAsync()
+    {
+        if (!settingsLoaded || controller.State == DictationState.Recording)
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            if (activeAudioInputDeviceNumber != SelectedAudioInputDeviceNumber())
+            {
+                RecreateController();
+            }
+
+            RefreshUiFromControllerState("Audio input updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Audio input update failed: {ex.Message}");
+        }
+    }
+
+    private async Task<string?> RefreshAudioInputDevicesAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken)
+    {
+        var devices = await audioInputDeviceProvider.ListInputDevicesAsync(cancellationToken);
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        audioInputChoices = result.Choices;
+        AudioInputComboBox.ItemsSource = audioInputChoices;
+        AudioInputComboBox.SelectedIndex = Math.Clamp(
+            result.SelectedIndex,
+            0,
+            Math.Max(0, audioInputChoices.Count - 1));
+
+        return result.Warning;
+    }
+
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
         var settings = await CurrentSettingsAsync(cancellationToken, includeShortcutFields: false);
@@ -751,6 +835,8 @@ public sealed partial class MainWindow : Window
             PasteLastEnhancementHotkey = includeShortcutFields
                 ? PasteLastEnhancedHotkeyTextBox.Text.Trim()
                 : settings.PasteLastEnhancementHotkey,
+            AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
+            AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
@@ -766,6 +852,23 @@ public sealed partial class MainWindow : Window
             historyStore,
             settingsStore,
             dictionaryStore);
+
+    private int? SelectedAudioInputDeviceNumber() =>
+        SelectedAudioInputDeviceChoice()?.DeviceNumber;
+
+    private string SelectedAudioInputDeviceName()
+    {
+        var choice = SelectedAudioInputDeviceChoice();
+        return choice?.DeviceNumber is null ? string.Empty : choice.Name;
+    }
+
+    private AudioInputDeviceChoice? SelectedAudioInputDeviceChoice()
+    {
+        var selectedIndex = AudioInputComboBox.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < audioInputChoices.Count
+            ? audioInputChoices[selectedIndex]
+            : null;
+    }
 
     private bool TryReplaceGlobalHotkeys(AppSettings settings, AppSettings? rollbackSettings)
     {
@@ -851,8 +954,10 @@ public sealed partial class MainWindow : Window
 
     private void RecreateController()
     {
+        var selectedAudioInputDeviceNumber = SelectedAudioInputDeviceNumber();
         audioCapture.Dispose();
-        audioCapture = new NAudioCaptureService(recordingsDirectory);
+        audioCapture = new NAudioCaptureService(recordingsDirectory, selectedAudioInputDeviceNumber);
+        activeAudioInputDeviceNumber = selectedAudioInputDeviceNumber;
         controller = CreateController(audioCapture);
     }
 
@@ -873,6 +978,14 @@ public sealed partial class MainWindow : Window
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
+        RefreshAudioInputsButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
+        ApplyAudioInputButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
         SearchHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ClearHistorySearchButton.IsEnabled = settingsLoaded && !operationActive;
         DeleteHistoryButton.IsEnabled = settingsLoaded && !operationActive;

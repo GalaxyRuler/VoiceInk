@@ -20,6 +20,9 @@
 ## File Structure
 
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Audio/AudioInputDevice.cs`: immutable capture device identity for Core/App use.
+- Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Audio/AudioInputDeviceChoice.cs`: displayable System Default/custom device choice.
+- Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Audio/AudioInputDeviceSelection.cs`: testable saved-device selection and fallback logic.
+- Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Audio/AudioInputDeviceSelectionResult.cs`: choice list, selected index, and warning payload.
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Services/IAudioInputDeviceProvider.cs`: UI-independent enumeration contract.
 - Modify `VoiceInk.Windows/src/VoiceInk.Windows.Core/Settings/AppSettings.cs`: add selected audio input device fields.
 - Modify `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/Settings/JsonSettingsStoreTests.cs`: verify settings round-trip.
@@ -27,6 +30,7 @@
 - Modify `VoiceInk.Windows/src/VoiceInk.Windows.Native/Audio/NAudioCaptureService.cs`: accept an optional device number and apply it to `WaveInEvent`.
 - Modify `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`: add Audio Input controls.
 - Modify `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`: load, refresh, save, and apply the selected capture device.
+- Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Audio/AudioInputDeviceSelectionTests.cs`: verify custom selection and unavailable-device fallback without microphone hardware.
 - Modify `README.md`: document audio input selection in the Windows MVP.
 - Modify `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`: move refresh/custom device support from gap to implemented and leave prioritized mode as a gap.
 - Update this plan with verification status.
@@ -74,7 +78,7 @@ Run the same filtered settings test.
 
 Expected: `SaveAsync_PersistsSettings` passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -173,7 +177,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -188,7 +192,7 @@ feat(windows): enumerate audio input devices
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add XAML controls**
+- [x] **Step 1: Add XAML controls**
 
 Insert an `Audio Input` section after the model path field with:
 
@@ -208,15 +212,16 @@ Insert an `Audio Input` section after the model path field with:
 
 Increment the following `Grid.Row` values by one and add one `RowDefinition`.
 
-- [ ] **Step 2: Add shell device choice model**
+- [x] **Step 2: Add shell device choice model**
 
-Add:
+Implemented the choice and selection records in Core instead of the shell so selection behavior can be tested without WinUI:
 
 ```csharp
-private sealed record AudioInputDeviceChoice(int? DeviceNumber, string Name)
-{
-    public override string ToString() => DeviceNumber is null ? "System Default" : $"{Name} ({DeviceNumber})";
-}
+public sealed record AudioInputDeviceChoice(int? DeviceNumber, string Name, int Channels);
+public sealed record AudioInputDeviceSelectionResult(
+    IReadOnlyList<AudioInputDeviceChoice> Choices,
+    int SelectedIndex,
+    string? Warning);
 ```
 
 Add fields:
@@ -227,7 +232,7 @@ private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
 private int? activeAudioInputDeviceNumber;
 ```
 
-- [ ] **Step 3: Load and refresh device list**
+- [x] **Step 3: Load and refresh device list**
 
 During construction initialize `audioInputDeviceProvider = new NAudioInputDeviceProvider();`.
 
@@ -244,7 +249,7 @@ Implement `RefreshAudioInputDevicesAsync` so it:
 - Selects the saved device number when it is still present.
 - Falls back to System Default and reports `Selected audio input is unavailable; using System Default` when the saved device is missing.
 
-- [ ] **Step 4: Save and apply selected input**
+- [x] **Step 4: Save and apply selected input**
 
 Update `CurrentSettingsAsync` to persist:
 
@@ -259,7 +264,7 @@ Change `RecreateController()` to pass `SelectedAudioInputDeviceNumber()` into `N
 
 In `StartCurrentRecordingAsync`, call `EnsureControllerMatchesSelectedAudioInput()` before starting.
 
-- [ ] **Step 5: Build**
+- [x] **Step 5: Build**
 
 Run:
 
