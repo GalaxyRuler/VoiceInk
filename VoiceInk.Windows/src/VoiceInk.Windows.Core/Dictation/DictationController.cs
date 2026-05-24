@@ -23,7 +23,7 @@ public sealed class DictationController(
         await lifecycleGate.WaitAsync(cancellationToken);
         try
         {
-            if (State is DictationState.Recording or DictationState.Transcribing or DictationState.Inserting)
+            if (State != DictationState.Idle)
             {
                 return;
             }
@@ -37,7 +37,7 @@ public sealed class DictationController(
                 if (string.IsNullOrWhiteSpace(settings.ModelPath))
                 {
                     State = DictationState.Error;
-                    LastError = "Select a local whisper model before dictating.";
+                    LastError = "Local whisper model path is required.";
                     return;
                 }
 

@@ -52,9 +52,32 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
 
         Assert.Equal(DictationState.Error, controller.State);
-        Assert.Equal("Select a local whisper model before dictating.", controller.LastError);
+        Assert.Equal("Local whisper model path is required.", controller.LastError);
         Assert.False(capture.Started);
         Assert.Equal(0, transcription.CallCount);
+    }
+
+    [Fact]
+    public async Task StartAsync_DoesNothingWhenAlreadyInError()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper"));
+        var settings = new FakeSettingsStore(new AppSettings());
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        settings.CurrentSettings = settings.CurrentSettings with { ModelPath = "ggml-base.en.bin" };
+        await controller.StartAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Error, controller.State);
+        Assert.Equal("Local whisper model path is required.", controller.LastError);
+        Assert.False(capture.Started);
+        Assert.Equal(0, capture.StartCount);
     }
 
     [Fact]
@@ -322,6 +345,7 @@ public sealed class DictationControllerTests
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore
     {
+        public AppSettings CurrentSettings { get; set; } = settings;
         public Task? LoadGate { get; init; }
 
         public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)
@@ -331,7 +355,7 @@ public sealed class DictationControllerTests
                 await LoadGate.WaitAsync(cancellationToken);
             }
 
-            return settings;
+            return CurrentSettings;
         }
 
         public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken) => Task.CompletedTask;
