@@ -92,6 +92,12 @@ Run this command from the repository root:
 dotnet run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
 ```
 
+If `dotnet` reports `NETSDK1045` because the system SDK is older than .NET 10, either install the .NET 10 SDK or run with a local .NET 10 SDK executable. In this worktree, the bundled SDK command is:
+
+```powershell
+& ..\.dotnet-sdk-10\dotnet.exe run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
+```
+
 After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording when that global hotkey is available.
 
 ### Current Windows MVP Scope
