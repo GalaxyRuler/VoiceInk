@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using VoiceInk.Windows.Core.Audio;
@@ -12,6 +13,7 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.Dictionary;
@@ -20,6 +22,7 @@ using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.Text;
+using VoiceInk.Windows.Native.Tray;
 using VoiceInk.Windows.Native.Transcription;
 using Windows.Media.Core;
 using Windows.Storage;
@@ -41,6 +44,7 @@ public sealed partial class MainWindow : Window
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
+    private TrayIconService? trayIconService;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
@@ -57,6 +61,7 @@ public sealed partial class MainWindow : Window
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
+    private bool exitRequested;
     private string? hotkeyRegistrationError;
 
     public MainWindow()
@@ -84,6 +89,8 @@ public sealed partial class MainWindow : Window
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
 
+        CreateTrayIconService();
+        AppWindow.Closing += MainWindow_AppWindowClosing;
         Closed += MainWindow_Closed;
         RefreshUiFromControllerState("Loading settings");
         _ = InitializeAsync();
@@ -102,6 +109,45 @@ public sealed partial class MainWindow : Window
     private async void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         await CancelCurrentRecordingAsync();
+    }
+
+    private void TrayIconService_ShowRequested(object? sender, EventArgs e)
+    {
+        RestoreAndActivateWindow();
+        RefreshUiFromControllerState();
+    }
+
+    private void TrayIconService_HideRequested(object? sender, EventArgs e)
+    {
+        HideWindowToTray();
+    }
+
+    private async void TrayIconService_ToggleRecordingRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            await ToggleCurrentRecordingAsync();
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Tray recording command failed: {ex.Message}");
+        }
+    }
+
+    private async void TrayIconService_QuickAddDictionaryRequested(object? sender, EventArgs e)
+    {
+        await ShowQuickAddDictionaryAsync();
+    }
+
+    private async void TrayIconService_OpenHistoryRequested(object? sender, EventArgs e)
+    {
+        await OpenHistoryWindowAsync();
+    }
+
+    private void TrayIconService_ExitRequested(object? sender, EventArgs e)
+    {
+        exitRequested = true;
+        Close();
     }
 
     private async void RefreshAudioInputsButton_Click(object sender, RoutedEventArgs e)
@@ -1455,6 +1501,17 @@ public sealed partial class MainWindow : Window
         return Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
     }
 
+    private void HideWindowToTray()
+    {
+        var windowHandle = WindowNative.GetWindowHandle(this);
+        if (windowHandle != IntPtr.Zero)
+        {
+            ShowWindow(windowHandle, ShowWindowHide);
+        }
+
+        RefreshUiFromControllerState();
+    }
+
     private void RestoreAndActivateWindow()
     {
         var windowHandle = WindowNative.GetWindowHandle(this);
@@ -1463,6 +1520,10 @@ public sealed partial class MainWindow : Window
             if (IsIconic(windowHandle))
             {
                 ShowWindow(windowHandle, ShowWindowRestore);
+            }
+            else
+            {
+                ShowWindow(windowHandle, ShowWindowShow);
             }
 
             _ = SetForegroundWindow(windowHandle);
@@ -1854,11 +1915,23 @@ public sealed partial class MainWindow : Window
             ? hotkeyRegistrationError
             : null;
 
-        StatusTextBlock.Text = statusOverride
+        var displayStatus = statusOverride
             ?? controller.LastError
             ?? controller.LastWarning
             ?? idleHotkeyWarning
             ?? stateStatus;
+        StatusTextBlock.Text = displayStatus;
+        UpdateTrayFromControllerState(displayStatus, operationActive);
+    }
+
+    private void UpdateTrayFromControllerState(string displayStatus, bool operationActive)
+    {
+        var trayState = TrayShellPresenter.FromState(
+            settingsLoaded,
+            controller.State,
+            operationActive,
+            displayStatus);
+        trayIconService?.UpdateState(trayState);
     }
 
     private static string StateToStatusText(DictationState state) =>
@@ -1904,14 +1977,57 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        AppWindow.Closing -= MainWindow_AppWindowClosing;
         windowLifetime.Cancel();
         DisposeGlobalHotkeyService();
+        DisposeTrayIconService();
         ClearHistoryAudioPlayer();
 
         audioCapture.Dispose();
         windowLifetime.Dispose();
     }
 
+    private void MainWindow_AppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (exitRequested || windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        args.Cancel = true;
+        HideWindowToTray();
+    }
+
+    private void CreateTrayIconService()
+    {
+        trayIconService = new TrayIconService();
+        trayIconService.ShowRequested += TrayIconService_ShowRequested;
+        trayIconService.HideRequested += TrayIconService_HideRequested;
+        trayIconService.ToggleRecordingRequested += TrayIconService_ToggleRecordingRequested;
+        trayIconService.QuickAddDictionaryRequested += TrayIconService_QuickAddDictionaryRequested;
+        trayIconService.OpenHistoryRequested += TrayIconService_OpenHistoryRequested;
+        trayIconService.ExitRequested += TrayIconService_ExitRequested;
+    }
+
+    private void DisposeTrayIconService()
+    {
+        if (trayIconService is null)
+        {
+            return;
+        }
+
+        trayIconService.ShowRequested -= TrayIconService_ShowRequested;
+        trayIconService.HideRequested -= TrayIconService_HideRequested;
+        trayIconService.ToggleRecordingRequested -= TrayIconService_ToggleRecordingRequested;
+        trayIconService.QuickAddDictionaryRequested -= TrayIconService_QuickAddDictionaryRequested;
+        trayIconService.OpenHistoryRequested -= TrayIconService_OpenHistoryRequested;
+        trayIconService.ExitRequested -= TrayIconService_ExitRequested;
+        trayIconService.Dispose();
+        trayIconService = null;
+    }
+
+    private const int ShowWindowHide = 0;
+    private const int ShowWindowShow = 5;
     private const int ShowWindowRestore = 9;
     private const int ShowWindowMinimize = 6;
 

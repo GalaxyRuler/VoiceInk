@@ -149,6 +149,13 @@ Request subagent review against this plan and the macOS menu-bar behavior. Fix a
 Run:
 
 ```powershell
-git add README.md VoiceInk.Windows docs\superpowers\specs\2026-05-24-windows-open-source-parity-design.md
+git add .gitignore README.md `
+  VoiceInk.Windows\src\VoiceInk.Windows.Core\Shell\TrayShellState.cs `
+  VoiceInk.Windows\src\VoiceInk.Windows.Core\Shell\TrayShellPresenter.cs `
+  VoiceInk.Windows\tests\VoiceInk.Windows.Core.Tests\Shell\TrayShellPresenterTests.cs `
+  VoiceInk.Windows\src\VoiceInk.Windows.Native\Tray\TrayIconService.cs `
+  VoiceInk.Windows\src\VoiceInk.Windows.App\MainWindow.xaml.cs `
+  docs\superpowers\plans\2026-05-24-windows-tray-shell.md `
+  docs\superpowers\specs\2026-05-24-windows-open-source-parity-design.md
 git commit -m "feat(windows): add tray shell"
 ```

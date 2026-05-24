@@ -59,7 +59,7 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
-- Planned tray shell slice for show/hide, recording toggle, Quick Add, History, and Quit.
+- Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -83,7 +83,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 113 Core tests and 35 Infrastructure tests passed after the dictionary edit/sorting slice.
+Result: 118 Core tests and 35 Infrastructure tests passed after the tray shell slice.
 
 ## Parity Inventory
 
@@ -93,20 +93,26 @@ macOS has a sidebar app with Dashboard, Transcribe Audio, History, AI Models, En
 
 macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarView`. It can keep the app alive after windows close, toggle menu-bar-only mode, focus or hide the main window, open History, and expose recorder/model/enhancement/audio/context/settings/help/quit commands from the menu bar. Windows should adapt this as a tray icon rather than a Dock/menu-bar mode.
 
+Implemented:
+
+- Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk commands.
+- Close-to-tray behavior for the main window, with explicit Quit from the tray.
+- Tray state presenter for recording/busy/loading labels and enabled states.
+
 Windows gaps:
 
-- Tray-first shell with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Navigation sidebar.
 - Dedicated settings pages.
 - Dedicated multi-window History surface.
 - About/Open Source replacement.
+- Tray submenus for model/provider/enhancement/language/audio/context/settings once those Windows subsystems exist.
 
-Active tray-shell slice on 2026-05-24:
+Tray-shell slice completed on 2026-05-24:
 
-- Implement a native Windows tray icon with menu entries for Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk.
-- Keep menu state synchronized with dictation state so recording and busy states use correct labels/enabled states.
-- Omit macOS commercial updater/support items. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray slice.
-- Leave model/provider/enhancement/language/audio context submenus as later work until those Windows subsystems and view-models exist.
+- Native Windows tray icon with menu entries for Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk.
+- Menu state synchronized with dictation state so recording and busy states use correct labels/enabled states.
+- macOS commercial updater/support items omitted. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray shell.
+- Model/provider/enhancement/language/audio context submenus remain later work until those Windows subsystems and view-models exist.
 
 ### Floating Recorder
 
@@ -397,6 +403,7 @@ Status on 2026-05-24:
 - Completed Open History Window shortcut as a Windows MVP adaptation that restores/focuses the main shell and inline History area until a dedicated history window exists.
 - Completed Quick Add to Dictionary as a Windows MVP dialog adaptation of the macOS floating quick-add panel, with Vocabulary and Word Replacement modes.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
+- Completed native Windows tray shell with show/hide, recording toggle, Quick Add, History, Quit, and close-to-tray behavior.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
 - Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
