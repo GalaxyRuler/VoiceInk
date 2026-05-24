@@ -390,6 +390,7 @@ public sealed partial class MainWindow : Window
             }
 
             RecordingHotkeyTextBox.Text = settings.Hotkey;
+            SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
             PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
             RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
@@ -1425,6 +1426,9 @@ public sealed partial class MainWindow : Window
         {
             ModelPath = ModelPathTextBox.Text,
             Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
+            SecondaryRecordingHotkey = includeShortcutFields
+                ? SecondaryRecordingHotkeyTextBox.Text.Trim()
+                : settings.SecondaryRecordingHotkey,
             PasteLastTranscriptionHotkey = includeShortcutFields
                 ? PasteLastHotkeyTextBox.Text.Trim()
                 : settings.PasteLastTranscriptionHotkey,

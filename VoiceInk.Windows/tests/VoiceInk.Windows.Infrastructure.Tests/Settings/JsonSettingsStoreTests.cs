@@ -36,6 +36,7 @@ public sealed class JsonSettingsStoreTests
             AppendTrailingSpace = true,
             RestoreClipboard = false,
             Hotkey = "Ctrl+Shift+D",
+            SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
             RetryLastTranscriptionHotkey = "Ctrl+Alt+R",

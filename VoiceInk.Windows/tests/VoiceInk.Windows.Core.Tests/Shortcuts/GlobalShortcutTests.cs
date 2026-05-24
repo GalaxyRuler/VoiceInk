@@ -85,6 +85,7 @@ public sealed class GlobalShortcutTests
         var settings = new AppSettings
         {
             Hotkey = "Ctrl+Alt+Space",
+            SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
             RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
@@ -102,6 +103,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.ToggleRecording, item.Action);
                 Assert.Equal("Ctrl+Alt+Space", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.ToggleRecording, item.Action);
+                Assert.Equal("Ctrl+Alt+S", item.Shortcut.DisplayText);
             },
             item =>
             {
@@ -174,6 +180,20 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Paste Last Transcription already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateSecondaryRecordingAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            SecondaryRecordingHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Secondary Shortcut already uses Ctrl+Alt+Space.");
     }
 
     [Fact]

@@ -19,6 +19,14 @@ public static class GlobalShortcutSettings
             errors,
             usedShortcuts);
         AddRegistration(
+            settings.SecondaryRecordingHotkey,
+            GlobalShortcutAction.ToggleRecording,
+            "Secondary Shortcut",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
+        AddRegistration(
             settings.PasteLastTranscriptionHotkey,
             GlobalShortcutAction.PasteLastTranscription,
             "Paste Last Transcription",

@@ -56,6 +56,10 @@
                     Header="Primary Shortcut"
                     PlaceholderText="Ctrl+Alt+Space" />
                 <TextBox
+                    x:Name="SecondaryRecordingHotkeyTextBox"
+                    Header="Secondary Shortcut"
+                    PlaceholderText="Ctrl+Alt+S" />
+                <TextBox
                     x:Name="PasteLastHotkeyTextBox"
                     Header="Paste Last Transcription"
                     PlaceholderText="Ctrl+Alt+V" />

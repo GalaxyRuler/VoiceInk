@@ -9,6 +9,7 @@ public sealed record AppSettings
     public bool AppendTrailingSpace { get; init; }
     public bool RestoreClipboard { get; init; } = true;
     public string Hotkey { get; init; } = "Ctrl+Alt+Space";
+    public string SecondaryRecordingHotkey { get; init; } = string.Empty;
     public string PasteLastTranscriptionHotkey { get; init; } = string.Empty;
     public string PasteLastEnhancementHotkey { get; init; } = string.Empty;
     public string RetryLastTranscriptionHotkey { get; init; } = string.Empty;

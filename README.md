@@ -24,7 +24,7 @@ The project goal is to make privacy-focused voice-to-text software that is effic
 - 🔒 **Privacy First**: 100% offline processing ensures your data never leaves your device
 - ⚡ **Power Mode**: Intelligent app detection automatically applies your perfect pre-configured settings based on the app/ URL you're on
 - 🧠 **Context Aware**: Smart AI that understands your screen content and adapts to the context
-- 🎯 **Global Shortcuts**: Configurable keyboard shortcuts for quick recording and push-to-talk functionality
+- 🎯 **Global Shortcuts**: Configurable keyboard shortcuts for quick recording, with Windows secondary toggle support and macOS push-to-talk modes
 - 📝 **Personal Dictionary**: Train the AI to understand your unique terminology with custom words, industry terms, and smart text replacements
 - 🔄 **Smart Modes**: Instantly switch between AI-powered modes optimized for different writing styles and contexts
 - 🤖 **AI Assistant**: Built-in voice assistant mode for a quick chatGPT like conversational assistant
@@ -93,7 +93,7 @@ Remove the temporary drive mapping with:
 cmd /c "subst W: /D"
 ```
 
-After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary. Retry Last reuses the latest completed history row with a saved audio file, applies the current local model, dictionary, and cleanup settings, saves the retried row, and copies the retried text to the clipboard. Cancel Recording stops the active recorder, keeps the captured audio file, and saves a canceled history row. Open History restores the main window and focuses the inline History area. Quick Add opens a small Vocabulary/Word Replacement dialog that mirrors the macOS quick-add panel intent.
+After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary. Retry Last reuses the latest completed history row with a saved audio file, applies the current local model, dictionary, and cleanup settings, saves the retried row, and copies the retried text to the clipboard. Cancel Recording stops the active recorder, keeps the captured audio file, and saves a canceled history row. Open History restores the main window and focuses the inline History area. Quick Add opens a small Vocabulary/Word Replacement dialog that mirrors the macOS quick-add panel intent.
 
 ### Current Windows MVP Scope
 
@@ -102,7 +102,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Microphone capture
 - Clipboard-based text insertion into the active app
 - JSON settings and SQLite transcription history
-- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary
+- Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary
 - Core dictionary models for vocabulary words and word replacements
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
@@ -118,7 +118,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Paste-last final and enhanced-preferred history actions in the shell
 - History search, selected-row audio playback/open, selected-row retry, retry-last-to-clipboard, active-recording cancel history, and confirmed single-item delete
 
-The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, prioritized audio input failover, canceling in-flight transcription/enhancement, a dedicated multi-window History surface, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export/quick-add path, recent-history metadata view, paste-last actions, retry-last action, active-recording cancel action, open-history focus action, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, push-to-talk/hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, a dedicated multi-window History surface, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export/quick-add path, recent-history metadata view, paste-last actions, retry-last action, active-recording cancel action, open-history focus action, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 
