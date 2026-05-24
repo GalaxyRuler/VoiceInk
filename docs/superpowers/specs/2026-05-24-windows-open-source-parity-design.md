@@ -67,7 +67,7 @@ The Windows MVP already has:
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
 - Recent history list/detail shell view for original, final, enhanced, status, timing, model, prompt, and error metadata.
-- Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`.
+- Picker-based CSV history export.
 - Paste-last final and enhanced-preferred history actions.
 - History search and confirmed single-item delete.
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
@@ -261,7 +261,7 @@ Implemented core:
 - SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, and error message.
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
 - Core CSV export formatting for stored metadata.
-- Shell recent-history list/detail and local CSV export.
+- Shell recent-history list/detail and picker-based CSV export.
 - Paste-last final and enhanced-preferred Core primitives with shell buttons.
 - Search and confirmed single-item delete in the shell.
 
@@ -271,7 +271,7 @@ Windows gaps:
 - Enhancement model and AI request messages.
 - Power Mode name/emoji.
 - Retry-last flow.
-- Picker-based export and batch actions.
+- Batch actions.
 
 ### Metrics
 
@@ -364,12 +364,13 @@ Status on 2026-05-24:
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
+- Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed history search and confirmed single-item delete.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, history batch actions, picker export, and audio playback.
+- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, history batch actions, and audio playback.
 - Add focused tests and docs.
 
 ## Verification

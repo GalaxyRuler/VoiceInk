@@ -4,7 +4,7 @@
 
 **Goal:** Let Windows users choose where to save history CSV exports.
 
-**Architecture:** Reuse the existing Core `HistoryCsvExporter` and current shell history list/search state. Keep picker integration in the WinUI app layer and initialize the picker with this window's HWND as required for desktop WinUI apps. Keep the previous local export folder only as a fallback if picker initialization or write fails in an environment where Windows file pickers are unavailable.
+**Architecture:** Reuse the existing Core `HistoryCsvExporter` and current shell history list/search state. Keep picker integration in the WinUI app layer and initialize the picker with this window's HWND as required for desktop WinUI apps. If the picker or write fails, report the error in the shell status instead of silently writing somewhere else.
 
 **Tech Stack:** .NET 10, WinUI 3, Windows.Storage.Pickers `FileSavePicker`, `WinRT.Interop.InitializeWithWindow`, existing `HistoryCsvExporter`.
 
@@ -68,11 +68,11 @@ feat(windows): choose history csv export path
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-history-export-picker.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document picker-based CSV export. Keep batch actions, audio playback, and retry-last as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -82,7 +82,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -92,11 +92,14 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from this plan commit through HEAD. Fix Critical and Important findings before proceeding.
 
-- [ ] **Step 5: Commit docs**
+Review result: no Critical or Important findings. Minor stale fallback wording in this plan
+was updated to match the implemented picker-only export behavior.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 
