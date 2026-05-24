@@ -145,7 +145,7 @@ feat(windows): persist history audio paths
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Core/History/HistoryRetryService.cs`
 - Test: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/History/HistoryRetryServiceTests.cs`
 
-- [ ] **Step 1: Write failing retry service tests**
+- [x] **Step 1: Write failing retry service tests**
 
 Add tests for:
 
@@ -159,7 +159,7 @@ RetryAsync_AppliesDictionaryAndCleanupSettings()
 
 Use fake `ITranscriptionService`, `IHistoryStore`, `ISettingsStore`, and `IDictionaryStore`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -169,7 +169,7 @@ Run:
 
 Expected: build fails because retry service/result do not exist.
 
-- [ ] **Step 3: Implement retry result and service**
+- [x] **Step 3: Implement retry result and service**
 
 Implementation details:
 
@@ -182,13 +182,13 @@ Implementation details:
 - Apply `TextPostProcessor.Process` with current cleanup settings and replacements.
 - Save a new completed history item with new ID, UTC timestamp, source audio duration, transcription duration, original/final text, provider, language, model path, and `audioFilePath: source.AudioFilePath`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same `HistoryRetryServiceTests` command.
 
 Expected: all retry service tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
