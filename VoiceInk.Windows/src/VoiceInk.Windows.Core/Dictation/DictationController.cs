@@ -48,7 +48,7 @@ public sealed class DictationController(
                 State = DictationState.Recording;
                 await audioCapture.StartAsync(cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 State = DictationState.Idle;
                 throw;

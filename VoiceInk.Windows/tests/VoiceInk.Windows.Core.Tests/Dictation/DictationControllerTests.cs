@@ -357,6 +357,30 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StartAsync_CaptureStartCancellationFailureSetsErrorWhenCallerTokenIsNotCanceled()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1))
+        {
+            StartExceptionToThrow = new OperationCanceledException("capture start canceled")
+        };
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Error, controller.State);
+        Assert.Equal("capture start canceled", controller.LastError);
+        Assert.Equal(1, capture.StartCount);
+    }
+
+    [Fact]
     public async Task StopAsync_CaptureStopFailureSetsError()
     {
         var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1))
