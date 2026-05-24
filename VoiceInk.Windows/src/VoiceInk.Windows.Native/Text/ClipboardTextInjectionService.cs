@@ -17,17 +17,20 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
         {
             await Task.Delay(TimeSpan.FromMilliseconds(80), cancellationToken);
             SendCtrlV();
-
-            if (restoreClipboard)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(400), cancellationToken);
-            }
         }
         finally
         {
             if (restoreClipboard && previousClipboard is not null)
             {
-                await previousClipboard.RestoreAsync(CancellationToken.None);
+                await Task.Delay(TimeSpan.FromMilliseconds(400), CancellationToken.None);
+
+                try
+                {
+                    await previousClipboard.RestoreAsync(CancellationToken.None);
+                }
+                catch
+                {
+                }
             }
         }
     }
