@@ -173,12 +173,19 @@ Windows gaps:
 
 ### Model Management
 
-macOS has local Whisper cards, imported Whisper models, Parakeet/FluidAudio cards, native Apple model, cloud model cards, language selection, custom cloud models, API key management, model download/import, default model selection, and prewarm on wake.
+macOS has local Whisper cards, imported Whisper models, Parakeet/FluidAudio cards, native Apple model, cloud model cards, language selection, custom cloud models, API key management, model download/import, default model selection, and prewarm on wake. The macOS local model flow scans model files, imports Whisper ggml `.bin` models, displays imported model cards, and lets the user set a default transcription model.
+
+Active local-model-library slice on 2026-05-24:
+
+- Persist imported local Whisper `.bin` model references in Windows JSON settings.
+- Add an imported-model selector to the Windows shell and set the selected model as the default local model path.
+- Add an import picker for `.bin` files and a link to open the open-source whisper.cpp GGML model downloads page.
+- Keep model catalog cards, direct download, language capability UI, warmup/preload, and cloud provider cards as later model-management work.
 
 Windows gaps:
 
-- Model catalog and cards.
-- Import/download flow.
+- Model catalog and cards beyond imported local model references.
+- Direct model download flow.
 - Language picker bound to model capabilities.
 - Default model management.
 - Warmup/preload.
