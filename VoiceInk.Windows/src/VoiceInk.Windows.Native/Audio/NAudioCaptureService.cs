@@ -81,7 +81,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
         try
         {
             waveIn.StopRecording();
-            stoppedArgs = await stoppedTask.ConfigureAwait(false);
+            stoppedArgs = await stoppedTask.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         catch
         {
@@ -121,6 +121,8 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
 
     private void DisposeCurrentRecording()
     {
+        var stoppedCompletion = recordingStopped;
+
         if (waveIn is not null)
         {
             waveIn.DataAvailable -= OnDataAvailable;
@@ -138,5 +140,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
         recordingStopped = null;
         currentFilePath = null;
         startedAt = default;
+
+        stoppedCompletion?.TrySetCanceled();
     }
 }

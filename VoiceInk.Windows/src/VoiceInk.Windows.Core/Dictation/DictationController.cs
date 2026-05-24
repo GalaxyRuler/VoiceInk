@@ -84,6 +84,7 @@ public sealed class DictationController(
 
             try
             {
+                // Always let capture stop release recorder resources before honoring caller cancellation.
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
