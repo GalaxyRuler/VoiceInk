@@ -61,6 +61,8 @@ The Windows MVP already has:
 - Global `Ctrl+Alt+Space` toggle.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
+- Persistent JSON-backed dictionary storage.
+- Shell add/remove controls for vocabulary words and word replacements.
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
 
@@ -224,13 +226,17 @@ Windows gaps:
 
 macOS Dictionary has Word Replacements and Vocabulary sections. Vocabulary stores words for enhancement prompts. Word replacements support comma-separated originals, duplicate detection across variants, enabled state, edit/delete, sorting, quick add, and replacement application in the transcription pipeline.
 
-Windows gaps:
+Implemented core:
 
 - Dictionary models.
-- Dictionary store.
+- JSON dictionary store.
 - Word replacement application.
 - Vocabulary prompt rendering.
-- UI for vocabulary/replacements.
+- Shell add/delete controls for vocabulary and replacements.
+
+Windows gaps:
+
+- Dedicated macOS-style Dictionary page with edit flow, sorting controls, and richer guidance.
 - Import/export.
 - Quick add shortcut.
 
@@ -337,11 +343,13 @@ The first slice must:
 Status on 2026-05-24:
 
 - Completed Core dictionary records, validation, vocabulary prompt rendering, and global longest-trigger-first replacement application.
+- Completed persistent JSON dictionary storage.
+- Completed basic shell add/remove controls for vocabulary and word replacements.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: persistent dictionary editing/import/export/quick-add and history metadata views.
+- Remaining for this slice: dictionary edit/import/export/quick-add and history metadata views.
 - Add focused tests and docs.
 
 ## Verification

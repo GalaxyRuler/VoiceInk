@@ -34,7 +34,7 @@
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Infrastructure/Dictionary/JsonDictionaryStore.cs`
 - Create: `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/Dictionary/JsonDictionaryStoreTests.cs`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add tests that describe the store API before implementation:
 
@@ -111,7 +111,7 @@ public async Task DeleteReplacementAsync_RemovesMatchingReplacement()
 }
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -121,7 +121,7 @@ Run:
 
 Expected: build or tests fail because `JsonDictionaryStore` and writable store methods do not exist yet.
 
-- [ ] **Step 3: Implement the writable contract and store**
+- [x] **Step 3: Implement the writable contract and store**
 
 Add these methods to `IDictionaryStore`:
 
@@ -141,13 +141,13 @@ Implement `JsonDictionaryStore` with:
 - `DictionaryService.AddVocabularyWords` and `DictionaryService.AddWordReplacement` for macOS-matched validation.
 - Stable list ordering by word/original text for UI readability.
 
-- [ ] **Step 4: Run tests to verify GREEN**
+- [x] **Step 4: Run tests to verify GREEN**
 
 Run the same filtered infrastructure test command.
 
 Expected: all `JsonDictionaryStoreTests` pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -162,7 +162,7 @@ feat(windows): persist dictionary entries
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add shell controls**
+- [x] **Step 1: Add shell controls**
 
 Add a `Dictionary` section below cleanup settings with:
 
@@ -170,11 +170,11 @@ Add a `Dictionary` section below cleanup settings with:
 - Word replacement original input, replacement input, add button, list, and remove button.
 - Text that matches macOS terminology: `Vocabulary`, `Word Replacements`, `Original text`, and `Replacement text`.
 
-- [ ] **Step 2: Wire store and refresh behavior**
+- [x] **Step 2: Wire store and refresh behavior**
 
 Compose `JsonDictionaryStore` at `%LOCALAPPDATA%\VoiceInk.Windows\dictionary.json`, pass it to `DictationController`, and use it for shell list mutations. Refresh the lists after initialization and after every add/delete.
 
-- [ ] **Step 3: Run app build**
+- [x] **Step 3: Run app build**
 
 Run:
 
@@ -184,7 +184,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Commit message:
 
@@ -199,11 +199,11 @@ feat(windows): add dictionary controls to shell
 - Modify: `README.md`
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document that Windows now supports persistent vocabulary and word replacement add/delete in the shell. Keep import/export, quick add shortcut, edit sheet, and polished full dictionary page listed as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -213,7 +213,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 

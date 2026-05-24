@@ -123,11 +123,13 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - JSON settings and SQLite transcription history
 - Global `Ctrl+Alt+Space` recording toggle
 - Core dictionary models for vocabulary words and word replacements
+- Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
 - Expanded history metadata for original text, final text, status, language, model path, prompt name, and enhancement timing
 - Shell controls for filler-word removal, punctuation cleanup, lowercase output, and trailing spaces
+- Shell controls for adding/removing vocabulary words and word replacements
 
-The current shell does not yet expose Dictionary editing or history metadata views in the UI; those are wired in Core and persistence for follow-on Windows UI slices. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, import/export, quick add shortcuts, or history metadata views in the UI; the Dictionary add/remove path is source-runnable and wired into the dictation cleanup pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 
