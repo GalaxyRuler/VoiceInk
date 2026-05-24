@@ -291,13 +291,29 @@ Windows adaptation:
 
 macOS Power Mode supports app and URL rules, configurable model/language/enhancement/prompt/paste/session preferences, emoji/name display, auto-send keys, enabled states, ordering, validation, shortcut integration, and persistence choice.
 
+Power Mode Windows MVP target:
+
+- Add a Core `PowerModeRule` model persisted with normal JSON settings.
+- Match enabled rules in stored order against the active Windows process name and title bar text.
+- Apply a default rule only when no app/window rule matches.
+- Capture the active window at recording start and keep the chosen Power Mode for the whole dictation session.
+- Override model path, language, enhancement enabled state, selected enhancement prompt, trailing-space paste cleanup, filler removal, punctuation cleanup, and lowercase cleanup for that session without rewriting the user's base settings.
+- Store Power Mode name and emoji in history and CSV export for completed and canceled rows.
+- Add a WinUI Power Mode section with rule list, add/update/remove, enable toggle, active-window quick fill, ordering, and basic override controls.
+- Defer browser URL detection, auto-send keys, Power Mode global shortcuts, and recorder popover selection until the next Power Mode slice.
+
+Windows Win32 grounding:
+
+- `GetForegroundWindow` is the active-window primitive for the window the user is working with.
+- `GetWindowThreadProcessId` maps that window to the owning process id.
+- `GetWindowTextW` reads the title bar text when the window exposes one; empty titles must degrade gracefully.
+
 Windows gaps:
 
-- Power Mode config model.
-- Active window and URL matching.
-- Per-mode application of settings.
+- Browser URL matching.
 - Auto-send keys.
-- UI and recorder integration.
+- Power Mode shortcuts.
+- Recorder popover integration.
 
 ### Dictionary
 
