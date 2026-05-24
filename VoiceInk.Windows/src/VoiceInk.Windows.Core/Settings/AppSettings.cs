@@ -1,3 +1,5 @@
+using VoiceInk.Windows.Core.Text;
+
 namespace VoiceInk.Windows.Core.Settings;
 
 public sealed record AppSettings
@@ -8,4 +10,7 @@ public sealed record AppSettings
     public bool RestoreClipboard { get; init; } = true;
     public string Hotkey { get; init; } = "Ctrl+Alt+Space";
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;
+    public bool RemoveFillerWords { get; init; } = true;
+    public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
+    public bool LowercaseTranscription { get; init; }
 }
