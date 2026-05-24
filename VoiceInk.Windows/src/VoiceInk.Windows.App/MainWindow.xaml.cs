@@ -4,8 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
@@ -224,7 +226,8 @@ public sealed partial class MainWindow : Window
             new WhisperNetTranscriptionService(),
             new ClipboardTextInjectionService(restoreClipboard: true),
             new SqliteHistoryStore(historyPath),
-            settingsStore);
+            settingsStore,
+            new EmptyDictionaryStore());
 
     private void RegisterGlobalHotkey()
     {
@@ -298,5 +301,18 @@ public sealed partial class MainWindow : Window
 
         audioCapture.Dispose();
         windowLifetime.Dispose();
+    }
+
+    private sealed class EmptyDictionaryStore : IDictionaryStore
+    {
+        public Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<VocabularyWord>>([]);
+        }
+
+        public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<WordReplacement>>([]);
+        }
     }
 }

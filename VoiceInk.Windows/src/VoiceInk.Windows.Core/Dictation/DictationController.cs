@@ -1,3 +1,4 @@
+using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Text;
@@ -10,9 +11,11 @@ public sealed class DictationController(
     ITranscriptionService transcriptionService,
     ITextInjectionService textInjection,
     IHistoryStore historyStore,
-    ISettingsStore settingsStore)
+    ISettingsStore settingsStore,
+    IDictionaryStore? dictionaryStore = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
+    private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
 
     public DictationState State { get; private set; } = DictationState.Idle;
     public string? LastError { get; private set; }
@@ -89,6 +92,7 @@ public sealed class DictationController(
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var settings = await settingsStore.LoadAsync(cancellationToken);
+                var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
 
                 State = DictationState.Transcribing;
                 var transcription = await transcriptionService.TranscribeAsync(
@@ -98,7 +102,12 @@ public sealed class DictationController(
 
                 var finalText = TextPostProcessor.Process(
                     transcription.Text,
-                    new TextPostProcessingOptions(settings.AppendTrailingSpace));
+                    new TextPostProcessingOptions(
+                        AppendTrailingSpace: settings.AppendTrailingSpace,
+                        RemoveFillerWords: settings.RemoveFillerWords,
+                        WordReplacements: replacements,
+                        PunctuationCleanupMode: settings.PunctuationCleanupMode,
+                        LowercaseTranscription: settings.LowercaseTranscription));
 
                 if (finalText.Length == 0)
                 {
@@ -118,7 +127,11 @@ public sealed class DictationController(
                             finalText,
                             transcription.ProviderName,
                             audio.Duration,
-                            transcription.Duration),
+                            transcription.Duration,
+                            originalText: transcription.Text,
+                            status: TranscriptionHistoryStatus.Completed,
+                            language: settings.Language,
+                            modelPath: settings.ModelPath),
                         cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -147,6 +160,21 @@ public sealed class DictationController(
         finally
         {
             lifecycleGate.Release();
+        }
+    }
+
+    private sealed class EmptyDictionaryStore : IDictionaryStore
+    {
+        public static EmptyDictionaryStore Instance { get; } = new();
+
+        public Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<VocabularyWord>>([]);
+        }
+
+        public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<WordReplacement>>([]);
         }
     }
 }

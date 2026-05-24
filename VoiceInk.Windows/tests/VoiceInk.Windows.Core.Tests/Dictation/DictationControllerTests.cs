@@ -1,8 +1,10 @@
 using VoiceInk.Windows.Core.Audio;
+using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
 using Xunit;
 
@@ -39,6 +41,43 @@ public sealed class DictationControllerTests
         Assert.Equal("hello world ", saved.Text);
         Assert.Equal("local-whisper", saved.ProviderName);
         Assert.Equal(TimeSpan.FromSeconds(2), saved.AudioDuration);
+    }
+
+    [Fact]
+    public async Task StopAsync_AppliesCleanupSettingsAndDictionaryReplacementsToInsertedAndHistoryText()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("Um, voice ink!", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "C:\\Models\\ggml-base.en.bin",
+            Language = "en",
+            RemoveFillerWords = false,
+            PunctuationCleanupMode = PunctuationCleanupMode.RemoveAll,
+            LowercaseTranscription = true
+        });
+        var dictionary = new FakeDictionaryStore
+        {
+            Replacements =
+            [
+                new WordReplacement(Guid.NewGuid(), "voice ink", "VoiceInk!", DateTimeOffset.UtcNow)
+            ]
+        };
+        var controller = new DictationController(capture, transcription, insertion, history, settings, dictionary);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("um voiceink", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("Um, voice ink!", saved.OriginalText);
+        Assert.Equal("um voiceink", saved.Text);
+        Assert.Equal(TranscriptionHistoryStatus.Completed, saved.Status);
+        Assert.Equal("en", saved.Language);
+        Assert.Equal("C:\\Models\\ggml-base.en.bin", saved.ModelPath);
     }
 
     [Fact]
@@ -680,5 +719,21 @@ public sealed class DictationControllerTests
         }
 
         public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class FakeDictionaryStore : IDictionaryStore
+    {
+        public IReadOnlyList<VocabularyWord> Vocabulary { get; init; } = [];
+        public IReadOnlyList<WordReplacement> Replacements { get; init; } = [];
+
+        public Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Vocabulary);
+        }
+
+        public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Replacements);
+        }
     }
 }
