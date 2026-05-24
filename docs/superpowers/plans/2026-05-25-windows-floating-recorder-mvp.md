@@ -14,6 +14,8 @@
 
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderViewState.cs`.
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderPresenter.cs`.
+- Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderActivityPolicy.cs`.
+- Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderRefreshPolicy.cs`.
 - Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Recorder/FloatingRecorderPresenterTests.cs`.
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.App/FloatingRecorderWindow.xaml`.
 - Create `VoiceInk.Windows/src/VoiceInk.Windows.App/FloatingRecorderWindow.xaml.cs`.
@@ -23,7 +25,7 @@
 
 ## Task 1: Planning Docs
 
-- [ ] **Step 1: Update parity spec**
+- [x] **Step 1: Update parity spec**
 
 Record the macOS source behavior:
 
@@ -34,11 +36,11 @@ Record the macOS source behavior:
 Record the Windows adaptation for this slice:
 
 - Implement a compact always-on-top floating mini-recorder window.
-- Show it while recording, transcribing, inserting, or while an explicit operation status is active.
-- Include status title, detail text, elapsed timer, animated pulse bars, Stop and Cancel buttons during recording, and disabled Prompt/Power Mode affordance labels for design continuity.
+- Show it while recording, transcribing, inserting, starting, stopping, or canceling.
+- Include status title, detail text, elapsed timer, animated pulse bars, and disabled Prompt/Power Mode affordance labels for design continuity.
 - Leave true live partial transcript, real waveform metering, notch style, prompt picker, and Power Mode button behavior as later slices.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -51,7 +53,7 @@ Expected: docs-only commit.
 
 ## Task 2: Red Tests
 
-- [ ] **Step 1: Add presenter tests**
+- [x] **Step 1: Add presenter tests**
 
 Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Recorder/FloatingRecorderPresenterTests.cs`:
 
@@ -134,7 +136,7 @@ public sealed class FloatingRecorderPresenterTests
 }
 ```
 
-- [ ] **Step 2: Run red tests**
+- [x] **Step 2: Run red tests**
 
 Run:
 
@@ -146,7 +148,7 @@ Expected: compile failure because `VoiceInk.Windows.Core.Recorder` types do not 
 
 ## Task 3: Core Presenter
 
-- [ ] **Step 1: Add view-state record**
+- [x] **Step 1: Add view-state record**
 
 Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderViewState.cs`:
 
@@ -163,7 +165,7 @@ public sealed record FloatingRecorderViewState(
     bool ShowPulse);
 ```
 
-- [ ] **Step 2: Add presenter**
+- [x] **Step 2: Add presenter**
 
 Create `VoiceInk.Windows/src/VoiceInk.Windows.Core/Recorder/FloatingRecorderPresenter.cs`:
 
@@ -235,13 +237,13 @@ public static class FloatingRecorderPresenter
 }
 ```
 
-- [ ] **Step 3: Verify focused tests**
+- [x] **Step 3: Verify focused tests**
 
 Run the focused test command from Task 2. Expected: presenter tests pass.
 
 ## Task 4: WinUI Floating Recorder Window
 
-- [ ] **Step 1: Add floating recorder XAML**
+- [x] **Step 1: Add floating recorder XAML**
 
 Create `VoiceInk.Windows/src/VoiceInk.Windows.App/FloatingRecorderWindow.xaml` with:
 
@@ -249,33 +251,33 @@ Create `VoiceInk.Windows/src/VoiceInk.Windows.App/FloatingRecorderWindow.xaml` w
 - `TitleTextBlock`, `DetailTextBlock`, `ElapsedTextBlock`.
 - Three pulse bars named `PulseBar1`, `PulseBar2`, `PulseBar3`.
 - Disabled continuity buttons/labels `PromptButton` and `PowerModeButton`.
-- `StopFloatingRecorderButton` and `CancelFloatingRecorderButton` wired to code-behind.
+- An informational hint that directs users to the global shortcut or main-window controls, keeping this slice non-activating for paste-target safety.
 
-- [ ] **Step 2: Add floating recorder code-behind**
+- [x] **Step 2: Add floating recorder code-behind**
 
 Create `FloatingRecorderWindow.xaml.cs`:
 
-- Constructor accepts `Func<Task> stopRequested` and `Func<Task> cancelRequested`.
-- Configure window size to `320x128`.
+- Constructor configures an informational non-activating mini-recorder window.
+- Configure window size to `320x104`.
 - Use `OverlappedPresenter` to set `IsAlwaysOnTop = true`, `IsResizable = false`, `IsMaximizable = false`, `IsMinimizable = false` where available.
-- Hide the title bar with `ExtendsContentIntoTitleBar = true`.
+- Hide the native border and title bar with `OverlappedPresenter.SetBorderAndTitleBar(false, false)`.
 - Position bottom center of the display area using `DisplayArea.GetFromWindowId(...)`.
 - Use `DispatcherQueueTimer` every 180ms to animate pulse bar opacity/height.
-- `Apply(FloatingRecorderViewState state)` updates text, button enabled states, pulse visibility, and shows/hides the native window.
+- `Apply(FloatingRecorderViewState state)` updates text, pulse visibility, and shows/hides the native window.
 
-- [ ] **Step 3: Wire from MainWindow**
+- [x] **Step 3: Wire from MainWindow**
 
 Modify `MainWindow.xaml.cs`:
 
-- Add fields `FloatingRecorderWindow? floatingRecorderWindow; DateTimeOffset? recordingStartedAt; string? floatingRecorderStatus;`.
+- Add fields `FloatingRecorderWindow? floatingRecorderWindow; DateTimeOffset? recordingStartedAt;`.
 - Set `recordingStartedAt = DateTimeOffset.Now` after successful `controller.StartAsync`.
 - Clear `recordingStartedAt` after stop/cancel finishes and when idle/error without active operation.
 - Add `EnsureFloatingRecorderWindow()`.
 - In `RefreshUiFromControllerState`, after `displayStatus` is computed, call `UpdateFloatingRecorder(displayStatus, operationActive)`.
-- `UpdateFloatingRecorder` builds a `FloatingRecorderPresenter.FromState(...)` state and applies it.
-- Use existing `StopCurrentRecordingAsync` and `CancelCurrentRecordingAsync` for floating window commands.
+- `UpdateFloatingRecorder` uses `FloatingRecorderActivityPolicy` so unrelated shell operations do not show the recorder, then builds a `FloatingRecorderPresenter.FromState(...)` state and applies it.
+- Keep stop on the existing global shortcuts, tray command, and main-window controls, and keep cancel on the existing global shortcut and main-window controls until a later slice can implement truly non-activating mouse commands without stealing the paste target.
 
-- [ ] **Step 4: Verify app build**
+- [x] **Step 4: Verify app build**
 
 Run:
 
@@ -287,15 +289,15 @@ Expected: build passes with 0 warnings/errors.
 
 ## Task 5: Docs, Review, Commit
 
-- [ ] **Step 1: Update README/spec**
+- [x] **Step 1: Update README/spec**
 
 Document:
 
 - Windows now has a compact floating mini-recorder during recording/processing.
-- It includes state text, elapsed timer, pulse animation, stop/cancel controls, and prompt/Power Mode affordances.
+- It includes state text, elapsed timer, pulse animation, and prompt/Power Mode affordances.
 - Live partial transcript, real waveform/level metering, notch style, prompt picker, and Power Mode behavior remain future gaps.
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 Run:
 
@@ -306,7 +308,7 @@ Run:
 
 Expected: all tests pass and Debug x64 build passes with 0 warnings/errors.
 
-- [ ] **Step 3: Request review and fix findings**
+- [x] **Step 3: Request review and fix findings**
 
 Request subagent review against this plan and the macOS recorder source. Fix all Critical and Important findings before committing.
 
@@ -318,6 +320,8 @@ Run:
 git add README.md `
   VoiceInk.Windows\src\VoiceInk.Windows.Core\Recorder\FloatingRecorderViewState.cs `
   VoiceInk.Windows\src\VoiceInk.Windows.Core\Recorder\FloatingRecorderPresenter.cs `
+  VoiceInk.Windows\src\VoiceInk.Windows.Core\Recorder\FloatingRecorderActivityPolicy.cs `
+  VoiceInk.Windows\src\VoiceInk.Windows.Core\Recorder\FloatingRecorderRefreshPolicy.cs `
   VoiceInk.Windows\tests\VoiceInk.Windows.Core.Tests\Recorder\FloatingRecorderPresenterTests.cs `
   VoiceInk.Windows\src\VoiceInk.Windows.App\FloatingRecorderWindow.xaml `
   VoiceInk.Windows\src\VoiceInk.Windows.App\FloatingRecorderWindow.xaml.cs `

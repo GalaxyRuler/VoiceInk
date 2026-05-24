@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -15,6 +16,7 @@ using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
+using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
@@ -59,8 +61,10 @@ public sealed partial class MainWindow : Window
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
+    private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
     private GlobalHotkeyService? hotkeyService;
     private TrayIconService? trayIconService;
+    private FloatingRecorderWindow? floatingRecorderWindow;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
@@ -82,12 +86,17 @@ public sealed partial class MainWindow : Window
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
     private bool exitRequested;
+    private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
 
     public MainWindow()
     {
         InitializeComponent();
+        floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
+        floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
+        floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
+
         InitializeNavigationItems();
         ShowShellSection(DashboardSectionTag);
         RefreshAboutSection();
@@ -221,6 +230,11 @@ public sealed partial class MainWindow : Window
 
             await SaveSettingsAsync(windowLifetime.Token);
             await controller.StartAsync(windowLifetime.Token);
+            if (controller.State == DictationState.Recording)
+            {
+                recordingStartedAt = DateTimeOffset.Now;
+            }
+
             statusOverride = null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -258,6 +272,7 @@ public sealed partial class MainWindow : Window
         {
             await controller.StopAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            recordingStartedAt = null;
             statusOverride = null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -301,6 +316,7 @@ public sealed partial class MainWindow : Window
         {
             await controller.CancelAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            recordingStartedAt = null;
             statusOverride = controller.LastWarning ?? "Recording canceled";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -2568,7 +2584,80 @@ public sealed partial class MainWindow : Window
             ?? idleHotkeyWarning
             ?? stateStatus;
         StatusTextBlock.Text = displayStatus;
+        UpdateFloatingRecorder(displayStatus, operationActive);
         UpdateTrayFromControllerState(displayStatus, operationActive);
+    }
+
+    private void UpdateFloatingRecorder(string displayStatus, bool operationActive)
+    {
+        var recorderActivityActive = FloatingRecorderActivityPolicy.ShouldShowForActivity(
+            controller.State,
+            isStarting,
+            isStopping,
+            isCanceling);
+        if (!recorderActivityActive)
+        {
+            recordingStartedAt = null;
+        }
+
+        var elapsed = recordingStartedAt is null
+            ? TimeSpan.Zero
+            : DateTimeOffset.Now - recordingStartedAt.Value;
+        var state = FloatingRecorderPresenter.FromState(
+            controller.State,
+            elapsed,
+            displayStatus,
+            recorderActivityActive && operationActive);
+
+        if (!state.IsVisible && floatingRecorderWindow is null)
+        {
+            UpdateFloatingRecorderRefreshTimer(state);
+            return;
+        }
+
+        EnsureFloatingRecorderWindow().Apply(state);
+        UpdateFloatingRecorderRefreshTimer(state);
+    }
+
+    private void RefreshFloatingRecorderFromTimer()
+    {
+        if (windowLifetime.IsCancellationRequested)
+        {
+            floatingRecorderRefreshTimer.Stop();
+            return;
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void UpdateFloatingRecorderRefreshTimer(FloatingRecorderViewState state)
+    {
+        if (FloatingRecorderRefreshPolicy.ShouldRefresh(state))
+        {
+            if (!floatingRecorderRefreshTimer.IsRunning)
+            {
+                floatingRecorderRefreshTimer.Start();
+            }
+
+            return;
+        }
+
+        if (floatingRecorderRefreshTimer.IsRunning)
+        {
+            floatingRecorderRefreshTimer.Stop();
+        }
+    }
+
+    private FloatingRecorderWindow EnsureFloatingRecorderWindow()
+    {
+        if (floatingRecorderWindow is not null)
+        {
+            return floatingRecorderWindow;
+        }
+
+        floatingRecorderWindow = new FloatingRecorderWindow();
+        floatingRecorderWindow.Closed += (_, _) => floatingRecorderWindow = null;
+        return floatingRecorderWindow;
     }
 
     private void UpdateTrayFromControllerState(string displayStatus, bool operationActive)
@@ -2629,6 +2718,8 @@ public sealed partial class MainWindow : Window
         DisposeGlobalHotkeyService();
         DisposeTrayIconService();
         ClearHistoryAudioPlayer();
+        floatingRecorderRefreshTimer.Stop();
+        floatingRecorderWindow?.Close();
 
         audioCapture.Dispose();
         windowLifetime.Dispose();

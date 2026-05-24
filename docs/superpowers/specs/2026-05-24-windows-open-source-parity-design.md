@@ -60,6 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
+- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
@@ -129,20 +130,21 @@ Navigation-settings-shell slice completed on 2026-05-25:
 
 macOS has mini and notch recorder styles with record/stop states, waveform, processing indicators, live partial transcript, AI prompt picker, Power Mode button, cancel behavior, and compact keyboard-driven controls.
 
-Active floating-recorder slice on 2026-05-25:
+Floating-recorder slice completed on 2026-05-25:
 
-- Add a compact always-on-top Windows mini-recorder adapted from `MiniRecorderPanel` and `MiniRecorderView`.
-- Show state text, elapsed timer, pulse animation, stop/cancel controls, and prompt/Power Mode affordances while recording or processing.
-- Use a Core presenter for state-to-UI mapping.
-- Leave live partial transcript, real audio meter waveform, notch style, prompt picker behavior, and Power Mode behavior for later slices.
+- Added a compact always-on-top Windows mini-recorder adapted from `MiniRecorderPanel` and `MiniRecorderView`.
+- Shows while recording, transcribing, inserting, or during an explicit operation status such as starting, stopping, or canceling.
+- Shows state title, detail text, elapsed timer, animated pulse bars, and disabled Prompt/Power Mode affordance labels for design continuity.
+- Keeps stop on global shortcuts, tray commands, and main-window controls, and keeps cancel on global shortcuts and main-window controls in this slice so the floating recorder cannot steal focus from the dictation target before paste insertion.
+- Uses a Core `FloatingRecorderPresenter` for state-to-UI mapping.
+- Leaves live partial transcript, real audio meter waveform, notch style, prompt picker behavior, and Power Mode behavior for later slices.
 
 Windows gaps:
 
-- Floating recorder window.
 - Waveform/level visualization.
 - Live partial transcript.
+- Non-activating mouse controls for stop/cancel that preserve the paste target.
 - Prompt and Power Mode controls in recorder.
-- Cancel active-recording state persisted to history.
 
 ### Shortcuts
 
