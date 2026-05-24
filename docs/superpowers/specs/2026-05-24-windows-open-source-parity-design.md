@@ -83,6 +83,10 @@ Fresh baseline verification on 2026-05-24:
 
 Result: 106 Core tests and 33 Infrastructure tests passed after the quick-add dictionary shortcut slice.
 
+Active slice:
+
+- Secondary Shortcut will be implemented as a second configurable Windows global hotkey that maps to the existing toggle-recording action. Push-to-talk, hybrid mode, and key-up handling remain later native-hook work because the current `RegisterHotKey` path posts `WM_HOTKEY` on activation rather than key release.
+
 ## Parity Inventory
 
 ### Shell And Navigation
