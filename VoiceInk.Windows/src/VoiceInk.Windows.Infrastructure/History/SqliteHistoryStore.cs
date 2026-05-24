@@ -169,6 +169,30 @@ public sealed class SqliteHistoryStore : IHistoryStore
             : null;
     }
 
+    public async Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
+                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
+                   model_path, prompt_name, enhancement_duration_ms, error_message, audio_file_path
+            FROM transcriptions
+            WHERE status = 'completed'
+              AND audio_file_path IS NOT NULL
+              AND TRIM(audio_file_path) <> ''
+            ORDER BY created_at_utc_ticks DESC
+            LIMIT 1;
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken)
+            ? ReadHistoryItem(reader)
+            : null;
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = new SqliteConnection(connectionString);

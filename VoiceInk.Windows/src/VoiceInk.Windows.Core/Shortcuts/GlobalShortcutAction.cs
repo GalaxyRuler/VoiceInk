@@ -4,5 +4,6 @@ public enum GlobalShortcutAction
 {
     ToggleRecording,
     PasteLastTranscription,
-    PasteLastEnhancedTranscription
+    PasteLastEnhancedTranscription,
+    RetryLastTranscription
 }

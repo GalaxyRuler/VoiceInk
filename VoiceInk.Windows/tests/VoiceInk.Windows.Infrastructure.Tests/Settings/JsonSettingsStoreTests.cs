@@ -38,6 +38,7 @@ public sealed class JsonSettingsStoreTests
             Hotkey = "Ctrl+Shift+D",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
+            RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone"
         };

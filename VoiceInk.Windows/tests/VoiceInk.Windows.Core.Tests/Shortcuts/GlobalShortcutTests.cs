@@ -86,7 +86,8 @@ public sealed class GlobalShortcutTests
         {
             Hotkey = "Ctrl+Alt+Space",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",
-            PasteLastEnhancementHotkey = "Ctrl+Alt+E"
+            PasteLastEnhancementHotkey = "Ctrl+Alt+E",
+            RetryLastTranscriptionHotkey = "Ctrl+Alt+R"
         };
 
         var result = GlobalShortcutSettings.BuildRegistrations(settings);
@@ -108,6 +109,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.PasteLastEnhancedTranscription, item.Action);
                 Assert.Equal("Ctrl+Alt+E", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.RetryLastTranscription, item.Action);
+                Assert.Equal("Ctrl+Alt+R", item.Shortcut.DisplayText);
             });
     }
 
@@ -150,5 +156,19 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Paste Last Transcription already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateRetryLastAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            RetryLastTranscriptionHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Retry Last Transcription already uses Ctrl+Alt+Space.");
     }
 }

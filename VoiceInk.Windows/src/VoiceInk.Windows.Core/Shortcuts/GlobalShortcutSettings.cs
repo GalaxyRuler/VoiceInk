@@ -34,6 +34,14 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        AddRegistration(
+            settings.RetryLastTranscriptionHotkey,
+            GlobalShortcutAction.RetryLastTranscription,
+            "Retry Last Transcription",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }

@@ -14,6 +14,14 @@ public sealed class HistoryRetryService(
 {
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
 
+    public async Task<HistoryRetryResult> RetryLatestAsync(CancellationToken cancellationToken)
+    {
+        var source = await historyStore.GetLatestCompletedWithAudioAsync(cancellationToken);
+        return source is null
+            ? new HistoryRetryResult(false, "No transcription available")
+            : await RetryAsync(source, cancellationToken);
+    }
+
     public async Task<HistoryRetryResult> RetryAsync(
         TranscriptionHistoryItem source,
         CancellationToken cancellationToken)

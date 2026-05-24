@@ -145,6 +145,79 @@ public sealed class HistoryRetryServiceTests
         Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions?.Prompt);
     }
 
+    [Fact]
+    public async Task RetryLatestAsync_ReturnsFailureWhenNoCompletedTranscriptionExists()
+    {
+        var service = new HistoryRetryService(
+            new FakeTranscriptionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings { ModelPath = "ggml-base.en.bin" }));
+
+        var result = await service.RetryLatestAsync(CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("No transcription available", result.Message);
+    }
+
+    [Fact]
+    public async Task RetryLatestAsync_RetriesLatestCompletedHistoryItem()
+    {
+        using var audio = new TempAudioFile();
+        var history = new FakeHistoryStore();
+        var source = HistoryItem(audio.Path) with
+        {
+            Status = TranscriptionHistoryStatus.Completed,
+            AudioDuration = TimeSpan.FromSeconds(7)
+        };
+        history.Items.Add(source);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            " retried text ",
+            TimeSpan.FromMilliseconds(50),
+            "local-whisper"));
+        var service = new HistoryRetryService(
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings { ModelPath = "ggml-base.en.bin" }));
+
+        var result = await service.RetryLatestAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("Retry transcription saved", result.Message);
+        Assert.NotNull(result.Item);
+        Assert.Equal("retried text", result.Item.Text);
+        Assert.Equal(audio.Path, result.Item.AudioFilePath);
+        Assert.Equal(TimeSpan.FromSeconds(7), transcription.LastAudio?.Duration);
+    }
+
+    [Fact]
+    public async Task RetryLatestAsync_SkipsNewerCompletedHistoryItemsWithoutAudioPath()
+    {
+        using var audio = new TempAudioFile();
+        var history = new FakeHistoryStore();
+        history.Items.Add(HistoryItem(audioFilePath: null) with
+        {
+            Text = "newer text-only transcription",
+            Status = TranscriptionHistoryStatus.Completed
+        });
+        history.Items.Add(HistoryItem(audio.Path) with
+        {
+            Text = "older retryable transcription",
+            Status = TranscriptionHistoryStatus.Completed
+        });
+        var service = new HistoryRetryService(
+            new FakeTranscriptionService(new TranscriptionResult(
+                "retryable text",
+                TimeSpan.FromMilliseconds(50),
+                "local-whisper")),
+            history,
+            new FakeSettingsStore(new AppSettings { ModelPath = "ggml-base.en.bin" }));
+
+        var result = await service.RetryLatestAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(audio.Path, result.Item?.AudioFilePath);
+    }
+
     private static TranscriptionHistoryItem HistoryItem(string? audioFilePath) =>
         new(
             Guid.NewGuid(),
@@ -217,6 +290,11 @@ public sealed class HistoryRetryServiceTests
 
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
+
+        public Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(Items.FirstOrDefault(item =>
+                item.Status == TranscriptionHistoryStatus.Completed
+                && !string.IsNullOrWhiteSpace(item.AudioFilePath)));
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);

@@ -21,9 +21,9 @@ using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Transcription;
+using Windows.Media.Core;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Media.Core;
 using WinRT.Interop;
 
 namespace VoiceInk.Windows.App;
@@ -204,6 +204,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.PasteLastEnhancedTranscription:
                     await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
                     break;
+                case GlobalShortcutAction.RetryLastTranscription:
+                    await RetryLastHistoryAsync();
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -284,6 +287,11 @@ public sealed partial class MainWindow : Window
         await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
     }
 
+    private async void RetryLastButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RetryLastHistoryAsync();
+    }
+
     private async void RetryHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await RetrySelectedHistoryAsync();
@@ -324,6 +332,7 @@ public sealed partial class MainWindow : Window
             RecordingHotkeyTextBox.Text = settings.Hotkey;
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
             PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
+            RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -735,6 +744,54 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task RetryLastHistoryAsync()
+    {
+        if (!settingsLoaded
+            || isStarting
+            || isStopping
+            || isPastingLast
+            || isRetryingHistory
+            || controller.State == DictationState.Recording)
+        {
+            return;
+        }
+
+        var statusOverride = "Retrying last transcription";
+        isRetryingHistory = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            var result = await historyRetryService.RetryLatestAsync(windowLifetime.Token);
+            if (result.Item is not null)
+            {
+                HistorySearchTextBox.Text = string.Empty;
+                await RefreshHistoryAsync(windowLifetime.Token);
+                SelectHistoryItem(result.Item.Id);
+                await textInjectionService.CopyAsync(result.Item.Text, windowLifetime.Token);
+                statusOverride = "Retry transcription copied";
+            }
+            else
+            {
+                statusOverride = result.Message;
+            }
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Retry last failed: {ex.Message}";
+        }
+        finally
+        {
+            isRetryingHistory = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private void OpenSelectedHistoryAudio()
     {
         var audioPath = SelectedHistoryAudioPath();
@@ -762,7 +819,7 @@ public sealed partial class MainWindow : Window
 
     private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
     {
-        if (isStopping || isPastingLast)
+        if (isStopping || isPastingLast || isRetryingHistory)
         {
             return;
         }
@@ -1108,6 +1165,9 @@ public sealed partial class MainWindow : Window
             PasteLastEnhancementHotkey = includeShortcutFields
                 ? PasteLastEnhancedHotkeyTextBox.Text.Trim()
                 : settings.PasteLastEnhancementHotkey,
+            RetryLastTranscriptionHotkey = includeShortcutFields
+                ? RetryLastHotkeyTextBox.Text.Trim()
+                : settings.RetryLastTranscriptionHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
@@ -1255,6 +1315,10 @@ public sealed partial class MainWindow : Window
             && controller.State == DictationState.Recording;
         PasteLastButton.IsEnabled = settingsLoaded && !operationActive;
         PasteLastEnhancedButton.IsEnabled = settingsLoaded && !operationActive;
+        RetryLastButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;

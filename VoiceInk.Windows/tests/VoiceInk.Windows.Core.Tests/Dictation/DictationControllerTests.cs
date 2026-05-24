@@ -770,6 +770,13 @@ public sealed class DictationControllerTests
             return Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
         }
 
+        public Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Items.FirstOrDefault(item =>
+                item.Status == TranscriptionHistoryStatus.Completed
+                && !string.IsNullOrWhiteSpace(item.AudioFilePath)));
+        }
+
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
             return Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);

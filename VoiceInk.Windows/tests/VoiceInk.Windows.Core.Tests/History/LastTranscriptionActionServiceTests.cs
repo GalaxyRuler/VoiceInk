@@ -218,6 +218,14 @@ public sealed class LastTranscriptionActionServiceTests
                 items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
         }
 
+        public Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(
+                items.FirstOrDefault(item =>
+                    item.Status == TranscriptionHistoryStatus.Completed
+                    && !string.IsNullOrWhiteSpace(item.AudioFilePath)));
+        }
+
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
             return Task.FromResult(false);

@@ -112,7 +112,7 @@ Remove the temporary drive mapping with:
 cmd /c "subst W: /D"
 ```
 
-After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, and paste last enhanced.
+After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, paste last enhanced, and retry last transcription. Retry Last reuses the latest completed history row with a saved audio file, applies the current local model, dictionary, and cleanup settings, saves the retried row, and copies the retried text to the clipboard.
 
 ### Current Windows MVP Scope
 
@@ -121,7 +121,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Microphone capture
 - Clipboard-based text insertion into the active app
 - JSON settings and SQLite transcription history
-- Configurable global key+modifier shortcuts for recording toggle, paste last, and paste last enhanced
+- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, and retry last transcription
 - Core dictionary models for vocabulary words and word replacements
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
@@ -134,9 +134,9 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Shell recent-history list/detail view for original, final, enhanced, status, timing, model, prompt, and error metadata
 - Picker-based CSV history export
 - Paste-last final and enhanced-preferred history actions in the shell
-- History search, selected-row audio playback/open, selected-row retry, and confirmed single-item delete
+- History search, selected-row audio playback/open, selected-row retry, retry-last-to-clipboard, and confirmed single-item delete
 
-The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, quick add shortcuts, global retry-last shortcut, prioritized audio input failover, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export path, recent-history metadata view, paste-last actions, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, quick add shortcuts, prioritized audio input failover, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export path, recent-history metadata view, paste-last actions, retry-last action, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 

@@ -10,6 +10,19 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
 {
     private readonly SemaphoreSlim insertionGate = new(1, 1);
 
+    public async Task CopyAsync(string text, CancellationToken cancellationToken)
+    {
+        await insertionGate.WaitAsync(cancellationToken);
+        try
+        {
+            ClipboardStaDispatcher.Invoke(() => Clipboard.SetText(text));
+        }
+        finally
+        {
+            insertionGate.Release();
+        }
+    }
+
     public async Task InsertAsync(string text, CancellationToken cancellationToken)
     {
         await insertionGate.WaitAsync(cancellationToken);

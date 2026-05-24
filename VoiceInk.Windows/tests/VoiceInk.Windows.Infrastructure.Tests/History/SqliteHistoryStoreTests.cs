@@ -322,6 +322,37 @@ public sealed class SqliteHistoryStoreTests
     }
 
     [Fact]
+    public async Task GetLatestCompletedWithAudioAsync_ReturnsLatestCompletedItemWithAudioPath()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var retryable = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            "retryable",
+            "local-whisper",
+            TimeSpan.FromSeconds(1),
+            TimeSpan.Zero,
+            audioFilePath: "C:\\Audio\\retryable.wav");
+        var textOnly = retryable with
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Text = "newer text-only",
+            OriginalText = "newer text-only",
+            AudioFilePath = null
+        };
+
+        await store.SaveAsync(retryable, CancellationToken.None);
+        await store.SaveAsync(textOnly, CancellationToken.None);
+
+        var latestCompleted = await store.GetLatestCompletedWithAudioAsync(CancellationToken.None);
+
+        Assert.Equal(retryable, latestCompleted);
+    }
+
+    [Fact]
     public async Task SearchAsync_MatchesFinalOriginalEnhancedAndMetadata()
     {
         using var temp = new TempDirectory();

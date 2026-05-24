@@ -58,7 +58,7 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
-- Configurable global key+modifier shortcuts for recording toggle, paste last, and paste last enhanced.
+- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, and retry last transcription.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
@@ -80,7 +80,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 91 Core tests and 32 Infrastructure tests passed after the history audio/retry slice.
+Result: 95 Core tests and 33 Infrastructure tests passed after the retry-last shortcut slice.
 
 ## Parity Inventory
 
@@ -113,14 +113,14 @@ macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hy
 
 Implemented:
 
-- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, and paste last enhanced transcription.
+- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, paste last enhanced transcription, and retry last transcription.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
 
 Windows gaps:
 
 - Press-and-hold key-up handling.
 - Secondary shortcut.
-- Retry-last, cancel-recording, open-history, quick-add, toggle-enhancement, and Power Mode shortcuts.
+- Cancel-recording, open-history, quick-add, toggle-enhancement, and Power Mode shortcuts.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
 
@@ -265,16 +265,16 @@ Implemented core:
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
 - Core CSV export formatting for stored metadata, including audio file path.
 - Core selected-history retry service for existing audio files using current local transcription settings, dictionary prompt, replacements, and cleanup options.
+- Core retry-latest service for the newest completed history item with a saved audio file.
 - Shell recent-history list/detail and picker-based CSV export.
 - Paste-last final and enhanced-preferred Core primitives with shell buttons.
-- Search, selected-row audio playback/open, selected-row retry, and confirmed single-item delete in the shell.
+- Search, selected-row audio playback/open, selected-row retry, retry-last-to-clipboard, and confirmed single-item delete in the shell.
 
 Windows gaps:
 
 - Enhancement model and AI request messages.
 - Power Mode name/emoji.
 - Waveform/rate controls and AI re-enhance from the macOS audio player.
-- Global retry-last shortcut flow.
 - Batch actions.
 
 ### Metrics
@@ -377,13 +377,12 @@ Status on 2026-05-24:
 - Completed shell recent-history list/detail and local CSV export.
 - Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
-- Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, history search, and confirmed single-item delete.
-- Active slice: retry-last transcription shell and optional global shortcut flow, reusing recorded history audio, current local model/settings, dictionary prompts, and cleanup settings. Successful retry-last output is copied to the clipboard instead of pasted automatically.
-- Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
+- Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, retry-last-to-clipboard through the local transcription pipeline, history search, and confirmed single-item delete.
+- Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, and retry last transcription.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, global retry-last shortcut, prioritized audio input failover, waveform/rate controls, AI re-enhance, and history batch actions.
+- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, prioritized audio input failover, waveform/rate controls, AI re-enhance, and history batch actions.
 - Add focused tests and docs.
 
 ## Verification
