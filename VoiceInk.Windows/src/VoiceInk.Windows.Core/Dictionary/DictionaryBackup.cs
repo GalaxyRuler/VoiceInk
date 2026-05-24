@@ -28,16 +28,7 @@ public static class DictionaryBackup
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .Select(word => new WordBackup(word))
                 .ToArray(),
-            WordReplacements: replacements
-                .Where(replacement => replacement.IsEnabled)
-                .Where(replacement =>
-                    !string.IsNullOrWhiteSpace(replacement.OriginalText)
-                    && !string.IsNullOrWhiteSpace(replacement.ReplacementText))
-                .OrderBy(replacement => replacement.OriginalText, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    replacement => replacement.OriginalText.Trim(),
-                    replacement => replacement.ReplacementText.Trim(),
-                    StringComparer.OrdinalIgnoreCase));
+            WordReplacements: ExportableReplacements(replacements));
 
         return JsonSerializer.Serialize(backup, JsonOptions);
     }
@@ -74,4 +65,23 @@ public static class DictionaryBackup
     }
 
     private sealed record WordBackup([property: JsonPropertyName("word")] string Word);
+
+    private static IReadOnlyDictionary<string, string> ExportableReplacements(
+        IEnumerable<WordReplacement> replacements) =>
+        replacements
+            .Where(replacement => replacement.IsEnabled)
+            .Select(replacement => new
+            {
+                OriginalText = replacement.OriginalText.Trim(),
+                ReplacementText = replacement.ReplacementText.Trim()
+            })
+            .Where(replacement =>
+                replacement.OriginalText.Length > 0
+                && replacement.ReplacementText.Length > 0)
+            .GroupBy(replacement => replacement.OriginalText, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Last().OriginalText,
+                group => group.Last().ReplacementText,
+                StringComparer.OrdinalIgnoreCase);
 }

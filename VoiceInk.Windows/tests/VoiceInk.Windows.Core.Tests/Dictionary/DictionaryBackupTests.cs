@@ -26,6 +26,20 @@ public sealed class DictionaryBackupTests
     }
 
     [Fact]
+    public void Export_ToleratesDuplicateReplacementKeysByUsingLastEntry()
+    {
+        var json = DictionaryBackup.Export(
+            [],
+            [
+                new WordReplacement(Guid.NewGuid(), "Voice ink", "Old", DateTimeOffset.UnixEpoch),
+                new WordReplacement(Guid.NewGuid(), " voice ink ", "VoiceInk", DateTimeOffset.UnixEpoch)
+            ]);
+
+        Assert.Contains("\"voice ink\": \"VoiceInk\"", json);
+        Assert.DoesNotContain("\"Voice ink\": \"Old\"", json);
+    }
+
+    [Fact]
     public void Parse_ReadsMacStyleDictionaryFields()
     {
         var parsed = DictionaryBackup.Parse(
