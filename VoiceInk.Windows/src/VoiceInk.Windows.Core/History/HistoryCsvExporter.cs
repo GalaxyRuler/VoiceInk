@@ -1,0 +1,52 @@
+using System.Globalization;
+using System.Text;
+
+namespace VoiceInk.Windows.Core.History;
+
+public static class HistoryCsvExporter
+{
+    private const string Header =
+        "Original Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message";
+
+    public static string Export(IEnumerable<TranscriptionHistoryItem> items)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(Header);
+
+        foreach (var item in items)
+        {
+            builder.AppendLine(string.Join(
+                ",",
+                Escape(item.OriginalText),
+                Escape(item.EnhancedText ?? string.Empty),
+                Escape(item.PromptName ?? string.Empty),
+                Escape(item.ModelPath ?? string.Empty),
+                Escape(item.ProviderName),
+                Escape(item.Status.ToString()),
+                Escape(item.Language),
+                Escape(Seconds(item.TranscriptionDuration)),
+                Escape(item.EnhancementDuration is null ? string.Empty : Seconds(item.EnhancementDuration.Value)),
+                Escape(item.CreatedAt.ToString("O", CultureInfo.InvariantCulture)),
+                Escape(Seconds(item.AudioDuration)),
+                Escape(item.ErrorMessage ?? string.Empty)));
+        }
+
+        return builder.ToString();
+    }
+
+    private static string Seconds(TimeSpan duration) =>
+        duration.TotalSeconds.ToString("0.000", CultureInfo.InvariantCulture);
+
+    private static string Escape(string value)
+    {
+        if (value.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var escaped = value.Replace("\"", "\"\"", StringComparison.Ordinal);
+        return escaped.IndexOfAny([',', '"', '\r', '\n']) >= 0
+            ? $"\"{escaped}\""
+            : escaped;
+    }
+}
