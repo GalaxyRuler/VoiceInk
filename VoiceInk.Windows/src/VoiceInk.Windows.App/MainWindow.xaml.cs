@@ -111,6 +111,8 @@ public sealed partial class MainWindow : Window
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
+    private bool suppressCloudTranscriptionPresetChanged;
+    private bool suppressCloudTranscriptionModelChanged;
     private bool exitRequested;
     private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
@@ -119,6 +121,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
         floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
         floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
         floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
@@ -316,8 +319,8 @@ public sealed partial class MainWindow : Window
             }
 
             if (currentSettings.TranscriptionProvider == TranscriptionProviderKind.OpenAICompatible
-                && !await secretStore.HasSecretAsync(
-                    OpenAICompatibleCloudTranscriptionService.SecretName,
+                && !await HasCloudTranscriptionApiKeyAsync(
+                    currentSettings.CloudTranscriptionProviderId,
                     windowLifetime.Token))
             {
                 statusOverride = "Cloud transcription API key is required.";
@@ -492,6 +495,36 @@ public sealed partial class MainWindow : Window
 
     private void TranscriptionProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (settingsLoaded)
+        {
+            _ = RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void CloudTranscriptionPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!suppressCloudTranscriptionPresetChanged)
+        {
+            ApplySelectedCloudTranscriptionPreset(fillConfiguration: true);
+            if (settingsLoaded)
+            {
+                _ = RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
+            }
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void CloudTranscriptionModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!suppressCloudTranscriptionModelChanged
+            && CloudTranscriptionModelComboBox.SelectedItem is string model)
+        {
+            CloudTranscriptionModelTextBox.Text = model;
+        }
+
         RefreshUiFromControllerState();
     }
 
@@ -745,8 +778,12 @@ public sealed partial class MainWindow : Window
             localWhisperModels = settings.ImportedWhisperModels;
             RefreshModelChoices(settings.ModelPath);
             TranscriptionProviderComboBox.SelectedIndex = TranscriptionProviderToSelectedIndex(settings.TranscriptionProvider);
+            suppressCloudTranscriptionPresetChanged = true;
+            SelectCloudTranscriptionPreset(settings.CloudTranscriptionProviderId);
+            suppressCloudTranscriptionPresetChanged = false;
             CloudTranscriptionEndpointTextBox.Text = settings.CloudTranscriptionEndpoint;
             CloudTranscriptionModelTextBox.Text = settings.CloudTranscriptionModel;
+            RefreshCloudTranscriptionModelChoices(settings.CloudTranscriptionModel);
             RecordingHotkeyTextBox.Text = settings.Hotkey;
             SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
@@ -792,6 +829,8 @@ public sealed partial class MainWindow : Window
         finally
         {
             suppressModelPathChanged = false;
+            suppressCloudTranscriptionPresetChanged = false;
+            suppressCloudTranscriptionModelChanged = false;
         }
     }
 
@@ -2479,13 +2518,14 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState(statusOverride);
         try
         {
+            var providerId = SelectedCloudTranscriptionProviderId();
             await secretStore.SaveSecretAsync(
-                OpenAICompatibleCloudTranscriptionService.SecretName,
+                TranscriptionConfiguration.SecretNameForCloudProvider(providerId),
                 secret,
                 windowLifetime.Token);
             CloudTranscriptionApiKeyPasswordBox.Password = string.Empty;
             await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
-            statusOverride = "Cloud transcription API key saved";
+            statusOverride = $"{TranscriptionProviderPresetCatalog.Resolve(providerId).DisplayName} API key saved";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2514,12 +2554,15 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState(statusOverride);
         try
         {
-            await secretStore.DeleteSecretAsync(
-                OpenAICompatibleCloudTranscriptionService.SecretName,
-                windowLifetime.Token);
+            var providerId = SelectedCloudTranscriptionProviderId();
+            foreach (var secretName in TranscriptionConfiguration.SecretNamesForCloudProvider(providerId))
+            {
+                await secretStore.DeleteSecretAsync(secretName, windowLifetime.Token);
+            }
+
             CloudTranscriptionApiKeyPasswordBox.Password = string.Empty;
             await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
-            statusOverride = "Cloud transcription API key cleared";
+            statusOverride = $"{TranscriptionProviderPresetCatalog.Resolve(providerId).DisplayName} API key cleared";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2804,6 +2847,7 @@ public sealed partial class MainWindow : Window
             ModelPath = ModelPathTextBox.Text,
             ImportedWhisperModels = localWhisperModels.ToArray(),
             TranscriptionProvider = SelectedTranscriptionProvider(),
+            CloudTranscriptionProviderId = SelectedCloudTranscriptionProviderId(),
             CloudTranscriptionEndpoint = CloudTranscriptionEndpointTextBox.Text.Trim(),
             CloudTranscriptionModel = CloudTranscriptionModelTextBox.Text.Trim(),
             Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
@@ -2886,6 +2930,12 @@ public sealed partial class MainWindow : Window
         TranscriptionProviderComboBox.SelectedIndex == 1
             ? TranscriptionProviderKind.OpenAICompatible
             : TranscriptionProviderKind.LocalWhisper;
+
+    private string SelectedCloudTranscriptionProviderId() =>
+        SelectedCloudTranscriptionPreset()?.Id ?? TranscriptionProviderPresetCatalog.Custom.Id;
+
+    private TranscriptionProviderPreset? SelectedCloudTranscriptionPreset() =>
+        CloudTranscriptionPresetComboBox.SelectedItem as TranscriptionProviderPreset;
 
     private Guid? SelectedEnhancementPromptId()
     {
@@ -3198,12 +3248,26 @@ public sealed partial class MainWindow : Window
 
     private async Task RefreshCloudTranscriptionKeyStatusAsync(CancellationToken cancellationToken)
     {
-        var hasKey = await secretStore.HasSecretAsync(
-            OpenAICompatibleCloudTranscriptionService.SecretName,
-            cancellationToken);
+        var preset = TranscriptionProviderPresetCatalog.Resolve(SelectedCloudTranscriptionProviderId());
+        var hasKey = await HasCloudTranscriptionApiKeyAsync(preset.Id, cancellationToken);
         CloudTranscriptionKeyStatusTextBlock.Text = hasKey
-            ? "Cloud transcription API key stored in Windows Credential Manager"
-            : "No cloud transcription API key stored";
+            ? $"{preset.DisplayName} API key stored in Windows Credential Manager"
+            : $"No {preset.DisplayName} API key stored";
+    }
+
+    private async Task<bool> HasCloudTranscriptionApiKeyAsync(
+        string providerId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secretName in TranscriptionConfiguration.SecretNamesForCloudProvider(providerId))
+        {
+            if (await secretStore.HasSecretAsync(secretName, cancellationToken))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int EnhancementTimeoutSeconds(AppSettings settings) =>
@@ -3221,6 +3285,53 @@ public sealed partial class MainWindow : Window
 
     private static int TranscriptionProviderToSelectedIndex(TranscriptionProviderKind provider) =>
         provider == TranscriptionProviderKind.OpenAICompatible ? 1 : 0;
+
+    private void SelectCloudTranscriptionPreset(string? providerId)
+    {
+        var preset = TranscriptionProviderPresetCatalog.Resolve(providerId);
+        var index = TranscriptionProviderPresetCatalog.All.ToList().FindIndex(item => item.Id == preset.Id);
+        CloudTranscriptionPresetComboBox.SelectedIndex = Math.Max(0, index);
+    }
+
+    private void ApplySelectedCloudTranscriptionPreset(bool fillConfiguration)
+    {
+        var preset = TranscriptionProviderPresetCatalog.Resolve(SelectedCloudTranscriptionProviderId());
+        if (fillConfiguration && preset.Id != TranscriptionProviderPresetCatalog.Custom.Id)
+        {
+            CloudTranscriptionEndpointTextBox.Text = preset.Endpoint;
+            if (string.IsNullOrWhiteSpace(CloudTranscriptionModelTextBox.Text)
+                || !preset.ModelIds.Any(model => string.Equals(
+                    model,
+                    CloudTranscriptionModelTextBox.Text.Trim(),
+                    StringComparison.OrdinalIgnoreCase)))
+            {
+                CloudTranscriptionModelTextBox.Text = preset.DefaultModel;
+            }
+        }
+
+        RefreshCloudTranscriptionModelChoices(CloudTranscriptionModelTextBox.Text);
+    }
+
+    private void RefreshCloudTranscriptionModelChoices(string selectedModel)
+    {
+        var preset = TranscriptionProviderPresetCatalog.Resolve(SelectedCloudTranscriptionProviderId());
+        suppressCloudTranscriptionModelChanged = true;
+        CloudTranscriptionModelComboBox.ItemsSource = preset.ModelIds.ToArray();
+        if (preset.ModelIds.Count == 0)
+        {
+            CloudTranscriptionModelComboBox.SelectedIndex = -1;
+        }
+        else
+        {
+            var index = preset.ModelIds.ToList().FindIndex(model => string.Equals(
+                model,
+                selectedModel.Trim(),
+                StringComparison.OrdinalIgnoreCase));
+            CloudTranscriptionModelComboBox.SelectedIndex = index >= 0 ? index : 0;
+        }
+
+        suppressCloudTranscriptionModelChanged = false;
+    }
 
     private bool IsOperationActive(
         bool includeCurrentModelImport = true,
@@ -3458,6 +3569,7 @@ public sealed partial class MainWindow : Window
         var modelControlsEnabled = CanEditModelLibrary();
         var cloudTranscriptionControlsEnabled = modelControlsEnabled
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible;
+        var cloudPresetHasModelChoices = SelectedCloudTranscriptionPreset()?.ModelIds.Count > 0;
         var enhancementControlsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
@@ -3508,8 +3620,10 @@ public sealed partial class MainWindow : Window
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
         TranscriptionProviderComboBox.IsEnabled = modelControlsEnabled;
+        CloudTranscriptionPresetComboBox.IsEnabled = cloudTranscriptionControlsEnabled;
         CloudTranscriptionEndpointTextBox.IsEnabled = cloudTranscriptionControlsEnabled;
         CloudTranscriptionModelTextBox.IsEnabled = cloudTranscriptionControlsEnabled;
+        CloudTranscriptionModelComboBox.IsEnabled = cloudTranscriptionControlsEnabled && cloudPresetHasModelChoices;
         CloudTranscriptionApiKeyPasswordBox.IsEnabled = cloudTranscriptionControlsEnabled;
         SaveCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
         ClearCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;

@@ -149,7 +149,7 @@ public sealed class DictationController(
                             Guid.NewGuid(),
                             DateTimeOffset.UtcNow,
                             finalText,
-                            transcription.ProviderName,
+                            TranscriptionConfiguration.ProviderName(settings),
                             audio.Duration,
                             transcription.Duration,
                             originalText: transcription.Text,

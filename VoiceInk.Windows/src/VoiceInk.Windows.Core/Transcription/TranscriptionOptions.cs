@@ -8,4 +8,5 @@ public sealed record TranscriptionOptions(
     string Prompt = "",
     TranscriptionProviderKind Provider = TranscriptionProviderKind.LocalWhisper,
     string CloudEndpoint = "",
-    string CloudModel = "");
+    string CloudModel = "",
+    string CloudProviderId = "custom");

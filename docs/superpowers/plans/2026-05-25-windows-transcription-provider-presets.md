@@ -48,7 +48,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Preset Catalog Red/Green
 
-- [ ] **Step 1: Add failing Core tests**
+- [x] **Step 1: Add failing Core tests**
 
 Add `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Transcription/TranscriptionProviderPresetCatalogTests.cs` with tests:
 
@@ -84,7 +84,7 @@ public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerI
 }
 ```
 
-- [ ] **Step 2: Run red Core tests**
+- [x] **Step 2: Run red Core tests**
 
 Run:
 
@@ -94,7 +94,7 @@ Run:
 
 Expected: compile failure because preset catalog/types do not exist.
 
-- [ ] **Step 3: Implement Core catalog and provider id**
+- [x] **Step 3: Implement Core catalog and provider id**
 
 Add:
 
@@ -106,13 +106,13 @@ Add:
 - `TranscriptionConfiguration.ProviderName(AppSettings)` returns `"groq"` when the cloud provider ID is `groq`; custom remains `"openai-compatible"`.
 - `TranscriptionConfiguration.BuildOptions` copies the cloud provider ID into options.
 
-- [ ] **Step 4: Verify Core tests pass**
+- [x] **Step 4: Verify Core tests pass**
 
 Run the same focused Core command. Expected: tests pass.
 
 ## Task 3: Pipeline Metadata Red/Green
 
-- [ ] **Step 1: Add failing Core pipeline tests**
+- [x] **Step 1: Add failing Core pipeline tests**
 
 Extend existing dictation, Transcribe Audio, and History Retry tests with a Groq case that sets:
 
@@ -125,7 +125,7 @@ CloudTranscriptionModel = "whisper-large-v3-turbo"
 
 Assert `TranscriptionOptions.CloudProviderId == "groq"` and saved history `ProviderName == "groq"`.
 
-- [ ] **Step 2: Run red pipeline tests**
+- [x] **Step 2: Run red pipeline tests**
 
 Run:
 
@@ -135,17 +135,17 @@ Run:
 
 Expected: compile or assertion failures until provider ID flows through options and metadata.
 
-- [ ] **Step 3: Implement minimal pipeline support**
+- [x] **Step 3: Implement minimal pipeline support**
 
 Use `TranscriptionConfiguration.ProviderName(settings)` when saving completed history rows for cloud providers if the adapter returns generic `openai-compatible`. Do not change local Whisper behavior.
 
-- [ ] **Step 4: Verify pipeline tests pass**
+- [x] **Step 4: Verify pipeline tests pass**
 
 Run the same focused command. Expected: tests pass.
 
 ## Task 4: Infrastructure Secret Routing Red/Green
 
-- [ ] **Step 1: Add failing Infrastructure tests**
+- [x] **Step 1: Add failing Infrastructure tests**
 
 Extend `OpenAICompatibleCloudTranscriptionServiceTests`:
 
@@ -171,7 +171,7 @@ public async Task TranscribeAsync_ReadsProviderSpecificSecret()
 }
 ```
 
-- [ ] **Step 2: Run red Infrastructure tests**
+- [x] **Step 2: Run red Infrastructure tests**
 
 Run:
 
@@ -181,7 +181,7 @@ Run:
 
 Expected: assertion failure because the adapter still reads the old shared secret name.
 
-- [ ] **Step 3: Implement provider-specific secret lookup**
+- [x] **Step 3: Implement provider-specific secret lookup**
 
 Change `OpenAICompatibleCloudTranscriptionService` to call:
 
@@ -192,21 +192,21 @@ var apiKey = await secretStore.ReadSecretAsync(secretName, cancellationToken);
 
 Keep the existing `SecretName` constant as an obsolete compatibility alias for custom provider UI references only if needed; new code should use `SecretNameForCloudProvider`.
 
-- [ ] **Step 4: Verify Infrastructure tests pass**
+- [x] **Step 4: Verify Infrastructure tests pass**
 
 Run the same focused Infrastructure command. Expected: tests pass.
 
 ## Task 5: WinUI Preset Wiring
 
-- [ ] **Step 1: Add AI Models preset controls**
+- [x] **Step 1: Add AI Models preset controls**
 
 In `MainWindow.xaml`, add a `CloudTranscriptionPresetComboBox` above endpoint/model fields and a `CloudTranscriptionModelComboBox` near the model field. Use the existing section style. The custom preset leaves endpoint/model editable; Groq fills endpoint and exposes model choices.
 
-- [ ] **Step 2: Load/save selected preset**
+- [x] **Step 2: Load/save selected preset**
 
 In `InitializeAsync`, set the preset combo from `settings.CloudTranscriptionProviderId`. In `CurrentSettingsAsync`, save `CloudTranscriptionProviderId = SelectedCloudTranscriptionProviderId()`.
 
-- [ ] **Step 3: Wire preset selection**
+- [x] **Step 3: Wire preset selection**
 
 Add helpers:
 
@@ -224,11 +224,11 @@ On preset selection:
 - If model text is blank or not in preset model list, fill default model.
 - Refresh key status using `TranscriptionConfiguration.SecretNameForCloudProvider(SelectedCloudTranscriptionProviderId())`.
 
-- [ ] **Step 4: Update key save/clear/status**
+- [x] **Step 4: Update key save/clear/status**
 
 Change cloud transcription key save/clear/status methods to use provider-specific secret names. Update status text to include the selected preset display name.
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
 
 Run:
 
@@ -240,7 +240,7 @@ Expected: build succeeds with zero errors.
 
 ## Task 6: Docs, Review, And Commit
 
-- [ ] **Step 1: Update README and parity spec**
+- [x] **Step 1: Update README and parity spec**
 
 Document:
 
@@ -249,7 +249,7 @@ Document:
 - Provider-specific Credential Manager entries.
 - Deepgram, AssemblyAI, and other providers remain later because their request flows differ or need streaming/provider-specific adapters.
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 Run:
 
@@ -261,11 +261,11 @@ Run:
 
 Expected: focused tests pass, full tests pass, build succeeds.
 
-- [ ] **Step 3: Request review and fix Critical/Important findings**
+- [x] **Step 3: Request review and fix Critical/Important findings**
 
 Ask a subagent to review provider preset defaults, provider-specific secret handling, endpoint validation, and UI persistence.
 
-- [ ] **Step 4: Commit implementation**
+- [x] **Step 4: Commit implementation**
 
 Run:
 

@@ -262,9 +262,18 @@ Cloud Transcription slice completed on 2026-05-25:
 - Added a router between local Whisper and OpenAI-compatible transcription so the existing UI workflows use the selected provider.
 - Added WinUI endpoint/model/key controls and key save/clear/status actions without storing API keys in JSON settings.
 
+Cloud provider preset slice completed on 2026-05-25:
+
+- Added a Core preset catalog with `Custom OpenAI-compatible` and `Groq`.
+- Added Groq endpoint/model defaults for `https://api.groq.com/openai/v1/audio/transcriptions`, `whisper-large-v3-turbo`, and `whisper-large-v3`.
+- Added provider-specific Credential Manager secret names so custom and Groq keys are stored independently.
+- Added provider ID persistence in JSON settings without storing keys in JSON.
+- Added WinUI preset and preset-model selectors that prefill compatible endpoint/model defaults while leaving custom configuration editable.
+- Saved Groq cloud transcription rows with provider metadata `groq`.
+
 Windows gaps:
 
-- Named provider cards. First compatible provider slice should add neutral presets/cards for custom OpenAI-compatible and Groq. Groq is a good first named card because its official speech-to-text docs expose `https://api.groq.com/openai/v1/audio/transcriptions` and Whisper model IDs that use the same multipart request shape already implemented for custom OpenAI-compatible transcription.
+- Named provider cards beyond Groq.
 - Streaming adapters.
 - Provider-specific payloads.
 - In-app provider test requests and API-key verification.

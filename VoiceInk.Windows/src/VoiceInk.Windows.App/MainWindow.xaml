@@ -121,6 +121,11 @@
                             <ComboBoxItem Content="Local Whisper" />
                             <ComboBoxItem Content="OpenAI-compatible" />
                         </ComboBox>
+                        <ComboBox
+                            x:Name="CloudTranscriptionPresetComboBox"
+                            DisplayMemberPath="DisplayName"
+                            Header="Cloud provider preset"
+                            SelectionChanged="CloudTranscriptionPresetComboBox_SelectionChanged" />
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -137,6 +142,10 @@
                                 Header="Cloud transcription model"
                                 PlaceholderText="gpt-4o-transcribe" />
                         </Grid>
+                        <ComboBox
+                            x:Name="CloudTranscriptionModelComboBox"
+                            Header="Preset model"
+                            SelectionChanged="CloudTranscriptionModelComboBox_SelectionChanged" />
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

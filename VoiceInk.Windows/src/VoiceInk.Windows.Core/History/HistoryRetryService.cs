@@ -70,7 +70,7 @@ public sealed class HistoryRetryService(
             Guid.NewGuid(),
             DateTimeOffset.UtcNow,
             finalText,
-            transcription.ProviderName,
+            TranscriptionConfiguration.ProviderName(settings),
             source.AudioDuration,
             transcription.Duration,
             originalText: transcription.Text,

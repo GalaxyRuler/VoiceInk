@@ -12,7 +12,7 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
     HttpClient httpClient,
     ISecretStore secretStore) : ITranscriptionService
 {
-    public const string SecretName = "VoiceInk.Windows.Transcription.OpenAICompatible.ApiKey";
+    public const string SecretName = "VoiceInk.Windows.Transcription.OpenAICompatible.Custom.ApiKey";
 
     public async Task<TranscriptionResult> TranscribeAsync(
         AudioCaptureResult audio,
@@ -32,7 +32,8 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
             throw new InvalidOperationException("Cloud transcription model is required.");
         }
 
-        var apiKey = await secretStore.ReadSecretAsync(SecretName, cancellationToken);
+        var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken);
+
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException("Cloud transcription provider is not configured.");
@@ -59,7 +60,23 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
         return new TranscriptionResult(
             text,
             Stopwatch.GetElapsedTime(startedAt),
-            TranscriptionConfiguration.OpenAICompatibleProviderName);
+            TranscriptionConfiguration.OpenAICompatibleProviderNameFor(options.CloudProviderId));
+    }
+
+    private async Task<string?> ReadApiKeyAsync(
+        string providerId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secretName in TranscriptionConfiguration.SecretNamesForCloudProvider(providerId))
+        {
+            var apiKey = await secretStore.ReadSecretAsync(secretName, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                return apiKey;
+            }
+        }
+
+        return null;
     }
 
     private static MultipartFormDataContent CreateMultipartContent(

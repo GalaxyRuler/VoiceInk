@@ -15,6 +15,8 @@ public static class TranscriptionConfiguration
         "Cloud transcription endpoint must not contain credentials.";
     public const string CloudEndpointQuerySecretRejectedMessage =
         "Cloud transcription endpoint must not contain API keys or tokens in the query string.";
+    private const string CloudSecretNamePrefix = "VoiceInk.Windows.Transcription.OpenAICompatible";
+    private const string LegacyCustomSecretName = "VoiceInk.Windows.Transcription.OpenAICompatible.ApiKey";
 
     public static string? ValidateRequiredSettings(AppSettings settings) =>
         settings.TranscriptionProvider switch
@@ -53,13 +55,35 @@ public static class TranscriptionConfiguration
             prompt,
             settings.TranscriptionProvider,
             settings.CloudTranscriptionEndpoint,
-            settings.CloudTranscriptionModel);
+            settings.CloudTranscriptionModel,
+            TranscriptionProviderPresetCatalog.Resolve(settings.CloudTranscriptionProviderId).Id);
+
+    public static string SecretNameForCloudProvider(string? providerId)
+    {
+        var preset = TranscriptionProviderPresetCatalog.Resolve(providerId);
+        var segment = preset.Id switch
+        {
+            "groq" => "Groq",
+            _ => "Custom"
+        };
+
+        return $"{CloudSecretNamePrefix}.{segment}.ApiKey";
+    }
+
+    public static IReadOnlyList<string> SecretNamesForCloudProvider(string? providerId)
+    {
+        var primary = SecretNameForCloudProvider(providerId);
+        return TranscriptionProviderPresetCatalog.Resolve(providerId).Id == TranscriptionProviderPresetCatalog.Custom.Id
+            ? [primary, LegacyCustomSecretName]
+            : [primary];
+    }
 
     public static string ProviderName(AppSettings settings) =>
         settings.TranscriptionProvider switch
         {
             TranscriptionProviderKind.LocalWhisper => LocalWhisperProviderName,
-            TranscriptionProviderKind.OpenAICompatible => OpenAICompatibleProviderName,
+            TranscriptionProviderKind.OpenAICompatible => OpenAICompatibleProviderNameFor(
+                settings.CloudTranscriptionProviderId),
             _ => settings.TranscriptionProvider.ToString()
         };
 
@@ -69,6 +93,14 @@ public static class TranscriptionConfiguration
             TranscriptionProviderKind.OpenAICompatible => settings.CloudTranscriptionModel,
             _ => settings.ModelPath
         };
+
+    public static string OpenAICompatibleProviderNameFor(string? providerId)
+    {
+        var preset = TranscriptionProviderPresetCatalog.Resolve(providerId);
+        return preset.Id == TranscriptionProviderPresetCatalog.Custom.Id
+            ? OpenAICompatibleProviderName
+            : preset.Id;
+    }
 
     private static string? ValidateCloudEndpoint(string endpoint)
     {

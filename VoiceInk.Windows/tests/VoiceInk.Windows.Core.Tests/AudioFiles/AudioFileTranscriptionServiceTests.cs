@@ -80,8 +80,9 @@ public sealed class AudioFileTranscriptionServiceTests
             new FakeSettingsStore(new AppSettings
             {
                 TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
-                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
-                CloudTranscriptionModel = "gpt-4o-transcribe",
+                CloudTranscriptionProviderId = "groq",
+                CloudTranscriptionEndpoint = "https://api.groq.com/openai/v1/audio/transcriptions",
+                CloudTranscriptionModel = "whisper-large-v3-turbo",
                 Language = "en"
             }),
             dictionary);
@@ -91,12 +92,13 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.True(result.Success);
         Assert.NotNull(transcription.LastOptions);
         Assert.Equal(TranscriptionProviderKind.OpenAICompatible, transcription.LastOptions.Provider);
-        Assert.Equal("https://api.example.test/v1/audio/transcriptions", transcription.LastOptions.CloudEndpoint);
-        Assert.Equal("gpt-4o-transcribe", transcription.LastOptions.CloudModel);
+        Assert.Equal("groq", transcription.LastOptions.CloudProviderId);
+        Assert.Equal("https://api.groq.com/openai/v1/audio/transcriptions", transcription.LastOptions.CloudEndpoint);
+        Assert.Equal("whisper-large-v3-turbo", transcription.LastOptions.CloudModel);
         Assert.Equal("en", transcription.LastOptions.Language);
         Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions.Prompt);
-        Assert.Equal("openai-compatible", result.Item?.ProviderName);
-        Assert.Equal("gpt-4o-transcribe", result.Item?.ModelPath);
+        Assert.Equal("groq", result.Item?.ProviderName);
+        Assert.Equal("whisper-large-v3-turbo", result.Item?.ModelPath);
     }
 
     [Fact]

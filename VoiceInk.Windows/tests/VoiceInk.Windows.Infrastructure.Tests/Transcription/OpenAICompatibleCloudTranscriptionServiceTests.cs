@@ -146,6 +146,64 @@ public sealed class OpenAICompatibleCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_ReadsProviderSpecificSecret()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"text":"Groq text"}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Transcription.OpenAICompatible.Custom.ApiKey"] = "custom-secret",
+                ["VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey"] = "gsk-test-secret"
+            }
+        };
+        var service = new OpenAICompatibleCloudTranscriptionService(new HttpClient(handler), secrets);
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(
+                endpoint: "https://api.groq.com/openai/v1/audio/transcriptions",
+                model: "whisper-large-v3-turbo",
+                providerId: "groq"),
+            CancellationToken.None);
+
+        Assert.Equal("VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey", secrets.LastReadName);
+        Assert.Equal(["VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey"], secrets.ReadNames);
+        Assert.Equal("gsk-test-secret", handler.Requests[0].Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_CustomProviderFallsBackToLegacySecretName()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"text":"Custom text"}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Transcription.OpenAICompatible.ApiKey"] = "legacy-custom-secret"
+            }
+        };
+        var service = new OpenAICompatibleCloudTranscriptionService(new HttpClient(handler), secrets);
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(providerId: "custom"),
+            CancellationToken.None);
+
+        Assert.Equal(
+            [
+                "VoiceInk.Windows.Transcription.OpenAICompatible.Custom.ApiKey",
+                "VoiceInk.Windows.Transcription.OpenAICompatible.ApiKey"
+            ],
+            secrets.ReadNames);
+        Assert.Equal("legacy-custom-secret", handler.Requests[0].Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -201,14 +259,16 @@ public sealed class OpenAICompatibleCloudTranscriptionServiceTests
         string endpoint = "https://api.example.test/v1/audio/transcriptions",
         string model = "gpt-4o-transcribe",
         string language = "auto",
-        string prompt = "") =>
+        string prompt = "",
+        string providerId = "custom") =>
         new(
             ModelPath: string.Empty,
             language,
             prompt,
             TranscriptionProviderKind.OpenAICompatible,
             endpoint,
-            model);
+            model,
+            providerId);
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json) =>
         new(statusCode)
@@ -263,11 +323,14 @@ public sealed class OpenAICompatibleCloudTranscriptionServiceTests
     {
         public string? Secret { get; init; }
         public string? LastReadName { get; private set; }
+        public Dictionary<string, string> Secrets { get; } = [];
+        public List<string> ReadNames { get; } = [];
 
         public Task<string?> ReadSecretAsync(string name, CancellationToken cancellationToken)
         {
             LastReadName = name;
-            return Task.FromResult(Secret);
+            ReadNames.Add(name);
+            return Task.FromResult(Secrets.TryGetValue(name, out var value) ? value : Secret);
         }
 
         public Task SaveSecretAsync(string name, string secret, CancellationToken cancellationToken) =>
