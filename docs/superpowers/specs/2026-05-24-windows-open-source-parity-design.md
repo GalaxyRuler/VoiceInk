@@ -379,6 +379,7 @@ Status on 2026-05-24:
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, retry-last-to-clipboard through the local transcription pipeline, history search, and confirmed single-item delete.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, and retry last transcription.
+- Active slice: cancel active recording, save a canceled history row with the recorded audio file, and expose a shell button plus optional global shortcut.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
