@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -22,6 +23,7 @@ using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Transcription;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Media.Core;
 using WinRT.Interop;
 
 namespace VoiceInk.Windows.App;
@@ -34,6 +36,7 @@ public sealed partial class MainWindow : Window
     private readonly JsonSettingsStore settingsStore;
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
+    private readonly HistoryRetryService historyRetryService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
@@ -47,6 +50,7 @@ public sealed partial class MainWindow : Window
     private bool isStarting;
     private bool isStopping;
     private bool isPastingLast;
+    private bool isRetryingHistory;
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
@@ -67,6 +71,11 @@ public sealed partial class MainWindow : Window
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
+        historyRetryService = new HistoryRetryService(
+            new WhisperNetTranscriptionService(),
+            historyStore,
+            settingsStore,
+            dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
@@ -273,6 +282,16 @@ public sealed partial class MainWindow : Window
     private async void PasteLastEnhancedButton_Click(object sender, RoutedEventArgs e)
     {
         await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
+    }
+
+    private async void RetryHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RetrySelectedHistoryAsync();
+    }
+
+    private void OpenHistoryAudioButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedHistoryAudio();
     }
 
     private async void DeleteHistoryButton_Click(object sender, RoutedEventArgs e)
@@ -623,13 +642,13 @@ public sealed partial class MainWindow : Window
 
     private async Task DeleteSelectedHistoryAsync()
     {
-        if (HistoryListView.SelectedIndex < 0 || HistoryListView.SelectedIndex >= historyItems.Count)
+        var item = SelectedHistoryItem();
+        if (item is null)
         {
             RefreshUiFromControllerState("Select a transcription to delete");
             return;
         }
 
-        var item = historyItems[HistoryListView.SelectedIndex];
         var dialog = new ContentDialog
         {
             XamlRoot = Content.XamlRoot,
@@ -649,7 +668,9 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            ClearHistoryAudioPlayer();
             var deleted = await historyStore.DeleteAsync(item.Id, windowLifetime.Token);
+            TryDeleteHistoryAudioFile(item);
             await RefreshHistoryAsync(windowLifetime.Token);
             RefreshUiFromControllerState(deleted ? "Transcription deleted" : "Transcription was already deleted");
         }
@@ -660,6 +681,82 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"History delete failed: {ex.Message}");
+        }
+    }
+
+    private async Task RetrySelectedHistoryAsync()
+    {
+        if (isRetryingHistory)
+        {
+            return;
+        }
+
+        var item = SelectedHistoryItem();
+        if (item is null)
+        {
+            RefreshUiFromControllerState("Select a transcription to retry");
+            return;
+        }
+
+        if (SelectedHistoryAudioPath() is null)
+        {
+            RefreshUiFromControllerState("Audio file not found");
+            return;
+        }
+
+        var statusOverride = "Retrying transcription";
+        isRetryingHistory = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            var result = await historyRetryService.RetryAsync(item, windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            if (result.Item is not null)
+            {
+                SelectHistoryItem(result.Item.Id);
+            }
+
+            statusOverride = result.Message;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Retry failed: {ex.Message}";
+        }
+        finally
+        {
+            isRetryingHistory = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private void OpenSelectedHistoryAudio()
+    {
+        var audioPath = SelectedHistoryAudioPath();
+        if (audioPath is null)
+        {
+            RefreshUiFromControllerState("Audio file not found");
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{audioPath}\"",
+                UseShellExecute = true
+            });
+            RefreshUiFromControllerState("Audio file opened");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Open audio failed: {ex.Message}");
         }
     }
 
@@ -698,7 +795,8 @@ public sealed partial class MainWindow : Window
 
     private void RefreshSelectedHistoryDetails()
     {
-        if (HistoryListView.SelectedIndex < 0 || HistoryListView.SelectedIndex >= historyItems.Count)
+        var item = SelectedHistoryItem();
+        if (item is null)
         {
             HistoryMetadataTextBlock.Text = historyItems.Count == 0
                 ? "No transcriptions"
@@ -706,10 +804,17 @@ public sealed partial class MainWindow : Window
             HistoryOriginalTextBox.Text = string.Empty;
             HistoryFinalTextBox.Text = string.Empty;
             HistoryEnhancedTextBox.Text = string.Empty;
+            ClearHistoryAudioPlayer();
+            RefreshUiFromControllerState();
             return;
         }
 
-        var item = historyItems[HistoryListView.SelectedIndex];
+        var audioPath = SelectedHistoryAudioPath();
+        var audioStatus = string.IsNullOrWhiteSpace(item.AudioFilePath)
+            ? "Not recorded"
+            : audioPath is null
+                ? $"Missing: {item.AudioFilePath}"
+                : audioPath;
         HistoryMetadataTextBlock.Text = string.Join(
             Environment.NewLine,
             $"Status: {item.Status}",
@@ -719,12 +824,101 @@ public sealed partial class MainWindow : Window
             $"Prompt: {item.PromptName ?? "None"}",
             $"Recorded: {item.CreatedAt.LocalDateTime:g}",
             $"Audio: {Seconds(item.AudioDuration)}s",
+            $"Audio file: {audioStatus}",
             $"Transcription: {Seconds(item.TranscriptionDuration)}s",
             $"Enhancement: {(item.EnhancementDuration is null ? "None" : $"{Seconds(item.EnhancementDuration.Value)}s")}",
             $"Error: {item.ErrorMessage ?? "None"}");
         HistoryOriginalTextBox.Text = item.OriginalText;
         HistoryFinalTextBox.Text = item.Text;
         HistoryEnhancedTextBox.Text = item.EnhancedText ?? string.Empty;
+        RefreshHistoryAudioPlayer(audioPath);
+        RefreshUiFromControllerState();
+    }
+
+    private TranscriptionHistoryItem? SelectedHistoryItem() =>
+        HistoryListView.SelectedIndex >= 0 && HistoryListView.SelectedIndex < historyItems.Count
+            ? historyItems[HistoryListView.SelectedIndex]
+            : null;
+
+    private string? SelectedHistoryAudioPath()
+    {
+        var item = SelectedHistoryItem();
+        if (string.IsNullOrWhiteSpace(item?.AudioFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var fullPath = Path.GetFullPath(item.AudioFilePath);
+            return File.Exists(fullPath) ? fullPath : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void SelectHistoryItem(Guid id)
+    {
+        var selectedIndex = historyItems.ToList().FindIndex(item => item.Id == id);
+        if (selectedIndex >= 0)
+        {
+            HistoryListView.SelectedIndex = selectedIndex;
+            RefreshSelectedHistoryDetails();
+        }
+    }
+
+    private void RefreshHistoryAudioPlayer(string? audioPath)
+    {
+        if (audioPath is null)
+        {
+            ClearHistoryAudioPlayer();
+            return;
+        }
+
+        HistoryAudioPlayer.Source = MediaSource.CreateFromUri(new Uri(audioPath, UriKind.Absolute));
+        HistoryAudioPlayer.Visibility = Visibility.Visible;
+    }
+
+    private void ClearHistoryAudioPlayer()
+    {
+        HistoryAudioPlayer.Source = null;
+        HistoryAudioPlayer.Visibility = Visibility.Collapsed;
+    }
+
+    private void TryDeleteHistoryAudioFile(TranscriptionHistoryItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.AudioFilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            var audioPath = Path.GetFullPath(item.AudioFilePath);
+            if (!File.Exists(audioPath) || !IsUnderDirectory(audioPath, recordingsDirectory))
+            {
+                return;
+            }
+
+            File.Delete(audioPath);
+        }
+        catch
+        {
+            // Deleting the history row should not fail just because a stale audio file is locked.
+        }
+    }
+
+    private static bool IsUnderDirectory(string candidatePath, string directoryPath)
+    {
+        var fullDirectory = Path.GetFullPath(directoryPath);
+        if (!fullDirectory.EndsWith(Path.DirectorySeparatorChar))
+        {
+            fullDirectory += Path.DirectorySeparatorChar;
+        }
+
+        return candidatePath.StartsWith(fullDirectory, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string HistoryListItem(TranscriptionHistoryItem item)
@@ -1048,8 +1242,9 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting || isStopping || isPastingLast;
+        var operationActive = isStarting || isStopping || isPastingLast || isRetryingHistory;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
+        var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
 
         StartButton.IsEnabled = settingsLoaded
             && !operationActive
@@ -1079,6 +1274,12 @@ public sealed partial class MainWindow : Window
         SearchHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ClearHistorySearchButton.IsEnabled = settingsLoaded && !operationActive;
         DeleteHistoryButton.IsEnabled = settingsLoaded && !operationActive;
+        RetryHistoryButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording
+            && historyAudioAvailable;
+        OpenHistoryAudioButton.IsEnabled = settingsLoaded && !operationActive && historyAudioAvailable;
 
         var stateStatus = StateToStatusText(controller.State);
         var idleHotkeyWarning = controller.State == DictationState.Idle && !operationActive
@@ -1123,6 +1324,7 @@ public sealed partial class MainWindow : Window
     {
         windowLifetime.Cancel();
         DisposeGlobalHotkeyService();
+        ClearHistoryAudioPlayer();
 
         audioCapture.Dispose();
         windowLifetime.Dispose();

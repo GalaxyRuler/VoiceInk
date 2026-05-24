@@ -205,7 +205,7 @@ feat(windows): retry selected history audio
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add selected-history controls**
+- [x] **Step 1: Add selected-history controls**
 
 In the History section add:
 
@@ -215,7 +215,7 @@ In the History section add:
 
 Keep controls hidden/disabled unless the selected item has an existing audio file.
 
-- [ ] **Step 2: Wire selection state**
+- [x] **Step 2: Wire selection state**
 
 Implementation details:
 
@@ -224,7 +224,7 @@ Implementation details:
 - In `RefreshSelectedHistoryDetails`, display `Audio file: <path or Not recorded/Missing>` and set `HistoryAudioPlayer.Source = MediaSource.CreateFromUri(new Uri(path))` only when `File.Exists(path)`.
 - Enable `RetryHistoryButton` and `OpenHistoryAudioButton` only when audio is available and no operation is active.
 
-- [ ] **Step 3: Wire retry/open handlers**
+- [x] **Step 3: Wire retry/open handlers**
 
 Implementation details:
 
@@ -232,7 +232,7 @@ Implementation details:
 - `OpenHistoryAudioButton_Click` opens Explorer with `/select,"<path>"`.
 - Existing history delete should also delete the selected audio file if it exists under `recordingsDirectory`; outside paths are left alone.
 
-- [ ] **Step 4: Build verify**
+- [x] **Step 4: Build verify**
 
 Run:
 
@@ -242,7 +242,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 

@@ -184,6 +184,8 @@
                     <Button x:Name="PasteLastEnhancedButton" Grid.Column="6" Content="Paste Last Enhanced" Click="PasteLastEnhancedButton_Click" />
                 </Grid>
                 <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="RetryHistoryButton" Content="Retry Selected" Click="RetryHistoryButton_Click" />
+                    <Button x:Name="OpenHistoryAudioButton" Content="Open Audio" Click="OpenHistoryAudioButton_Click" />
                     <Button x:Name="DeleteHistoryButton" Content="Delete" Click="DeleteHistoryButton_Click" />
                 </StackPanel>
                 <Grid ColumnSpacing="12">
@@ -220,6 +222,11 @@
                             Height="80"
                             IsReadOnly="True"
                             TextWrapping="Wrap" />
+                        <MediaPlayerElement
+                            x:Name="HistoryAudioPlayer"
+                            Height="72"
+                            AreTransportControlsEnabled="True"
+                            Visibility="Collapsed" />
                     </StackPanel>
                 </Grid>
             </StackPanel>
