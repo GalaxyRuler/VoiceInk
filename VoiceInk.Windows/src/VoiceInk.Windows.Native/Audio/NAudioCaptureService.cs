@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using NAudio.Wave;
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Services;
@@ -45,7 +46,21 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
         }
         catch
         {
+            var failedFilePath = currentFilePath;
             DisposeCurrentRecording();
+
+            if (failedFilePath is not null)
+            {
+                try
+                {
+                    File.Delete(failedFilePath);
+                }
+                catch
+                {
+                    // Preserve the original startup failure if cleanup cannot delete the partial file.
+                }
+            }
+
             throw;
         }
 
@@ -79,7 +94,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
 
         if (stoppedArgs.Exception is not null)
         {
-            throw stoppedArgs.Exception;
+            ExceptionDispatchInfo.Capture(stoppedArgs.Exception).Throw();
         }
 
         return new AudioCaptureResult(filePath, duration, 16000, 1);
