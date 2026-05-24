@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.Settings;
 using Xunit;
 
@@ -41,6 +42,54 @@ public sealed class JsonSettingsStoreTests
         var actual = await store.LoadAsync(CancellationToken.None);
 
         Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async Task SaveAsync_PersistsPunctuationCleanupModeAsMacStyleString()
+    {
+        using var temp = new TempDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var store = new JsonSettingsStore(path);
+        var expected = new AppSettings
+        {
+            PunctuationCleanupMode = PunctuationCleanupMode.RemoveAll,
+            RemoveFillerWords = false,
+            LowercaseTranscription = true
+        };
+
+        await store.SaveAsync(expected, CancellationToken.None);
+
+        var content = await File.ReadAllTextAsync(path);
+        Assert.Contains("\"PunctuationCleanupMode\": \"removeAll\"", content);
+        var actual = await store.LoadAsync(CancellationToken.None);
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("\"removeTrailingPeriod\"", PunctuationCleanupMode.RemoveTrailingPeriod)]
+    [InlineData("2", PunctuationCleanupMode.RemoveTrailingPeriod)]
+    public async Task LoadAsync_ReadsMacStyleAndLegacyNumericPunctuationCleanupModes(
+        string jsonValue,
+        PunctuationCleanupMode expectedMode)
+    {
+        using var temp = new TempDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        await File.WriteAllTextAsync(
+            path,
+            $$"""
+            {
+              "PunctuationCleanupMode": {{jsonValue}},
+              "RemoveFillerWords": false,
+              "LowercaseTranscription": true
+            }
+            """);
+        var store = new JsonSettingsStore(path);
+
+        var settings = await store.LoadAsync(CancellationToken.None);
+
+        Assert.Equal(expectedMode, settings.PunctuationCleanupMode);
+        Assert.False(settings.RemoveFillerWords);
+        Assert.True(settings.LowercaseTranscription);
     }
 
     [Fact]

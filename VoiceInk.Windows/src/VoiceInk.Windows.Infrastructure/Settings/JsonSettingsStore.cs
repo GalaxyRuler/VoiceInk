@@ -8,7 +8,8 @@ public sealed class JsonSettingsStore(string filePath) : ISettingsStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        WriteIndented = true
+        WriteIndented = true,
+        Converters = { new PunctuationCleanupModeJsonConverter() }
     };
 
     public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)

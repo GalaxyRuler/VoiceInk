@@ -71,6 +71,16 @@ public sealed class TextPostProcessorTests
     }
 
     [Fact]
+    public void Process_RemoveAllPunctuationPreservesLineBreaks()
+    {
+        var result = TextPostProcessor.Process(
+            "first,\nsecond",
+            new TextPostProcessingOptions(PunctuationCleanupMode: PunctuationCleanupMode.RemoveAll));
+
+        Assert.Equal("first\nsecond", result);
+    }
+
+    [Fact]
     public void Process_RemoveTrailingPeriodRemovesSingleTrailingPeriod()
     {
         var result = TextPostProcessor.Process(

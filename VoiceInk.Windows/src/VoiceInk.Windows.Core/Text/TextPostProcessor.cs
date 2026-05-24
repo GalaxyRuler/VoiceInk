@@ -27,6 +27,9 @@ public static class TextPostProcessor
         RegexOptions.Compiled);
 
     private static readonly Regex WhitespaceRegex = new(@"\s{2,}", RegexOptions.Compiled);
+    private static readonly Regex HorizontalWhitespaceRegex = new(@"[^\S\r\n]{2,}", RegexOptions.Compiled);
+    private static readonly Regex SpaceBeforeNewlineRegex = new(@"[ \t]+(\r?\n)", RegexOptions.Compiled);
+    private static readonly Regex SpaceAfterNewlineRegex = new(@"(\r?\n)[ \t]+", RegexOptions.Compiled);
 
     private static readonly Regex[] HallucinationRegexes =
     [
@@ -166,7 +169,7 @@ public static class TextPostProcessor
             output[index] = IsPunctuation(character) ? ' ' : character;
         }
 
-        return NormalizeWhitespace(new string(output).Replace("\0", string.Empty, StringComparison.Ordinal));
+        return NormalizePunctuationWhitespace(new string(output).Replace("\0", string.Empty, StringComparison.Ordinal));
     }
 
     private static bool IsPunctuation(char character) =>
@@ -186,4 +189,12 @@ public static class TextPostProcessor
         WhitespaceRegex
             .Replace(text, " ")
             .Trim();
+
+    private static string NormalizePunctuationWhitespace(string text)
+    {
+        var normalized = HorizontalWhitespaceRegex.Replace(text, " ");
+        normalized = SpaceBeforeNewlineRegex.Replace(normalized, "$1");
+        normalized = SpaceAfterNewlineRegex.Replace(normalized, "$1");
+        return normalized.Trim();
+    }
 }
