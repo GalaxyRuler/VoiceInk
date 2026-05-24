@@ -188,13 +188,40 @@ public sealed class SqliteHistoryStoreTests
             enhancementProviderName: "openai-compatible",
             enhancementModelName: "gpt-compatible",
             aiRequestSystemMessage: "system prompt",
-            aiRequestUserMessage: "user prompt");
+            aiRequestUserMessage: "user prompt",
+            powerModeName: "Chat",
+            powerModeEmoji: "C");
 
         await store.SaveAsync(item, CancellationToken.None);
 
         var loaded = await store.ListRecentAsync(1, CancellationToken.None);
 
         Assert.Equal(item, Assert.Single(loaded));
+    }
+
+    [Fact]
+    public async Task SaveAndListRecentAsync_RoundTripsPowerModeMetadata()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero),
+            "final text",
+            "local-whisper",
+            TimeSpan.FromSeconds(4),
+            TimeSpan.FromMilliseconds(700),
+            powerModeName: "Docs",
+            powerModeEmoji: "D");
+
+        await store.SaveAsync(item, CancellationToken.None);
+
+        var loaded = Assert.Single(await store.ListRecentAsync(1, CancellationToken.None));
+
+        Assert.Equal("Docs", loaded.PowerModeName);
+        Assert.Equal("D", loaded.PowerModeEmoji);
+        Assert.Equal(item, loaded);
     }
 
     [Fact]
@@ -242,6 +269,8 @@ public sealed class SqliteHistoryStoreTests
         Assert.Equal("auto", item.Language);
         Assert.Null(item.EnhancedText);
         Assert.Null(item.ModelPath);
+        Assert.Null(item.PowerModeName);
+        Assert.Null(item.PowerModeEmoji);
     }
 
     [Fact]

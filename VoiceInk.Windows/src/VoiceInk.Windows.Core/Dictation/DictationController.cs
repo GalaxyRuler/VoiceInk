@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -15,10 +16,12 @@ public sealed class DictationController(
     IHistoryStore historyStore,
     ISettingsStore settingsStore,
     IDictionaryStore? dictionaryStore = null,
-    TextEnhancementPipeline? enhancementPipeline = null)
+    TextEnhancementPipeline? enhancementPipeline = null,
+    IPowerModeTargetProvider? powerModeTargetProvider = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
+    private PowerModeResolution? activePowerModeResolution;
 
     public DictationState State { get; private set; } = DictationState.Idle;
     public string? LastError { get; private set; }
@@ -44,7 +47,8 @@ public sealed class DictationController(
             try
             {
                 var settings = await settingsStore.LoadAsync(cancellationToken);
-                if (string.IsNullOrWhiteSpace(settings.ModelPath))
+                var powerModeResolution = await ResolvePowerModeAsync(settings, cancellationToken);
+                if (string.IsNullOrWhiteSpace(powerModeResolution.EffectiveSettings.ModelPath))
                 {
                     State = DictationState.Error;
                     LastError = "Local whisper model path is required.";
@@ -53,14 +57,17 @@ public sealed class DictationController(
 
                 State = DictationState.Recording;
                 await audioCapture.StartAsync(cancellationToken);
+                activePowerModeResolution = powerModeResolution;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                activePowerModeResolution = null;
                 State = DictationState.Idle;
                 throw;
             }
             catch (Exception ex)
             {
+                activePowerModeResolution = null;
                 State = DictationState.Error;
                 LastError = ex.Message;
             }
@@ -94,7 +101,9 @@ public sealed class DictationController(
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var settings = await settingsStore.LoadAsync(cancellationToken);
+                var powerModeResolution = activePowerModeResolution
+                    ?? PowerModeMatcher.Resolve(await settingsStore.LoadAsync(cancellationToken), target: null);
+                var settings = powerModeResolution.EffectiveSettings;
                 var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
                 var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
                 var vocabularyPrompt = DictionaryService.RenderVocabularyPrompt(vocabulary);
@@ -153,7 +162,9 @@ public sealed class DictationController(
                             enhancementProviderName: enhancement?.EnhancementProviderName,
                             enhancementModelName: enhancement?.EnhancementModelName,
                             aiRequestSystemMessage: enhancement?.SystemMessage,
-                            aiRequestUserMessage: enhancement?.UserMessage),
+                            aiRequestUserMessage: enhancement?.UserMessage,
+                            powerModeName: powerModeResolution.PowerModeName,
+                            powerModeEmoji: powerModeResolution.PowerModeEmoji),
                         cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -177,6 +188,10 @@ public sealed class DictationController(
             {
                 State = DictationState.Error;
                 LastError = ex.Message;
+            }
+            finally
+            {
+                activePowerModeResolution = null;
             }
         }
         finally
@@ -208,7 +223,9 @@ public sealed class DictationController(
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var settings = await settingsStore.LoadAsync(cancellationToken);
+                var powerModeResolution = activePowerModeResolution
+                    ?? PowerModeMatcher.Resolve(await settingsStore.LoadAsync(cancellationToken), target: null);
+                var settings = powerModeResolution.EffectiveSettings;
                 try
                 {
                     await historyStore.SaveAsync(
@@ -223,7 +240,9 @@ public sealed class DictationController(
                             status: TranscriptionHistoryStatus.Canceled,
                             language: settings.Language,
                             modelPath: settings.ModelPath,
-                            audioFilePath: audio.FilePath),
+                            audioFilePath: audio.FilePath,
+                            powerModeName: powerModeResolution.PowerModeName,
+                            powerModeEmoji: powerModeResolution.PowerModeEmoji),
                         cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -248,6 +267,10 @@ public sealed class DictationController(
                 State = DictationState.Error;
                 LastError = ex.Message;
             }
+            finally
+            {
+                activePowerModeResolution = null;
+            }
         }
         finally
         {
@@ -261,6 +284,31 @@ public sealed class DictationController(
             TranscriptionProviderKind.LocalWhisper => "local-whisper",
             _ => settings.TranscriptionProvider.ToString()
         };
+
+    private async Task<PowerModeResolution> ResolvePowerModeAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken)
+    {
+        if (powerModeTargetProvider is null)
+        {
+            return PowerModeMatcher.Resolve(settings, target: null);
+        }
+
+        try
+        {
+            var target = await powerModeTargetProvider.GetCurrentTargetAsync(cancellationToken);
+            return PowerModeMatcher.Resolve(settings, target);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning = $"Power Mode detection failed: {ex.Message}";
+            return PowerModeMatcher.Resolve(settings, target: null);
+        }
+    }
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {

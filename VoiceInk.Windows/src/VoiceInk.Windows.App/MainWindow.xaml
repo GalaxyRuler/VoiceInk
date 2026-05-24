@@ -195,6 +195,171 @@
                             Click="ApplyEnhancementSettingsButton_Click" />
                     </StackPanel>
 
+                    <StackPanel x:Name="PowerModeSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Power Mode" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            x:Name="PowerModeActiveWindowTextBlock"
+                            Text="Active window not checked"
+                            TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="RefreshPowerModeTargetButton"
+                                Content="Refresh Active Window"
+                                Click="RefreshPowerModeTargetButton_Click" />
+                            <Button
+                                x:Name="UsePowerModeTargetButton"
+                                Content="Use Active Window"
+                                Click="UsePowerModeTargetButton_Click" />
+                        </StackPanel>
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="3*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <ListView
+                                    x:Name="PowerModeRulesListView"
+                                    Height="260"
+                                    SelectionChanged="PowerModeRulesListView_SelectionChanged"
+                                    SelectionMode="Single" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button
+                                        x:Name="MovePowerModeRuleUpButton"
+                                        Content="Move Up"
+                                        Click="MovePowerModeRuleUpButton_Click" />
+                                    <Button
+                                        x:Name="MovePowerModeRuleDownButton"
+                                        Content="Move Down"
+                                        Click="MovePowerModeRuleDownButton_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        x:Name="PowerModeNameTextBox"
+                                        Grid.Column="0"
+                                        Header="Name"
+                                        PlaceholderText="Chat" />
+                                    <TextBox
+                                        x:Name="PowerModeEmojiTextBox"
+                                        Grid.Column="1"
+                                        Header="Emoji"
+                                        PlaceholderText="C" />
+                                </Grid>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        x:Name="PowerModeProcessTextBox"
+                                        Grid.Column="0"
+                                        Header="Process contains"
+                                        PlaceholderText="teams" />
+                                    <TextBox
+                                        x:Name="PowerModeWindowTitleTextBox"
+                                        Grid.Column="1"
+                                        Header="Window title contains"
+                                        PlaceholderText="chat" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <CheckBox
+                                        x:Name="PowerModeEnabledCheckBox"
+                                        Content="Enabled"
+                                        IsChecked="True" />
+                                    <CheckBox
+                                        x:Name="PowerModeDefaultCheckBox"
+                                        Content="Default" />
+                                </StackPanel>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        x:Name="PowerModeModelPathTextBox"
+                                        Grid.Column="0"
+                                        Header="Model override"
+                                        PlaceholderText="C:\Models\ggml-base.en.bin" />
+                                    <TextBox
+                                        x:Name="PowerModeLanguageTextBox"
+                                        Grid.Column="1"
+                                        Header="Language override"
+                                        PlaceholderText="en" />
+                                </Grid>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox
+                                        x:Name="PowerModeEnhancementOverrideComboBox"
+                                        Grid.Column="0"
+                                        Header="Enhancement override"
+                                        SelectedIndex="0">
+                                        <ComboBoxItem Content="Keep base" />
+                                        <ComboBoxItem Content="Enable" />
+                                        <ComboBoxItem Content="Disable" />
+                                    </ComboBox>
+                                    <ComboBox
+                                        x:Name="PowerModePromptOverrideComboBox"
+                                        Grid.Column="1"
+                                        Header="Prompt override" />
+                                </Grid>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox
+                                        x:Name="PowerModeAppendTrailingSpaceCheckBox"
+                                        Grid.Column="0"
+                                        Content="Trailing space"
+                                        IsThreeState="True" />
+                                    <CheckBox
+                                        x:Name="PowerModeRemoveFillerWordsCheckBox"
+                                        Grid.Column="1"
+                                        Content="Remove fillers"
+                                        IsThreeState="True" />
+                                    <CheckBox
+                                        x:Name="PowerModeLowercaseCheckBox"
+                                        Grid.Column="2"
+                                        Content="Lowercase"
+                                        IsThreeState="True" />
+                                </Grid>
+                                <ComboBox
+                                    x:Name="PowerModePunctuationCleanupComboBox"
+                                    Header="Punctuation cleanup override"
+                                    SelectedIndex="0">
+                                    <ComboBoxItem Content="Keep base" />
+                                    <ComboBoxItem Content="Keep punctuation" />
+                                    <ComboBoxItem Content="Remove all" />
+                                    <ComboBoxItem Content="Remove trailing period" />
+                                </ComboBox>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button
+                                        x:Name="AddPowerModeRuleButton"
+                                        Content="Add Rule"
+                                        Click="AddPowerModeRuleButton_Click" />
+                                    <Button
+                                        x:Name="UpdatePowerModeRuleButton"
+                                        Content="Update Rule"
+                                        Click="UpdatePowerModeRuleButton_Click" />
+                                    <Button
+                                        x:Name="RemovePowerModeRuleButton"
+                                        Content="Remove Rule"
+                                        Click="RemovePowerModeRuleButton_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
                     <StackPanel x:Name="AudioInputSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Audio Input" FontSize="24" FontWeight="SemiBold" />
                         <ComboBox

@@ -18,6 +18,7 @@ using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
+using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
@@ -29,6 +30,7 @@ using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
+using VoiceInk.Windows.Native.PowerMode;
 using VoiceInk.Windows.Native.Security;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Tray;
@@ -51,6 +53,7 @@ public sealed partial class MainWindow : Window
     private const string SettingsSectionTag = "Settings";
     private const string AboutSectionTag = "About";
     private const string EnhancementSectionTag = "Enhancement";
+    private const string PowerModeSectionTag = "Power Mode";
 
     private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
@@ -70,6 +73,7 @@ public sealed partial class MainWindow : Window
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
+    private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
     private GlobalHotkeyService? hotkeyService;
@@ -87,6 +91,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
     private IReadOnlyList<LocalWhisperModel> modelChoices = [];
     private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
+    private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
@@ -495,6 +500,47 @@ public sealed partial class MainWindow : Window
         await ClearEnhancementKeyAsync();
     }
 
+    private async void RefreshPowerModeTargetButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshPowerModeActiveTargetAsync(fillRuleFields: false);
+    }
+
+    private async void UsePowerModeTargetButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshPowerModeActiveTargetAsync(fillRuleFields: true);
+    }
+
+    private void PowerModeRulesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        FillPowerModeFormFromSelection();
+        RefreshUiFromControllerState();
+    }
+
+    private async void AddPowerModeRuleButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AddPowerModeRuleAsync();
+    }
+
+    private async void UpdatePowerModeRuleButton_Click(object sender, RoutedEventArgs e)
+    {
+        await UpdateSelectedPowerModeRuleAsync();
+    }
+
+    private async void RemovePowerModeRuleButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RemoveSelectedPowerModeRuleAsync();
+    }
+
+    private async void MovePowerModeRuleUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        await MoveSelectedPowerModeRuleAsync(-1);
+    }
+
+    private async void MovePowerModeRuleDownButton_Click(object sender, RoutedEventArgs e)
+    {
+        await MoveSelectedPowerModeRuleAsync(1);
+    }
+
     private void OpenDiagnosticsFolderButton_Click(object sender, RoutedEventArgs e)
     {
         OpenDiagnosticsFolder();
@@ -674,6 +720,9 @@ public sealed partial class MainWindow : Window
             SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
             EnhancementRetryOnTimeoutCheckBox.IsChecked = settings.EnhancementRetryOnTimeout;
             RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
+            powerModeRules = settings.PowerModeRules;
+            RefreshPowerModePromptChoices(selectedPromptId: null);
+            RefreshPowerModeRulesListView();
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -2162,6 +2211,7 @@ public sealed partial class MainWindow : Window
             $"Language: {item.Language}",
             $"Model: {item.ModelPath ?? "Not recorded"}",
             $"Prompt: {item.PromptName ?? "None"}",
+            $"Power Mode: {PowerModeDisplay(item.PowerModeName, item.PowerModeEmoji)}",
             $"Recorded: {item.CreatedAt.LocalDateTime:g}",
             $"Audio: {Seconds(item.AudioDuration)}s",
             $"Audio file: {audioStatus}",
@@ -2638,7 +2688,8 @@ public sealed partial class MainWindow : Window
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
-            PunctuationCleanupMode = SelectedPunctuationCleanupMode()
+            PunctuationCleanupMode = SelectedPunctuationCleanupMode(),
+            PowerModeRules = powerModeRules.ToArray()
         };
     }
 
@@ -2650,7 +2701,8 @@ public sealed partial class MainWindow : Window
             historyStore,
             settingsStore,
             dictionaryStore,
-            textEnhancementPipeline);
+            textEnhancementPipeline,
+            powerModeTargetProvider);
 
     private int? SelectedAudioInputDeviceNumber() =>
         SelectedAudioInputDeviceChoice()?.DeviceNumber;
@@ -2712,6 +2764,268 @@ public sealed partial class MainWindow : Window
         var promptId = selectedPromptId ?? EnhancementPromptCatalog.DefaultPromptId;
         var selectedIndex = enhancementPrompts.ToList().FindIndex(prompt => prompt.Id == promptId);
         EnhancementPromptComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    }
+
+    private void RefreshPowerModePromptChoices(Guid? selectedPromptId)
+    {
+        PowerModePromptOverrideComboBox.ItemsSource = new[] { "Keep base" }
+            .Concat(enhancementPrompts.Select(prompt => prompt.Title))
+            .ToArray();
+        if (selectedPromptId is null)
+        {
+            PowerModePromptOverrideComboBox.SelectedIndex = 0;
+            return;
+        }
+
+        var selectedIndex = enhancementPrompts.ToList().FindIndex(prompt => prompt.Id == selectedPromptId.Value);
+        PowerModePromptOverrideComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex + 1 : 0;
+    }
+
+    private async Task RefreshPowerModeActiveTargetAsync(bool fillRuleFields)
+    {
+        try
+        {
+            var target = await powerModeTargetProvider.GetCurrentTargetAsync(windowLifetime.Token);
+            if (target is null)
+            {
+                PowerModeActiveWindowTextBlock.Text = "Active window unavailable";
+                RefreshUiFromControllerState("Active window unavailable");
+                return;
+            }
+
+            PowerModeActiveWindowTextBlock.Text = $"Process: {target.ProcessName}; Title: {target.WindowTitle}";
+            if (fillRuleFields)
+            {
+                PowerModeProcessTextBox.Text = target.ProcessName;
+                PowerModeWindowTitleTextBox.Text = target.WindowTitle;
+            }
+
+            RefreshUiFromControllerState("Active window refreshed");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            PowerModeActiveWindowTextBlock.Text = $"Active window failed: {ex.Message}";
+            RefreshUiFromControllerState($"Active window failed: {ex.Message}");
+        }
+    }
+
+    private async Task AddPowerModeRuleAsync()
+    {
+        if (!CanEditPowerModeRules())
+        {
+            return;
+        }
+
+        var rule = PowerModeRuleFromForm(existing: null);
+        powerModeRules = NormalizeDefaultRule(powerModeRules.Concat([rule]).ToArray(), rule);
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshPowerModeRulesListView(rule.Id);
+        RefreshUiFromControllerState("Power Mode rule added");
+    }
+
+    private async Task UpdateSelectedPowerModeRuleAsync()
+    {
+        if (!CanEditPowerModeRules() || SelectedPowerModeRule() is not { } selectedRule)
+        {
+            return;
+        }
+
+        var updatedRule = PowerModeRuleFromForm(selectedRule);
+        powerModeRules = NormalizeDefaultRule(
+            powerModeRules.Select(rule => rule.Id == selectedRule.Id ? updatedRule : rule).ToArray(),
+            updatedRule);
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshPowerModeRulesListView(updatedRule.Id);
+        RefreshUiFromControllerState("Power Mode rule updated");
+    }
+
+    private async Task RemoveSelectedPowerModeRuleAsync()
+    {
+        if (!CanEditPowerModeRules() || SelectedPowerModeRule() is not { } selectedRule)
+        {
+            return;
+        }
+
+        powerModeRules = powerModeRules.Where(rule => rule.Id != selectedRule.Id).ToArray();
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshPowerModeRulesListView();
+        RefreshUiFromControllerState("Power Mode rule removed");
+    }
+
+    private async Task MoveSelectedPowerModeRuleAsync(int direction)
+    {
+        if (!CanEditPowerModeRules() || SelectedPowerModeRule() is not { } selectedRule)
+        {
+            return;
+        }
+
+        var currentIndex = PowerModeRulesListView.SelectedIndex;
+        var targetIndex = currentIndex + direction;
+        if (targetIndex < 0 || targetIndex >= powerModeRules.Count)
+        {
+            return;
+        }
+
+        var rules = powerModeRules.ToList();
+        rules.RemoveAt(currentIndex);
+        rules.Insert(targetIndex, selectedRule);
+        powerModeRules = rules;
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshPowerModeRulesListView(selectedRule.Id);
+        RefreshUiFromControllerState("Power Mode rules reordered");
+    }
+
+    private void RefreshPowerModeRulesListView(Guid? selectedId = null)
+    {
+        selectedId ??= SelectedPowerModeRule()?.Id;
+        PowerModeRulesListView.ItemsSource = powerModeRules
+            .Select(PowerModeRuleListItem)
+            .ToArray();
+
+        PowerModeRulesListView.SelectedIndex = selectedId is null
+            ? -1
+            : powerModeRules.ToList().FindIndex(rule => rule.Id == selectedId.Value);
+        FillPowerModeFormFromSelection();
+    }
+
+    private void FillPowerModeFormFromSelection()
+    {
+        var rule = SelectedPowerModeRule();
+        PowerModeNameTextBox.Text = rule?.Name ?? string.Empty;
+        PowerModeEmojiTextBox.Text = rule?.Emoji ?? string.Empty;
+        PowerModeProcessTextBox.Text = rule?.ProcessNamePattern ?? string.Empty;
+        PowerModeWindowTitleTextBox.Text = rule?.WindowTitlePattern ?? string.Empty;
+        PowerModeEnabledCheckBox.IsChecked = rule?.IsEnabled ?? true;
+        PowerModeDefaultCheckBox.IsChecked = rule?.IsDefault ?? false;
+        PowerModeModelPathTextBox.Text = rule?.ModelPathOverride ?? string.Empty;
+        PowerModeLanguageTextBox.Text = rule?.LanguageOverride ?? string.Empty;
+        PowerModeEnhancementOverrideComboBox.SelectedIndex = rule?.IsEnhancementEnabledOverride switch
+        {
+            true => 1,
+            false => 2,
+            _ => 0
+        };
+        RefreshPowerModePromptChoices(rule?.SelectedEnhancementPromptIdOverride);
+        PowerModeAppendTrailingSpaceCheckBox.IsChecked = rule?.AppendTrailingSpaceOverride;
+        PowerModeRemoveFillerWordsCheckBox.IsChecked = rule?.RemoveFillerWordsOverride;
+        PowerModeLowercaseCheckBox.IsChecked = rule?.LowercaseTranscriptionOverride;
+        PowerModePunctuationCleanupComboBox.SelectedIndex = rule?.PunctuationCleanupModeOverride switch
+        {
+            PunctuationCleanupMode.Keep => 1,
+            PunctuationCleanupMode.RemoveAll => 2,
+            PunctuationCleanupMode.RemoveTrailingPeriod => 3,
+            _ => 0
+        };
+    }
+
+    private PowerModeRule PowerModeRuleFromForm(PowerModeRule? existing)
+    {
+        var name = PowerModeNameTextBox.Text.Trim();
+        var emoji = PowerModeEmojiTextBox.Text.Trim();
+        return new PowerModeRule
+        {
+            Id = existing?.Id ?? Guid.NewGuid(),
+            Name = string.IsNullOrWhiteSpace(name) ? "New Power Mode" : name,
+            Emoji = string.IsNullOrWhiteSpace(emoji) ? "*" : emoji,
+            IsEnabled = PowerModeEnabledCheckBox.IsChecked == true,
+            IsDefault = PowerModeDefaultCheckBox.IsChecked == true,
+            ProcessNamePattern = PowerModeProcessTextBox.Text.Trim(),
+            WindowTitlePattern = PowerModeWindowTitleTextBox.Text.Trim(),
+            ModelPathOverride = TrimToNull(PowerModeModelPathTextBox.Text),
+            LanguageOverride = TrimToNull(PowerModeLanguageTextBox.Text),
+            IsEnhancementEnabledOverride = SelectedEnhancementOverride(),
+            SelectedEnhancementPromptIdOverride = SelectedPowerModePromptOverrideId(),
+            AppendTrailingSpaceOverride = PowerModeAppendTrailingSpaceCheckBox.IsChecked,
+            RemoveFillerWordsOverride = PowerModeRemoveFillerWordsCheckBox.IsChecked,
+            LowercaseTranscriptionOverride = PowerModeLowercaseCheckBox.IsChecked,
+            PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode()
+        };
+    }
+
+    private static IReadOnlyList<PowerModeRule> NormalizeDefaultRule(
+        IReadOnlyList<PowerModeRule> rules,
+        PowerModeRule changedRule) =>
+        changedRule.IsDefault
+            ? rules.Select(rule => rule.Id == changedRule.Id ? rule : rule with { IsDefault = false }).ToArray()
+            : rules;
+
+    private PowerModeRule? SelectedPowerModeRule() =>
+        PowerModeRulesListView.SelectedIndex >= 0 && PowerModeRulesListView.SelectedIndex < powerModeRules.Count
+            ? powerModeRules[PowerModeRulesListView.SelectedIndex]
+            : null;
+
+    private bool CanEditPowerModeRules() =>
+        settingsLoaded
+        && !IsOperationActive()
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording;
+
+    private Guid? SelectedPowerModePromptOverrideId()
+    {
+        var selectedIndex = PowerModePromptOverrideComboBox.SelectedIndex;
+        return selectedIndex > 0 && selectedIndex - 1 < enhancementPrompts.Count
+            ? enhancementPrompts[selectedIndex - 1].Id
+            : null;
+    }
+
+    private bool? SelectedEnhancementOverride() =>
+        PowerModeEnhancementOverrideComboBox.SelectedIndex switch
+        {
+            1 => true,
+            2 => false,
+            _ => null
+        };
+
+    private PunctuationCleanupMode? SelectedPowerModePunctuationCleanupMode() =>
+        PowerModePunctuationCleanupComboBox.SelectedIndex switch
+        {
+            1 => PunctuationCleanupMode.Keep,
+            2 => PunctuationCleanupMode.RemoveAll,
+            3 => PunctuationCleanupMode.RemoveTrailingPeriod,
+            _ => null
+        };
+
+    private static string? TrimToNull(string value)
+    {
+        var trimmed = value.Trim();
+        return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+    }
+
+    private static string PowerModeRuleListItem(PowerModeRule rule)
+    {
+        var enabled = rule.IsEnabled ? string.Empty : "Off - ";
+        var target = rule.IsDefault
+            ? "Default"
+            : string.Join(
+                ", ",
+                new[]
+                {
+                    string.IsNullOrWhiteSpace(rule.ProcessNamePattern) ? null : $"Process: {rule.ProcessNamePattern}",
+                    string.IsNullOrWhiteSpace(rule.WindowTitlePattern) ? null : $"Title: {rule.WindowTitlePattern}"
+                }.Where(value => value is not null));
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            target = "No target";
+        }
+
+        return $"{enabled}{rule.Emoji} {rule.Name} - {target}";
+    }
+
+    private static string PowerModeDisplay(string? name, string? emoji)
+    {
+        var trimmedName = name?.Trim();
+        var trimmedEmoji = emoji?.Trim();
+        return (trimmedEmoji, trimmedName) switch
+        {
+            ({ Length: > 0 }, { Length: > 0 }) => $"{trimmedEmoji} {trimmedName}",
+            ({ Length: > 0 }, _) => trimmedEmoji,
+            (_, { Length: > 0 }) => trimmedName,
+            _ => "None"
+        };
     }
 
     private async Task RefreshEnhancementKeyStatusAsync(CancellationToken cancellationToken)
@@ -2793,6 +3107,7 @@ public sealed partial class MainWindow : Window
         TranscribeAudioSectionPanel.Visibility = tag == TranscribeAudioSectionTag ? Visibility.Visible : Visibility.Collapsed;
         ModelsSectionPanel.Visibility = tag == ModelsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         EnhancementSectionPanel.Visibility = tag == EnhancementSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        PowerModeSectionPanel.Visibility = tag == PowerModeSectionTag ? Visibility.Visible : Visibility.Collapsed;
         AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
         DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
         HistorySectionPanel.Visibility = tag == HistorySectionTag ? Visibility.Visible : Visibility.Collapsed;
@@ -2920,6 +3235,7 @@ public sealed partial class MainWindow : Window
     {
         DisposeGlobalHotkeyService();
         var windowHandle = WindowNative.GetWindowHandle(this);
+        powerModeTargetProvider.ExcludeWindowHandle(windowHandle);
         var newHotkeyService = new GlobalHotkeyService(windowHandle);
         try
         {
@@ -2971,6 +3287,7 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        var powerModeControlsEnabled = CanEditPowerModeRules();
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
         var audioFileQueueEditable = CanEditAudioFileQueue();
         var selectedAudioFileQueueItem = SelectedAudioFileQueueItem();
@@ -3026,6 +3343,30 @@ public sealed partial class MainWindow : Window
         SkipShortEnhancementCheckBox.IsEnabled = enhancementControlsEnabled;
         EnhancementRetryOnTimeoutCheckBox.IsEnabled = enhancementControlsEnabled;
         ApplyEnhancementSettingsButton.IsEnabled = enhancementControlsEnabled;
+        RefreshPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
+        UsePowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
+        PowerModeRulesListView.IsEnabled = powerModeControlsEnabled;
+        PowerModeNameTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeProcessTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeWindowTitleTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeEnabledCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeDefaultCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeModelPathTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeLanguageTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeEnhancementOverrideComboBox.IsEnabled = powerModeControlsEnabled;
+        PowerModePromptOverrideComboBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeAppendTrailingSpaceCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeRemoveFillerWordsCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeLowercaseCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModePunctuationCleanupComboBox.IsEnabled = powerModeControlsEnabled;
+        AddPowerModeRuleButton.IsEnabled = powerModeControlsEnabled;
+        UpdatePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;
+        RemovePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;
+        MovePowerModeRuleUpButton.IsEnabled = powerModeControlsEnabled && PowerModeRulesListView.SelectedIndex > 0;
+        MovePowerModeRuleDownButton.IsEnabled = powerModeControlsEnabled
+            && PowerModeRulesListView.SelectedIndex >= 0
+            && PowerModeRulesListView.SelectedIndex < powerModeRules.Count - 1;
         ChooseAudioFilesButton.IsEnabled = audioFileQueueEditable;
         StartAudioFileQueueButton.IsEnabled = audioFileQueueEditable && hasPendingAudioFiles;
         CancelAudioFileQueueButton.IsEnabled = isTranscribingAudioFiles;

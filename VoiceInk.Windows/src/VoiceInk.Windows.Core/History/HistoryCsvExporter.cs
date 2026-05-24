@@ -6,7 +6,7 @@ namespace VoiceInk.Windows.Core.History;
 public static class HistoryCsvExporter
 {
     private const string Header =
-        "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Enhancement Provider,Enhancement Model,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path";
+        "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Power Mode,Provider,Enhancement Provider,Enhancement Model,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path";
 
     public static string Export(IEnumerable<TranscriptionHistoryItem> items)
     {
@@ -22,6 +22,7 @@ public static class HistoryCsvExporter
                 Escape(item.EnhancedText ?? string.Empty),
                 Escape(item.PromptName ?? string.Empty),
                 Escape(item.ModelPath ?? string.Empty),
+                Escape(PowerModeDisplay(item.PowerModeName, item.PowerModeEmoji)),
                 Escape(item.ProviderName),
                 Escape(item.EnhancementProviderName ?? string.Empty),
                 Escape(item.EnhancementModelName ?? string.Empty),
@@ -52,5 +53,18 @@ public static class HistoryCsvExporter
         return escaped.IndexOfAny([',', '"', '\r', '\n']) >= 0
             ? $"\"{escaped}\""
             : escaped;
+    }
+
+    private static string PowerModeDisplay(string? name, string? emoji)
+    {
+        var trimmedName = name?.Trim();
+        var trimmedEmoji = emoji?.Trim();
+        return (trimmedEmoji, trimmedName) switch
+        {
+            ({ Length: > 0 }, { Length: > 0 }) => $"{trimmedEmoji} {trimmedName}",
+            ({ Length: > 0 }, _) => trimmedEmoji,
+            (_, { Length: > 0 }) => trimmedName,
+            _ => string.Empty
+        };
     }
 }

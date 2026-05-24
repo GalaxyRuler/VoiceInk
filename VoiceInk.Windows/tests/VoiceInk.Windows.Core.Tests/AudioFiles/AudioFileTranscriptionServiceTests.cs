@@ -81,6 +81,8 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Equal("recordings", importer.LastRecordingsDirectory);
         Assert.Equal(importedAudio, transcription.LastAudio);
         Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions?.Prompt);
+        Assert.Null(result.Item.PowerModeName);
+        Assert.Null(result.Item.PowerModeEmoji);
     }
 
     [Fact]

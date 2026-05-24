@@ -9,6 +9,7 @@ public static class ShellNavigationPresenter
         new("History", "History", "Document"),
         new("AI Models", "AI Models", "Library"),
         new("Enhancement", "Enhancement", "Edit"),
+        new("Power Mode", "Power Mode", "LightningBolt"),
         new("Audio Input", "Audio Input", "Microphone"),
         new("Dictionary", "Dictionary", "Character"),
         new("Settings", "Settings", "Setting"),

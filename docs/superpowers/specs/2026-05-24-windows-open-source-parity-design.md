@@ -63,6 +63,7 @@ The Windows MVP already has:
 - Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, original-text fallback, and successful enhancement insertion.
+- Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
@@ -301,6 +302,14 @@ Power Mode Windows MVP target:
 - Store Power Mode name and emoji in history and CSV export for completed and canceled rows.
 - Add a WinUI Power Mode section with rule list, add/update/remove, enable toggle, active-window quick fill, ordering, and basic override controls.
 - Defer browser URL detection, auto-send keys, Power Mode global shortcuts, and recorder popover selection until the next Power Mode slice.
+
+Power Mode slice completed on 2026-05-25:
+
+- Added Core Power Mode rules, target matching, default fallback, and settings overlay behavior.
+- Added native Windows active-window process/title detection behind a Core interface.
+- Captured the matching rule at recording start and used its effective settings for transcription, cleanup, enhancement, insertion, and canceled-history metadata.
+- Added Power Mode name/emoji to SQLite history, CSV export, and the History detail view.
+- Added a WinUI Power Mode section for ordered rules, active-window quick fill, enabled/default toggles, and model/language/enhancement/prompt/cleanup overrides.
 
 Windows Win32 grounding:
 

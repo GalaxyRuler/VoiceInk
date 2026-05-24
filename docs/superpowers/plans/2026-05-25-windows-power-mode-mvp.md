@@ -57,7 +57,7 @@ Record the Windows Power Mode MVP contract:
 - History stores Power Mode name and emoji.
 - Browser URL matching, auto-send keys, Power Mode shortcuts, and recorder popover selection are later work.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -70,7 +70,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Matcher Red/Green
 
-- [ ] **Step 1: Add failing matcher tests**
+- [x] **Step 1: Add failing matcher tests**
 
 Create `PowerModeMatcherTests` for:
 
@@ -80,7 +80,7 @@ Create `PowerModeMatcherTests` for:
 - default rule applies only when no app/window rule matches;
 - overrides produce a merged settings copy without mutating the base settings.
 
-- [ ] **Step 2: Run red tests**
+- [x] **Step 2: Run red tests**
 
 Run:
 
@@ -90,7 +90,7 @@ Run:
 
 Expected: compile failure because Power Mode types do not exist.
 
-- [ ] **Step 3: Add Core matcher implementation**
+- [x] **Step 3: Add Core matcher implementation**
 
 Implement:
 
@@ -100,13 +100,13 @@ Implement:
 - `AppSettings.PowerModeRules`.
 - null/empty override handling so blank fields keep base settings.
 
-- [ ] **Step 4: Verify matcher tests pass**
+- [x] **Step 4: Verify matcher tests pass**
 
 Run the focused Power Mode Core test command. Expected: matcher tests pass.
 
 ## Task 3: Dictation Session Red/Green
 
-- [ ] **Step 1: Add failing dictation tests**
+- [x] **Step 1: Add failing dictation tests**
 
 Cover:
 
@@ -114,7 +114,7 @@ Cover:
 - canceled recordings save the same active Power Mode metadata;
 - provider failure or missing target falls back to base settings without blocking recording.
 
-- [ ] **Step 2: Run red dictation tests**
+- [x] **Step 2: Run red dictation tests**
 
 Run:
 
@@ -124,7 +124,7 @@ Run:
 
 Expected: new tests fail until the controller stores session resolution.
 
-- [ ] **Step 3: Implement dictation session overlay**
+- [x] **Step 3: Implement dictation session overlay**
 
 Modify `DictationController` to:
 
@@ -134,13 +134,13 @@ Modify `DictationController` to:
 - use effective settings for transcription, cleanup, enhancement, insertion, and canceled history;
 - clear the session after stop/cancel/error.
 
-- [ ] **Step 4: Verify dictation tests pass**
+- [x] **Step 4: Verify dictation tests pass**
 
 Run the dictation-controller test command. Expected: all dictation tests pass.
 
 ## Task 4: History Metadata Red/Green
 
-- [ ] **Step 1: Add failing history tests**
+- [x] **Step 1: Add failing history tests**
 
 Cover:
 
@@ -149,7 +149,7 @@ Cover:
 - CSV exports a `Power Mode` column rendered as `emoji name`.
 - audio-file transcription saves null Power Mode metadata.
 
-- [ ] **Step 2: Run red history tests**
+- [x] **Step 2: Run red history tests**
 
 Run:
 
@@ -159,17 +159,17 @@ Run:
 
 Expected: tests fail until schema/export/item changes exist.
 
-- [ ] **Step 3: Implement history metadata**
+- [x] **Step 3: Implement history metadata**
 
 Add `PowerModeName` and `PowerModeEmoji` to history item, SQLite insert/select/search/schema migration, CSV header/rows, and UI metadata display.
 
-- [ ] **Step 4: Verify history tests pass**
+- [x] **Step 4: Verify history tests pass**
 
 Run the filtered history command. Expected: tests pass.
 
 ## Task 5: Native Active Window And Shell UI
 
-- [ ] **Step 1: Add the native target provider**
+- [x] **Step 1: Add the native target provider**
 
 Implement `ActiveWindowPowerModeTargetProvider` with safe P/Invoke:
 
@@ -179,11 +179,11 @@ Implement `ActiveWindowPowerModeTargetProvider` with safe P/Invoke:
 - read process name through `Process.GetProcessById`;
 - catch process-access failures and still return title/process id when possible.
 
-- [ ] **Step 2: Wire controller construction**
+- [x] **Step 2: Wire controller construction**
 
 Pass the native provider into `CreateController` so dictation sessions can resolve Power Mode without UI coupling.
 
-- [ ] **Step 3: Add WinUI Power Mode section**
+- [x] **Step 3: Add WinUI Power Mode section**
 
 Add navigation and controls:
 
@@ -194,11 +194,11 @@ Add navigation and controls:
 - add/update/remove/move up/move down buttons;
 - refresh active window and use active window buttons.
 
-- [ ] **Step 4: Persist UI edits through settings**
+- [x] **Step 4: Persist UI edits through settings**
 
 Load rules into the section, save rules through `SaveSettingsAsync`, and keep rule list state refreshed after add/update/remove/reorder.
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
 
 Run:
 
@@ -210,7 +210,7 @@ Expected: build succeeds with zero errors.
 
 ## Task 6: Docs, Review, And Commit
 
-- [ ] **Step 1: Update README and parity spec**
+- [x] **Step 1: Update README and parity spec**
 
 Document source-runnable Power Mode behavior and remaining gaps.
 

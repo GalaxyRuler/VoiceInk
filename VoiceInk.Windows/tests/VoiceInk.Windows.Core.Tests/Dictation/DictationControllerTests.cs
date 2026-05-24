@@ -3,6 +3,7 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -240,6 +241,142 @@ public sealed class DictationControllerTests
         Assert.Equal(TimeSpan.FromMilliseconds(42), saved.EnhancementDuration);
         Assert.Contains("TRANSCRIPTION ENHANCER", saved.AiRequestSystemMessage);
         Assert.Contains("<TRANSCRIPT>", saved.AiRequestUserMessage);
+    }
+
+    [Fact]
+    public async Task StopAsync_UsesPowerModeResolvedAtRecordingStart()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "base.bin",
+            Language = "auto",
+            AppendTrailingSpace = false,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    Emoji = "C",
+                    ProcessNamePattern = "teams",
+                    ModelPathOverride = "chat.bin",
+                    LanguageOverride = "en",
+                    AppendTrailingSpaceOverride = true
+                }
+            ]
+        });
+        var targetProvider = new FakePowerModeTargetProvider(new PowerModeTarget("Teams", "Project Chat", 300));
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            settings,
+            powerModeTargetProvider: targetProvider);
+
+        await controller.StartAsync(CancellationToken.None);
+        settings.CurrentSettings = settings.CurrentSettings with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Other",
+                    Emoji = "O",
+                    ProcessNamePattern = "teams",
+                    ModelPathOverride = "other.bin",
+                    LanguageOverride = "fr"
+                }
+            ]
+        };
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal(1, targetProvider.CallCount);
+        Assert.Equal("hello ", insertion.InsertedText);
+        Assert.Equal("chat.bin", transcription.LastOptions?.ModelPath);
+        Assert.Equal("en", transcription.LastOptions?.Language);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("Chat", saved.PowerModeName);
+        Assert.Equal("C", saved.PowerModeEmoji);
+        Assert.Equal("chat.bin", saved.ModelPath);
+        Assert.Equal("en", saved.Language);
+    }
+
+    [Fact]
+    public async Task CancelAsync_SavesRecordingStartPowerModeMetadata()
+    {
+        var audio = new AudioCaptureResult(@"C:\Recordings\canceled.wav", TimeSpan.FromSeconds(3), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "base.bin",
+            Language = "auto",
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Docs",
+                    Emoji = "D",
+                    ProcessNamePattern = "winword",
+                    LanguageOverride = "en"
+                }
+            ]
+        });
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            history,
+            settings,
+            powerModeTargetProvider: new FakePowerModeTargetProvider(new PowerModeTarget("WINWORD", "Document", 301)));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.CancelAsync(CancellationToken.None);
+
+        var saved = Assert.Single(history.Items);
+        Assert.Equal(TranscriptionHistoryStatus.Canceled, saved.Status);
+        Assert.Equal("Docs", saved.PowerModeName);
+        Assert.Equal("D", saved.PowerModeEmoji);
+        Assert.Equal("en", saved.Language);
+    }
+
+    [Fact]
+    public async Task StartAsync_WhenPowerModeTargetProviderFailsFallsBackToBaseSettings()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "local-whisper"));
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "base.bin",
+                Language = "auto",
+                PowerModeRules =
+                [
+                    new PowerModeRule
+                    {
+                        Name = "Default",
+                        Emoji = "*",
+                        IsDefault = true,
+                        ModelPathOverride = "default.bin"
+                    }
+                ]
+            }),
+            powerModeTargetProvider: new FakePowerModeTargetProvider(exception: new InvalidOperationException("foreground unavailable")));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("base.bin", transcription.LastOptions?.ModelPath);
+        Assert.Equal("auto", transcription.LastOptions?.Language);
     }
 
     [Fact]
@@ -731,26 +868,29 @@ public sealed class DictationControllerTests
     public async Task StopAsync_CancellationAfterCaptureStopPropagatesAndLeavesIdle()
     {
         using var cts = new CancellationTokenSource();
-        var loadEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var loadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var vocabularyEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var vocabularyGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
-        var settings = new FakeSettingsStore(new AppSettings
+        var dictionary = new FakeDictionaryStore
         {
-            ModelPath = "ggml-base.en.bin"
-        });
+            VocabularyEntered = vocabularyEntered,
+            VocabularyGate = vocabularyGate.Task
+        };
         var controller = new DictationController(
             capture,
             new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
             new FakeTextInjectionService(),
             new FakeHistoryStore(),
-            settings);
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }),
+            dictionary);
 
         await controller.StartAsync(CancellationToken.None);
-        settings.LoadEntered = loadEntered;
-        settings.LoadGate = loadGate.Task;
 
         var stop = controller.StopAsync(cts.Token);
-        await loadEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await vocabularyEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
         await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
@@ -951,10 +1091,18 @@ public sealed class DictationControllerTests
     {
         public IReadOnlyList<VocabularyWord> Vocabulary { get; init; } = [];
         public IReadOnlyList<WordReplacement> Replacements { get; init; } = [];
+        public TaskCompletionSource? VocabularyEntered { get; init; }
+        public Task? VocabularyGate { get; init; }
 
-        public Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(Vocabulary);
+            VocabularyEntered?.SetResult();
+            if (VocabularyGate is not null)
+            {
+                await VocabularyGate.WaitAsync(cancellationToken);
+            }
+
+            return Vocabulary;
         }
 
         public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
@@ -981,6 +1129,24 @@ public sealed class DictationControllerTests
                 "openai-compatible",
                 request.Model,
                 TimeSpan.FromMilliseconds(42)));
+        }
+    }
+
+    private sealed class FakePowerModeTargetProvider(
+        PowerModeTarget? target = null,
+        Exception? exception = null) : IPowerModeTargetProvider
+    {
+        public int CallCount { get; private set; }
+
+        public Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken)
+        {
+            CallCount++;
+            if (exception is not null)
+            {
+                throw exception;
+            }
+
+            return Task.FromResult(target);
         }
     }
 }

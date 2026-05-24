@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Models;
+using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Text;
 
 namespace VoiceInk.Windows.Core.Settings;
@@ -33,6 +34,7 @@ public sealed record AppSettings
     public bool RemoveFillerWords { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
+    public PowerModeRule[] PowerModeRules { get; init; } = [];
 
     public bool Equals(AppSettings? other)
     {
@@ -64,7 +66,8 @@ public sealed record AppSettings
             ShortEnhancementWordThreshold == other.ShortEnhancementWordThreshold &&
             RemoveFillerWords == other.RemoveFillerWords &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
-            LowercaseTranscription == other.LowercaseTranscription;
+            LowercaseTranscription == other.LowercaseTranscription &&
+            PowerModeRules.SequenceEqual(other.PowerModeRules);
     }
 
     public override int GetHashCode()
@@ -102,6 +105,11 @@ public sealed record AppSettings
         hash.Add(RemoveFillerWords);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);
+        foreach (var rule in PowerModeRules)
+        {
+            hash.Add(rule);
+        }
+
         return hash.ToHashCode();
     }
 }

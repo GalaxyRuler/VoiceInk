@@ -23,6 +23,8 @@ public sealed record TranscriptionHistoryItem
     public string? EnhancementModelName { get; init; }
     public string? AiRequestSystemMessage { get; init; }
     public string? AiRequestUserMessage { get; init; }
+    public string? PowerModeName { get; init; }
+    public string? PowerModeEmoji { get; init; }
 
     public TranscriptionHistoryItem(
         Guid id,
@@ -43,7 +45,9 @@ public sealed record TranscriptionHistoryItem
         string? enhancementProviderName = null,
         string? enhancementModelName = null,
         string? aiRequestSystemMessage = null,
-        string? aiRequestUserMessage = null)
+        string? aiRequestUserMessage = null,
+        string? powerModeName = null,
+        string? powerModeEmoji = null)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -64,5 +68,7 @@ public sealed record TranscriptionHistoryItem
         EnhancementModelName = string.IsNullOrWhiteSpace(enhancementModelName) ? null : enhancementModelName;
         AiRequestSystemMessage = string.IsNullOrWhiteSpace(aiRequestSystemMessage) ? null : aiRequestSystemMessage;
         AiRequestUserMessage = string.IsNullOrWhiteSpace(aiRequestUserMessage) ? null : aiRequestUserMessage;
+        PowerModeName = string.IsNullOrWhiteSpace(powerModeName) ? null : powerModeName;
+        PowerModeEmoji = string.IsNullOrWhiteSpace(powerModeEmoji) ? null : powerModeEmoji;
     }
 }
