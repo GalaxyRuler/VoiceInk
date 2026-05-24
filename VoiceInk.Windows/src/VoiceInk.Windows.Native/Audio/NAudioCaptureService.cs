@@ -61,7 +61,6 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
 
         var stoppedTask = recordingStopped.Task;
         var filePath = currentFilePath;
-        var duration = DateTimeOffset.UtcNow - startedAt;
 
         StoppedEventArgs stoppedArgs;
         try
@@ -75,6 +74,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory) : IAudioCap
             throw;
         }
 
+        var duration = DateTimeOffset.UtcNow - startedAt;
         DisposeCurrentRecording();
 
         if (stoppedArgs.Exception is not null)
