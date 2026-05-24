@@ -61,6 +61,7 @@ The Windows MVP already has:
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
+- Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -175,19 +176,19 @@ Windows gaps:
 
 macOS has local Whisper cards, imported Whisper models, Parakeet/FluidAudio cards, native Apple model, cloud model cards, language selection, custom cloud models, API key management, model download/import, default model selection, and prewarm on wake. The macOS local model flow scans model files, imports Whisper ggml `.bin` models, displays imported model cards, and lets the user set a default transcription model.
 
-Active local-model-library slice on 2026-05-24:
+Local-model-library slice completed on 2026-05-24:
 
 - Persist imported local Whisper `.bin` model references in Windows JSON settings.
 - Add an imported-model selector to the Windows shell and set the selected model as the default local model path.
 - Add an import picker for `.bin` files and a link to open the open-source whisper.cpp GGML model downloads page.
-- Keep model catalog cards, direct download, language capability UI, warmup/preload, and cloud provider cards as later model-management work.
+- Keep model catalog cards, direct in-app download, language capability UI, warmup/preload, and cloud provider cards as later model-management work.
 
 Windows gaps:
 
 - Model catalog and cards beyond imported local model references.
 - Direct model download flow.
 - Language picker bound to model capabilities.
-- Default model management.
+- Rich default model management views beyond the imported-model selector and raw path field.
 - Warmup/preload.
 - Provider cards and secure API key storage.
 
@@ -357,7 +358,7 @@ Implemented:
 
 Windows gaps:
 
-- Model catalog/download/import cards.
+- Model catalog/download cards and imported-model reuse inside onboarding.
 - Permission health checks beyond opening Windows microphone settings.
 - Reset-onboarding setting.
 
@@ -426,6 +427,7 @@ Status on 2026-05-24:
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed native Windows tray shell with show/hide, recording toggle, Quick Add, History, Quit, and close-to-tray behavior.
 - Completed first-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
+- Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
 - Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.

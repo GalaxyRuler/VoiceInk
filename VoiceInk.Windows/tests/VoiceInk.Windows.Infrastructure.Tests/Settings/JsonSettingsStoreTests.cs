@@ -1,5 +1,6 @@
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
+using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Infrastructure.Settings;
 using Xunit;
 
@@ -45,7 +46,14 @@ public sealed class JsonSettingsStoreTests
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
-            HasCompletedOnboarding = true
+            HasCompletedOnboarding = true,
+            ImportedWhisperModels =
+            [
+                new LocalWhisperModel(
+                    "C:\\Models\\ggml-base.en.bin",
+                    "ggml-base.en",
+                    DateTimeOffset.Parse("2026-05-24T12:00:00Z"))
+            ]
         };
 
         await store.SaveAsync(expected, CancellationToken.None);

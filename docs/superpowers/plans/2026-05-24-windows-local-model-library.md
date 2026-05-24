@@ -23,11 +23,11 @@
 
 ## Task 1: Planning Docs
 
-- [ ] **Step 1: Mark local model library active**
+- [x] **Step 1: Mark local model library active**
 
 Update the model-management section to record the macOS source behavior: available local models, imported local models, import panel for Whisper ggml `.bin`, default model selection, and download cards. Record the Windows adaptation: imported local model references and default path selector now; model catalog/download/prewarm remains later.
 
-- [ ] **Step 2: Commit the plan**
+- [x] **Step 2: Commit the plan**
 
 Run:
 
@@ -40,7 +40,7 @@ Expected: docs-only commit.
 
 ## Task 2: Red Tests
 
-- [ ] **Step 1: Add Core service tests**
+- [x] **Step 1: Add Core service tests**
 
 Create tests proving:
 
@@ -49,11 +49,11 @@ Create tests proving:
 - Import rejects duplicate paths case-insensitively.
 - Build choices includes the current `ModelPath` when it is not already imported.
 
-- [ ] **Step 2: Add settings persistence test**
+- [x] **Step 2: Add settings persistence test**
 
 Update `JsonSettingsStoreTests.SaveAsync_PersistsSettings` to include one imported model and assert round-trip equality.
 
-- [ ] **Step 3: Run red tests**
+- [x] **Step 3: Run red tests**
 
 Run:
 
@@ -66,27 +66,27 @@ Expected: compile failures because the local model types and settings property d
 
 ## Task 3: Core And Settings
 
-- [ ] **Step 1: Add model record**
+- [x] **Step 1: Add model record**
 
 `LocalWhisperModel` contains `Path`, `DisplayName`, and `ImportedAt`. `ToString()` returns `DisplayName`.
 
-- [ ] **Step 2: Add import/choice service**
+- [x] **Step 2: Add import/choice service**
 
 `LocalWhisperModelService.Import(string path, IEnumerable<LocalWhisperModel> existing, DateTimeOffset importedAt, out string? error)` trims the path, requires a `.bin` extension, rejects duplicate paths case-insensitively with `Model is already imported.`, and appends a new model with file-name-without-extension display name.
 
 `LocalWhisperModelService.BuildChoices(AppSettings settings)` returns imported models plus a synthetic model for `settings.ModelPath` when nonblank and not already imported.
 
-- [ ] **Step 3: Persist imported models**
+- [x] **Step 3: Persist imported models**
 
 Add `public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];` to `AppSettings`.
 
-- [ ] **Step 4: Verify focused tests**
+- [x] **Step 4: Verify focused tests**
 
 Run the same focused Core and Infrastructure test commands from Task 2. Expected: selected tests pass.
 
 ## Task 4: WinUI Wiring
 
-- [ ] **Step 1: Add shell controls**
+- [x] **Step 1: Add shell controls**
 
 Under the model path text box, add:
 
@@ -95,19 +95,19 @@ Under the model path text box, add:
 - `UseSelectedModelButton` with content `Use Selected Model`.
 - `OpenModelDownloadsButton` with content `Open GGML Model Downloads`.
 
-- [ ] **Step 2: Load and refresh choices**
+- [x] **Step 2: Load and refresh choices**
 
 Keep a `localWhisperModels` field. During initialization, set it from settings and refresh the combo box with `LocalWhisperModelService.BuildChoices(settings)`. Preserve selection by path when possible.
 
-- [ ] **Step 3: Import and select behavior**
+- [x] **Step 3: Import and select behavior**
 
 `ImportModelButton` opens a `.bin` `FileOpenPicker`, imports the path through Core, sets the imported model as `ModelPath`, persists settings, and refreshes choices. `UseSelectedModelButton` sets the selected model path as the default and persists. `OpenModelDownloadsButton` opens `https://huggingface.co/ggerganov/whisper.cpp/tree/main` with `UseShellExecute = true`.
 
-- [ ] **Step 4: UI state**
+- [x] **Step 4: UI state**
 
 Disable import/select/download controls while recording, transcribing, inserting, onboarding, quick-add, retry, paste, or cancel operations are active. Keep the raw model path text box for manual source-runnable paths.
 
-- [ ] **Step 5: Verify app build**
+- [x] **Step 5: Verify app build**
 
 Run:
 
@@ -119,11 +119,11 @@ Expected: build passes with 0 warnings/errors.
 
 ## Task 5: Docs, Review, Commit
 
-- [ ] **Step 1: Update README/spec**
+- [x] **Step 1: Update README/spec**
 
 Document imported local model references and default model selection as implemented. Keep download cards, catalog metadata, language capability UI, warmup/preload, and cloud provider cards as remaining gaps.
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 Run:
 
@@ -134,11 +134,11 @@ Run:
 
 Expected: all tests and Debug x64 build pass.
 
-- [ ] **Step 3: Request review and fix findings**
+- [x] **Step 3: Request review and fix findings**
 
 Request subagent review against this plan and the macOS AI Models source. Fix all Critical and Important findings before committing.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Run:
 

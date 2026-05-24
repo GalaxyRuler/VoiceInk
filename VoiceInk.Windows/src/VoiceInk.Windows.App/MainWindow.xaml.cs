@@ -12,6 +12,7 @@ using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
@@ -52,6 +53,8 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
+    private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
+    private IReadOnlyList<LocalWhisperModel> modelChoices = [];
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
@@ -59,6 +62,7 @@ public sealed partial class MainWindow : Window
     private bool isPastingLast;
     private bool isRetryingHistory;
     private bool isQuickAdding;
+    private bool isImportingModel;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -164,7 +168,7 @@ public sealed partial class MainWindow : Window
 
     private async Task StartCurrentRecordingAsync()
     {
-        if (isStarting || isStopping || isCanceling || !settingsLoaded)
+        if (IsOperationActive() || !settingsLoaded)
         {
             return;
         }
@@ -331,7 +335,28 @@ public sealed partial class MainWindow : Window
         if (!suppressModelPathChanged)
         {
             modelPathEdited = true;
+            RefreshModelChoices(ModelPathTextBox.Text);
         }
+    }
+
+    private void ModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshUiFromControllerState();
+    }
+
+    private async void ImportModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ImportLocalModelAsync();
+    }
+
+    private async void UseSelectedModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await UseSelectedLocalModelAsync();
+    }
+
+    private void OpenModelDownloadsButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenModelDownloads();
     }
 
     private async void AddVocabularyButton_Click(object sender, RoutedEventArgs e)
@@ -479,6 +504,8 @@ public sealed partial class MainWindow : Window
                 suppressModelPathChanged = false;
             }
 
+            localWhisperModels = settings.ImportedWhisperModels;
+            RefreshModelChoices(settings.ModelPath);
             RecordingHotkeyTextBox.Text = settings.Hotkey;
             SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
             PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
@@ -811,6 +838,125 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Microphone settings failed: {ex.Message}");
+        }
+    }
+
+    private async Task ImportLocalModelAsync()
+    {
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        var statusOverride = "Opening model picker";
+        isImportingModel = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.List,
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            picker.FileTypeFilter.Add(".bin");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+            {
+                statusOverride = "Model import canceled";
+                return;
+            }
+
+            if (!CanEditModelLibrary(includeCurrentModelImport: false))
+            {
+                statusOverride = "Model import canceled because VoiceInk is busy";
+                return;
+            }
+
+            var importedModels = LocalWhisperModelService.Import(
+                file.Path,
+                localWhisperModels,
+                DateTimeOffset.Now,
+                out var error);
+            if (error is not null)
+            {
+                statusOverride = error;
+                return;
+            }
+
+            localWhisperModels = importedModels;
+            ModelPathTextBox.Text = file.Path;
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshModelChoices(file.Path);
+            statusOverride = $"Model imported: {Path.GetFileName(file.Path)}";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Model import failed: {ex.Message}";
+        }
+        finally
+        {
+            isImportingModel = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task UseSelectedLocalModelAsync()
+    {
+        var selectedModel = SelectedLocalWhisperModelChoice();
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        if (selectedModel is null)
+        {
+            RefreshUiFromControllerState("Select an imported model");
+            return;
+        }
+
+        try
+        {
+            ModelPathTextBox.Text = selectedModel.Path;
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshModelChoices(selectedModel.Path);
+            RefreshUiFromControllerState($"Default model: {selectedModel.DisplayName}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Model selection failed: {ex.Message}");
+        }
+    }
+
+    private void OpenModelDownloads()
+    {
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://huggingface.co/ggerganov/whisper.cpp/tree/main",
+                UseShellExecute = true
+            });
+            RefreshUiFromControllerState("Model downloads opened");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Model downloads failed: {ex.Message}");
         }
     }
 
@@ -1994,6 +2140,7 @@ public sealed partial class MainWindow : Window
         return settings with
         {
             ModelPath = ModelPathTextBox.Text,
+            ImportedWhisperModels = localWhisperModels.ToArray(),
             Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
             SecondaryRecordingHotkey = includeShortcutFields
                 ? SecondaryRecordingHotkeyTextBox.Text.Trim()
@@ -2050,6 +2197,51 @@ public sealed partial class MainWindow : Window
             ? audioInputChoices[selectedIndex]
             : null;
     }
+
+    private LocalWhisperModel? SelectedLocalWhisperModelChoice()
+    {
+        var selectedIndex = ModelComboBox.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < modelChoices.Count
+            ? modelChoices[selectedIndex]
+            : null;
+    }
+
+    private void RefreshModelChoices(string? selectedPath = null)
+    {
+        var modelPath = selectedPath ?? ModelPathTextBox.Text;
+        modelChoices = LocalWhisperModelService.BuildChoices(
+            new AppSettings
+            {
+                ModelPath = modelPath,
+                ImportedWhisperModels = localWhisperModels.ToArray()
+            });
+        ModelComboBox.ItemsSource = modelChoices;
+
+        var trimmedPath = modelPath.Trim();
+        ModelComboBox.SelectedIndex = string.IsNullOrWhiteSpace(trimmedPath)
+            ? -1
+            : modelChoices.ToList().FindIndex(model =>
+                string.Equals(model.Path, trimmedPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool IsOperationActive(bool includeCurrentModelImport = true) =>
+        isStarting
+        || isStopping
+        || isCanceling
+        || isPastingLast
+        || isRetryingHistory
+        || isQuickAdding
+        || isOnboardingOpen
+        || (includeCurrentModelImport && isImportingModel);
+
+    private bool IsControllerBusy() =>
+        controller.State is DictationState.Transcribing or DictationState.Inserting;
+
+    private bool CanEditModelLibrary(bool includeCurrentModelImport = true) =>
+        settingsLoaded
+        && !IsOperationActive(includeCurrentModelImport)
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording;
 
     private bool TryReplaceGlobalHotkeys(AppSettings settings, AppSettings? rollbackSettings)
     {
@@ -2150,14 +2342,9 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting
-            || isStopping
-            || isCanceling
-            || isPastingLast
-            || isRetryingHistory
-            || isQuickAdding
-            || isOnboardingOpen;
-        var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
+        var operationActive = IsOperationActive();
+        var controllerBusy = IsControllerBusy();
+        var modelControlsEnabled = CanEditModelLibrary();
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
         var selectedReplacement = ReplacementListView.SelectedIndex >= 0 && ReplacementListView.SelectedIndex < replacementItems.Count
             ? replacementItems[ReplacementListView.SelectedIndex]
@@ -2194,6 +2381,10 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        ModelComboBox.IsEnabled = modelControlsEnabled;
+        ImportModelButton.IsEnabled = modelControlsEnabled;
+        UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
+        OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
         ExportDictionaryButton.IsEnabled = settingsLoaded && !operationActive;
         ImportDictionaryButton.IsEnabled = settingsLoaded
             && !operationActive
