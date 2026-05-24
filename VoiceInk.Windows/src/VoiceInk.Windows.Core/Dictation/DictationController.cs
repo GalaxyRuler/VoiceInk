@@ -20,7 +20,11 @@ public sealed class DictationController(
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await lifecycleGate.WaitAsync(cancellationToken);
+        if (!await lifecycleGate.WaitAsync(0, cancellationToken))
+        {
+            return;
+        }
+
         try
         {
             if (State != DictationState.Idle)
@@ -63,7 +67,11 @@ public sealed class DictationController(
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await lifecycleGate.WaitAsync(cancellationToken);
+        if (!await lifecycleGate.WaitAsync(0, cancellationToken))
+        {
+            return;
+        }
+
         try
         {
             if (State != DictationState.Recording)
