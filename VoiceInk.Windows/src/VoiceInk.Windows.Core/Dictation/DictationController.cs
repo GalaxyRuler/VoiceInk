@@ -120,7 +120,7 @@ public sealed class DictationController(
                             transcription.Duration),
                         cancellationToken);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     State = DictationState.Idle;
                     throw;
@@ -132,7 +132,7 @@ public sealed class DictationController(
 
                 State = DictationState.Idle;
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 State = DictationState.Idle;
                 throw;
