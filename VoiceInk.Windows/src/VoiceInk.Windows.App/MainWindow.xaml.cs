@@ -263,11 +263,16 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && controller.State == DictationState.Recording;
 
+        var stateStatus = StateToStatusText(controller.State);
+        var idleHotkeyWarning = controller.State == DictationState.Idle && !operationActive
+            ? hotkeyRegistrationError
+            : null;
+
         StatusTextBlock.Text = statusOverride
             ?? controller.LastError
             ?? controller.LastWarning
-            ?? hotkeyRegistrationError
-            ?? StateToStatusText(controller.State);
+            ?? idleHotkeyWarning
+            ?? stateStatus;
     }
 
     private static string StateToStatusText(DictationState state) =>
