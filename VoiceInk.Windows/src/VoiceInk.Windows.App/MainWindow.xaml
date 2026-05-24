@@ -115,6 +115,8 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button x:Name="RefreshHistoryButton" Content="Refresh" Click="RefreshHistoryButton_Click" />
                     <Button x:Name="ExportHistoryButton" Content="Export CSV" Click="ExportHistoryButton_Click" />
+                    <Button x:Name="PasteLastButton" Content="Paste Last" Click="PasteLastButton_Click" />
+                    <Button x:Name="PasteLastEnhancedButton" Content="Paste Last Enhanced" Click="PasteLastEnhancedButton_Click" />
                 </StackPanel>
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>

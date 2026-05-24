@@ -29,6 +29,8 @@ public sealed partial class MainWindow : Window
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
     private readonly JsonSettingsStore settingsStore;
+    private readonly ClipboardTextInjectionService textInjectionService;
+    private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
     private NAudioCaptureService audioCapture;
@@ -57,6 +59,8 @@ public sealed partial class MainWindow : Window
         dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
         historyStore = new SqliteHistoryStore(historyPath);
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
+        textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
+        lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
 
@@ -210,6 +214,16 @@ public sealed partial class MainWindow : Window
     private async void ExportHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await ExportHistoryAsync();
+    }
+
+    private async void PasteLastButton_Click(object sender, RoutedEventArgs e)
+    {
+        await PasteLastAsync(LastTranscriptionTextKind.Final);
+    }
+
+    private async void PasteLastEnhancedButton_Click(object sender, RoutedEventArgs e)
+    {
+        await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
     }
 
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -461,6 +475,23 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
+    {
+        try
+        {
+            var result = await lastTranscriptionActionService.PasteLastAsync(textKind, windowLifetime.Token);
+            RefreshUiFromControllerState(result.Message);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Paste last failed: {ex.Message}");
+        }
+    }
+
     private void RefreshSelectedHistoryDetails()
     {
         if (HistoryListView.SelectedIndex < 0 || HistoryListView.SelectedIndex >= historyItems.Count)
@@ -537,7 +568,7 @@ public sealed partial class MainWindow : Window
         new(
             captureService,
             new WhisperNetTranscriptionService(),
-            new ClipboardTextInjectionService(restoreClipboard: true),
+            textInjectionService,
             historyStore,
             settingsStore,
             dictionaryStore);
