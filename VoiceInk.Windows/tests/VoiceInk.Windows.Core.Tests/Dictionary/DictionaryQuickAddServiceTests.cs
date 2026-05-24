@@ -143,6 +143,14 @@ public sealed class DictionaryQuickAddServiceTests
             return Task.FromResult<string?>(null);
         }
 
+        public Task<string?> UpdateWordReplacementAsync(
+            Guid id,
+            string original,
+            string replacement,
+            bool isEnabled,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(null);
+
         public Task DeleteVocabularyWordAsync(Guid id, CancellationToken cancellationToken) =>
             Task.CompletedTask;
 

@@ -62,7 +62,7 @@ The Windows MVP already has:
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
-- Shell add/remove controls for vocabulary words and word replacements.
+- Shell add/remove/sort controls for vocabulary words and add/edit/enable/disable/remove/sort controls for word replacements.
 - Quick-add dialog with Vocabulary and Word Replacement modes.
 - Dictionary JSON import/export for vocabulary words and word replacements.
 - Vocabulary prompt biasing for local Whisper transcription.
@@ -81,11 +81,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 107 Core tests and 33 Infrastructure tests passed after the secondary recording shortcut slice.
-
-Active slice:
-
-- Dictionary edit/sorting will add macOS-style vocabulary/replacement sort controls and word-replacement edit/enabled-state management to the current Windows shell. A dedicated Dictionary page with the full macOS layout remains a later shell/navigation gap.
+Result: 113 Core tests and 35 Infrastructure tests passed after the dictionary edit/sorting slice.
 
 ## Parity Inventory
 
@@ -253,13 +249,14 @@ Implemented core:
 - Word replacement application.
 - Vocabulary prompt rendering.
 - Vocabulary prompt pass-through to local Whisper transcription.
-- Shell add/delete controls for vocabulary and replacements.
+- Shell add/delete/sort controls for vocabulary.
+- Shell add/edit/delete/enable/disable/sort controls for word replacements.
 - Dictionary-only JSON backup export/import using macOS backup field names for vocabulary and word replacements.
 - Quick-add dialog with Vocabulary and Word Replacement modes, opened by shell button or global shortcut.
 
 Windows gaps:
 
-- Dedicated macOS-style Dictionary page with edit flow, sorting controls, and richer guidance.
+- Dedicated macOS-style Dictionary navigation page and richer layout/guidance.
 
 ### History
 
@@ -375,7 +372,7 @@ Status on 2026-05-24:
 
 - Completed Core dictionary records, validation, vocabulary prompt rendering, and global longest-trigger-first replacement application.
 - Completed persistent JSON dictionary storage.
-- Completed basic shell add/remove controls for vocabulary and word replacements.
+- Completed shell add/remove/sort controls for vocabulary and add/edit/remove/enable/disable/sort controls for word replacements.
 - Completed dictionary JSON import/export for vocabulary words and word replacements.
 - Completed vocabulary prompt pass-through to local Whisper transcription.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
@@ -391,7 +388,7 @@ Status on 2026-05-24:
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/sorting, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
+- Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
 - Add focused tests and docs.
 
 ## Verification

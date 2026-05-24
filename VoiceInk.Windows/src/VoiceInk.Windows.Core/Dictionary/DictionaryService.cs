@@ -80,6 +80,52 @@ public static class DictionaryService
             IsEnabled: true);
     }
 
+    public static WordReplacement? UpdateWordReplacement(
+        WordReplacement current,
+        string original,
+        string replacement,
+        bool isEnabled,
+        IEnumerable<WordReplacement> existing,
+        out string? error)
+    {
+        error = null;
+
+        var originals = SplitCommaSeparated(original);
+        var trimmedReplacement = replacement.Trim();
+        if (originals.Count == 0)
+        {
+            error = "Original text is required.";
+            return null;
+        }
+
+        if (trimmedReplacement.Length == 0)
+        {
+            error = "Replacement text is required.";
+            return null;
+        }
+
+        var existingTokens = existing
+            .Where(entry => entry.Id != current.Id)
+            .SelectMany(entry => SplitCommaSeparated(entry.OriginalText))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var token in originals)
+        {
+            if (existingTokens.Contains(token))
+            {
+                error = $"'{token}' already exists in word replacements";
+                return null;
+            }
+        }
+
+        return current with
+        {
+            OriginalText = string.Join(", ", originals),
+            ReplacementText = trimmedReplacement,
+            IsEnabled = isEnabled
+        };
+    }
+
     public static string RenderVocabularyPrompt(IEnumerable<VocabularyWord> words)
     {
         var vocabulary = words

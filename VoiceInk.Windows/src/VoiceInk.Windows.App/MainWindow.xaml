@@ -120,6 +120,14 @@
 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Vocabulary" />
+                    <ComboBox
+                        x:Name="VocabularySortComboBox"
+                        Header="Sort"
+                        SelectedIndex="0"
+                        SelectionChanged="DictionarySortComboBox_SelectionChanged">
+                        <ComboBoxItem Content="Word A-Z" />
+                        <ComboBoxItem Content="Word Z-A" />
+                    </ComboBox>
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -149,10 +157,22 @@
 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Word Replacements" />
+                    <ComboBox
+                        x:Name="ReplacementSortComboBox"
+                        Header="Sort"
+                        SelectedIndex="0"
+                        SelectionChanged="DictionarySortComboBox_SelectionChanged">
+                        <ComboBoxItem Content="Original A-Z" />
+                        <ComboBoxItem Content="Original Z-A" />
+                        <ComboBoxItem Content="Replacement A-Z" />
+                        <ComboBoxItem Content="Replacement Z-A" />
+                    </ComboBox>
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
@@ -176,10 +196,21 @@
                             Grid.Column="3"
                             Content="Remove"
                             Click="RemoveReplacementButton_Click" />
+                        <Button
+                            x:Name="EditReplacementButton"
+                            Grid.Column="4"
+                            Content="Edit"
+                            Click="EditReplacementButton_Click" />
+                        <Button
+                            x:Name="ToggleReplacementButton"
+                            Grid.Column="5"
+                            Content="Disable"
+                            Click="ToggleReplacementButton_Click" />
                     </Grid>
                     <ListView
                         x:Name="ReplacementListView"
                         Height="140"
+                        SelectionChanged="ReplacementListView_SelectionChanged"
                         SelectionMode="Single" />
                 </StackPanel>
             </StackPanel>

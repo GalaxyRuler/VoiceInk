@@ -301,6 +301,16 @@ public sealed partial class MainWindow : Window
         await RemoveSelectedReplacementAsync();
     }
 
+    private async void EditReplacementButton_Click(object sender, RoutedEventArgs e)
+    {
+        await EditSelectedReplacementAsync();
+    }
+
+    private async void ToggleReplacementButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ToggleSelectedReplacementAsync();
+    }
+
     private async void ExportDictionaryButton_Click(object sender, RoutedEventArgs e)
     {
         await ExportDictionaryAsync();
@@ -375,6 +385,33 @@ public sealed partial class MainWindow : Window
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSelectedHistoryDetails();
+    }
+
+    private void ReplacementListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshUiFromControllerState();
+    }
+
+    private async void DictionarySortComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Dictionary sorted");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Dictionary sort failed: {ex.Message}");
+        }
     }
 
     private async Task InitializeAsync()
@@ -557,15 +594,32 @@ public sealed partial class MainWindow : Window
 
     private async Task RefreshDictionaryAsync(CancellationToken cancellationToken)
     {
-        vocabularyItems = await dictionaryStore.ListVocabularyAsync(cancellationToken);
-        replacementItems = await dictionaryStore.ListReplacementsAsync(cancellationToken);
+        var selectedVocabularyId = VocabularyListView.SelectedIndex >= 0 && VocabularyListView.SelectedIndex < vocabularyItems.Count
+            ? vocabularyItems[VocabularyListView.SelectedIndex].Id
+            : (Guid?)null;
+        var selectedReplacementId = ReplacementListView.SelectedIndex >= 0 && ReplacementListView.SelectedIndex < replacementItems.Count
+            ? replacementItems[ReplacementListView.SelectedIndex].Id
+            : (Guid?)null;
+
+        vocabularyItems = DictionarySortService.SortVocabulary(
+            await dictionaryStore.ListVocabularyAsync(cancellationToken),
+            SelectedVocabularySortMode());
+        replacementItems = DictionarySortService.SortReplacements(
+            await dictionaryStore.ListReplacementsAsync(cancellationToken),
+            SelectedReplacementSortMode());
 
         VocabularyListView.ItemsSource = vocabularyItems
             .Select(item => item.Word)
             .ToArray();
         ReplacementListView.ItemsSource = replacementItems
-            .Select(item => $"{item.OriginalText} -> {item.ReplacementText}")
+            .Select(ReplacementListItem)
             .ToArray();
+        VocabularyListView.SelectedIndex = selectedVocabularyId is null
+            ? -1
+            : vocabularyItems.ToList().FindIndex(item => item.Id == selectedVocabularyId.Value);
+        ReplacementListView.SelectedIndex = selectedReplacementId is null
+            ? -1
+            : replacementItems.ToList().FindIndex(item => item.Id == selectedReplacementId.Value);
     }
 
     private async Task ExportDictionaryAsync()
@@ -790,6 +844,137 @@ public sealed partial class MainWindow : Window
         {
             isQuickAdding = false;
             RefreshUiFromControllerState(finalStatus);
+        }
+    }
+
+    private async Task EditSelectedReplacementAsync()
+    {
+        var selectedIndex = ReplacementListView.SelectedIndex;
+        if (!settingsLoaded || selectedIndex < 0 || selectedIndex >= replacementItems.Count)
+        {
+            RefreshUiFromControllerState("Select a word replacement to edit");
+            return;
+        }
+
+        var selected = replacementItems[selectedIndex];
+        var statusTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
+        var originalTextBox = new TextBox
+        {
+            Header = "Original text",
+            Text = selected.OriginalText
+        };
+        var replacementTextBox = new TextBox
+        {
+            Header = "Replacement text",
+            Text = selected.ReplacementText,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            Height = 92
+        };
+        var enabledCheckBox = new CheckBox
+        {
+            Content = "Enabled",
+            IsChecked = selected.IsEnabled
+        };
+        var content = new StackPanel
+        {
+            Spacing = 12
+        };
+        content.Children.Add(originalTextBox);
+        content.Children.Add(replacementTextBox);
+        content.Children.Add(enabledCheckBox);
+        content.Children.Add(statusTextBlock);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Edit Word Replacement",
+            Content = content,
+            PrimaryButtonText = "Save",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary
+        };
+        dialog.PrimaryButtonClick += async (_, args) =>
+        {
+            var deferral = args.GetDeferral();
+            try
+            {
+                var error = await dictionaryStore.UpdateWordReplacementAsync(
+                    selected.Id,
+                    originalTextBox.Text,
+                    replacementTextBox.Text,
+                    enabledCheckBox.IsChecked == true,
+                    windowLifetime.Token);
+                if (error is not null)
+                {
+                    args.Cancel = true;
+                    statusTextBlock.Text = error;
+                    return;
+                }
+
+                await RefreshDictionaryAsync(windowLifetime.Token);
+                SelectReplacementItem(selected.Id);
+            }
+            catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+            {
+                args.Cancel = true;
+                statusTextBlock.Text = "Closing";
+            }
+            catch (Exception ex)
+            {
+                args.Cancel = true;
+                statusTextBlock.Text = $"Word replacement update failed: {ex.Message}";
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        RefreshUiFromControllerState(result == ContentDialogResult.Primary
+            ? "Word replacements updated"
+            : "Word replacement edit canceled");
+    }
+
+    private async Task ToggleSelectedReplacementAsync()
+    {
+        var selectedIndex = ReplacementListView.SelectedIndex;
+        if (!settingsLoaded || selectedIndex < 0 || selectedIndex >= replacementItems.Count)
+        {
+            RefreshUiFromControllerState("Select a word replacement to update");
+            return;
+        }
+
+        var selected = replacementItems[selectedIndex];
+        try
+        {
+            var error = await dictionaryStore.UpdateWordReplacementAsync(
+                selected.Id,
+                selected.OriginalText,
+                selected.ReplacementText,
+                !selected.IsEnabled,
+                windowLifetime.Token);
+            if (error is not null)
+            {
+                RefreshUiFromControllerState(error);
+                return;
+            }
+
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            SelectReplacementItem(selected.Id);
+            RefreshUiFromControllerState(selected.IsEnabled ? "Word replacement disabled" : "Word replacement enabled");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Word replacement update failed: {ex.Message}");
         }
     }
 
@@ -1241,6 +1426,21 @@ public sealed partial class MainWindow : Window
         return $"{item.CreatedAt.LocalDateTime:g}  [{item.Status}]  {preview}";
     }
 
+    private static string ReplacementListItem(WordReplacement replacement)
+    {
+        var prefix = replacement.IsEnabled ? string.Empty : "[Disabled] ";
+        return $"{prefix}{replacement.OriginalText} -> {replacement.ReplacementText}";
+    }
+
+    private void SelectReplacementItem(Guid id)
+    {
+        var selectedIndex = replacementItems.ToList().FindIndex(item => item.Id == id);
+        if (selectedIndex >= 0)
+        {
+            ReplacementListView.SelectedIndex = selectedIndex;
+        }
+    }
+
     private static string Seconds(TimeSpan duration) =>
         duration.TotalSeconds.ToString("0.000", CultureInfo.InvariantCulture);
 
@@ -1584,6 +1784,9 @@ public sealed partial class MainWindow : Window
         var operationActive = isStarting || isStopping || isCanceling || isPastingLast || isRetryingHistory || isQuickAdding;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
+        var selectedReplacement = ReplacementListView.SelectedIndex >= 0 && ReplacementListView.SelectedIndex < replacementItems.Count
+            ? replacementItems[ReplacementListView.SelectedIndex]
+            : null;
 
         StartButton.IsEnabled = settingsLoaded
             && !operationActive
@@ -1625,6 +1828,17 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State == DictationState.Idle;
+        EditReplacementButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State == DictationState.Idle
+            && selectedReplacement is not null;
+        ToggleReplacementButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State == DictationState.Idle
+            && selectedReplacement is not null;
+        ToggleReplacementButton.Content = selectedReplacement?.IsEnabled == false ? "Enable" : "Disable";
         SearchHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ClearHistorySearchButton.IsEnabled = settingsLoaded && !operationActive;
         DeleteHistoryButton.IsEnabled = settingsLoaded && !operationActive;
@@ -1664,6 +1878,20 @@ public sealed partial class MainWindow : Window
             1 => PunctuationCleanupMode.RemoveAll,
             2 => PunctuationCleanupMode.RemoveTrailingPeriod,
             _ => PunctuationCleanupMode.Keep
+        };
+
+    private string SelectedVocabularySortMode() =>
+        VocabularySortComboBox.SelectedIndex == 1
+            ? DictionarySortModes.VocabularyWordDescending
+            : DictionarySortModes.VocabularyWordAscending;
+
+    private string SelectedReplacementSortMode() =>
+        ReplacementSortComboBox.SelectedIndex switch
+        {
+            1 => DictionarySortModes.ReplacementOriginalDescending,
+            2 => DictionarySortModes.ReplacementTextAscending,
+            3 => DictionarySortModes.ReplacementTextDescending,
+            _ => DictionarySortModes.ReplacementOriginalAscending
         };
 
     private static int PunctuationCleanupModeToSelectedIndex(PunctuationCleanupMode mode) =>

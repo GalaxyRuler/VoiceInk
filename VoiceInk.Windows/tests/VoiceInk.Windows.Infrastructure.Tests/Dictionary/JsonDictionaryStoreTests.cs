@@ -77,6 +77,54 @@ public sealed class JsonDictionaryStoreTests
     }
 
     [Fact]
+    public async Task UpdateWordReplacementAsync_EditsReplacementAndEnabledState()
+    {
+        using var temp = new TempDirectory();
+        var store = new JsonDictionaryStore(Path.Combine(temp.Path, "dictionary.json"));
+        await store.AddWordReplacementAsync("Voice ink", "VoiceInk", CancellationToken.None);
+        var original = Assert.Single(await store.ListReplacementsAsync(CancellationToken.None));
+
+        var error = await store.UpdateWordReplacementAsync(
+            original.Id,
+            "Voice ink, Voicing",
+            "VoiceInk",
+            isEnabled: false,
+            CancellationToken.None);
+
+        Assert.Null(error);
+        var replacement = Assert.Single(await store.ListReplacementsAsync(CancellationToken.None));
+        Assert.Equal(original.Id, replacement.Id);
+        Assert.Equal(original.DateAdded, replacement.DateAdded);
+        Assert.Equal("Voice ink, Voicing", replacement.OriginalText);
+        Assert.Equal("VoiceInk", replacement.ReplacementText);
+        Assert.False(replacement.IsEnabled);
+    }
+
+    [Fact]
+    public async Task UpdateWordReplacementAsync_RejectsDuplicateVariantExcludingEditedReplacement()
+    {
+        using var temp = new TempDirectory();
+        var store = new JsonDictionaryStore(Path.Combine(temp.Path, "dictionary.json"));
+        await store.AddWordReplacementAsync("Voice ink", "VoiceInk", CancellationToken.None);
+        await store.AddWordReplacementAsync("codex", "Codex", CancellationToken.None);
+        var current = (await store.ListReplacementsAsync(CancellationToken.None))
+            .Single(item => item.OriginalText == "codex");
+
+        var error = await store.UpdateWordReplacementAsync(
+            current.Id,
+            "voice ink",
+            "VoiceInk",
+            isEnabled: true,
+            CancellationToken.None);
+
+        Assert.Equal("'voice ink' already exists in word replacements", error);
+        var currentAfterUpdate = (await store.ListReplacementsAsync(CancellationToken.None))
+            .Single(item => item.Id == current.Id);
+        Assert.Equal("codex", currentAfterUpdate.OriginalText);
+        Assert.Equal("Codex", currentAfterUpdate.ReplacementText);
+    }
+
+    [Fact]
     public async Task ExportBackupAsync_WritesCurrentDictionaryAsBackupJson()
     {
         using var temp = new TempDirectory();

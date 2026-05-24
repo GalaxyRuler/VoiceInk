@@ -81,6 +81,55 @@ public sealed class DictionaryServiceTests
     }
 
     [Fact]
+    public void UpdateWordReplacement_TrimsTextAndPreservesIdentity()
+    {
+        var current = new WordReplacement(Guid.NewGuid(), "voice ink", "VoiceInk", Now.AddDays(-2), IsEnabled: true);
+        var existing = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "codex", "Codex", Now.AddDays(-1), IsEnabled: true),
+            current
+        };
+
+        var updated = DictionaryService.UpdateWordReplacement(
+            current,
+            " Voice ink, voicing ",
+            " VoiceInk ",
+            isEnabled: false,
+            existing,
+            out var error);
+
+        Assert.Null(error);
+        Assert.NotNull(updated);
+        Assert.Equal(current.Id, updated.Id);
+        Assert.Equal(current.DateAdded, updated.DateAdded);
+        Assert.Equal("Voice ink, voicing", updated.OriginalText);
+        Assert.Equal("VoiceInk", updated.ReplacementText);
+        Assert.False(updated.IsEnabled);
+    }
+
+    [Fact]
+    public void UpdateWordReplacement_RejectsDuplicateVariantExcludingCurrentReplacement()
+    {
+        var current = new WordReplacement(Guid.NewGuid(), "codex", "Codex", Now, IsEnabled: true);
+        var existing = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "Voice ink, Voicing", "VoiceInk", Now, IsEnabled: true),
+            current
+        };
+
+        var updated = DictionaryService.UpdateWordReplacement(
+            current,
+            "voice ink",
+            "VoiceInk",
+            isEnabled: true,
+            existing,
+            out var error);
+
+        Assert.Null(updated);
+        Assert.Equal("'voice ink' already exists in word replacements", error);
+    }
+
+    [Fact]
     public void ApplyReplacements_UsesLongestEnabledVariantsFirst()
     {
         var replacements = new[]

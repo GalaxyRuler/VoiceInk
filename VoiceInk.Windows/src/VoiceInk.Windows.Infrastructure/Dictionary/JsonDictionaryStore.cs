@@ -103,6 +103,46 @@ public sealed class JsonDictionaryStore(string filePath) : IWritableDictionarySt
         }
     }
 
+    public async Task<string?> UpdateWordReplacementAsync(
+        Guid id,
+        string original,
+        string replacement,
+        bool isEnabled,
+        CancellationToken cancellationToken)
+    {
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var data = await LoadUnlockedAsync(cancellationToken);
+            var index = data.Replacements.FindIndex(item => item.Id == id);
+            if (index < 0)
+            {
+                return "Word replacement not found.";
+            }
+
+            var update = DictionaryService.UpdateWordReplacement(
+                data.Replacements[index],
+                original,
+                replacement,
+                isEnabled,
+                data.Replacements,
+                out var error);
+
+            if (error is not null || update is null)
+            {
+                return error;
+            }
+
+            data.Replacements[index] = update;
+            await SaveUnlockedAsync(data, cancellationToken);
+            return null;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     public async Task DeleteVocabularyWordAsync(Guid id, CancellationToken cancellationToken)
     {
         await gate.WaitAsync(cancellationToken);

@@ -6,6 +6,12 @@ public interface IWritableDictionaryStore : IDictionaryStore
 {
     Task<string?> AddVocabularyWordsAsync(string input, CancellationToken cancellationToken);
     Task<string?> AddWordReplacementAsync(string original, string replacement, CancellationToken cancellationToken);
+    Task<string?> UpdateWordReplacementAsync(
+        Guid id,
+        string original,
+        string replacement,
+        bool isEnabled,
+        CancellationToken cancellationToken);
     Task DeleteVocabularyWordAsync(Guid id, CancellationToken cancellationToken);
     Task DeleteReplacementAsync(Guid id, CancellationToken cancellationToken);
     Task<string> ExportBackupAsync(CancellationToken cancellationToken);
