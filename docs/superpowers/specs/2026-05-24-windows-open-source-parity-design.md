@@ -264,7 +264,7 @@ Cloud Transcription slice completed on 2026-05-25:
 
 Windows gaps:
 
-- Named provider cards.
+- Named provider cards. First compatible provider slice should add neutral presets/cards for custom OpenAI-compatible and Groq. Groq is a good first named card because its official speech-to-text docs expose `https://api.groq.com/openai/v1/audio/transcriptions` and Whisper model IDs that use the same multipart request shape already implemented for custom OpenAI-compatible transcription.
 - Streaming adapters.
 - Provider-specific payloads.
 - In-app provider test requests and API-key verification.
