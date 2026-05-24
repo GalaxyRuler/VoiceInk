@@ -129,6 +129,13 @@ Navigation-settings-shell slice completed on 2026-05-25:
 
 macOS has mini and notch recorder styles with record/stop states, waveform, processing indicators, live partial transcript, AI prompt picker, Power Mode button, cancel behavior, and compact keyboard-driven controls.
 
+Active floating-recorder slice on 2026-05-25:
+
+- Add a compact always-on-top Windows mini-recorder adapted from `MiniRecorderPanel` and `MiniRecorderView`.
+- Show state text, elapsed timer, pulse animation, stop/cancel controls, and prompt/Power Mode affordances while recording or processing.
+- Use a Core presenter for state-to-UI mapping.
+- Leave live partial transcript, real audio meter waveform, notch style, prompt picker behavior, and Power Mode behavior for later slices.
+
 Windows gaps:
 
 - Floating recorder window.
