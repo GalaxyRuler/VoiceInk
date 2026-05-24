@@ -6,7 +6,7 @@ namespace VoiceInk.Windows.Core.History;
 public static class HistoryCsvExporter
 {
     private const string Header =
-        "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message";
+        "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path";
 
     public static string Export(IEnumerable<TranscriptionHistoryItem> items)
     {
@@ -29,7 +29,8 @@ public static class HistoryCsvExporter
                 Escape(item.EnhancementDuration is null ? string.Empty : Seconds(item.EnhancementDuration.Value)),
                 Escape(item.CreatedAt.ToString("O", CultureInfo.InvariantCulture)),
                 Escape(Seconds(item.AudioDuration)),
-                Escape(item.ErrorMessage ?? string.Empty)));
+                Escape(item.ErrorMessage ?? string.Empty),
+                Escape(item.AudioFilePath ?? string.Empty)));
         }
 
         return builder.ToString();

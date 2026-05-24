@@ -16,6 +16,7 @@ public sealed record TranscriptionHistoryItem
     public string? PromptName { get; init; }
     public TimeSpan? EnhancementDuration { get; init; }
     public string? ErrorMessage { get; init; }
+    public string? AudioFilePath { get; init; }
 
     public TranscriptionHistoryItem(
         Guid id,
@@ -31,7 +32,8 @@ public sealed record TranscriptionHistoryItem
         string? modelPath = null,
         string? promptName = null,
         TimeSpan? enhancementDuration = null,
-        string? errorMessage = null)
+        string? errorMessage = null,
+        string? audioFilePath = null)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -47,5 +49,6 @@ public sealed record TranscriptionHistoryItem
         PromptName = promptName;
         EnhancementDuration = enhancementDuration;
         ErrorMessage = errorMessage;
+        AudioFilePath = string.IsNullOrWhiteSpace(audioFilePath) ? null : audioFilePath;
     }
 }

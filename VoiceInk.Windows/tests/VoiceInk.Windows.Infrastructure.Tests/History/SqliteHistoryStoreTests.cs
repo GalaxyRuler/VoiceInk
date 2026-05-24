@@ -194,6 +194,33 @@ public sealed class SqliteHistoryStoreTests
     }
 
     [Fact]
+    public async Task SaveAndListRecentAsync_RoundTripsAudioFilePath()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero),
+            "final text",
+            "local-whisper",
+            TimeSpan.FromSeconds(4),
+            TimeSpan.FromMilliseconds(700),
+            audioFilePath: @"C:\Recordings\sample.wav");
+
+        await store.SaveAsync(item, CancellationToken.None);
+
+        var recent = Assert.Single(await store.ListRecentAsync(1, CancellationToken.None));
+        var search = Assert.Single(await store.SearchAsync("final text", 1, CancellationToken.None));
+        var latest = await store.GetLatestCompletedAsync(CancellationToken.None);
+
+        Assert.Equal(@"C:\Recordings\sample.wav", recent.AudioFilePath);
+        Assert.Equal(item, recent);
+        Assert.Equal(item, search);
+        Assert.Equal(item, latest);
+    }
+
+    [Fact]
     public async Task ListRecentAsync_MigratesMvpSchemaAndMapsOriginalTextToText()
     {
         using var temp = new TempDirectory();
@@ -211,6 +238,19 @@ public sealed class SqliteHistoryStoreTests
         Assert.Equal("auto", item.Language);
         Assert.Null(item.EnhancedText);
         Assert.Null(item.ModelPath);
+    }
+
+    [Fact]
+    public async Task MigrateLegacyDatabase_SetsAudioFilePathToNull()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        CreateMvpHistoryDatabase(dbPath);
+
+        var store = new SqliteHistoryStore(dbPath);
+        var item = Assert.Single(await store.ListRecentAsync(10, CancellationToken.None));
+
+        Assert.Null(item.AudioFilePath);
     }
 
     [Fact]

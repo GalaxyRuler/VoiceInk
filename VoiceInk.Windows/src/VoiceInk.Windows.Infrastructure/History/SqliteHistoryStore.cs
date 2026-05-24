@@ -31,11 +31,11 @@ public sealed class SqliteHistoryStore : IHistoryStore
             INSERT INTO transcriptions
                 (id, created_at, created_at_utc_ticks, text, original_text, enhanced_text, status,
                  provider_name, language, model_path, prompt_name, audio_duration_ms,
-                 transcription_duration_ms, enhancement_duration_ms, error_message)
+                 transcription_duration_ms, enhancement_duration_ms, error_message, audio_file_path)
             VALUES
                 ($id, $created_at, $created_at_utc_ticks, $text, $original_text, $enhanced_text, $status,
                  $provider_name, $language, $model_path, $prompt_name, $audio_duration_ms,
-                 $transcription_duration_ms, $enhancement_duration_ms, $error_message);
+                 $transcription_duration_ms, $enhancement_duration_ms, $error_message, $audio_file_path);
             """;
         command.Parameters.AddWithValue("$id", item.Id.ToString());
         command.Parameters.AddWithValue("$created_at", item.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
@@ -52,6 +52,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         command.Parameters.AddWithValue("$transcription_duration_ms", item.TranscriptionDuration.TotalMilliseconds);
         command.Parameters.AddWithValue("$enhancement_duration_ms", ValueOrDbNull(item.EnhancementDuration?.TotalMilliseconds));
         command.Parameters.AddWithValue("$error_message", ValueOrDbNull(item.ErrorMessage));
+        command.Parameters.AddWithValue("$audio_file_path", ValueOrDbNull(item.AudioFilePath));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -75,7 +76,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         command.CommandText = """
             SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
                    COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
-                   model_path, prompt_name, enhancement_duration_ms, error_message
+                   model_path, prompt_name, enhancement_duration_ms, error_message, audio_file_path
             FROM transcriptions
             ORDER BY created_at_utc_ticks DESC
             LIMIT $limit;
@@ -119,7 +120,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         command.CommandText = """
             SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
                    COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
-                   model_path, prompt_name, enhancement_duration_ms, error_message
+                   model_path, prompt_name, enhancement_duration_ms, error_message, audio_file_path
             FROM transcriptions
             WHERE text LIKE $query ESCAPE '\'
                OR original_text LIKE $query ESCAPE '\'
@@ -129,6 +130,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
                OR model_path LIKE $query ESCAPE '\'
                OR prompt_name LIKE $query ESCAPE '\'
                OR error_message LIKE $query ESCAPE '\'
+               OR audio_file_path LIKE $query ESCAPE '\'
             ORDER BY created_at_utc_ticks DESC
             LIMIT $limit;
             """;
@@ -154,7 +156,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         command.CommandText = """
             SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
                    COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
-                   model_path, prompt_name, enhancement_duration_ms, error_message
+                   model_path, prompt_name, enhancement_duration_ms, error_message, audio_file_path
             FROM transcriptions
             WHERE status = 'completed'
             ORDER BY created_at_utc_ticks DESC
@@ -194,7 +196,8 @@ public sealed class SqliteHistoryStore : IHistoryStore
             modelPath: GetNullableString(reader, 10),
             promptName: GetNullableString(reader, 11),
             enhancementDuration: GetNullableTimeSpan(reader, 12),
-            errorMessage: GetNullableString(reader, 13));
+            errorMessage: GetNullableString(reader, 13),
+            audioFilePath: GetNullableString(reader, 14));
 
     private void EnsureDatabase()
     {
@@ -218,7 +221,8 @@ public sealed class SqliteHistoryStore : IHistoryStore
                 audio_duration_ms REAL NOT NULL,
                 transcription_duration_ms REAL NOT NULL,
                 enhancement_duration_ms REAL NULL,
-                error_message TEXT NULL
+                error_message TEXT NULL,
+                audio_file_path TEXT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_transcriptions_created_at_utc_ticks
                 ON transcriptions(created_at_utc_ticks DESC);
@@ -233,6 +237,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
         EnsureColumn(connection, "prompt_name", "prompt_name TEXT NULL");
         EnsureColumn(connection, "enhancement_duration_ms", "enhancement_duration_ms REAL NULL");
         EnsureColumn(connection, "error_message", "error_message TEXT NULL");
+        EnsureColumn(connection, "audio_file_path", "audio_file_path TEXT NULL");
     }
 
     private static void EnsureColumn(SqliteConnection connection, string columnName, string definition)

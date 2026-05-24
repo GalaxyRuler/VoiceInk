@@ -133,7 +133,8 @@ public sealed class DictationController(
                             originalText: transcription.Text,
                             status: TranscriptionHistoryStatus.Completed,
                             language: settings.Language,
-                            modelPath: settings.ModelPath),
+                            modelPath: settings.ModelPath,
+                            audioFilePath: audio.FilePath),
                         cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

@@ -52,6 +52,26 @@ public sealed class HistoryCsvExporterTests
     }
 
     [Fact]
+    public void Export_IncludesAudioFilePathColumn()
+    {
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UnixEpoch,
+            "final",
+            "local-whisper",
+            TimeSpan.FromSeconds(2),
+            TimeSpan.Zero,
+            audioFilePath: @"C:\Recordings\sample.wav");
+
+        var csv = HistoryCsvExporter.Export([item]);
+
+        Assert.StartsWith(
+            "Original Transcript,Final Transcript,Enhanced Transcript,Prompt Name,Transcription Model,Provider,Status,Language,Transcription Time,Enhancement Time,Timestamp,Duration,Error Message,Audio File Path",
+            csv);
+        Assert.Contains(@",2.000,,C:\Recordings\sample.wav", csv);
+    }
+
+    [Fact]
     public void Export_EscapesCommasQuotesAndNewlines()
     {
         var item = new TranscriptionHistoryItem(

@@ -56,7 +56,7 @@ Windows slice behavior:
 - Test: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Dictation/DictationControllerTests.cs`
 - Test: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/History/HistoryCsvExporterTests.cs`
 
-- [ ] **Step 1: Write failing Infrastructure tests**
+- [x] **Step 1: Write failing Infrastructure tests**
 
 Add tests proving:
 
@@ -67,7 +67,7 @@ MigrateLegacyDatabase_SetsAudioFilePathToNull()
 
 Use a sample `TranscriptionHistoryItem(..., audioFilePath: @"C:\Recordings\sample.wav")` and assert `AudioFilePath` round-trips from `ListRecentAsync`, `SearchAsync`, and `GetLatestCompletedAsync`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -77,7 +77,7 @@ Run:
 
 Expected: build/test fails because `AudioFilePath` and `audio_file_path` are not implemented.
 
-- [ ] **Step 3: Implement Core/SQLite audio path persistence**
+- [x] **Step 3: Implement Core/SQLite audio path persistence**
 
 Implementation details:
 
@@ -87,13 +87,13 @@ Implementation details:
 - Call `EnsureColumn(connection, "audio_file_path", "audio_file_path TEXT NULL")`.
 - Use `ValueOrDbNull(item.AudioFilePath)`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same Infrastructure filtered command.
 
 Expected: matching tests pass.
 
-- [ ] **Step 5: Write failing Core tests for dictation save and CSV**
+- [x] **Step 5: Write failing Core tests for dictation save and CSV**
 
 Add tests proving:
 
@@ -104,7 +104,7 @@ Export_IncludesAudioFilePathColumn()
 
 Expected saved history item receives the fake capture result path, and CSV header/value include `Audio File Path`.
 
-- [ ] **Step 6: Verify RED**
+- [x] **Step 6: Verify RED**
 
 Run:
 
@@ -114,20 +114,20 @@ Run:
 
 Expected: fails until dictation save and CSV exporter include the new property.
 
-- [ ] **Step 7: Implement dictation save and CSV export**
+- [x] **Step 7: Implement dictation save and CSV export**
 
 Implementation details:
 
 - In `DictationController.StopAsync`, pass `audioFilePath: audio.FilePath`.
 - In `HistoryCsvExporter`, append `Audio File Path` to the header and item rows.
 
-- [ ] **Step 8: Verify GREEN**
+- [x] **Step 8: Verify GREEN**
 
 Run the same Core filtered command.
 
 Expected: matching tests pass.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 Commit message:
 

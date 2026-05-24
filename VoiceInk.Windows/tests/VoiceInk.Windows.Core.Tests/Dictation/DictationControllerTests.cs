@@ -44,6 +44,30 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_SavesAudioFilePathInHistory()
+    {
+        var audio = new AudioCaptureResult(@"C:\Recordings\sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var history = new FakeHistoryStore();
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        var saved = Assert.Single(history.Items);
+        Assert.Equal(@"C:\Recordings\sample.wav", saved.AudioFilePath);
+    }
+
+    [Fact]
     public async Task StopAsync_AppliesCleanupSettingsAndDictionaryReplacementsToInsertedAndHistoryText()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
