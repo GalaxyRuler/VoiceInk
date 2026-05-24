@@ -34,7 +34,7 @@
 - Create: `VoiceInk.Windows/src/VoiceInk.Windows.Core/History/LastTranscriptionActionService.cs`
 - Create: `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/History/LastTranscriptionActionServiceTests.cs`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add tests with these behaviors:
 
@@ -113,7 +113,7 @@ public async Task PasteLastAsync_ReturnsErrorWhenNoCompletedTranscriptionExists(
 }
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -123,24 +123,24 @@ Run:
 
 Expected: build fails because the service types do not exist.
 
-- [ ] **Step 3: Implement service**
+- [x] **Step 3: Implement service**
 
 Implementation rules:
 
-- Query `historyStore.ListRecentAsync(10, cancellationToken)`.
-- Use the first row with `Status == Completed`.
+- Query `historyStore.GetLatestCompletedAsync(cancellationToken)`.
+- Use the newest persisted row with `Status == Completed`.
 - `Final` inserts `item.Text`.
 - `EnhancedPreferred` inserts non-empty `item.EnhancedText`, otherwise `item.Text`.
 - Empty chosen text returns `No transcription available`.
 - Let insertion exceptions flow to the shell for now.
 
-- [ ] **Step 4: Run tests to verify GREEN**
+- [x] **Step 4: Run tests to verify GREEN**
 
 Run the same filtered Core test command.
 
 Expected: all `LastTranscriptionActionServiceTests` pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 
@@ -155,15 +155,15 @@ feat(windows): add paste-last history primitives
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add buttons**
+- [x] **Step 1: Add buttons**
 
 Add `Paste Last` and `Paste Last Enhanced` buttons in the History section toolbar.
 
-- [ ] **Step 2: Wire actions**
+- [x] **Step 2: Wire actions**
 
 Instantiate `LastTranscriptionActionService(historyStore, textInjectionService)` or equivalent reusable insertion service. Button handlers call the service and report returned messages in the status text.
 
-- [ ] **Step 3: Build app**
+- [x] **Step 3: Build app**
 
 Run:
 
@@ -173,7 +173,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Commit message:
 
@@ -189,11 +189,11 @@ feat(windows): expose paste-last history actions
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-paste-last-primitives.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document paste-last final and enhanced-preferred primitives and shell buttons. Keep configurable global shortcuts and retry-last as gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -203,7 +203,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -213,11 +213,14 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from the plan commit through HEAD. Fix Critical and Important findings before proceeding.
 
-- [ ] **Step 5: Commit docs**
+Review result: no Critical or Important findings. Minor findings were addressed by documenting
+`GetLatestCompletedAsync` and making enhanced fallback status match the inserted final text.
+
+- [x] **Step 5: Commit docs**
 
 Commit message:
 

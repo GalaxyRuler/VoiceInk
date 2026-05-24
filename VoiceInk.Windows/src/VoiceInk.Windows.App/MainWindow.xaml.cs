@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
@@ -24,7 +25,6 @@ namespace VoiceInk.Windows.App;
 public sealed partial class MainWindow : Window
 {
     private readonly string recordingsDirectory;
-    private readonly string historyPath;
     private readonly string exportDirectory;
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
@@ -40,6 +40,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
     private bool isStarting;
     private bool isStopping;
+    private bool isPastingLast;
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
@@ -53,7 +54,7 @@ public sealed partial class MainWindow : Window
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VoiceInk.Windows");
         recordingsDirectory = Path.Combine(appData, "Recordings");
-        historyPath = Path.Combine(appData, "history.db");
+        var historyPath = Path.Combine(appData, "history.db");
         exportDirectory = Path.Combine(appData, "Exports");
 
         dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
@@ -477,18 +478,34 @@ public sealed partial class MainWindow : Window
 
     private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
     {
+        if (isStopping || isPastingLast)
+        {
+            return;
+        }
+
+        var statusOverride = "Preparing paste target";
+        isPastingLast = true;
+        RefreshUiFromControllerState(statusOverride);
         try
         {
-            var result = await lastTranscriptionActionService.PasteLastAsync(textKind, windowLifetime.Token);
-            RefreshUiFromControllerState(result.Message);
+            var result = await lastTranscriptionActionService.PasteLastAsync(
+                textKind,
+                windowLifetime.Token,
+                MinimizeForExternalPasteAsync);
+            statusOverride = result.Message;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
-            RefreshUiFromControllerState("Closing");
+            statusOverride = "Closing";
         }
         catch (Exception ex)
         {
-            RefreshUiFromControllerState($"Paste last failed: {ex.Message}");
+            statusOverride = $"Paste last failed: {ex.Message}";
+        }
+        finally
+        {
+            isPastingLast = false;
+            RefreshUiFromControllerState(statusOverride);
         }
     }
 
@@ -537,6 +554,17 @@ public sealed partial class MainWindow : Window
 
     private static string Seconds(TimeSpan duration) =>
         duration.TotalSeconds.ToString("0.000", CultureInfo.InvariantCulture);
+
+    private Task MinimizeForExternalPasteAsync(CancellationToken cancellationToken)
+    {
+        var windowHandle = WindowNative.GetWindowHandle(this);
+        if (windowHandle != IntPtr.Zero)
+        {
+            ShowWindow(windowHandle, ShowWindowMinimize);
+        }
+
+        return Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
+    }
 
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
@@ -599,7 +627,7 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting || isStopping;
+        var operationActive = isStarting || isStopping || isPastingLast;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
 
         StartButton.IsEnabled = settingsLoaded
@@ -609,6 +637,10 @@ public sealed partial class MainWindow : Window
         StopButton.IsEnabled = settingsLoaded
             && !operationActive
             && controller.State == DictationState.Recording;
+        PasteLastButton.IsEnabled = settingsLoaded && !operationActive;
+        PasteLastEnhancedButton.IsEnabled = settingsLoaded && !operationActive;
+        RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
+        ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
 
         var stateStatus = StateToStatusText(controller.State);
         var idleHotkeyWarning = controller.State == DictationState.Idle && !operationActive
@@ -662,4 +694,9 @@ public sealed partial class MainWindow : Window
         audioCapture.Dispose();
         windowLifetime.Dispose();
     }
+
+    private const int ShowWindowMinimize = 6;
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 }

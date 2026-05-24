@@ -8,30 +8,40 @@ namespace VoiceInk.Windows.Native.Text;
 
 public sealed class ClipboardTextInjectionService(bool restoreClipboard) : ITextInjectionService
 {
+    private readonly SemaphoreSlim insertionGate = new(1, 1);
+
     public async Task InsertAsync(string text, CancellationToken cancellationToken)
     {
-        var previousClipboard = restoreClipboard ? ClipboardSnapshot.Capture() : null;
-
-        ClipboardStaDispatcher.Invoke(() => Clipboard.SetText(text));
+        await insertionGate.WaitAsync(cancellationToken);
         try
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(80), cancellationToken);
-            SendCtrlV();
+            var previousClipboard = restoreClipboard ? ClipboardSnapshot.Capture() : null;
+
+            ClipboardStaDispatcher.Invoke(() => Clipboard.SetText(text));
+            try
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(80), cancellationToken);
+                SendCtrlV();
+            }
+            finally
+            {
+                if (restoreClipboard && previousClipboard is not null)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(400), CancellationToken.None);
+
+                    try
+                    {
+                        await previousClipboard.RestoreAsync(CancellationToken.None);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
         }
         finally
         {
-            if (restoreClipboard && previousClipboard is not null)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(400), CancellationToken.None);
-
-                try
-                {
-                    await previousClipboard.RestoreAsync(CancellationToken.None);
-                }
-                catch
-                {
-                }
-            }
+            insertionGate.Release();
         }
     }
 

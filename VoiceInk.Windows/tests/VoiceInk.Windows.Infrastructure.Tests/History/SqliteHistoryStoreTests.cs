@@ -247,6 +247,40 @@ public sealed class SqliteHistoryStoreTests
         Assert.Equal("model failed", results[1].ErrorMessage);
     }
 
+    [Fact]
+    public async Task GetLatestCompletedAsync_ReturnsCompletedItemAfterNewerNonCompletedItems()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var completed = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddHours(-1),
+            "completed",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        await store.SaveAsync(completed, CancellationToken.None);
+
+        for (var index = 0; index < 12; index++)
+        {
+            await store.SaveAsync(
+                new TranscriptionHistoryItem(
+                    Guid.NewGuid(),
+                    DateTimeOffset.UtcNow.AddMinutes(index),
+                    $"failed {index}",
+                    "local-whisper",
+                    TimeSpan.Zero,
+                    TimeSpan.Zero,
+                    status: TranscriptionHistoryStatus.Failed),
+                CancellationToken.None);
+        }
+
+        var latestCompleted = await store.GetLatestCompletedAsync(CancellationToken.None);
+
+        Assert.Equal(completed, latestCompleted);
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"voiceink-{Guid.NewGuid():N}");

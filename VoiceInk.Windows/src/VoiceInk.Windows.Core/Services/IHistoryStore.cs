@@ -6,4 +6,5 @@ public interface IHistoryStore
 {
     Task SaveAsync(TranscriptionHistoryItem item, CancellationToken cancellationToken);
     Task<IReadOnlyList<TranscriptionHistoryItem>> ListRecentAsync(int limit, CancellationToken cancellationToken);
+    Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken);
 }

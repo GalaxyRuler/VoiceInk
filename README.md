@@ -131,8 +131,9 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Shell controls for adding/removing vocabulary words and word replacements
 - Shell recent-history list/detail view for original, final, enhanced, status, timing, model, prompt, and error metadata
 - Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`
+- Paste-last final and enhanced-preferred history actions in the shell
 
-The current shell does not yet expose full macOS-style Dictionary editing, import/export, quick add shortcuts, search/delete/retry history actions, audio playback, or a picker-based CSV export location. The Dictionary add/remove path and recent-history metadata view are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, import/export, quick add shortcuts, configurable global utility shortcuts, retry history actions, audio playback, or a picker-based CSV export location. The Dictionary add/remove path, recent-history metadata view, and paste-last actions are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 

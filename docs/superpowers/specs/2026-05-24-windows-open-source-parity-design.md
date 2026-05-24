@@ -68,6 +68,7 @@ The Windows MVP already has:
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
 - Recent history list/detail shell view for original, final, enhanced, status, timing, model, prompt, and error metadata.
 - Local CSV history export under `%LOCALAPPDATA%\VoiceInk.Windows\Exports`.
+- Paste-last final and enhanced-preferred history actions.
 
 Fresh baseline verification on 2026-05-24:
 
@@ -113,6 +114,7 @@ Windows gaps:
 - Secondary shortcut.
 - Utility shortcuts.
 - Shortcut validation and conflict handling.
+- Paste-last actions exist as shell buttons and Core primitives, but not yet configurable global shortcuts.
 
 ### Transcription Pipeline
 
@@ -254,13 +256,14 @@ Implemented core:
 - Existing MVP history databases migrate in place and map legacy text to original/final text.
 - Core CSV export formatting for stored metadata.
 - Shell recent-history list/detail and local CSV export.
+- Paste-last final and enhanced-preferred Core primitives with shell buttons.
 
 Windows gaps:
 
 - Audio file URL and playback.
 - Enhancement model and AI request messages.
 - Power Mode name/emoji.
-- Retry and paste-last flows.
+- Retry-last flow.
 - Search, delete, picker-based export, and batch actions.
 
 ### Metrics
@@ -354,9 +357,10 @@ Status on 2026-05-24:
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
+- Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add and history search/delete/retry/audio playback.
+- Remaining for this slice: dictionary edit/import/export/quick-add, global paste-last shortcuts, retry-last, and history search/delete/audio playback.
 - Add focused tests and docs.
 
 ## Verification

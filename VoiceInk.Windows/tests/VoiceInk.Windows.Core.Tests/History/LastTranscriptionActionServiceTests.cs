@@ -65,6 +65,7 @@ public sealed class LastTranscriptionActionServiceTests
         var result = await service.PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred, CancellationToken.None);
 
         Assert.True(result.Success);
+        Assert.Equal("Last transcription pasted", result.Message);
         Assert.Equal("final cleaned", insertion.InsertedText);
     }
 
@@ -106,8 +107,89 @@ public sealed class LastTranscriptionActionServiceTests
         Assert.Equal("completed", insertion.InsertedText);
     }
 
+    [Fact]
+    public async Task PasteLastAsync_UsesLatestCompletedHistoryQuery()
+    {
+        var completed = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "completed",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var history = new FakeHistoryStore(
+            Enumerable.Range(0, 12)
+                .Select(index => new TranscriptionHistoryItem(
+                    Guid.NewGuid(),
+                    DateTimeOffset.UtcNow.AddMinutes(index),
+                    $"failed {index}",
+                    "local-whisper",
+                    TimeSpan.Zero,
+                    TimeSpan.Zero,
+                    status: TranscriptionHistoryStatus.Failed))
+                .Prepend(completed)
+                .ToArray())
+        {
+            LatestCompleted = completed
+        };
+        var insertion = new FakeTextInjectionService();
+        var service = new LastTranscriptionActionService(history, insertion);
+
+        await service.PasteLastAsync(LastTranscriptionTextKind.Final, CancellationToken.None);
+
+        Assert.True(history.GetLatestCompletedCalled);
+        Assert.Equal("completed", insertion.InsertedText);
+    }
+
+    [Fact]
+    public async Task PasteLastAsync_PreparesTargetAfterSelectingTextAndBeforeInsertion()
+    {
+        var events = new List<string>();
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "completed",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var insertion = new FakeTextInjectionService(events);
+        var service = new LastTranscriptionActionService(new FakeHistoryStore([item]), insertion);
+
+        await service.PasteLastAsync(
+            LastTranscriptionTextKind.Final,
+            CancellationToken.None,
+            _ =>
+            {
+                events.Add("prepare");
+                return Task.CompletedTask;
+            });
+
+        Assert.Equal(["prepare", "insert"], events);
+    }
+
+    [Fact]
+    public async Task PasteLastAsync_DoesNotPrepareTargetWhenNoCompletedTranscriptionExists()
+    {
+        var prepared = false;
+        var service = new LastTranscriptionActionService(new FakeHistoryStore([]), new FakeTextInjectionService());
+
+        await service.PasteLastAsync(
+            LastTranscriptionTextKind.Final,
+            CancellationToken.None,
+            _ =>
+            {
+                prepared = true;
+                return Task.CompletedTask;
+            });
+
+        Assert.False(prepared);
+    }
+
     private sealed class FakeHistoryStore(IReadOnlyList<TranscriptionHistoryItem> items) : IHistoryStore
     {
+        public TranscriptionHistoryItem? LatestCompleted { get; init; }
+        public bool GetLatestCompletedCalled { get; private set; }
+
         public Task SaveAsync(TranscriptionHistoryItem item, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
@@ -119,15 +201,24 @@ public sealed class LastTranscriptionActionServiceTests
         {
             return Task.FromResult(items.Take(limit).ToArray() as IReadOnlyList<TranscriptionHistoryItem>);
         }
+
+        public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
+        {
+            GetLatestCompletedCalled = true;
+            return Task.FromResult(
+                LatestCompleted ??
+                items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
+        }
     }
 
-    private sealed class FakeTextInjectionService : ITextInjectionService
+    private sealed class FakeTextInjectionService(List<string>? events = null) : ITextInjectionService
     {
         public string? InsertedText { get; private set; }
 
         public Task InsertAsync(string text, CancellationToken cancellationToken)
         {
             InsertedText = text;
+            events?.Add("insert");
             return Task.CompletedTask;
         }
     }

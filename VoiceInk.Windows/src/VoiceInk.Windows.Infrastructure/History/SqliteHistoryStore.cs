@@ -86,25 +86,50 @@ public sealed class SqliteHistoryStore : IHistoryStore
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            items.Add(new TranscriptionHistoryItem(
-                Guid.Parse(reader.GetString(0)),
-                DateTimeOffset.ParseExact(reader.GetString(1), "O", CultureInfo.InvariantCulture),
-                reader.GetString(2),
-                reader.GetString(3),
-                TimeSpan.FromMilliseconds(reader.GetDouble(4)),
-                TimeSpan.FromMilliseconds(reader.GetDouble(5)),
-                originalText: reader.GetString(6),
-                enhancedText: GetNullableString(reader, 7),
-                status: ParseStatus(reader.GetString(8)),
-                language: reader.GetString(9),
-                modelPath: GetNullableString(reader, 10),
-                promptName: GetNullableString(reader, 11),
-                enhancementDuration: GetNullableTimeSpan(reader, 12),
-                errorMessage: GetNullableString(reader, 13)));
+            items.Add(ReadHistoryItem(reader));
         }
 
         return items;
     }
+
+    public async Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
+                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
+                   model_path, prompt_name, enhancement_duration_ms, error_message
+            FROM transcriptions
+            WHERE status = 'completed'
+            ORDER BY created_at_utc_ticks DESC
+            LIMIT 1;
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken)
+            ? ReadHistoryItem(reader)
+            : null;
+    }
+
+    private static TranscriptionHistoryItem ReadHistoryItem(SqliteDataReader reader) =>
+        new(
+            Guid.Parse(reader.GetString(0)),
+            DateTimeOffset.ParseExact(reader.GetString(1), "O", CultureInfo.InvariantCulture),
+            reader.GetString(2),
+            reader.GetString(3),
+            TimeSpan.FromMilliseconds(reader.GetDouble(4)),
+            TimeSpan.FromMilliseconds(reader.GetDouble(5)),
+            originalText: reader.GetString(6),
+            enhancedText: GetNullableString(reader, 7),
+            status: ParseStatus(reader.GetString(8)),
+            language: reader.GetString(9),
+            modelPath: GetNullableString(reader, 10),
+            promptName: GetNullableString(reader, 11),
+            enhancementDuration: GetNullableTimeSpan(reader, 12),
+            errorMessage: GetNullableString(reader, 13));
 
     private void EnsureDatabase()
     {

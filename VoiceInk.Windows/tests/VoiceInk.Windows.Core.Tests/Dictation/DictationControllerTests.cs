@@ -732,6 +732,11 @@ public sealed class DictationControllerTests
         {
             return Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(Items.Take(limit).ToList());
         }
+
+        public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
+        }
     }
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore

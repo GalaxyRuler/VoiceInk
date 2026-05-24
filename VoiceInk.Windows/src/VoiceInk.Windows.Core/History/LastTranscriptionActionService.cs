@@ -8,38 +8,44 @@ public sealed class LastTranscriptionActionService(
 {
     public async Task<LastTranscriptionActionResult> PasteLastAsync(
         LastTranscriptionTextKind textKind,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Func<CancellationToken, Task>? prepareTargetAsync = null)
     {
-        var item = (await historyStore.ListRecentAsync(10, cancellationToken))
-            .FirstOrDefault(entry => entry.Status == TranscriptionHistoryStatus.Completed);
+        var item = await historyStore.GetLatestCompletedAsync(cancellationToken);
 
         if (item is null)
         {
             return new LastTranscriptionActionResult(false, "No transcription available");
         }
 
-        var text = TextFor(item, textKind);
-        if (string.IsNullOrWhiteSpace(text))
+        var selection = TextFor(item, textKind);
+        if (string.IsNullOrWhiteSpace(selection.Text))
         {
             return new LastTranscriptionActionResult(false, "No transcription available");
         }
 
-        await textInjection.InsertAsync(text, cancellationToken);
-        return new LastTranscriptionActionResult(true, MessageFor(textKind));
+        if (prepareTargetAsync is not null)
+        {
+            await prepareTargetAsync(cancellationToken);
+        }
+
+        await textInjection.InsertAsync(selection.Text, cancellationToken);
+        return new LastTranscriptionActionResult(true, MessageFor(selection.UsedEnhancedText));
     }
 
-    private static string TextFor(TranscriptionHistoryItem item, LastTranscriptionTextKind textKind) =>
-        textKind switch
+    private static TextSelection TextFor(TranscriptionHistoryItem item, LastTranscriptionTextKind textKind)
+    {
+        if (textKind == LastTranscriptionTextKind.EnhancedPreferred
+            && !string.IsNullOrWhiteSpace(item.EnhancedText))
         {
-            LastTranscriptionTextKind.EnhancedPreferred when !string.IsNullOrWhiteSpace(item.EnhancedText) =>
-                item.EnhancedText,
-            _ => item.Text
-        };
+            return new TextSelection(item.EnhancedText, UsedEnhancedText: true);
+        }
 
-    private static string MessageFor(LastTranscriptionTextKind textKind) =>
-        textKind switch
-        {
-            LastTranscriptionTextKind.EnhancedPreferred => "Last enhanced transcription pasted",
-            _ => "Last transcription pasted"
-        };
+        return new TextSelection(item.Text, UsedEnhancedText: false);
+    }
+
+    private static string MessageFor(bool usedEnhancedText) =>
+        usedEnhancedText ? "Last enhanced transcription pasted" : "Last transcription pasted";
+
+    private sealed record TextSelection(string Text, bool UsedEnhancedText);
 }
