@@ -27,6 +27,67 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <StackPanel x:Name="TranscribeAudioSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Transcribe Audio" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            Text="Choose audio or video files, then process them sequentially with the current local model and cleanup settings."
+                            TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="ChooseAudioFilesButton"
+                                Content="Choose Files"
+                                Click="ChooseAudioFilesButton_Click" />
+                            <Button
+                                x:Name="StartAudioFileQueueButton"
+                                Content="Start"
+                                Click="StartAudioFileQueueButton_Click" />
+                            <Button
+                                x:Name="CancelAudioFileQueueButton"
+                                Content="Cancel"
+                                Click="CancelAudioFileQueueButton_Click" />
+                            <Button
+                                x:Name="ClearAudioFileQueueButton"
+                                Content="Clear"
+                                Click="ClearAudioFileQueueButton_Click" />
+                            <Button
+                                x:Name="RemoveAudioFileQueueItemButton"
+                                Content="Remove"
+                                Click="RemoveAudioFileQueueItemButton_Click" />
+                            <Button
+                                x:Name="RetryAudioFileQueueItemButton"
+                                Content="Retry"
+                                Click="RetryAudioFileQueueItemButton_Click" />
+                        </StackPanel>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="3*" />
+                            </Grid.ColumnDefinitions>
+                            <ListView
+                                x:Name="AudioFileQueueListView"
+                                Grid.Column="0"
+                                Height="260"
+                                SelectionChanged="AudioFileQueueListView_SelectionChanged"
+                                SelectionMode="Single" />
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <TextBlock
+                                    x:Name="AudioFileQueueMetadataTextBlock"
+                                    Text="No files queued"
+                                    TextWrapping="Wrap" />
+                                <TextBox
+                                    x:Name="AudioFileQueueTranscriptTextBox"
+                                    Header="Transcript"
+                                    AcceptsReturn="True"
+                                    Height="180"
+                                    IsReadOnly="True"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock
+                            Text="Supported formats depend on Windows Media Foundation codecs. WAV, MP3, M4A, MP4, MOV, AAC, WMA, WMV, AVI, 3GP, 3G2, and FLAC are accepted by the picker."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
                     <StackPanel x:Name="ModelsSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="AI Models" FontSize="24" FontWeight="SemiBold" />
                         <TextBox

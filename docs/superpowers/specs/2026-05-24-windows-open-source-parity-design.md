@@ -61,6 +61,7 @@ The Windows MVP already has:
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
+- Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
@@ -98,7 +99,7 @@ macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarVie
 
 Implemented:
 
-- Sidebar navigation with Dashboard, History, AI Models, Audio Input, Dictionary, Settings, and About / Open Source sections.
+- Sidebar navigation with Dashboard, Transcribe Audio, History, AI Models, Audio Input, Dictionary, Settings, and About / Open Source sections.
 - Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk commands.
 - Close-to-tray behavior for the main window, with explicit Quit from the tray.
 - Tray state presenter for recording/busy/loading labels and enabled states.
@@ -124,7 +125,7 @@ Navigation-settings-shell slice completed on 2026-05-25:
 - Move existing source-runnable controls into macOS-aligned active sections: Dashboard, History, AI Models, Audio Input, Dictionary, and Settings.
 - Replace the commercial `VoiceInk Pro` sidebar destination with `About / Open Source`.
 - Add local-only diagnostics actions under About/Open Source.
-- Keep Transcribe Audio, Enhancement, Power Mode, and Permissions as later slices until their real Windows subsystems have usable controls.
+- Keep Enhancement, Power Mode, and Permissions as later slices until their real Windows subsystems have usable controls.
 
 ### Floating Recorder
 
@@ -219,11 +220,11 @@ Windows adaptation:
 
 macOS has a dedicated `Transcribe Audio` workflow for queued audio/video files. It supports drag/drop or file choosing, pending/processing/completed/failed states, start/cancel/clear controls, retry, copy/save, and optional AI enhancement.
 
-Active Transcribe Audio slice on 2026-05-25:
+Transcribe Audio slice completed on 2026-05-25:
 
-- Add a Windows `Transcribe Audio` navigation section after Dashboard.
-- Add multi-file picker import using Windows App SDK picker APIs and supported audio/video extensions backed by Windows Media Foundation where codecs are available.
-- Add a source-runnable in-memory queue with pending, processing, completed, failed, remove, retry, clear, start, and cancel behavior.
+- Added a Windows `Transcribe Audio` navigation section after Dashboard.
+- Added multi-file picker import using Windows App SDK picker APIs and supported audio/video extensions backed by Windows Media Foundation where codecs are available.
+- Added a source-runnable in-memory queue with pending, processing, completed, failed, remove, retry, clear, start, and cancel behavior.
 - Convert/import selected media into app-owned WAV recordings before transcription, then run the existing local Whisper transcription path with dictionary prompt biasing and text cleanup.
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
 - Leave drag/drop, optional AI enhancement, per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.

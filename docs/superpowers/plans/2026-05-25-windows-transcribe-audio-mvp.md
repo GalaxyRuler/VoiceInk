@@ -49,7 +49,7 @@ Windows adaptation for this slice:
 - Process pending files sequentially with local Whisper, dictionary prompt biasing, cleanup settings, and SQLite history save.
 - Leave drag/drop, optional enhancement, per-file save/copy, persistent queue restoration, and richer batch actions for later.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -62,7 +62,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Queue Red/Green
 
-- [ ] **Step 1: Add failing queue tests**
+- [x] **Step 1: Add failing queue tests**
 
 Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/AudioFiles/AudioFileQueueServiceTests.cs` covering:
 
@@ -73,7 +73,7 @@ Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/AudioFiles/AudioFileQ
 - Retries failed items by returning them to pending.
 - Clears the queue.
 
-- [ ] **Step 2: Run red tests**
+- [x] **Step 2: Run red tests**
 
 Run:
 
@@ -83,7 +83,7 @@ Run:
 
 Expected: compile failure because `VoiceInk.Windows.Core.AudioFiles` types do not exist yet.
 
-- [ ] **Step 3: Add queue implementation**
+- [x] **Step 3: Add queue implementation**
 
 Create queue records and `AudioFileQueueService`:
 
@@ -91,13 +91,13 @@ Create queue records and `AudioFileQueueService`:
 - `AddFiles` normalizes full paths, checks existence, filters unsupported extensions, skips duplicate non-terminal paths, and returns `AudioFileQueueUpdate`.
 - `RemovePending`, `RetryFailed`, and `Clear` return new arrays.
 
-- [ ] **Step 4: Verify queue tests**
+- [x] **Step 4: Verify queue tests**
 
 Run the focused queue test command. Expected: queue tests pass.
 
 ## Task 3: Core File Transcription Red/Green
 
-- [ ] **Step 1: Add failing transcription service tests**
+- [x] **Step 1: Add failing transcription service tests**
 
 Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/AudioFiles/AudioFileTranscriptionServiceTests.cs` covering:
 
@@ -106,7 +106,7 @@ Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/AudioFiles/AudioFileT
 - Empty final text returns failure without saving history.
 - Import/transcription exceptions return failed results.
 
-- [ ] **Step 2: Run red tests**
+- [x] **Step 2: Run red tests**
 
 Run:
 
@@ -116,7 +116,7 @@ Run:
 
 Expected: compile failure because the transcription service types do not exist yet.
 
-- [ ] **Step 3: Add core transcription implementation**
+- [x] **Step 3: Add core transcription implementation**
 
 Create:
 
@@ -135,13 +135,13 @@ Implementation details:
 - Save a completed `TranscriptionHistoryItem` using imported audio metadata/path.
 - Return a failure result for validation and non-cancellation exceptions.
 
-- [ ] **Step 4: Verify transcription service tests**
+- [x] **Step 4: Verify transcription service tests**
 
 Run the focused transcription service test command. Expected: tests pass.
 
 ## Task 4: Native Media Import
 
-- [ ] **Step 1: Add NAudio import service**
+- [x] **Step 1: Add NAudio import service**
 
 Create `VoiceInk.Windows/src/VoiceInk.Windows.Native/Audio/MediaFoundationAudioFileImportService.cs`.
 
@@ -152,7 +152,7 @@ Implementation details:
 - Return `AudioCaptureResult` with destination path, source duration, sample rate, and channel count.
 - Throw a clear `InvalidOperationException` when Media Foundation cannot decode the source file.
 
-- [ ] **Step 2: Verify app build**
+- [x] **Step 2: Verify app build**
 
 Run:
 
@@ -164,11 +164,11 @@ Expected: build passes with 0 warnings/errors.
 
 ## Task 5: Navigation And WinUI Shell
 
-- [ ] **Step 1: Update navigation tests**
+- [x] **Step 1: Update navigation tests**
 
 Update `ShellNavigationPresenterTests` so `Transcribe Audio` appears after Dashboard and before History.
 
-- [ ] **Step 2: Run red navigation test**
+- [x] **Step 2: Run red navigation test**
 
 Run:
 
@@ -178,7 +178,7 @@ Run:
 
 Expected: fails until the presenter includes `Transcribe Audio`.
 
-- [ ] **Step 3: Add navigation item and UI section**
+- [x] **Step 3: Add navigation item and UI section**
 
 Modify:
 
@@ -194,13 +194,13 @@ Processing rules:
 - Completed items select themselves and refresh History.
 - Failed items show error text and can be retried.
 
-- [ ] **Step 4: Verify focused navigation tests and build**
+- [x] **Step 4: Verify focused navigation tests and build**
 
 Run the focused navigation tests and Debug x64 build.
 
 ## Task 6: Docs, Review, Commit
 
-- [ ] **Step 1: Update README/spec/plan**
+- [x] **Step 1: Update README/spec/plan**
 
 Document the implemented Transcribe Audio MVP and remaining gaps:
 
@@ -209,7 +209,7 @@ Document the implemented Transcribe Audio MVP and remaining gaps:
 - Supported formats depend on Windows Media Foundation codecs.
 - Drag/drop, enhancement, per-file save/copy, and persistent queue restoration remain future gaps.
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 Run:
 
@@ -220,11 +220,11 @@ Run:
 
 Expected: all tests pass and Debug x64 build passes with 0 warnings/errors.
 
-- [ ] **Step 3: Request review and fix findings**
+- [x] **Step 3: Request review and fix findings**
 
 Request subagent review against this plan and the macOS Transcribe Audio source. Fix all Critical and Important findings before committing.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Run:
 

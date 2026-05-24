@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\VoiceInk.Windows.Core\VoiceInk.Windows.Core.csproj" />
     <ProjectReference Include="..\..\src\VoiceInk.Windows.Infrastructure\VoiceInk.Windows.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\VoiceInk.Windows.Native\VoiceInk.Windows.Native.csproj" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />

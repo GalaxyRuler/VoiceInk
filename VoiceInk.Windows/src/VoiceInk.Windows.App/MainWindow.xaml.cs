@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using VoiceInk.Windows.Core.Audio;
+using VoiceInk.Windows.Core.AudioFiles;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
@@ -39,6 +40,7 @@ namespace VoiceInk.Windows.App;
 public sealed partial class MainWindow : Window
 {
     private const string DashboardSectionTag = "Dashboard";
+    private const string TranscribeAudioSectionTag = "Transcribe Audio";
     private const string ModelsSectionTag = "AI Models";
     private const string AudioInputSectionTag = "Audio Input";
     private const string DictionarySectionTag = "Dictionary";
@@ -59,18 +61,22 @@ public sealed partial class MainWindow : Window
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
+    private readonly AudioFileQueueService audioFileQueueService = new();
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
     private GlobalHotkeyService? hotkeyService;
     private TrayIconService? trayIconService;
     private FloatingRecorderWindow? floatingRecorderWindow;
+    private AudioFileTranscriptionService audioFileTranscriptionService;
+    private CancellationTokenSource? audioFileQueueCancellation;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
+    private IReadOnlyList<AudioFileQueueItem> audioFileQueueItems = [];
     private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
     private IReadOnlyList<LocalWhisperModel> modelChoices = [];
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
@@ -81,6 +87,7 @@ public sealed partial class MainWindow : Window
     private bool isRetryingHistory;
     private bool isQuickAdding;
     private bool isImportingModel;
+    private bool isTranscribingAudioFiles;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -115,6 +122,12 @@ public sealed partial class MainWindow : Window
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         historyRetryService = new HistoryRetryService(
+            new WhisperNetTranscriptionService(),
+            historyStore,
+            settingsStore,
+            dictionaryStore);
+        audioFileTranscriptionService = new AudioFileTranscriptionService(
+            new MediaFoundationAudioFileImportService(),
             new WhisperNetTranscriptionService(),
             historyStore,
             settingsStore,
@@ -201,6 +214,57 @@ public sealed partial class MainWindow : Window
     private async void ApplyAudioInputButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyAudioInputAsync();
+    }
+
+    private async void ChooseAudioFilesButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ChooseAudioFilesAsync();
+    }
+
+    private async void StartAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
+    {
+        await StartAudioFileQueueAsync();
+    }
+
+    private void CancelAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
+    {
+        audioFileQueueCancellation?.Cancel();
+    }
+
+    private void ClearAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (isTranscribingAudioFiles)
+        {
+            return;
+        }
+
+        audioFileQueueItems = audioFileQueueService.Clear(audioFileQueueItems).Items;
+        RefreshAudioFileQueueListView();
+        RefreshUiFromControllerState("Audio file queue cleared");
+    }
+
+    private void RemoveAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (isTranscribingAudioFiles || SelectedAudioFileQueueItem() is not { } item)
+        {
+            return;
+        }
+
+        audioFileQueueItems = audioFileQueueService.RemovePending(audioFileQueueItems, item.Id).Items;
+        RefreshAudioFileQueueListView();
+        RefreshUiFromControllerState("Audio file removed");
+    }
+
+    private void RetryAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (isTranscribingAudioFiles || SelectedAudioFileQueueItem() is not { } item)
+        {
+            return;
+        }
+
+        audioFileQueueItems = audioFileQueueService.RetryFailed(audioFileQueueItems, item.Id).Items;
+        RefreshAudioFileQueueListView(item.Id);
+        RefreshUiFromControllerState("Audio file queued for retry");
     }
 
     private async Task StartCurrentRecordingAsync()
@@ -517,6 +581,12 @@ public sealed partial class MainWindow : Window
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSelectedHistoryDetails();
+    }
+
+    private void AudioFileQueueListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshSelectedAudioFileQueueDetails();
+        RefreshUiFromControllerState();
     }
 
     private void ReplacementListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1532,6 +1602,191 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task ChooseAudioFilesAsync()
+    {
+        if (!CanEditAudioFileQueue())
+        {
+            return;
+        }
+
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                SuggestedStartLocation = PickerLocationId.MusicLibrary
+            };
+            foreach (var extension in AudioFileQueueService.SupportedExtensions)
+            {
+                picker.FileTypeFilter.Add(extension);
+            }
+
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+            var files = await picker.PickMultipleFilesAsync();
+            if (files.Count == 0)
+            {
+                RefreshUiFromControllerState("Audio file selection canceled");
+                return;
+            }
+
+            var update = audioFileQueueService.AddFiles(audioFileQueueItems, files.Select(file => file.Path));
+            audioFileQueueItems = update.Items;
+            RefreshAudioFileQueueListView();
+
+            var status = update.AddedCount == 0
+                ? "No supported audio files added"
+                : $"Added {update.AddedCount} audio file{Plural(update.AddedCount)}";
+            if (update.SkippedCount > 0)
+            {
+                status += $" ({update.SkippedCount} skipped)";
+            }
+
+            RefreshUiFromControllerState(status);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Audio file selection failed: {ex.Message}");
+        }
+    }
+
+    private async Task StartAudioFileQueueAsync()
+    {
+        if (!CanEditAudioFileQueue() || !audioFileQueueItems.Any(item => item.Status == AudioFileQueueStatus.Pending))
+        {
+            return;
+        }
+
+        var statusOverride = "Transcribing audio files";
+        isTranscribingAudioFiles = true;
+        audioFileQueueCancellation = CancellationTokenSource.CreateLinkedTokenSource(windowLifetime.Token);
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await SaveSettingsAsync(audioFileQueueCancellation.Token);
+
+            while (audioFileQueueItems.FirstOrDefault(item => item.Status == AudioFileQueueStatus.Pending) is { } pending)
+            {
+                audioFileQueueCancellation.Token.ThrowIfCancellationRequested();
+                await ProcessAudioFileQueueItemAsync(pending, audioFileQueueCancellation.Token);
+            }
+
+            await RefreshHistoryAsync(windowLifetime.Token);
+            statusOverride = "Audio file queue processed";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (OperationCanceledException)
+        {
+            ResetProcessingAudioFileItems();
+            statusOverride = "Audio transcription canceled";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Audio transcription failed: {ex.Message}";
+        }
+        finally
+        {
+            isTranscribingAudioFiles = false;
+            audioFileQueueCancellation?.Dispose();
+            audioFileQueueCancellation = null;
+            RefreshAudioFileQueueListView();
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task ProcessAudioFileQueueItemAsync(
+        AudioFileQueueItem item,
+        CancellationToken cancellationToken)
+    {
+        UpdateAudioFileQueueItem(item.Id, current => current.MarkProcessing("Transcribing"));
+        RefreshAudioFileQueueListView(item.Id);
+
+        var result = await audioFileTranscriptionService.TranscribeAsync(
+            item.FilePath,
+            recordingsDirectory,
+            cancellationToken);
+        UpdateAudioFileQueueItem(
+            item.Id,
+            current => result.Success && result.Item is not null
+                ? current.MarkCompleted(result.Item)
+                : current.MarkFailed(result.Message));
+        RefreshAudioFileQueueListView(item.Id);
+    }
+
+    private void UpdateAudioFileQueueItem(
+        Guid id,
+        Func<AudioFileQueueItem, AudioFileQueueItem> update)
+    {
+        audioFileQueueItems = audioFileQueueItems
+            .Select(item => item.Id == id ? update(item) : item)
+            .ToArray();
+    }
+
+    private void ResetProcessingAudioFileItems()
+    {
+        audioFileQueueItems = audioFileQueueItems
+            .Select(item => item.Status == AudioFileQueueStatus.Processing ? item.MarkPending() : item)
+            .ToArray();
+    }
+
+    private void RefreshAudioFileQueueListView(Guid? selectedId = null)
+    {
+        selectedId ??= SelectedAudioFileQueueItem()?.Id;
+        AudioFileQueueListView.ItemsSource = audioFileQueueItems
+            .Select(AudioFileQueueListItem)
+            .ToArray();
+
+        var selectedIndex = selectedId is null
+            ? -1
+            : audioFileQueueItems.ToList().FindIndex(item => item.Id == selectedId.Value);
+        AudioFileQueueListView.SelectedIndex = selectedIndex;
+        RefreshSelectedAudioFileQueueDetails();
+    }
+
+    private void RefreshSelectedAudioFileQueueDetails()
+    {
+        var item = SelectedAudioFileQueueItem();
+        if (item is null)
+        {
+            AudioFileQueueMetadataTextBlock.Text = audioFileQueueItems.Count == 0
+                ? "No files queued"
+                : "Select a queued file";
+            AudioFileQueueTranscriptTextBox.Text = string.Empty;
+            return;
+        }
+
+        AudioFileQueueMetadataTextBlock.Text = string.Join(
+            Environment.NewLine,
+            $"File: {item.FileName}",
+            $"Status: {item.Status}",
+            $"Detail: {item.ErrorMessage ?? item.StatusDetail}",
+            $"Path: {item.FilePath}");
+        AudioFileQueueTranscriptTextBox.Text = item.HistoryItem?.Text ?? string.Empty;
+    }
+
+    private AudioFileQueueItem? SelectedAudioFileQueueItem() =>
+        AudioFileQueueListView.SelectedIndex >= 0 && AudioFileQueueListView.SelectedIndex < audioFileQueueItems.Count
+            ? audioFileQueueItems[AudioFileQueueListView.SelectedIndex]
+            : null;
+
+    private static string AudioFileQueueListItem(AudioFileQueueItem item)
+    {
+        var detail = item.ErrorMessage ?? item.StatusDetail;
+        return $"{item.Status}: {item.FileName} - {detail}";
+    }
+
+    private bool CanEditAudioFileQueue() =>
+        settingsLoaded
+        && !IsOperationActive()
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording;
+
     private async Task RefreshHistoryWithStatusAsync(string status)
     {
         try
@@ -1999,6 +2254,9 @@ public sealed partial class MainWindow : Window
     private static string Seconds(TimeSpan duration) =>
         duration.TotalSeconds.ToString("0.000", CultureInfo.InvariantCulture);
 
+    private static string Plural(int count) =>
+        count == 1 ? string.Empty : "s";
+
     private Task MinimizeForExternalPasteAsync(CancellationToken cancellationToken)
     {
         var windowHandle = WindowNative.GetWindowHandle(this);
@@ -2287,6 +2545,7 @@ public sealed partial class MainWindow : Window
         || isRetryingHistory
         || isQuickAdding
         || isOnboardingOpen
+        || isTranscribingAudioFiles
         || (includeCurrentModelImport && isImportingModel);
 
     private bool IsControllerBusy() =>
@@ -2328,6 +2587,7 @@ public sealed partial class MainWindow : Window
     {
         activeSectionTag = tag;
         DashboardSectionPanel.Visibility = tag == DashboardSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        TranscribeAudioSectionPanel.Visibility = tag == TranscribeAudioSectionTag ? Visibility.Visible : Visibility.Collapsed;
         ModelsSectionPanel.Visibility = tag == ModelsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
         DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
@@ -2504,6 +2764,9 @@ public sealed partial class MainWindow : Window
         var controllerBusy = IsControllerBusy();
         var modelControlsEnabled = CanEditModelLibrary();
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
+        var audioFileQueueEditable = CanEditAudioFileQueue();
+        var selectedAudioFileQueueItem = SelectedAudioFileQueueItem();
+        var hasPendingAudioFiles = audioFileQueueItems.Any(item => item.Status == AudioFileQueueStatus.Pending);
         var selectedReplacement = ReplacementListView.SelectedIndex >= 0 && ReplacementListView.SelectedIndex < replacementItems.Count
             ? replacementItems[ReplacementListView.SelectedIndex]
             : null;
@@ -2543,6 +2806,14 @@ public sealed partial class MainWindow : Window
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
+        ChooseAudioFilesButton.IsEnabled = audioFileQueueEditable;
+        StartAudioFileQueueButton.IsEnabled = audioFileQueueEditable && hasPendingAudioFiles;
+        CancelAudioFileQueueButton.IsEnabled = isTranscribingAudioFiles;
+        ClearAudioFileQueueButton.IsEnabled = settingsLoaded && !isTranscribingAudioFiles && audioFileQueueItems.Count > 0;
+        RemoveAudioFileQueueItemButton.IsEnabled = audioFileQueueEditable
+            && selectedAudioFileQueueItem?.Status == AudioFileQueueStatus.Pending;
+        RetryAudioFileQueueItemButton.IsEnabled = audioFileQueueEditable
+            && selectedAudioFileQueueItem?.Status == AudioFileQueueStatus.Failed;
         ExportDictionaryButton.IsEnabled = settingsLoaded && !operationActive;
         ImportDictionaryButton.IsEnabled = settingsLoaded
             && !operationActive
@@ -2715,6 +2986,8 @@ public sealed partial class MainWindow : Window
     {
         AppWindow.Closing -= MainWindow_AppWindowClosing;
         windowLifetime.Cancel();
+        audioFileQueueCancellation?.Cancel();
+        audioFileQueueCancellation?.Dispose();
         DisposeGlobalHotkeyService();
         DisposeTrayIconService();
         ClearHistoryAudioPlayer();

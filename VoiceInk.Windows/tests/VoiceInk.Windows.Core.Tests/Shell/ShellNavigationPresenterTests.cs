@@ -13,6 +13,7 @@ public sealed class ShellNavigationPresenterTests
         Assert.Collection(
             items,
             item => Assert.Equal(("Dashboard", "Dashboard", "Home", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
+            item => Assert.Equal(("Transcribe Audio", "Transcribe Audio", "Audio", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("History", "History", "Document", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("AI Models", "AI Models", "Library", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Audio Input", "Audio Input", "Microphone", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),

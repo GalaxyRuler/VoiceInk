@@ -5,6 +5,7 @@ public static class ShellNavigationPresenter
     public static IReadOnlyList<ShellNavigationItem> BuildItems() =>
     [
         new("Dashboard", "Dashboard", "Home"),
+        new("Transcribe Audio", "Transcribe Audio", "Audio"),
         new("History", "History", "Document"),
         new("AI Models", "AI Models", "Library"),
         new("Audio Input", "Audio Input", "Microphone"),
