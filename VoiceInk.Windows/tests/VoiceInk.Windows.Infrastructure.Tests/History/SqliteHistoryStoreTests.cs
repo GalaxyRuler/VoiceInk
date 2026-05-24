@@ -281,6 +281,122 @@ public sealed class SqliteHistoryStoreTests
         Assert.Equal(completed, latestCompleted);
     }
 
+    [Fact]
+    public async Task SearchAsync_MatchesFinalOriginalEnhancedAndMetadata()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var match = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "final VoiceInk text",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero,
+            originalText: "raw dictated text",
+            enhancedText: "polished transcript",
+            language: "en",
+            modelPath: "C:\\Models\\ggml-base.en.bin");
+        var miss = match with
+        {
+            Id = Guid.NewGuid(),
+            Text = "unrelated",
+            OriginalText = "other",
+            EnhancedText = null,
+            ModelPath = null
+        };
+
+        await store.SaveAsync(miss, CancellationToken.None);
+        await store.SaveAsync(match, CancellationToken.None);
+
+        var results = await store.SearchAsync("polished", 10, CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal(match, item);
+    }
+
+    [Fact]
+    public async Task SearchAsync_EscapesLikeWildcards()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var literalPercent = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "literal 100% value",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var unrelated = literalPercent with
+        {
+            Id = Guid.NewGuid(),
+            Text = "literal 1000 value",
+            OriginalText = "literal 1000 value"
+        };
+
+        await store.SaveAsync(unrelated, CancellationToken.None);
+        await store.SaveAsync(literalPercent, CancellationToken.None);
+
+        var results = await store.SearchAsync("100%", 10, CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal(literalPercent, item);
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithEmptyQueryReturnsRecentItems()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "recent",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+
+        await store.SaveAsync(item, CancellationToken.None);
+
+        var results = await store.SearchAsync(" ", 10, CancellationToken.None);
+
+        var loaded = Assert.Single(results);
+        Assert.Equal(item, loaded);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_RemovesOnlyMatchingItem()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var deleted = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "delete me",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var kept = deleted with
+        {
+            Id = Guid.NewGuid(),
+            Text = "keep me"
+        };
+
+        await store.SaveAsync(deleted, CancellationToken.None);
+        await store.SaveAsync(kept, CancellationToken.None);
+
+        Assert.True(await store.DeleteAsync(deleted.Id, CancellationToken.None));
+        Assert.False(await store.DeleteAsync(deleted.Id, CancellationToken.None));
+
+        var results = await store.ListRecentAsync(10, CancellationToken.None);
+        var item = Assert.Single(results);
+        Assert.Equal(kept, item);
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"voiceink-{Guid.NewGuid():N}");

@@ -34,7 +34,7 @@
 - Modify: `VoiceInk.Windows/tests/VoiceInk.Windows.Infrastructure.Tests/History/SqliteHistoryStoreTests.cs`
 - Modify: Core test fakes implementing `IHistoryStore`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add tests:
 
@@ -86,7 +86,7 @@ public async Task DeleteAsync_RemovesOnlyMatchingItem()
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -96,7 +96,7 @@ Run:
 
 Expected: build fails because store methods do not exist.
 
-- [ ] **Step 3: Implement store methods**
+- [x] **Step 3: Implement store methods**
 
 Rules:
 
@@ -106,13 +106,13 @@ Rules:
 - Preserve newest-first ordering.
 - `DeleteAsync(Guid id, token)` returns true when one row is deleted.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the same filtered Infrastructure test command.
 
 Expected: targeted tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit message:
 

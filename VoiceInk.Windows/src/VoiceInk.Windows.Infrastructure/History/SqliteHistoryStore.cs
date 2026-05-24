@@ -92,6 +92,59 @@ public sealed class SqliteHistoryStore : IHistoryStore
         return items;
     }
 
+    public async Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(
+        string query,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return await ListRecentAsync(limit, cancellationToken);
+        }
+
+        if (limit < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), limit, "Limit must be non-negative.");
+        }
+
+        if (limit == 0)
+        {
+            return [];
+        }
+
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
+                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
+                   model_path, prompt_name, enhancement_duration_ms, error_message
+            FROM transcriptions
+            WHERE text LIKE $query ESCAPE '\'
+               OR original_text LIKE $query ESCAPE '\'
+               OR enhanced_text LIKE $query ESCAPE '\'
+               OR provider_name LIKE $query ESCAPE '\'
+               OR language LIKE $query ESCAPE '\'
+               OR model_path LIKE $query ESCAPE '\'
+               OR prompt_name LIKE $query ESCAPE '\'
+               OR error_message LIKE $query ESCAPE '\'
+            ORDER BY created_at_utc_ticks DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$query", $"%{EscapeLikePattern(query.Trim())}%");
+        command.Parameters.AddWithValue("$limit", limit);
+
+        var items = new List<TranscriptionHistoryItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            items.Add(ReadHistoryItem(reader));
+        }
+
+        return items;
+    }
+
     public async Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
     {
         await using var connection = new SqliteConnection(connectionString);
@@ -112,6 +165,18 @@ public sealed class SqliteHistoryStore : IHistoryStore
         return await reader.ReadAsync(cancellationToken)
             ? ReadHistoryItem(reader)
             : null;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM transcriptions WHERE id = $id;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+
+        return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
     }
 
     private static TranscriptionHistoryItem ReadHistoryItem(SqliteDataReader reader) =>
@@ -203,6 +268,12 @@ public sealed class SqliteHistoryStore : IHistoryStore
 
     private static object ValueOrDbNull(double? value) =>
         value is null ? DBNull.Value : value.Value;
+
+    private static string EscapeLikePattern(string value) =>
+        value
+            .Replace(@"\", @"\\", StringComparison.Ordinal)
+            .Replace("%", @"\%", StringComparison.Ordinal)
+            .Replace("_", @"\_", StringComparison.Ordinal);
 
     private static string? GetNullableString(SqliteDataReader reader, int ordinal) =>
         reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);

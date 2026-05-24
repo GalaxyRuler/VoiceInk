@@ -733,9 +733,22 @@ public sealed class DictationControllerTests
             return Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(Items.Take(limit).ToList());
         }
 
+        public Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(
+            string query,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(Items.Take(limit).ToList());
+        }
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
+        }
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);
         }
     }
 

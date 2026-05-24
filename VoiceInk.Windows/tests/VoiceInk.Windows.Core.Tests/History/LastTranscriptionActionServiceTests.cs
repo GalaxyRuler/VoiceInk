@@ -202,12 +202,25 @@ public sealed class LastTranscriptionActionServiceTests
             return Task.FromResult(items.Take(limit).ToArray() as IReadOnlyList<TranscriptionHistoryItem>);
         }
 
+        public Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(
+            string query,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(items.Take(limit).ToArray() as IReadOnlyList<TranscriptionHistoryItem>);
+        }
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
         {
             GetLatestCompletedCalled = true;
             return Task.FromResult(
                 LatestCompleted ??
                 items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
+        }
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(false);
         }
     }
 
