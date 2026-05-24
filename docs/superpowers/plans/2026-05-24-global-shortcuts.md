@@ -118,7 +118,7 @@ feat(windows): add global shortcut settings model
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.Native/Hotkeys/GlobalHotkeyService.cs`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Update native registration**
+- [x] **Step 1: Update native registration**
 
 Replace single `RegisterCtrlAltSpace()` with `RegisterHotkeys(IEnumerable<GlobalShortcutRegistration>)`.
 
@@ -130,7 +130,7 @@ Rules:
 - Raise `HotkeyPressed` with `GlobalShortcutAction`.
 - Unregister every registered id on dispose.
 
-- [ ] **Step 2: Wire app dispatch**
+- [x] **Step 2: Wire app dispatch**
 
 After settings load, call `GlobalShortcutSettings.BuildRegistrations(settings)`, then register each valid shortcut. On hotkey:
 
@@ -138,7 +138,7 @@ After settings load, call `GlobalShortcutSettings.BuildRegistrations(settings)`,
 - `PasteLastTranscription` calls `PasteLastAsync(LastTranscriptionTextKind.Final)`.
 - `PasteLastEnhancedTranscription` calls `PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred)`.
 
-- [ ] **Step 3: Build**
+- [x] **Step 3: Build**
 
 Run:
 
@@ -148,7 +148,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Commit message:
 

@@ -10,6 +10,7 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Shortcuts;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.Dictionary;
 using VoiceInk.Windows.Infrastructure.History;
@@ -66,7 +67,6 @@ public sealed partial class MainWindow : Window
         controller = CreateController(audioCapture);
 
         Closed += MainWindow_Closed;
-        RegisterGlobalHotkey();
         RefreshUiFromControllerState("Loading settings");
         _ = InitializeAsync();
     }
@@ -167,11 +167,22 @@ public sealed partial class MainWindow : Window
         await StartCurrentRecordingAsync();
     }
 
-    private async void HotkeyService_HotkeyPressed(object? sender, EventArgs e)
+    private async void HotkeyService_HotkeyPressed(object? sender, GlobalHotkeyPressedEventArgs e)
     {
         try
         {
-            await ToggleCurrentRecordingAsync();
+            switch (e.Action)
+            {
+                case GlobalShortcutAction.PasteLastTranscription:
+                    await PasteLastAsync(LastTranscriptionTextKind.Final);
+                    break;
+                case GlobalShortcutAction.PasteLastEnhancedTranscription:
+                    await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
+                    break;
+                default:
+                    await ToggleCurrentRecordingAsync();
+                    break;
+            }
         }
         catch (Exception ex)
         {
@@ -250,6 +261,7 @@ public sealed partial class MainWindow : Window
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
             await RefreshDictionaryAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            RegisterGlobalHotkeys(settings);
 
             settingsLoaded = true;
             RefreshUiFromControllerState();
@@ -601,21 +613,42 @@ public sealed partial class MainWindow : Window
             settingsStore,
             dictionaryStore);
 
-    private void RegisterGlobalHotkey()
+    private void RegisterGlobalHotkeys(AppSettings settings)
     {
         try
         {
+            DisposeGlobalHotkeyService();
+            hotkeyRegistrationError = null;
+
+            var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
+            if (shortcutRegistration.Errors.Count > 0)
+            {
+                hotkeyRegistrationError = string.Join(" ", shortcutRegistration.Errors);
+                return;
+            }
+
             var windowHandle = WindowNative.GetWindowHandle(this);
             hotkeyService = new GlobalHotkeyService(windowHandle);
             hotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
-            hotkeyService.RegisterCtrlAltSpace();
+            hotkeyService.RegisterHotkeys(shortcutRegistration.Registrations);
         }
         catch (Exception ex)
         {
-            hotkeyService?.Dispose();
-            hotkeyService = null;
-            hotkeyRegistrationError = $"Ctrl+Alt+Space hotkey unavailable: {ex.Message}";
+            DisposeGlobalHotkeyService();
+            hotkeyRegistrationError = $"Global shortcut unavailable: {ex.Message}";
         }
+    }
+
+    private void DisposeGlobalHotkeyService()
+    {
+        if (hotkeyService is null)
+        {
+            return;
+        }
+
+        hotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
+        hotkeyService.Dispose();
+        hotkeyService = null;
     }
 
     private void RecreateController()
@@ -684,12 +717,7 @@ public sealed partial class MainWindow : Window
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
         windowLifetime.Cancel();
-        if (hotkeyService is not null)
-        {
-            hotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
-            hotkeyService.Dispose();
-            hotkeyService = null;
-        }
+        DisposeGlobalHotkeyService();
 
         audioCapture.Dispose();
         windowLifetime.Dispose();
