@@ -84,7 +84,9 @@ public sealed class DictationController(
 
             try
             {
-                var audio = await audioCapture.StopAsync(cancellationToken);
+                var audio = await audioCapture.StopAsync(CancellationToken.None);
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var settings = await settingsStore.LoadAsync(cancellationToken);
 
                 State = DictationState.Transcribing;

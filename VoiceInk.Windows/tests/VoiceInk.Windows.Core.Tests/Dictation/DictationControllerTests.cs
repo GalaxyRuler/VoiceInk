@@ -434,12 +434,45 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
-    public async Task StopAsync_CancellationDuringStopPropagatesAndLeavesIdle()
+    public async Task StopAsync_CancellationAfterCaptureStopPropagatesAndLeavesIdle()
     {
         using var cts = new CancellationTokenSource();
+        var loadEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin"
+        });
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        settings.LoadEntered = loadEntered;
+        settings.LoadGate = loadGate.Task;
+
+        var stop = controller.StopAsync(cts.Token);
+        await loadEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
+        Assert.False(capture.Started);
+        Assert.Equal(DictationState.Idle, controller.State);
+    }
+
+    [Fact]
+    public async Task StopAsync_CancellationDuringCaptureStopStillReleasesCaptureBeforePropagating()
+    {
+        using var cts = new CancellationTokenSource();
+        var stopEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var stopGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1))
         {
+            StopEntered = stopEntered,
             StopGate = stopGate.Task
         };
         var controller = new DictationController(
@@ -455,10 +488,12 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
 
         var stop = controller.StopAsync(cts.Token);
-        await Task.Delay(50);
+        await stopEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
         await cts.CancelAsync();
+        stopGate.SetResult();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
+        Assert.False(capture.Started);
         Assert.Equal(DictationState.Idle, controller.State);
     }
 
@@ -469,6 +504,7 @@ public sealed class DictationControllerTests
         public int StopCount { get; private set; }
         public Exception? StartExceptionToThrow { get; init; }
         public Exception? StopExceptionToThrow { get; init; }
+        public TaskCompletionSource? StopEntered { get; init; }
         public Task? StopGate { get; init; }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -487,6 +523,7 @@ public sealed class DictationControllerTests
         {
             StopCount++;
             Assert.True(Started);
+            StopEntered?.SetResult();
             if (StopExceptionToThrow is not null)
             {
                 throw StopExceptionToThrow;
@@ -497,6 +534,7 @@ public sealed class DictationControllerTests
                 await StopGate.WaitAsync(cancellationToken);
             }
 
+            Started = false;
             return result;
         }
     }
@@ -573,10 +611,12 @@ public sealed class DictationControllerTests
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore
     {
         public AppSettings CurrentSettings { get; set; } = settings;
-        public Task? LoadGate { get; init; }
+        public TaskCompletionSource? LoadEntered { get; set; }
+        public Task? LoadGate { get; set; }
 
         public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)
         {
+            LoadEntered?.SetResult();
             if (LoadGate is not null)
             {
                 await LoadGate.WaitAsync(cancellationToken);
