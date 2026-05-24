@@ -27,13 +27,44 @@ public sealed class JsonSettingsStore(string filePath) : ISettingsStore
 
     public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        await using var stream = File.Create(filePath);
-        await JsonSerializer.SerializeAsync(stream, settings, JsonOptions, cancellationToken);
+        var tempDirectory = string.IsNullOrWhiteSpace(directory) ? "." : directory;
+        var tempPath = Path.Combine(
+            tempDirectory,
+            $".{Path.GetFileName(filePath)}.{Guid.NewGuid():N}.tmp");
+
+        try
+        {
+            await using (var stream = new FileStream(
+                tempPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 4096,
+                options: FileOptions.Asynchronous))
+            {
+                await JsonSerializer.SerializeAsync(stream, settings, JsonOptions, cancellationToken);
+                await stream.FlushAsync(cancellationToken);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(tempPath, filePath, overwrite: true);
+        }
+        catch
+        {
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+
+            throw;
+        }
     }
 }
