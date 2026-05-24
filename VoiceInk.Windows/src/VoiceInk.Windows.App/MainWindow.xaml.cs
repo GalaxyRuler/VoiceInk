@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
+using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Infrastructure.Dictionary;
@@ -23,7 +25,9 @@ public sealed partial class MainWindow : Window
 {
     private readonly string recordingsDirectory;
     private readonly string historyPath;
+    private readonly string exportDirectory;
     private readonly JsonDictionaryStore dictionaryStore;
+    private readonly SqliteHistoryStore historyStore;
     private readonly JsonSettingsStore settingsStore;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
@@ -31,6 +35,7 @@ public sealed partial class MainWindow : Window
     private DictationController controller;
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
+    private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
     private bool isStarting;
     private bool isStopping;
     private bool settingsLoaded;
@@ -47,8 +52,10 @@ public sealed partial class MainWindow : Window
             "VoiceInk.Windows");
         recordingsDirectory = Path.Combine(appData, "Recordings");
         historyPath = Path.Combine(appData, "history.db");
+        exportDirectory = Path.Combine(appData, "Exports");
 
         dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
+        historyStore = new SqliteHistoryStore(historyPath);
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
@@ -126,6 +133,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await controller.StopAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
             statusOverride = null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -194,6 +202,21 @@ public sealed partial class MainWindow : Window
         await RemoveSelectedReplacementAsync();
     }
 
+    private async void RefreshHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshHistoryWithStatusAsync("History refreshed");
+    }
+
+    private async void ExportHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportHistoryAsync();
+    }
+
+    private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshSelectedHistoryDetails();
+    }
+
     private async Task InitializeAsync()
     {
         try
@@ -211,6 +234,7 @@ public sealed partial class MainWindow : Window
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
             await RefreshDictionaryAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
 
             settingsLoaded = true;
             RefreshUiFromControllerState();
@@ -374,6 +398,115 @@ public sealed partial class MainWindow : Window
             .ToArray();
     }
 
+    private async Task RefreshHistoryWithStatusAsync(string status)
+    {
+        try
+        {
+            await RefreshHistoryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(status);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"History refresh failed: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshHistoryAsync(CancellationToken cancellationToken)
+    {
+        var selectedId = HistoryListView.SelectedIndex >= 0 && HistoryListView.SelectedIndex < historyItems.Count
+            ? historyItems[HistoryListView.SelectedIndex].Id
+            : (Guid?)null;
+
+        historyItems = await historyStore.ListRecentAsync(50, cancellationToken);
+        HistoryListView.ItemsSource = historyItems
+            .Select(HistoryListItem)
+            .ToArray();
+
+        var selectedIndex = selectedId is null
+            ? -1
+            : historyItems.ToList().FindIndex(item => item.Id == selectedId.Value);
+        HistoryListView.SelectedIndex = selectedIndex;
+        RefreshSelectedHistoryDetails();
+    }
+
+    private async Task ExportHistoryAsync()
+    {
+        try
+        {
+            if (historyItems.Count == 0)
+            {
+                await RefreshHistoryAsync(windowLifetime.Token);
+            }
+
+            Directory.CreateDirectory(exportDirectory);
+            var fileName = $"VoiceInk-history-{DateTimeOffset.Now:yyyyMMdd-HHmmss}.csv";
+            var exportPath = Path.Combine(exportDirectory, fileName);
+            await File.WriteAllTextAsync(
+                exportPath,
+                HistoryCsvExporter.Export(historyItems),
+                windowLifetime.Token);
+            RefreshUiFromControllerState($"History exported: {exportPath}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"History export failed: {ex.Message}");
+        }
+    }
+
+    private void RefreshSelectedHistoryDetails()
+    {
+        if (HistoryListView.SelectedIndex < 0 || HistoryListView.SelectedIndex >= historyItems.Count)
+        {
+            HistoryMetadataTextBlock.Text = historyItems.Count == 0
+                ? "No transcriptions"
+                : "Select a transcription";
+            HistoryOriginalTextBox.Text = string.Empty;
+            HistoryFinalTextBox.Text = string.Empty;
+            HistoryEnhancedTextBox.Text = string.Empty;
+            return;
+        }
+
+        var item = historyItems[HistoryListView.SelectedIndex];
+        HistoryMetadataTextBlock.Text = string.Join(
+            Environment.NewLine,
+            $"Status: {item.Status}",
+            $"Provider: {item.ProviderName}",
+            $"Language: {item.Language}",
+            $"Model: {item.ModelPath ?? "Not recorded"}",
+            $"Prompt: {item.PromptName ?? "None"}",
+            $"Recorded: {item.CreatedAt.LocalDateTime:g}",
+            $"Audio: {Seconds(item.AudioDuration)}s",
+            $"Transcription: {Seconds(item.TranscriptionDuration)}s",
+            $"Enhancement: {(item.EnhancementDuration is null ? "None" : $"{Seconds(item.EnhancementDuration.Value)}s")}",
+            $"Error: {item.ErrorMessage ?? "None"}");
+        HistoryOriginalTextBox.Text = item.OriginalText;
+        HistoryFinalTextBox.Text = item.Text;
+        HistoryEnhancedTextBox.Text = item.EnhancedText ?? string.Empty;
+    }
+
+    private static string HistoryListItem(TranscriptionHistoryItem item)
+    {
+        var text = item.EnhancedText ?? item.Text;
+        var preview = text.ReplaceLineEndings(" ").Trim();
+        if (preview.Length > 80)
+        {
+            preview = $"{preview[..80]}...";
+        }
+
+        return $"{item.CreatedAt.LocalDateTime:g}  [{item.Status}]  {preview}";
+    }
+
+    private static string Seconds(TimeSpan duration) =>
+        duration.TotalSeconds.ToString("0.000", CultureInfo.InvariantCulture);
+
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
         AppSettings settings;
@@ -405,7 +538,7 @@ public sealed partial class MainWindow : Window
             captureService,
             new WhisperNetTranscriptionService(),
             new ClipboardTextInjectionService(restoreClipboard: true),
-            new SqliteHistoryStore(historyPath),
+            historyStore,
             settingsStore,
             dictionaryStore);
 
