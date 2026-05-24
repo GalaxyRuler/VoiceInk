@@ -378,6 +378,7 @@ Status on 2026-05-24:
 - Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, history search, and confirmed single-item delete.
+- Active slice: retry-last transcription shell and optional global shortcut flow, reusing recorded history audio, current local model/settings, dictionary prompts, and cleanup settings. Successful retry-last output is copied to the clipboard instead of pasted automatically.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
