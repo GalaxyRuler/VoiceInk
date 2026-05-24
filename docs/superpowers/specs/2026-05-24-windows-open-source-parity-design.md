@@ -116,6 +116,14 @@ Tray-shell slice completed on 2026-05-24:
 - macOS commercial updater/support items omitted. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray shell.
 - Model/provider/enhancement/language/audio context submenus remain later work until those Windows subsystems and view-models exist.
 
+Active navigation-settings-shell slice on 2026-05-25:
+
+- Use WinUI `NavigationView` as the Windows-native adaptation of macOS `NavigationSplitView`.
+- Move existing source-runnable controls into macOS-aligned active sections: Dashboard, AI Models, Audio Input, Dictionary, History, and Settings.
+- Replace the commercial `VoiceInk Pro` sidebar destination with `About / Open Source`.
+- Add local-only diagnostics actions under About/Open Source.
+- Keep Transcribe Audio, Enhancement, Power Mode, and Permissions as later slices until their real Windows subsystems have usable controls.
+
 ### Floating Recorder
 
 macOS has mini and notch recorder styles with record/stop states, waveform, processing indicators, live partial transcript, AI prompt picker, Power Mode button, cancel behavior, and compact keyboard-driven controls.
