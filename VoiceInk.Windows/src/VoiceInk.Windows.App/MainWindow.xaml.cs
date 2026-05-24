@@ -37,6 +37,7 @@ public sealed partial class MainWindow : Window
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
+    private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
@@ -52,6 +53,7 @@ public sealed partial class MainWindow : Window
     private bool isCanceling;
     private bool isPastingLast;
     private bool isRetryingHistory;
+    private bool isQuickAdding;
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
@@ -77,6 +79,7 @@ public sealed partial class MainWindow : Window
             historyStore,
             settingsStore,
             dictionaryStore);
+        dictionaryQuickAddService = new DictionaryQuickAddService(dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
@@ -256,6 +259,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.OpenHistoryWindow:
                     await OpenHistoryWindowAsync();
                     break;
+                case GlobalShortcutAction.QuickAddToDictionary:
+                    await ShowQuickAddDictionaryAsync();
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -303,6 +309,11 @@ public sealed partial class MainWindow : Window
     private async void ImportDictionaryButton_Click(object sender, RoutedEventArgs e)
     {
         await ImportDictionaryAsync();
+    }
+
+    private async void QuickAddDictionaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ShowQuickAddDictionaryAsync();
     }
 
     private async void RefreshHistoryButton_Click(object sender, RoutedEventArgs e)
@@ -384,6 +395,7 @@ public sealed partial class MainWindow : Window
             RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
             CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
             OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
+            QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
             RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -624,6 +636,162 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task ShowQuickAddDictionaryAsync()
+    {
+        if (!settingsLoaded
+            || isStarting
+            || isStopping
+            || isCanceling
+            || isPastingLast
+            || isRetryingHistory
+            || isQuickAdding
+            || controller.State != DictationState.Idle)
+        {
+            return;
+        }
+
+        isQuickAdding = true;
+        RefreshUiFromControllerState("Opening quick add");
+
+        DictionaryQuickAddResult? lastResult = null;
+        string? finalStatus = null;
+        try
+        {
+            RestoreAndActivateWindow();
+
+            var modeComboBox = new ComboBox
+            {
+                Header = "Mode",
+                ItemsSource = new[] { "Vocabulary", "Word Replacement" },
+                SelectedIndex = 0
+            };
+            var vocabularyTextBox = new TextBox
+            {
+                Header = "Vocabulary",
+                PlaceholderText = "e.g. Prakash, VoiceInk"
+            };
+            var replacementOriginalTextBox = new TextBox
+            {
+                Header = "Replace",
+                PlaceholderText = "e.g. my email, my mail"
+            };
+            var replacementTextBox = new TextBox
+            {
+                Header = "With",
+                PlaceholderText = "e.g. support@example.com"
+            };
+            var replacementPanel = new StackPanel
+            {
+                Spacing = 8,
+                Visibility = Visibility.Collapsed
+            };
+            replacementPanel.Children.Add(replacementOriginalTextBox);
+            replacementPanel.Children.Add(replacementTextBox);
+
+            var statusTextBlock = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap
+            };
+            var content = new StackPanel
+            {
+                Spacing = 12
+            };
+            content.Children.Add(modeComboBox);
+            content.Children.Add(vocabularyTextBox);
+            content.Children.Add(replacementPanel);
+            content.Children.Add(statusTextBlock);
+
+            modeComboBox.SelectionChanged += (_, _) =>
+            {
+                var replacementMode = modeComboBox.SelectedIndex == 1;
+                vocabularyTextBox.Visibility = replacementMode ? Visibility.Collapsed : Visibility.Visible;
+                replacementPanel.Visibility = replacementMode ? Visibility.Visible : Visibility.Collapsed;
+
+                if (replacementMode)
+                {
+                    replacementOriginalTextBox.Focus(FocusState.Programmatic);
+                }
+                else
+                {
+                    vocabularyTextBox.Focus(FocusState.Programmatic);
+                }
+            };
+            vocabularyTextBox.Loaded += (_, _) => vocabularyTextBox.Focus(FocusState.Programmatic);
+
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Quick Add to Dictionary",
+                Content = content,
+                PrimaryButtonText = "Add",
+                SecondaryButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary
+            };
+            dialog.PrimaryButtonClick += async (_, args) =>
+            {
+                var deferral = args.GetDeferral();
+                try
+                {
+                    var mode = modeComboBox.SelectedIndex == 1
+                        ? DictionaryQuickAddMode.WordReplacement
+                        : DictionaryQuickAddMode.Vocabulary;
+                    var result = await dictionaryQuickAddService.SubmitAsync(
+                        mode,
+                        vocabularyTextBox.Text,
+                        replacementOriginalTextBox.Text,
+                        replacementTextBox.Text,
+                        windowLifetime.Token);
+                    lastResult = result;
+                    if (!result.Succeeded)
+                    {
+                        args.Cancel = true;
+                        statusTextBlock.Text = result.Message;
+                        return;
+                    }
+
+                    await RefreshDictionaryAsync(windowLifetime.Token);
+                }
+                catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+                {
+                    args.Cancel = true;
+                    statusTextBlock.Text = "Closing";
+                }
+                catch (Exception ex)
+                {
+                    args.Cancel = true;
+                    statusTextBlock.Text = $"Quick add failed: {ex.Message}";
+                }
+                finally
+                {
+                    deferral.Complete();
+                }
+            };
+
+            var dialogResult = await dialog.ShowAsync();
+            if (lastResult?.Succeeded == true)
+            {
+                finalStatus = lastResult.Message;
+            }
+            else if (dialogResult == ContentDialogResult.Secondary)
+            {
+                finalStatus = "Quick add canceled";
+            }
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            finalStatus = "Closing";
+        }
+        catch (Exception ex)
+        {
+            finalStatus = $"Quick add failed: {ex.Message}";
+        }
+        finally
+        {
+            isQuickAdding = false;
+            RefreshUiFromControllerState(finalStatus);
+        }
+    }
+
     private async Task RefreshHistoryWithStatusAsync(string status)
     {
         try
@@ -797,7 +965,13 @@ public sealed partial class MainWindow : Window
 
     private async Task OpenHistoryWindowAsync()
     {
-        if (!settingsLoaded)
+        if (!settingsLoaded
+            || isStarting
+            || isStopping
+            || isCanceling
+            || isPastingLast
+            || isRetryingHistory
+            || isQuickAdding)
         {
             return;
         }
@@ -1266,6 +1440,9 @@ public sealed partial class MainWindow : Window
             OpenHistoryHotkey = includeShortcutFields
                 ? OpenHistoryHotkeyTextBox.Text.Trim()
                 : settings.OpenHistoryHotkey,
+            QuickAddDictionaryHotkey = includeShortcutFields
+                ? QuickAddHotkeyTextBox.Text.Trim()
+                : settings.QuickAddDictionaryHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
@@ -1400,7 +1577,7 @@ public sealed partial class MainWindow : Window
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {
-        var operationActive = isStarting || isStopping || isCanceling || isPastingLast || isRetryingHistory;
+        var operationActive = isStarting || isStopping || isCanceling || isPastingLast || isRetryingHistory || isQuickAdding;
         var controllerBusy = controller.State is DictationState.Transcribing or DictationState.Inserting;
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
 
@@ -1440,6 +1617,10 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        QuickAddDictionaryButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State == DictationState.Idle;
         SearchHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ClearHistorySearchButton.IsEnabled = settingsLoaded && !operationActive;
         DeleteHistoryButton.IsEnabled = settingsLoaded && !operationActive;

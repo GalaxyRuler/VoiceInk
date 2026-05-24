@@ -58,11 +58,12 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
-- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, and open history.
+- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
 - Shell add/remove controls for vocabulary words and word replacements.
+- Quick-add dialog with Vocabulary and Word Replacement modes.
 - Dictionary JSON import/export for vocabulary words and word replacements.
 - Vocabulary prompt biasing for local Whisper transcription.
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
@@ -74,17 +75,13 @@ The Windows MVP already has:
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
 - Refreshable audio input list with System Default/custom microphone selection.
 
-Active slice:
-
-- Quick Add to Dictionary will be implemented as a WinUI dialog equivalent to the macOS floating quick-add panel. It will support Vocabulary and Word Replacement modes, open from a button or global shortcut, and reuse the existing dictionary store and validation rules.
-
 Fresh baseline verification on 2026-05-24:
 
 ```powershell
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 98 Core tests and 33 Infrastructure tests passed after the cancel-recording shortcut slice.
+Result: 106 Core tests and 33 Infrastructure tests passed after the quick-add dictionary shortcut slice.
 
 ## Parity Inventory
 
@@ -118,14 +115,14 @@ macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hy
 
 Implemented:
 
-- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, and open history.
+- Configurable key+modifier shortcuts for primary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, open history, and quick add to dictionary.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
 
 Windows gaps:
 
 - Press-and-hold key-up handling.
 - Secondary shortcut.
-- Quick-add, toggle-enhancement, and Power Mode shortcuts.
+- Toggle-enhancement and Power Mode shortcuts.
 - Canceling in-flight transcription/enhancement after recording has already stopped.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
@@ -255,11 +252,11 @@ Implemented core:
 - Vocabulary prompt pass-through to local Whisper transcription.
 - Shell add/delete controls for vocabulary and replacements.
 - Dictionary-only JSON backup export/import using macOS backup field names for vocabulary and word replacements.
+- Quick-add dialog with Vocabulary and Word Replacement modes, opened by shell button or global shortcut.
 
 Windows gaps:
 
 - Dedicated macOS-style Dictionary page with edit flow, sorting controls, and richer guidance.
-- Quick add shortcut.
 
 ### History
 
@@ -385,12 +382,13 @@ Status on 2026-05-24:
 - Completed picker-based CSV export location selection.
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed selected-row history audio playback/open, selected-row retry through the local transcription pipeline, retry-last-to-clipboard through the local transcription pipeline, active-recording cancel history, history search, and confirmed single-item delete.
-- Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel active recording, and open history.
+- Completed configurable key+modifier global shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel active recording, open history, and quick add to dictionary.
 - Completed Open History Window shortcut as a Windows MVP adaptation that restores/focuses the main shell and inline History area until a dedicated history window exists.
+- Completed Quick Add to Dictionary as a Windows MVP dialog adaptation of the macOS floating quick-add panel, with Vocabulary and Word Replacement modes.
 - Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/sorting/quick-add, secondary/push-to-talk shortcuts, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
+- Remaining for this slice: dictionary edit/sorting, secondary/push-to-talk shortcuts, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
 - Add focused tests and docs.
 
 ## Verification

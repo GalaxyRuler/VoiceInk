@@ -89,7 +89,8 @@ public sealed class GlobalShortcutTests
             PasteLastEnhancementHotkey = "Ctrl+Alt+E",
             RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
             CancelRecordingHotkey = "Ctrl+Alt+C",
-            OpenHistoryHotkey = "Ctrl+Alt+H"
+            OpenHistoryHotkey = "Ctrl+Alt+H",
+            QuickAddDictionaryHotkey = "Ctrl+Alt+D"
         };
 
         var result = GlobalShortcutSettings.BuildRegistrations(settings);
@@ -126,6 +127,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.OpenHistoryWindow, item.Action);
                 Assert.Equal("Ctrl+Alt+H", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.QuickAddToDictionary, item.Action);
+                Assert.Equal("Ctrl+Alt+D", item.Shortcut.DisplayText);
             });
     }
 
@@ -210,5 +216,19 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Open History Window already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateQuickAddAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            QuickAddDictionaryHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Quick Add to Dictionary already uses Ctrl+Alt+Space.");
     }
 }

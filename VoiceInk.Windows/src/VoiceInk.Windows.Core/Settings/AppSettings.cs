@@ -14,6 +14,7 @@ public sealed record AppSettings
     public string RetryLastTranscriptionHotkey { get; init; } = string.Empty;
     public string CancelRecordingHotkey { get; init; } = string.Empty;
     public string OpenHistoryHotkey { get; init; } = string.Empty;
+    public string QuickAddDictionaryHotkey { get; init; } = string.Empty;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;

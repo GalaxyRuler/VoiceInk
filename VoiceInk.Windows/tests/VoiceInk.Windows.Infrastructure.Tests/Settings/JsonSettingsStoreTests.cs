@@ -41,6 +41,7 @@ public sealed class JsonSettingsStoreTests
             RetryLastTranscriptionHotkey = "Ctrl+Alt+R",
             CancelRecordingHotkey = "Ctrl+Alt+C",
             OpenHistoryHotkey = "Ctrl+Alt+H",
+            QuickAddDictionaryHotkey = "Ctrl+Alt+D",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone"
         };

@@ -7,5 +7,6 @@ public enum GlobalShortcutAction
     PasteLastEnhancedTranscription,
     RetryLastTranscription,
     CancelRecording,
-    OpenHistoryWindow
+    OpenHistoryWindow,
+    QuickAddToDictionary
 }

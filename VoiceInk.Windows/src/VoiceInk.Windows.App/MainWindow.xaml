@@ -75,6 +75,10 @@
                     x:Name="OpenHistoryHotkeyTextBox"
                     Header="Open History Window"
                     PlaceholderText="Ctrl+Alt+H" />
+                <TextBox
+                    x:Name="QuickAddHotkeyTextBox"
+                    Header="Quick Add to Dictionary"
+                    PlaceholderText="Ctrl+Alt+D" />
                 <Button
                     x:Name="ApplyShortcutsButton"
                     Content="Apply Shortcuts"
@@ -104,6 +108,10 @@
                         x:Name="ImportDictionaryButton"
                         Content="Import Dictionary"
                         Click="ImportDictionaryButton_Click" />
+                    <Button
+                        x:Name="QuickAddDictionaryButton"
+                        Content="Quick Add"
+                        Click="QuickAddDictionaryButton_Click" />
                 </StackPanel>
 
                 <StackPanel Spacing="8">

@@ -1,32 +1,22 @@
 <div align="center">
   <img src="VoiceInk/Assets.xcassets/AppIcon.appiconset/256-mac.png" width="180" height="180" />
   <h1>VoiceInk</h1>
-  <p>Voice to text app for macOS to transcribe what you say to text almost instantly</p>
+  <p>Free and open-source voice-to-text app source with an in-progress native Windows fork</p>
 
   [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
   ![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-brightgreen)
-  [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Beingpax/VoiceInk)](https://github.com/Beingpax/VoiceInk/releases)
-  ![GitHub all releases](https://img.shields.io/github/downloads/Beingpax/VoiceInk/total)
   ![GitHub stars](https://img.shields.io/github/stars/Beingpax/VoiceInk?style=social)
-  <p>
-    <a href="https://tryvoiceink.com">Website</a> •
-    <a href="https://www.youtube.com/@tryvoiceink">YouTube</a>
-  </p>
-
-  <a href="https://tryvoiceink.com">
-    <img src="https://img.shields.io/badge/Download%20Now-Latest%20Version-blue?style=for-the-badge&logo=apple" alt="Download VoiceInk" width="250"/>
-  </a>
 </div>
 
 ---
 
-VoiceInk is a native macOS application that transcribes what you say to text almost instantly. You can find all the information and download the app from [here](https://tryvoiceink.com). 
+VoiceInk is a native macOS application that transcribes what you say to text almost instantly. This fork also contains an in-progress native Windows implementation under `VoiceInk.Windows/`.
 
 ![VoiceInk Mac App](https://github.com/user-attachments/assets/12367379-83e7-48a6-b52c-4488a6a04bba)
 
-After dedicating the past 5 months to developing this app, I've decided to open source it for the greater good. 
+The Windows fork is developed as a free/open-source implementation. It has no licensing gates, trials, purchase prompts, paid feature locks, commercial telemetry, or private paid updater channel.
 
-My goal is to make it **the most efficient and privacy-focused voice-to-text solution for macOS** that is a joy to use. While the source code is now open for experienced developers to build and contribute, purchasing a license helps support continued development and gives you access to automatic updates, priority support, and upcoming features.
+The project goal is to make privacy-focused voice-to-text software that is efficient, understandable, and source-runnable.
 
 ## Features
 
@@ -41,18 +31,9 @@ My goal is to make it **the most efficient and privacy-focused voice-to-text sol
 
 ## Get Started
 
-### Download
-Get the latest version with a free trial from [tryvoiceink.com](https://tryvoiceink.com). Your purchase helps me work on VoiceInk full-time and continuously improve it with new features and updates.
-
-#### Homebrew
-Alternatively, you can install VoiceInk via `brew`:
-
-```shell
-brew install --cask voiceink
-```
-
 ### Build from Source
-As an open-source project, you can build VoiceInk yourself by following the instructions in [BUILDING.md](BUILDING.md). However, the compiled version includes additional benefits like automatic updates, priority support via Discord and email, and helps fund ongoing development.
+
+Build the macOS app by following [BUILDING.md](BUILDING.md). Build the Windows fork by following the Windows Fork Development section below.
 
 ## Requirements
 
@@ -112,7 +93,7 @@ Remove the temporary drive mapping with:
 cmd /c "subst W: /D"
 ```
 
-After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, paste last enhanced, retry last transcription, cancel recording, and open history. Retry Last reuses the latest completed history row with a saved audio file, applies the current local model, dictionary, and cleanup settings, saves the retried row, and copies the retried text to the clipboard. Cancel Recording stops the active recorder, keeps the captured audio file, and saves a canceled history row. Open History restores the main window and focuses the inline History area.
+After launch, enter a local whisper model path, click `Start Recording`, speak, then click `Stop And Insert`. You can also press `Ctrl+Alt+Space` to toggle recording by default when that global hotkey is available. The Windows shell also exposes configurable key+modifier shortcuts for recording, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary. Retry Last reuses the latest completed history row with a saved audio file, applies the current local model, dictionary, and cleanup settings, saves the retried row, and copies the retried text to the clipboard. Cancel Recording stops the active recorder, keeps the captured audio file, and saves a canceled history row. Open History restores the main window and focuses the inline History area. Quick Add opens a small Vocabulary/Word Replacement dialog that mirrors the macOS quick-add panel intent.
 
 ### Current Windows MVP Scope
 
@@ -121,7 +102,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Microphone capture
 - Clipboard-based text insertion into the active app
 - JSON settings and SQLite transcription history
-- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, and open history
+- Configurable global key+modifier shortcuts for recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary
 - Core dictionary models for vocabulary words and word replacements
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
@@ -129,6 +110,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Expanded history metadata for original text, final text, status, language, model path, prompt name, enhancement timing, and audio file path
 - Shell controls for filler-word removal, punctuation cleanup, lowercase output, and trailing spaces
 - Shell controls for adding/removing vocabulary words and word replacements
+- Quick-add Dictionary dialog for vocabulary words and word replacements
 - Dictionary JSON import/export for vocabulary words and word replacements
 - Shell audio input refresh and System Default/custom microphone selection
 - Shell recent-history list/detail view for original, final, enhanced, status, timing, model, prompt, and error metadata
@@ -136,7 +118,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Paste-last final and enhanced-preferred history actions in the shell
 - History search, selected-row audio playback/open, selected-row retry, retry-last-to-clipboard, active-recording cancel history, and confirmed single-item delete
 
-The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, quick add shortcuts, prioritized audio input failover, canceling in-flight transcription/enhancement, a dedicated multi-window History surface, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export path, recent-history metadata view, paste-last actions, retry-last action, active-recording cancel action, open-history focus action, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
+The current shell does not yet expose full macOS-style Dictionary editing, sorting controls, secondary/push-to-talk shortcuts, prioritized audio input failover, canceling in-flight transcription/enhancement, a dedicated multi-window History surface, waveform/rate audio playback controls, AI re-enhance, or batch history actions. The Dictionary add/remove/import/export/quick-add path, recent-history metadata view, paste-last actions, retry-last action, active-recording cancel action, open-history focus action, selected-row history retry/playback/open, history search/delete/export, configurable global key+modifier shortcuts, and System Default/custom microphone selection are source-runnable and wired into the dictation pipeline. Cloud transcription providers, AI text enhancement, and installer packaging are part of the Windows fork scope and are planned as follow-on Windows subsystems after this source-built MVP.
 
 ## Contributing
 

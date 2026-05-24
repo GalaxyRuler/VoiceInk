@@ -58,6 +58,14 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        AddRegistration(
+            settings.QuickAddDictionaryHotkey,
+            GlobalShortcutAction.QuickAddToDictionary,
+            "Quick Add to Dictionary",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }
