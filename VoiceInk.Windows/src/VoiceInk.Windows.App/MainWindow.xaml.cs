@@ -7,8 +7,8 @@ using Microsoft.UI.Xaml.Controls;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Settings;
-using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Text;
+using VoiceInk.Windows.Infrastructure.Dictionary;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Native.Audio;
@@ -23,11 +23,14 @@ public sealed partial class MainWindow : Window
 {
     private readonly string recordingsDirectory;
     private readonly string historyPath;
+    private readonly JsonDictionaryStore dictionaryStore;
     private readonly JsonSettingsStore settingsStore;
     private readonly CancellationTokenSource windowLifetime = new();
     private GlobalHotkeyService? hotkeyService;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
+    private IReadOnlyList<VocabularyWord> vocabularyItems = [];
+    private IReadOnlyList<WordReplacement> replacementItems = [];
     private bool isStarting;
     private bool isStopping;
     private bool settingsLoaded;
@@ -45,6 +48,7 @@ public sealed partial class MainWindow : Window
         recordingsDirectory = Path.Combine(appData, "Recordings");
         historyPath = Path.Combine(appData, "history.db");
 
+        dictionaryStore = new JsonDictionaryStore(Path.Combine(appData, "dictionary.json"));
         settingsStore = new JsonSettingsStore(Path.Combine(appData, "settings.json"));
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         controller = CreateController(audioCapture);
@@ -170,6 +174,26 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void AddVocabularyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AddVocabularyAsync();
+    }
+
+    private async void RemoveVocabularyButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RemoveSelectedVocabularyAsync();
+    }
+
+    private async void AddReplacementButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AddReplacementAsync();
+    }
+
+    private async void RemoveReplacementButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RemoveSelectedReplacementAsync();
+    }
+
     private async Task InitializeAsync()
     {
         try
@@ -186,6 +210,7 @@ public sealed partial class MainWindow : Window
             LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
             AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
             PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+            await RefreshDictionaryAsync(windowLifetime.Token);
 
             settingsLoaded = true;
             RefreshUiFromControllerState();
@@ -202,6 +227,151 @@ public sealed partial class MainWindow : Window
         {
             suppressModelPathChanged = false;
         }
+    }
+
+    private async Task AddVocabularyAsync()
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        var input = VocabularyInputTextBox.Text.Trim();
+        if (input.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var error = await dictionaryStore.AddVocabularyWordsAsync(input, windowLifetime.Token);
+            if (error is not null)
+            {
+                RefreshUiFromControllerState(error);
+                return;
+            }
+
+            VocabularyInputTextBox.Text = string.Empty;
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Vocabulary updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Vocabulary update failed: {ex.Message}");
+        }
+    }
+
+    private async Task RemoveSelectedVocabularyAsync()
+    {
+        if (!settingsLoaded || VocabularyListView.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        var selectedIndex = VocabularyListView.SelectedIndex;
+        if (selectedIndex >= vocabularyItems.Count)
+        {
+            return;
+        }
+
+        try
+        {
+            await dictionaryStore.DeleteVocabularyWordAsync(vocabularyItems[selectedIndex].Id, windowLifetime.Token);
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Vocabulary updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Vocabulary update failed: {ex.Message}");
+        }
+    }
+
+    private async Task AddReplacementAsync()
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        var original = ReplacementOriginalTextBox.Text.Trim();
+        var replacement = ReplacementTextBox.Text.Trim();
+        if (original.Length == 0 || replacement.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var error = await dictionaryStore.AddWordReplacementAsync(original, replacement, windowLifetime.Token);
+            if (error is not null)
+            {
+                RefreshUiFromControllerState(error);
+                return;
+            }
+
+            ReplacementOriginalTextBox.Text = string.Empty;
+            ReplacementTextBox.Text = string.Empty;
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Word replacements updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Word replacement update failed: {ex.Message}");
+        }
+    }
+
+    private async Task RemoveSelectedReplacementAsync()
+    {
+        if (!settingsLoaded || ReplacementListView.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        var selectedIndex = ReplacementListView.SelectedIndex;
+        if (selectedIndex >= replacementItems.Count)
+        {
+            return;
+        }
+
+        try
+        {
+            await dictionaryStore.DeleteReplacementAsync(replacementItems[selectedIndex].Id, windowLifetime.Token);
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Word replacements updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Word replacement update failed: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshDictionaryAsync(CancellationToken cancellationToken)
+    {
+        vocabularyItems = await dictionaryStore.ListVocabularyAsync(cancellationToken);
+        replacementItems = await dictionaryStore.ListReplacementsAsync(cancellationToken);
+
+        VocabularyListView.ItemsSource = vocabularyItems
+            .Select(item => item.Word)
+            .ToArray();
+        ReplacementListView.ItemsSource = replacementItems
+            .Select(item => $"{item.OriginalText} -> {item.ReplacementText}")
+            .ToArray();
     }
 
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
@@ -237,7 +407,7 @@ public sealed partial class MainWindow : Window
             new ClipboardTextInjectionService(restoreClipboard: true),
             new SqliteHistoryStore(historyPath),
             settingsStore,
-            new EmptyDictionaryStore());
+            dictionaryStore);
 
     private void RegisterGlobalHotkey()
     {
@@ -327,18 +497,5 @@ public sealed partial class MainWindow : Window
 
         audioCapture.Dispose();
         windowLifetime.Dispose();
-    }
-
-    private sealed class EmptyDictionaryStore : IDictionaryStore
-    {
-        public Task<IReadOnlyList<VocabularyWord>> ListVocabularyAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IReadOnlyList<VocabularyWord>>([]);
-        }
-
-        public Task<IReadOnlyList<WordReplacement>> ListReplacementsAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IReadOnlyList<WordReplacement>>([]);
-        }
     }
 }
