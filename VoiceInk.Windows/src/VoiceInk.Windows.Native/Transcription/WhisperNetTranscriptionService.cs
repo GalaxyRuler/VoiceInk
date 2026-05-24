@@ -39,6 +39,11 @@ public sealed class WhisperNetTranscriptionService : ITranscriptionService
             builder.WithLanguage(options.Language);
         }
 
+        if (!string.IsNullOrWhiteSpace(options.Prompt))
+        {
+            builder.WithPrompt(options.Prompt);
+        }
+
         using var processor = builder.Build();
 
         cancellationToken.ThrowIfCancellationRequested();

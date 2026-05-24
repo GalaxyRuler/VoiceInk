@@ -81,6 +81,39 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_PassesVocabularyPromptToTranscriptionOptions()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("VoiceInk", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var dictionary = new FakeDictionaryStore
+        {
+            Vocabulary =
+            [
+                new VocabularyWord(Guid.NewGuid(), "Whisper", DateTimeOffset.UtcNow),
+                new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+            ]
+        };
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                Language = "en"
+            }),
+            dictionary);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.NotNull(transcription.LastOptions);
+        Assert.Equal("Important Vocabulary: VoiceInk, Whisper", transcription.LastOptions.Prompt);
+    }
+
+    [Fact]
     public async Task StartAsync_DoesNotStartRecordingWhenModelPathIsMissing()
     {
         var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));

@@ -63,6 +63,7 @@ The Windows MVP already has:
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
 - Shell add/remove controls for vocabulary words and word replacements.
+- Vocabulary prompt biasing for local Whisper transcription.
 - Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
 - Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
 
@@ -232,6 +233,7 @@ Implemented core:
 - JSON dictionary store.
 - Word replacement application.
 - Vocabulary prompt rendering.
+- Vocabulary prompt pass-through to local Whisper transcription.
 - Shell add/delete controls for vocabulary and replacements.
 
 Windows gaps:
@@ -345,6 +347,7 @@ Status on 2026-05-24:
 - Completed Core dictionary records, validation, vocabulary prompt rendering, and global longest-trigger-first replacement application.
 - Completed persistent JSON dictionary storage.
 - Completed basic shell add/remove controls for vocabulary and word replacements.
+- Completed vocabulary prompt pass-through to local Whisper transcription.
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.

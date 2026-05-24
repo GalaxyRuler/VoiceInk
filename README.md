@@ -125,6 +125,7 @@ After launch, enter a local whisper model path, click `Start Recording`, speak, 
 - Core dictionary models for vocabulary words and word replacements
 - Persistent JSON-backed Dictionary storage for vocabulary words and word replacements
 - macOS-style transcription cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing spaces, and word replacements
+- Vocabulary prompt biasing for local Whisper transcription
 - Expanded history metadata for original text, final text, status, language, model path, prompt name, and enhancement timing
 - Shell controls for filler-word removal, punctuation cleanup, lowercase output, and trailing spaces
 - Shell controls for adding/removing vocabulary words and word replacements

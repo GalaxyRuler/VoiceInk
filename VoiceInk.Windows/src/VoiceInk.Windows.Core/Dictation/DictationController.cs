@@ -92,12 +92,14 @@ public sealed class DictationController(
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var settings = await settingsStore.LoadAsync(cancellationToken);
+                var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
                 var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
+                var vocabularyPrompt = DictionaryService.RenderVocabularyPrompt(vocabulary);
 
                 State = DictationState.Transcribing;
                 var transcription = await transcriptionService.TranscribeAsync(
                     audio,
-                    new TranscriptionOptions(settings.ModelPath, settings.Language),
+                    new TranscriptionOptions(settings.ModelPath, settings.Language, vocabularyPrompt),
                     cancellationToken);
 
                 var finalText = TextPostProcessor.Process(
