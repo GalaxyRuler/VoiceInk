@@ -15,6 +15,7 @@ Use the Swift app under `VoiceInk/` as the behavioral and language reference. Th
 Key macOS references inspected:
 
 - `VoiceInk/Views/ContentView.swift`: main information architecture.
+- `VoiceInk/MenuBarManager.swift` and `VoiceInk/Views/MenuBarView.swift`: menu-bar shell, menu-bar-only mode, window reopen behavior, and menu command language.
 - `VoiceInk/AppDefaults.swift`: default settings and behavior flags.
 - `VoiceInk/Transcription/Engine/TranscriptionPipeline.swift`: post-recording pipeline order.
 - `VoiceInk/Views/Recorder/*`: mini and notch recorder experience.
@@ -58,6 +59,7 @@ The Windows MVP already has:
 - NAudio microphone capture.
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
+- Planned tray shell slice for show/hide, recording toggle, Quick Add, History, and Quit.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -89,13 +91,22 @@ Result: 113 Core tests and 35 Infrastructure tests passed after the dictionary e
 
 macOS has a sidebar app with Dashboard, Transcribe Audio, History, AI Models, Enhancement, Power Mode, Permissions, Audio Input, Dictionary, Settings, and VoiceInk Pro. Windows should keep the same information architecture except replace VoiceInk Pro with About/Open Source.
 
+macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarView`. It can keep the app alive after windows close, toggle menu-bar-only mode, focus or hide the main window, open History, and expose recorder/model/enhancement/audio/context/settings/help/quit commands from the menu bar. Windows should adapt this as a tray icon rather than a Dock/menu-bar mode.
+
 Windows gaps:
 
-- Tray-first shell.
+- Tray-first shell with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Navigation sidebar.
 - Dedicated settings pages.
 - Dedicated multi-window History surface.
 - About/Open Source replacement.
+
+Active tray-shell slice on 2026-05-24:
+
+- Implement a native Windows tray icon with menu entries for Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk.
+- Keep menu state synchronized with dictation state so recording and busy states use correct labels/enabled states.
+- Omit macOS commercial updater/support items. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray slice.
+- Leave model/provider/enhancement/language/audio context submenus as later work until those Windows subsystems and view-models exist.
 
 ### Floating Recorder
 
