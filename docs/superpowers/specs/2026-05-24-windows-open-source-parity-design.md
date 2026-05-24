@@ -60,6 +60,9 @@ The Windows MVP already has:
 - Minimal WinUI shell.
 - Global `Ctrl+Alt+Space` toggle.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
+- Core dictionary models and replacement logic.
+- Text cleanup for hallucination markers, filler words, punctuation cleanup, lowercase output, trailing-space handling, and dictionary replacements.
+- Expanded history metadata and migration for original/final text, status, language, model path, prompt, and enhancement timing.
 
 Fresh baseline verification on 2026-05-24:
 
@@ -150,6 +153,18 @@ Windows adaptation:
 - Skip Native Apple transcription.
 - Treat Parakeet/FluidAudio as optional only if a compatible Windows runtime is practical.
 
+### Transcribe Audio
+
+macOS has a dedicated `Transcribe Audio` workflow for queued audio/video files. It supports drag/drop or file choosing, pending/processing/completed/failed states, start/cancel/clear controls, retry, copy/save, and optional AI enhancement.
+
+Windows gaps:
+
+- File queue model.
+- Supported media detection.
+- Batch transcription orchestration.
+- Per-file retry/cancel/copy/save states.
+- Optional enhancement in file transcription.
+
 ### Cloud Transcription
 
 macOS provider catalog includes Groq, ElevenLabs, Deepgram, Mistral, Gemini, Soniox, Speechmatics, AssemblyAI, xAI, Cartesia, and custom OpenAI-compatible models. Some providers support streaming only.
@@ -225,13 +240,18 @@ macOS history stores original and enhanced text, timestamp, audio duration, audi
 
 Windows gaps:
 
-- Original vs enhanced text.
-- Status values.
-- Failed/canceled rows.
-- Provider/model metadata beyond provider name.
+- UI for original vs enhanced text.
+- UI for failed/canceled rows.
+- Audio file URL and playback.
+- Enhancement model and AI request messages.
+- Power Mode name/emoji.
 - Retry and paste-last flows.
 - CSV export.
-- Audio playback.
+
+Implemented core:
+
+- SQLite schema now stores original text, final text, enhanced text, status, language, model path, prompt name, enhancement duration, and error message.
+- Existing MVP history databases migrate in place and map legacy text to original/final text.
 
 ### Metrics
 
@@ -252,6 +272,17 @@ Windows gaps:
 
 - Most settings beyond model path and default hotkey.
 - Windows equivalents for launch at login, tray behavior, audio device selection, privacy cleanup, backup, diagnostics, and paste method.
+
+### Audio Input
+
+macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.
+
+Windows gaps:
+
+- Device listing and refresh.
+- Custom device mode.
+- Prioritized fallback mode.
+- UI status for active/unavailable input devices.
 
 ### Onboarding
 
@@ -302,6 +333,14 @@ The first slice must:
 - Add text cleanup options matching macOS defaults.
 - Apply hallucination filtering, filler-word removal, word replacements, punctuation cleanup, lowercase, trim, and trailing-space handling in the Windows pipeline.
 - Save richer original/final text and status metadata in history without breaking existing rows.
+
+Status on 2026-05-24:
+
+- Completed Core dictionary records, validation, vocabulary prompt rendering, and global longest-trigger-first replacement application.
+- Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
+- Completed richer SQLite history metadata and MVP schema migration.
+- Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
+- Remaining for this slice: UI and persistent dictionary editing/import/export/quick-add.
 - Add focused tests and docs.
 
 ## Verification
