@@ -340,7 +340,8 @@ Status on 2026-05-24:
 - Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
-- Remaining for this slice: UI and persistent dictionary editing/import/export/quick-add.
+- Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
+- Remaining for this slice: persistent dictionary editing/import/export/quick-add and history metadata views.
 - Add focused tests and docs.
 
 ## Verification
