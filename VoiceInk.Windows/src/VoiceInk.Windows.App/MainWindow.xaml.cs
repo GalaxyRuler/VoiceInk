@@ -43,7 +43,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
-    private int? activeAudioInputDeviceNumber;
+    private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
     private bool isPastingLast;
@@ -116,7 +116,7 @@ public sealed partial class MainWindow : Window
             }
 
             if (controller.State == DictationState.Error
-                || activeAudioInputDeviceNumber != SelectedAudioInputDeviceNumber())
+                || !AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
             {
                 RecreateController();
             }
@@ -767,7 +767,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await SaveSettingsAsync(windowLifetime.Token);
-            if (activeAudioInputDeviceNumber != SelectedAudioInputDeviceNumber())
+            if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
             {
                 RecreateController();
             }
@@ -954,12 +954,18 @@ public sealed partial class MainWindow : Window
 
     private void RecreateController()
     {
-        var selectedAudioInputDeviceNumber = SelectedAudioInputDeviceNumber();
+        var selectedAudioInputDeviceChoice = SelectedAudioInputDeviceChoice();
         audioCapture.Dispose();
-        audioCapture = new NAudioCaptureService(recordingsDirectory, selectedAudioInputDeviceNumber);
-        activeAudioInputDeviceNumber = selectedAudioInputDeviceNumber;
+        audioCapture = new NAudioCaptureService(recordingsDirectory, selectedAudioInputDeviceChoice?.DeviceNumber);
+        activeAudioInputDeviceChoice = selectedAudioInputDeviceChoice;
         controller = CreateController(audioCapture);
     }
+
+    private static bool AudioInputDeviceChoicesMatch(
+        AudioInputDeviceChoice? first,
+        AudioInputDeviceChoice? second) =>
+        first?.DeviceNumber == second?.DeviceNumber
+        && string.Equals(first?.Name, second?.Name, StringComparison.Ordinal);
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {

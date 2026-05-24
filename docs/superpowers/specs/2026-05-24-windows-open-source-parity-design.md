@@ -71,6 +71,7 @@ The Windows MVP already has:
 - Paste-last final and enhanced-preferred history actions.
 - History search and confirmed single-item delete.
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
+- Refreshable audio input list with System Default/custom microphone selection.
 
 Fresh baseline verification on 2026-05-24:
 
@@ -78,7 +79,7 @@ Fresh baseline verification on 2026-05-24:
 & "C:\Users\Admin\Documents\Codex\2026-05-24\how-can-we-make-this-app\VoiceInk\.worktrees\.dotnet-sdk-10\dotnet.exe" test VoiceInk.Windows\VoiceInk.Windows.sln
 ```
 
-Result: 74 Core tests and 26 Infrastructure tests passed after the history search/delete slice.
+Result: 80 Core tests and 28 Infrastructure tests passed after the audio input selection slice.
 
 ## Parity Inventory
 
@@ -297,12 +298,18 @@ Windows gaps:
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.
 
+Implemented:
+
+- Device listing and refresh through NAudio `WaveIn`.
+- System Default mode.
+- Custom device selection persisted in JSON settings and applied before recording.
+- Missing saved device fallback to System Default with a status warning.
+
 Windows gaps:
 
-- Device listing and refresh.
-- Custom device mode.
 - Prioritized fallback mode.
-- UI status for active/unavailable input devices.
+- Live device-change notifications.
+- Rich active/unavailable badges and priority ordering UI.
 
 ### Onboarding
 
@@ -368,9 +375,10 @@ Status on 2026-05-24:
 - Completed paste-last final and enhanced-preferred primitives with shell buttons.
 - Completed history search and confirmed single-item delete.
 - Completed configurable key+modifier global shortcuts for recording toggle, paste last, and paste last enhanced.
+- Completed Windows audio input refresh and System Default/custom microphone selection.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, history batch actions, and audio playback.
+- Remaining for this slice: dictionary edit/import/export/quick-add, secondary/push-to-talk shortcuts, retry-last, prioritized audio input failover, history batch actions, and audio playback.
 - Add focused tests and docs.
 
 ## Verification

@@ -274,7 +274,7 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 Commit message:
 
@@ -290,7 +290,7 @@ feat(windows): expose audio input selection
 - Modify: `docs/superpowers/specs/2026-05-24-windows-open-source-parity-design.md`
 - Modify: `docs/superpowers/plans/2026-05-24-audio-input-selection.md`
 
-- [ ] **Step 1: Update docs**
+- [x] **Step 1: Update docs**
 
 Document:
 
@@ -298,7 +298,7 @@ Document:
 - Windows shell can use System Default or a selected device.
 - Prioritized mode and live device-change fallback remain gaps.
 
-- [ ] **Step 2: Run full tests**
+- [x] **Step 2: Run full tests**
 
 Run:
 
@@ -308,7 +308,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run Debug x64 build**
+- [x] **Step 3: Run Debug x64 build**
 
 Run:
 
@@ -318,9 +318,15 @@ Run:
 
 Expected: build succeeds with 0 errors.
 
-- [ ] **Step 4: Request review and fix Important findings**
+- [x] **Step 4: Request review and fix Important findings**
 
 Review the slice from this plan commit through HEAD. Fix Critical and Important findings before proceeding.
+
+Review result: one Important finding was fixed. Saved audio input selection now
+requires the saved device number and name to match, rebinds by unique saved name
+when the device number changes, falls back to System Default when the saved name
+is unavailable or ambiguous, and tracks the active capture choice by number and
+name before deciding whether to recreate the controller.
 
 - [ ] **Step 5: Commit docs**
 
