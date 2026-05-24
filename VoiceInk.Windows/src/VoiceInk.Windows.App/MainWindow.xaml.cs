@@ -234,6 +234,16 @@ public sealed partial class MainWindow : Window
         await RemoveSelectedReplacementAsync();
     }
 
+    private async void ExportDictionaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportDictionaryAsync();
+    }
+
+    private async void ImportDictionaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ImportDictionaryAsync();
+    }
+
     private async void RefreshHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshHistoryWithStatusAsync("History refreshed");
@@ -464,6 +474,75 @@ public sealed partial class MainWindow : Window
         ReplacementListView.ItemsSource = replacementItems
             .Select(item => $"{item.OriginalText} -> {item.ReplacementText}")
             .ToArray();
+    }
+
+    private async Task ExportDictionaryAsync()
+    {
+        try
+        {
+            var fileName = $"VoiceInk-dictionary-{DateTimeOffset.Now:yyyyMMdd-HHmmss}.json";
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = Path.GetFileNameWithoutExtension(fileName)
+            };
+            picker.FileTypeChoices.Add("JSON file", [".json"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                RefreshUiFromControllerState("Dictionary export canceled");
+                return;
+            }
+
+            var json = await dictionaryStore.ExportBackupAsync(windowLifetime.Token);
+            await FileIO.WriteTextAsync(file, json);
+            RefreshUiFromControllerState($"Dictionary exported: {file.Name}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Dictionary export failed: {ex.Message}");
+        }
+    }
+
+    private async Task ImportDictionaryAsync()
+    {
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.List,
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            picker.FileTypeFilter.Add(".json");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+            {
+                RefreshUiFromControllerState("Dictionary import canceled");
+                return;
+            }
+
+            var json = await FileIO.ReadTextAsync(file);
+            var result = await dictionaryStore.ImportBackupAsync(json, windowLifetime.Token);
+            await RefreshDictionaryAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(
+                $"Dictionary imported: {result.ImportedVocabularyCount} vocabulary, {result.ImportedReplacementCount} replacements, {result.SkippedDuplicateCount} skipped");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Dictionary import failed: {ex.Message}");
+        }
     }
 
     private async Task RefreshHistoryWithStatusAsync(string status)
@@ -989,6 +1068,11 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording;
         ApplyAudioInputButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
+        ExportDictionaryButton.IsEnabled = settingsLoaded && !operationActive;
+        ImportDictionaryButton.IsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;

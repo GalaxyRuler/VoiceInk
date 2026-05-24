@@ -216,7 +216,7 @@ Run the same filtered Infrastructure test command.
 
 Expected: export/import tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 Commit message:
 
@@ -231,11 +231,11 @@ feat(windows): import and export dictionary backups
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml`
 - Modify: `VoiceInk.Windows/src/VoiceInk.Windows.App/MainWindow.xaml.cs`
 
-- [ ] **Step 1: Add Dictionary buttons**
+- [x] **Step 1: Add Dictionary buttons**
 
 Add `Export Dictionary` and `Import Dictionary` buttons in the Dictionary section next to existing add/remove controls or below the section heading.
 
-- [ ] **Step 2: Implement file picker handlers**
+- [x] **Step 2: Implement file picker handlers**
 
 Implement:
 
@@ -245,7 +245,7 @@ Implement:
 - Import uses `FileOpenPicker`, JSON file type filter `.json`, initialized with the same HWND, reads with `FileIO.ReadTextAsync`, calls `dictionaryStore.ImportBackupAsync`, refreshes dictionary lists, and reports `Dictionary imported: X vocabulary, Y replacements, Z skipped`.
 - Cancel states report `Dictionary export canceled` and `Dictionary import canceled`.
 
-- [ ] **Step 3: Build**
+- [x] **Step 3: Build**
 
 Run:
 
