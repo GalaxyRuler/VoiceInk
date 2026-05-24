@@ -123,6 +123,70 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StartAsync_ConcurrentCallsOnlyStartCaptureOnce()
+    {
+        var loadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin"
+        })
+        {
+            LoadGate = loadGate.Task
+        };
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            settings);
+
+        var firstStart = controller.StartAsync(CancellationToken.None);
+        var secondStart = controller.StartAsync(CancellationToken.None);
+
+        await Task.Delay(50);
+        loadGate.SetResult();
+        await Task.WhenAll(firstStart, secondStart);
+
+        Assert.Equal(1, capture.StartCount);
+        Assert.Equal(DictationState.Recording, controller.State);
+    }
+
+    [Fact]
+    public async Task StopAsync_ConcurrentCallsOnlyStopAndInsertOnce()
+    {
+        var stopGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio)
+        {
+            StopGate = stopGate.Task
+        };
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin"
+        });
+        var controller = new DictationController(capture, transcription, insertion, history, settings);
+
+        await controller.StartAsync(CancellationToken.None);
+
+        var firstStop = controller.StopAsync(CancellationToken.None);
+        var secondStop = controller.StopAsync(CancellationToken.None);
+
+        await Task.Delay(50);
+        stopGate.SetResult();
+        await Task.WhenAll(firstStop, secondStop);
+
+        Assert.Equal(1, capture.StopCount);
+        Assert.Equal(1, transcription.CallCount);
+        Assert.Equal(1, insertion.InsertCount);
+        Assert.Single(history.Items);
+        Assert.Equal(DictationState.Idle, controller.State);
+    }
+
+    [Fact]
     public async Task StopAsync_HistoryFailureLeavesControllerIdleWithWarning()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
@@ -178,6 +242,7 @@ public sealed class DictationControllerTests
         public bool Started { get; private set; }
         public int StartCount { get; private set; }
         public int StopCount { get; private set; }
+        public Task? StopGate { get; init; }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -186,11 +251,16 @@ public sealed class DictationControllerTests
             return Task.CompletedTask;
         }
 
-        public Task<AudioCaptureResult> StopAsync(CancellationToken cancellationToken)
+        public async Task<AudioCaptureResult> StopAsync(CancellationToken cancellationToken)
         {
             StopCount++;
             Assert.True(Started);
-            return Task.FromResult(result);
+            if (StopGate is not null)
+            {
+                await StopGate.WaitAsync(cancellationToken);
+            }
+
+            return result;
         }
     }
 
@@ -218,9 +288,11 @@ public sealed class DictationControllerTests
     private sealed class FakeTextInjectionService : ITextInjectionService
     {
         public string? InsertedText { get; private set; }
+        public int InsertCount { get; private set; }
 
         public Task InsertAsync(string text, CancellationToken cancellationToken)
         {
+            InsertCount++;
             InsertedText = text;
             return Task.CompletedTask;
         }
@@ -250,7 +322,17 @@ public sealed class DictationControllerTests
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore
     {
-        public Task<AppSettings> LoadAsync(CancellationToken cancellationToken) => Task.FromResult(settings);
+        public Task? LoadGate { get; init; }
+
+        public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)
+        {
+            if (LoadGate is not null)
+            {
+                await LoadGate.WaitAsync(cancellationToken);
+            }
+
+            return settings;
+        }
 
         public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken) => Task.CompletedTask;
     }
