@@ -77,12 +77,16 @@ The Windows implementation lives under `VoiceInk.Windows/` and is separate from 
 
 ### Build
 
+Run these commands from the repository root, so the `VoiceInk.Windows\...` paths resolve correctly:
+
 ```powershell
 dotnet restore VoiceInk.Windows\VoiceInk.Windows.sln
 dotnet build VoiceInk.Windows\VoiceInk.Windows.sln -c Debug -p:Platform=x64
 ```
 
 ### Run
+
+Run this command from the repository root:
 
 ```powershell
 dotnet run --project VoiceInk.Windows\src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj -c Debug -p:Platform=x64
