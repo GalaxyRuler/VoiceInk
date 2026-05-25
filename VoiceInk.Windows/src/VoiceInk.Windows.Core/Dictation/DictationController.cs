@@ -26,11 +26,23 @@ public sealed class DictationController(
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
     private PowerModeResolution? activePowerModeResolution;
+    private bool isAcceptingPartialTranscript;
 
     public DictationState State { get; private set; } = DictationState.Idle;
     public string? LastError { get; private set; }
     public string? LastWarning { get; private set; }
     public bool LastStopInsertedText { get; private set; }
+    public string PartialTranscript { get; private set; } = string.Empty;
+
+    public void UpdatePartialTranscript(string? transcript)
+    {
+        if (State != DictationState.Recording || !isAcceptingPartialTranscript)
+        {
+            return;
+        }
+
+        PartialTranscript = transcript?.Trim() ?? string.Empty;
+    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -49,6 +61,7 @@ public sealed class DictationController(
             LastError = null;
             LastWarning = null;
             LastStopInsertedText = false;
+            ResetPartialTranscript();
 
             try
             {
@@ -65,12 +78,14 @@ public sealed class DictationController(
 
                 State = DictationState.Recording;
                 await audioCapture.StartAsync(cancellationToken);
+                isAcceptingPartialTranscript = true;
                 activePowerModeResolution = powerModeResolution;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 activePowerModeResolution = null;
                 State = DictationState.Idle;
+                ResetPartialTranscript();
                 throw;
             }
             catch (Exception ex)
@@ -78,6 +93,7 @@ public sealed class DictationController(
                 activePowerModeResolution = null;
                 State = DictationState.Error;
                 LastError = ex.Message;
+                ResetPartialTranscript();
             }
         }
         finally
@@ -103,6 +119,7 @@ public sealed class DictationController(
             LastError = null;
             LastWarning = null;
             LastStopInsertedText = false;
+            ResetPartialTranscript();
 
             try
             {
@@ -135,6 +152,7 @@ public sealed class DictationController(
                 if (finalText.Length == 0)
                 {
                     State = DictationState.Idle;
+                    ResetPartialTranscript();
                     return;
                 }
 
@@ -191,16 +209,19 @@ public sealed class DictationController(
                 }
 
                 State = DictationState.Idle;
+                ResetPartialTranscript();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 State = DictationState.Idle;
+                ResetPartialTranscript();
                 throw;
             }
             catch (Exception ex)
             {
                 State = DictationState.Error;
                 LastError = ex.Message;
+                ResetPartialTranscript();
             }
             finally
             {
@@ -230,6 +251,7 @@ public sealed class DictationController(
             LastError = null;
             LastWarning = null;
             LastStopInsertedText = false;
+            ResetPartialTranscript();
 
             try
             {
@@ -270,16 +292,19 @@ public sealed class DictationController(
                 }
 
                 State = DictationState.Idle;
+                ResetPartialTranscript();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 State = DictationState.Idle;
+                ResetPartialTranscript();
                 throw;
             }
             catch (Exception ex)
             {
                 State = DictationState.Error;
                 LastError = ex.Message;
+                ResetPartialTranscript();
             }
             finally
             {
@@ -353,6 +378,12 @@ public sealed class DictationController(
         catch
         {
         }
+    }
+
+    private void ResetPartialTranscript()
+    {
+        isAcceptingPartialTranscript = false;
+        PartialTranscript = string.Empty;
     }
 
     private sealed class EmptyDictionaryStore : IDictionaryStore

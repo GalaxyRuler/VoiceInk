@@ -19,7 +19,9 @@ public sealed partial class FloatingRecorderWindow : Window
     private const nuint NoActivateSubclassId = 1;
     private const int RecorderWindowWidth = 384;
     private const int RecorderWindowCollapsedHeight = 104;
+    private const int RecorderWindowLiveTranscriptHeight = 176;
     private const int RecorderWindowExpandedHeight = 352;
+    private const int RecorderWindowExpandedWithLiveTranscriptHeight = 424;
     private const double MinimumBarHeight = 8;
     private const double MaximumBarHeight = 32;
     private static readonly TimeSpan PopoverDismissalDelay = TimeSpan.FromMilliseconds(250);
@@ -34,6 +36,7 @@ public sealed partial class FloatingRecorderWindow : Window
     private bool subclassInstalled;
     private bool suppressPromptEnhancementChanged;
     private bool canUseRecorderControls;
+    private bool hasLiveTranscript;
     private RecorderControlPopover pendingDismissalPopover = RecorderControlPopover.None;
     private int pulseStep;
     private double inputLevel;
@@ -73,9 +76,14 @@ public sealed partial class FloatingRecorderWindow : Window
         ElapsedTextBlock.Text = state.Elapsed;
         StopRecordingButton.IsEnabled = state.CanStop;
         CancelRecordingButton.IsEnabled = state.CanCancel;
+        var showLiveTranscript = state.HasLiveTranscript;
+        hasLiveTranscript = showLiveTranscript;
+        LiveTranscriptPanel.Visibility = showLiveTranscript ? Visibility.Visible : Visibility.Collapsed;
+        LiveTranscriptTextBlock.Text = showLiveTranscript ? state.LiveTranscript : string.Empty;
         inputLevel = double.IsFinite(state.InputLevel) ? Math.Clamp(state.InputLevel, 0, 1) : 0;
         SetPulseVisible(state.ShowPulse);
         ApplyMeter();
+        ResizeForCurrentContent();
 
         if (state.IsVisible)
         {
@@ -262,11 +270,19 @@ public sealed partial class FloatingRecorderWindow : Window
         PowerModePopoverPanel.Visibility = popover == RecorderControlPopover.PowerMode
             ? Visibility.Visible
             : Visibility.Collapsed;
-        AppWindow.Resize(new SizeInt32(
-            RecorderWindowWidth,
-            popover == RecorderControlPopover.None
-                ? RecorderWindowCollapsedHeight
-                : RecorderWindowExpandedHeight));
+        ResizeForCurrentContent();
+    }
+
+    private void ResizeForCurrentContent()
+    {
+        var height = activePopover == RecorderControlPopover.None
+            ? hasLiveTranscript
+                ? RecorderWindowLiveTranscriptHeight
+                : RecorderWindowCollapsedHeight
+            : hasLiveTranscript
+                ? RecorderWindowExpandedWithLiveTranscriptHeight
+                : RecorderWindowExpandedHeight;
+        AppWindow.Resize(new SizeInt32(RecorderWindowWidth, height));
         if (isShown)
         {
             MoveBottomCenter();

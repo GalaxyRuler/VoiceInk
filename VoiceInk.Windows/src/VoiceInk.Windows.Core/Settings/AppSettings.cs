@@ -16,6 +16,7 @@ public sealed record AppSettings
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;
     public bool LaunchAtLogin { get; init; }
     public bool PrewarmModelOnWake { get; init; } = true;
+    public bool ShowLiveTranscriptPreview { get; init; }
     public bool IsSoundFeedbackEnabled { get; init; } = true;
     public bool IsSystemMuteEnabled { get; init; } = true;
     public bool IsPauseMediaEnabled { get; init; }
@@ -68,6 +69,7 @@ public sealed record AppSettings
             PasteMethod == other.PasteMethod &&
             LaunchAtLogin == other.LaunchAtLogin &&
             PrewarmModelOnWake == other.PrewarmModelOnWake &&
+            ShowLiveTranscriptPreview == other.ShowLiveTranscriptPreview &&
             IsSoundFeedbackEnabled == other.IsSoundFeedbackEnabled &&
             IsSystemMuteEnabled == other.IsSystemMuteEnabled &&
             IsPauseMediaEnabled == other.IsPauseMediaEnabled &&
@@ -121,6 +123,7 @@ public sealed record AppSettings
         hash.Add(PasteMethod);
         hash.Add(LaunchAtLogin);
         hash.Add(PrewarmModelOnWake);
+        hash.Add(ShowLiveTranscriptPreview);
         hash.Add(IsSoundFeedbackEnabled);
         hash.Add(IsSystemMuteEnabled);
         hash.Add(IsPauseMediaEnabled);

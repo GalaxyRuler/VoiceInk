@@ -16,7 +16,7 @@ VoiceInk Windows parity  [##############------] 72%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 78% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, and metrics are in place. Prompt-trigger detection, advanced formatting, and canceling in-flight post-recording work remain. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
-| Floating recorder | 70% | `[##############------]` | Compact recorder shows recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, and hover-dismissable no-activate Prompt/Power chooser panels. Live transcript and notch style remain. |
+| Floating recorder | 73% | `[###############-----]` | Compact recorder shows recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel for real partial sources. Streaming partial providers and notch style remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [##############------] 72%
 ## Current Slice
 
 ```text
-Windows dev ZIP packaging  [####################] 100%
+Windows live transcript preview plumbing  [####################] 100%
 ```
 
 Completed:
 
-- Added a repo-local PowerShell packaging script for an unpackaged Windows developer ZIP.
-- Publishes `win-x64` with .NET self-contained output and Windows App SDK self-contained deployment properties.
-- Stages a package README next to `VoiceInk.Windows.App.exe`.
-- Keeps generated package output under ignored `VoiceInk.Windows/artifacts/dev-zip`.
+- Added the `Show Live Transcript Preview` setting under AI Models.
+- Persisted the setting in JSON settings and General Settings backup/import.
+- Added Core partial transcript state that clears at recording boundaries.
+- Added floating recorder live transcript rendering that appears only while recording, enabled, and supplied real partial text.
 
 ## Near-Term Priority
 
-1. Finish floating recorder fidelity: live partial transcript and notch-style recorder.
+1. Finish floating recorder fidelity: real streaming partial transcript sources and notch-style recorder.
 2. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
 3. Continue packaging from dev ZIP to MSIX or installer with uninstall behavior and smoke tests.
 4. Continue model-management polish with richer provider cards and lifecycle status.

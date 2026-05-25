@@ -184,9 +184,17 @@ Floating-recorder hover-dismissal slice completed on 2026-05-25:
 - The chooser closes after a 250 ms delay once the pointer leaves both regions, matching the macOS recorder popover timing.
 - Manual click toggles still work, and all behavior stays inside the existing no-activate recorder window.
 
+Floating-recorder live transcript preview plumbing slice completed on 2026-05-25:
+
+- Added the macOS-aligned `Show Live Transcript Preview` setting under AI Models, persisted in JSON settings and General Settings backup/import.
+- Added Core partial transcript state to the dictation controller, with updates accepted only while recording and cleared at start/stop/cancel/error boundaries.
+- Added presenter gating so live transcript text is shown only while recording, the preview setting is enabled, and a real partial transcript source has provided non-empty text.
+- Added a compact live transcript panel above the Windows floating recorder chrome. The panel expands the existing no-activate recorder window upward and collapses when no live text is available.
+- This slice intentionally does not generate fake partial text. Real Windows streaming transcription providers remain a later provider slice.
+
 Windows gaps:
 
-- Live partial transcript.
+- Real streaming partial transcript sources for Windows providers.
 - Notch-style recorder.
 
 ### Shortcuts

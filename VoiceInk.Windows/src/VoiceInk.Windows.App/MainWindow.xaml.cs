@@ -159,6 +159,7 @@ public sealed partial class MainWindow : Window
     private bool suppressModelPathChanged;
     private bool suppressLanguageChanged;
     private bool suppressPrewarmChanged;
+    private bool suppressLiveTranscriptPreviewChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
     private bool suppressEnhancementPresetChanged;
@@ -828,6 +829,31 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void ShowLiveTranscriptPreviewCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (suppressLiveTranscriptPreviewChanged || !settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(
+                ShowLiveTranscriptPreviewCheckBox.IsChecked == true
+                    ? "Live transcript preview enabled"
+                    : "Live transcript preview disabled");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Live transcript preview update failed: {ex.Message}");
+        }
+    }
+
     private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyTranscriptionProviderSettingsAsync();
@@ -1234,6 +1260,7 @@ public sealed partial class MainWindow : Window
         {
             suppressModelPathChanged = false;
             suppressPrewarmChanged = false;
+            suppressLiveTranscriptPreviewChanged = false;
             suppressCloudTranscriptionPresetChanged = false;
             suppressCloudTranscriptionModelChanged = false;
             suppressEnhancementPresetChanged = false;
@@ -1300,6 +1327,9 @@ public sealed partial class MainWindow : Window
         suppressPrewarmChanged = true;
         PrewarmModelOnWakeCheckBox.IsChecked = settings.PrewarmModelOnWake;
         suppressPrewarmChanged = false;
+        suppressLiveTranscriptPreviewChanged = true;
+        ShowLiveTranscriptPreviewCheckBox.IsChecked = settings.ShowLiveTranscriptPreview;
+        suppressLiveTranscriptPreviewChanged = false;
         SoundFeedbackCheckBox.IsChecked = settings.IsSoundFeedbackEnabled;
         MuteSystemAudioCheckBox.IsChecked = settings.IsSystemMuteEnabled;
         PauseMediaCheckBox.IsChecked = settings.IsPauseMediaEnabled;
@@ -4709,6 +4739,7 @@ public sealed partial class MainWindow : Window
             PasteMethod = SelectedPasteMethod(),
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
             PrewarmModelOnWake = PrewarmModelOnWakeCheckBox.IsChecked == true,
+            ShowLiveTranscriptPreview = ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
             IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
             IsSystemMuteEnabled = MuteSystemAudioCheckBox.IsChecked == true,
             IsPauseMediaEnabled = PauseMediaCheckBox.IsChecked == true,
@@ -5886,6 +5917,7 @@ public sealed partial class MainWindow : Window
             && selectedCatalogModel?.IsDownloaded == true;
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
+        ShowLiveTranscriptPreviewCheckBox.IsEnabled = modelControlsEnabled;
         WarmupSelectedModelButton.IsEnabled = modelControlsEnabled
             && !modelWarmupActive
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
@@ -6047,7 +6079,9 @@ public sealed partial class MainWindow : Window
             elapsed,
             displayStatus,
             recorderActivityActive && operationActive,
-            inputLevel);
+            inputLevel,
+            controller.PartialTranscript,
+            ShowLiveTranscriptPreviewCheckBox.IsChecked == true);
 
         if (!state.IsVisible && floatingRecorderWindow is null)
         {

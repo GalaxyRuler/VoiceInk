@@ -169,14 +169,20 @@
                                 Text="Model warmup idle"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Spacing="8">
                             <CheckBox
                                 x:Name="PrewarmModelOnWakeCheckBox"
                                 Content="Prewarm Local Model"
                                 Checked="PrewarmModelOnWakeCheckBox_Changed"
                                 Unchecked="PrewarmModelOnWakeCheckBox_Changed" />
+                            <CheckBox
+                                x:Name="ShowLiveTranscriptPreviewCheckBox"
+                                Content="Show Live Transcript Preview"
+                                Checked="ShowLiveTranscriptPreviewCheckBox_Changed"
+                                Unchecked="ShowLiveTranscriptPreviewCheckBox_Changed" />
                             <Button
                                 x:Name="WarmupSelectedModelButton"
+                                HorizontalAlignment="Left"
                                 Content="Warm Up Selected Model"
                                 Click="WarmupSelectedModelButton_Click" />
                         </StackPanel>

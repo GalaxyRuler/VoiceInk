@@ -9,9 +9,13 @@ public static class FloatingRecorderPresenter
         TimeSpan elapsed,
         string? status,
         bool isOperationActive,
-        double inputLevel = 0)
+        double inputLevel = 0,
+        string? partialTranscript = null,
+        bool showLiveTranscriptPreview = false)
     {
         var safeInputLevel = double.IsFinite(inputLevel) ? Math.Clamp(inputLevel, 0, 1) : 0;
+        var liveTranscript = LiveTranscriptForState(state, partialTranscript, showLiveTranscriptPreview);
+        var hasLiveTranscript = liveTranscript.Length > 0;
         return state switch
         {
             DictationState.Recording => new(
@@ -22,7 +26,9 @@ public static class FloatingRecorderPresenter
                 CanStop: !isOperationActive,
                 CanCancel: !isOperationActive,
                 ShowPulse: true,
-                InputLevel: safeInputLevel),
+                InputLevel: safeInputLevel,
+                LiveTranscript: liveTranscript,
+                HasLiveTranscript: hasLiveTranscript),
             DictationState.Transcribing => new(
                 true,
                 "Transcribing",
@@ -71,5 +77,18 @@ public static class FloatingRecorderPresenter
         var safeElapsed = elapsed < TimeSpan.Zero ? TimeSpan.Zero : elapsed;
         var totalMinutes = (int)safeElapsed.TotalMinutes;
         return $"{totalMinutes:00}:{safeElapsed.Seconds:00}";
+    }
+
+    private static string LiveTranscriptForState(
+        DictationState state,
+        string? partialTranscript,
+        bool showLiveTranscriptPreview)
+    {
+        if (state != DictationState.Recording || !showLiveTranscriptPreview)
+        {
+            return string.Empty;
+        }
+
+        return partialTranscript?.Trim() ?? string.Empty;
     }
 }

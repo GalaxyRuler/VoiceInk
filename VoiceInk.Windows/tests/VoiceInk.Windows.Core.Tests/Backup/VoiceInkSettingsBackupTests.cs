@@ -42,6 +42,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(settings.ModelPath, backup.GeneralSettings.ModelPath);
         Assert.Equal(settings.LaunchAtLogin, backup.GeneralSettings.LaunchAtLogin);
         Assert.Equal(settings.PrewarmModelOnWake, backup.GeneralSettings.PrewarmModelOnWake);
+        Assert.Equal(settings.ShowLiveTranscriptPreview, backup.GeneralSettings.ShowLiveTranscriptPreview);
         Assert.Equal(settings.IsSoundFeedbackEnabled, backup.GeneralSettings.IsSoundFeedbackEnabled);
         Assert.Equal(settings.IsSystemMuteEnabled, backup.GeneralSettings.IsSystemMuteEnabled);
         Assert.Equal(settings.IsPauseMediaEnabled, backup.GeneralSettings.IsPauseMediaEnabled);
@@ -170,6 +171,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal("C:\\Models\\ggml-base.en.bin", merged.ModelPath);
         Assert.True(merged.LaunchAtLogin);
         Assert.False(merged.PrewarmModelOnWake);
+        Assert.True(merged.ShowLiveTranscriptPreview);
         Assert.False(merged.IsSoundFeedbackEnabled);
         Assert.True(merged.IsSystemMuteEnabled);
         Assert.True(merged.IsPauseMediaEnabled);
@@ -271,6 +273,7 @@ public sealed class VoiceInkSettingsBackupTests
             RestoreClipboard = false,
             LaunchAtLogin = true,
             PrewarmModelOnWake = false,
+            ShowLiveTranscriptPreview = true,
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,

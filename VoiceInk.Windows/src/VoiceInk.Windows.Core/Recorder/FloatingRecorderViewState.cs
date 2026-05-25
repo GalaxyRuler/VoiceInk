@@ -8,4 +8,6 @@ public sealed record FloatingRecorderViewState(
     bool CanStop,
     bool CanCancel,
     bool ShowPulse,
-    double InputLevel = 0);
+    double InputLevel = 0,
+    string LiveTranscript = "",
+    bool HasLiveTranscript = false);

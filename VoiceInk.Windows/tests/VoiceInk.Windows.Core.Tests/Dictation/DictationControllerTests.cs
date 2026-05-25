@@ -213,6 +213,89 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task UpdatePartialTranscript_AcceptsTextOnlyWhileRecordingAndClearsAfterStop()
+    {
+        DictationController? controller = null;
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "local-whisper"))
+        {
+            OnTranscribe = () => Assert.Equal(string.Empty, controller?.PartialTranscript)
+        };
+        controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        controller.UpdatePartialTranscript("ignored");
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+
+        await controller.StartAsync(CancellationToken.None);
+        controller.UpdatePartialTranscript("  live partial  ");
+        Assert.Equal("live partial", controller.PartialTranscript);
+
+        await controller.StopAsync(CancellationToken.None);
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+    }
+
+    [Fact]
+    public async Task UpdatePartialTranscript_ClearsAfterCancel()
+    {
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+        controller.UpdatePartialTranscript("live partial");
+
+        await controller.CancelAsync(CancellationToken.None);
+
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+    }
+
+    [Fact]
+    public async Task UpdatePartialTranscript_IgnoresLateUpdatesAfterStopBegins()
+    {
+        var stopEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stopGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1))
+            {
+                StopEntered = stopEntered,
+                StopGate = stopGate.Task
+            },
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+        controller.UpdatePartialTranscript("live partial");
+
+        var stop = controller.StopAsync(CancellationToken.None);
+        await stopEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        controller.UpdatePartialTranscript("late partial");
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+        stopGate.SetResult();
+
+        await stop;
+
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+    }
+
+    [Fact]
     public async Task StopAsync_AppliesCleanupSettingsAndDictionaryReplacementsToInsertedAndHistoryText()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);

@@ -37,6 +37,43 @@ public sealed class FloatingRecorderPresenterTests
         Assert.Equal(0.72, state.InputLevel);
     }
 
+    [Fact]
+    public void FromState_RecordingWithEnabledPreview_ShowsTrimmedLiveTranscript()
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(12),
+            "Recording",
+            isOperationActive: false,
+            partialTranscript: "  hello from the live recorder  ",
+            showLiveTranscriptPreview: true);
+
+        Assert.True(state.HasLiveTranscript);
+        Assert.Equal("hello from the live recorder", state.LiveTranscript);
+    }
+
+    [Theory]
+    [InlineData(DictationState.Recording, false, "hello")]
+    [InlineData(DictationState.Recording, true, " ")]
+    [InlineData(DictationState.Transcribing, true, "hello")]
+    [InlineData(DictationState.Idle, true, "hello")]
+    public void FromState_HidesLiveTranscriptWhenPreviewCannotBeShown(
+        DictationState dictationState,
+        bool showLiveTranscriptPreview,
+        string partialTranscript)
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            dictationState,
+            TimeSpan.FromSeconds(12),
+            "Recording",
+            isOperationActive: false,
+            partialTranscript: partialTranscript,
+            showLiveTranscriptPreview: showLiveTranscriptPreview);
+
+        Assert.False(state.HasLiveTranscript);
+        Assert.Equal(string.Empty, state.LiveTranscript);
+    }
+
     [Theory]
     [InlineData(DictationState.Transcribing, "Transcribing", "Processing speech")]
     [InlineData(DictationState.Inserting, "Inserting", "Inserting text")]

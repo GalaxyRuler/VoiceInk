@@ -42,6 +42,7 @@ public sealed class JsonSettingsStoreTests
             PasteMethod = "directText",
             LaunchAtLogin = true,
             PrewarmModelOnWake = false,
+            ShowLiveTranscriptPreview = true,
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,
