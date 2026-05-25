@@ -27,26 +27,25 @@ VoiceInk Windows parity  [##################--] 88%
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
-| Audio input | 68% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, and live Core Audio device-change refresh exist. Richer active/unavailable UI remains. |
+| Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 43% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows MSIX artifact validator  [####################] 100%
+Windows Audio Input status UI  [####################] 100%
 ```
 
 Completed:
 
-- Added a non-installing MSIX artifact validator.
-- Validated required MSIX container files, app executable, manifest identity, and capabilities.
-- Verified the validator against a synthetic artifact-local `.msix` without using a signing certificate.
-- Kept install, uninstall, certificate trust, and app launch as explicit manual smoke steps.
+- Added a Core audio input selection notice model.
+- Added persistent WinUI Audio Input page notices for System Default, active custom device, rebound saved device, unavailable saved device, and no detected microphone.
+- Kept existing shell warnings and controller refresh behavior intact.
 
 ## Near-Term Priority
 
 1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
-2. Add richer audio input active/unavailable UI.
-3. Add OCR picker/region polish so users can constrain screen context.
-4. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
+2. Add OCR picker/region polish so users can constrain screen context.
+3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
+4. Add deeper onboarding model catalog/download and permission health checks.

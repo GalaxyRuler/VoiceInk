@@ -591,6 +591,15 @@
 
                     <StackPanel x:Name="AudioInputSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Audio Input" FontSize="24" FontWeight="SemiBold" />
+                        <InfoBar
+                            x:Name="AudioInputStatusInfoBar"
+                            IsClosable="False"
+                            IsOpen="True"
+                            Severity="Informational" />
+                        <TextBlock
+                            x:Name="AudioInputStatusActionTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="WrapWholeWords" />
                         <ComboBox
                             x:Name="AudioInputComboBox"
                             Header="Microphone"

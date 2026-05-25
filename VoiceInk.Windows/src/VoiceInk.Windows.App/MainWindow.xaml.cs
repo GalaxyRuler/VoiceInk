@@ -133,6 +133,7 @@ public sealed partial class MainWindow : Window
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
+    private AudioInputDeviceSelectionNotice? audioInputSelectionNotice;
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
@@ -5174,6 +5175,12 @@ public sealed partial class MainWindow : Window
         try
         {
             await SaveSettingsAsync(windowLifetime.Token);
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            audioInputSelectionNotice = AudioInputDeviceSelection.BuildNotice(
+                audioInputChoices,
+                SelectedAudioInputDeviceChoice(),
+                settings);
+            UpdateAudioInputStatusNotice();
             RecreateControllerIfAudioInputChanged();
 
             RefreshUiFromControllerState("Audio input updated");
@@ -5262,14 +5269,43 @@ public sealed partial class MainWindow : Window
         var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
 
         audioInputChoices = result.Choices;
+        audioInputSelectionNotice = result.Notice;
         AudioInputComboBox.ItemsSource = audioInputChoices;
         AudioInputComboBox.SelectedIndex = Math.Clamp(
             result.SelectedIndex,
             0,
             Math.Max(0, audioInputChoices.Count - 1));
+        UpdateAudioInputStatusNotice();
 
         return result.Warning;
     }
+
+    private void UpdateAudioInputStatusNotice()
+    {
+        var notice = audioInputSelectionNotice;
+        if (notice is null)
+        {
+            AudioInputStatusInfoBar.Title = "Audio input";
+            AudioInputStatusInfoBar.Message = "Refresh audio inputs to check microphone availability.";
+            AudioInputStatusInfoBar.Severity = InfoBarSeverity.Informational;
+            AudioInputStatusActionTextBlock.Text = string.Empty;
+            return;
+        }
+
+        AudioInputStatusInfoBar.Title = notice.Title;
+        AudioInputStatusInfoBar.Message = notice.Message;
+        AudioInputStatusInfoBar.Severity = ToInfoBarSeverity(notice.Kind);
+        AudioInputStatusActionTextBlock.Text = notice.ActionText;
+    }
+
+    private static InfoBarSeverity ToInfoBarSeverity(AudioInputDeviceSelectionNoticeKind kind) =>
+        kind switch
+        {
+            AudioInputDeviceSelectionNoticeKind.Success => InfoBarSeverity.Success,
+            AudioInputDeviceSelectionNoticeKind.Warning => InfoBarSeverity.Warning,
+            AudioInputDeviceSelectionNoticeKind.Error => InfoBarSeverity.Error,
+            _ => InfoBarSeverity.Informational
+        };
 
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
