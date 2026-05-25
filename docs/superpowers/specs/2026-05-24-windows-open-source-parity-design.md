@@ -437,7 +437,7 @@ Windows gaps:
 
 - Prompt template persistence.
 - Provider-specific Anthropic Messages API and Local CLI hooks.
-- Clipboard-copy fallback for selected text, screen/OCR, browser URL, and app-specific context capture.
+- Screen/OCR, browser URL, and app-specific context capture.
 - Dynamic provider model loading for OpenRouter and Ollama.
 - Recorder prompt picker activation.
 - AI re-enhance from History.
@@ -492,11 +492,15 @@ Selected-text enhancement context slice completed on 2026-05-25:
 - Changed enhancement context providers to receive a request describing which sources to read, so clipboard remains gated by `Clipboard Context` while selected text is best-effort when enhancement runs.
 - Added Windows UI Automation selected-text capture through `AutomationElement.FocusedElement`, `TextPattern.GetSelection()`, and `TextPatternRange.GetText(...)`.
 - Added a Windows context aggregator that isolates selected-text and clipboard read failures and degrades each source independently.
-- Deliberately did not add clipboard-copy fallback for selected text in this slice, preserving clipboard contents.
+
+Selected-text clipboard fallback slice completed on 2026-05-25:
+
+- Added a guarded clipboard-copy fallback for selected text when UI Automation returns no selection.
+- The fallback captures the current clipboard, sends Ctrl+C, reads text, truncates it for prompt context, and restores the prior clipboard state in a best-effort finally block.
+- When both selected text and clipboard context are requested, ordinary clipboard context is read only after fallback restoration so it sees the user's original clipboard text.
 
 Windows gaps:
 
-- Clipboard-copy fallback for selected text when UI Automation does not expose selection.
 - Active window title/process.
 - OCR via Windows OCR APIs if available.
 - Browser URL detection.

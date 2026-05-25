@@ -2,7 +2,7 @@ using System.Windows.Automation;
 
 namespace VoiceInk.Windows.Native.Text;
 
-public sealed class SelectedTextEnhancementContextProvider
+public sealed class SelectedTextEnhancementContextProvider : ISelectedTextReader
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMilliseconds(500);
 

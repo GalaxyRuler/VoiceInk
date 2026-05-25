@@ -4,20 +4,26 @@ namespace VoiceInk.Windows.Native.Text;
 
 public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvider
 {
-    private readonly ClipboardEnhancementContextProvider clipboardProvider;
-    private readonly SelectedTextEnhancementContextProvider selectedTextProvider;
+    private readonly IClipboardTextReader clipboardProvider;
+    private readonly ISelectedTextReader selectedTextProvider;
+    private readonly ISelectedTextClipboardFallbackReader selectedTextFallbackProvider;
 
     public WindowsEnhancementContextProvider()
-        : this(new ClipboardEnhancementContextProvider(), new SelectedTextEnhancementContextProvider())
+        : this(
+            new ClipboardEnhancementContextProvider(),
+            new SelectedTextEnhancementContextProvider(),
+            new SelectedTextClipboardFallbackReader())
     {
     }
 
     public WindowsEnhancementContextProvider(
-        ClipboardEnhancementContextProvider clipboardProvider,
-        SelectedTextEnhancementContextProvider selectedTextProvider)
+        IClipboardTextReader clipboardProvider,
+        ISelectedTextReader selectedTextProvider,
+        ISelectedTextClipboardFallbackReader selectedTextFallbackProvider)
     {
         this.clipboardProvider = clipboardProvider;
         this.selectedTextProvider = selectedTextProvider;
+        this.selectedTextFallbackProvider = selectedTextFallbackProvider;
     }
 
     public async Task<EnhancementContext> GetContextAsync(
@@ -38,7 +44,13 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
     {
         try
         {
-            return await selectedTextProvider.GetSelectedTextAsync(cancellationToken);
+            var selectedText = await selectedTextProvider.GetSelectedTextAsync(cancellationToken);
+            if (!string.IsNullOrWhiteSpace(selectedText))
+            {
+                return selectedText;
+            }
+
+            return await selectedTextFallbackProvider.GetSelectedTextAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

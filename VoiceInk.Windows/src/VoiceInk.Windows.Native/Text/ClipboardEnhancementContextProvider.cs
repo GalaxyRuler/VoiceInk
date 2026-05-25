@@ -3,7 +3,7 @@ using VoiceInk.Windows.Core.Enhancement;
 
 namespace VoiceInk.Windows.Native.Text;
 
-public sealed class ClipboardEnhancementContextProvider : IEnhancementContextProvider
+public sealed class ClipboardEnhancementContextProvider : IEnhancementContextProvider, IClipboardTextReader
 {
     private readonly int maxCharacters;
 

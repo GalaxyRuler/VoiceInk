@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###############-----] 78%
+VoiceInk Windows parity  [################----] 79%
 ```
 
 ## Area Bars
@@ -21,7 +21,7 @@ VoiceInk Windows parity  [###############-----] 78%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
+| Context features | 43% | `[#########-----------]` | Clipboard context, UI Automation selected-text context, and guarded clipboard-copy selected-text fallback exist with graceful degradation. Active window/browser URL context and OCR remain. |
 | Power Mode | 60% | `[############--------]` | Rule model, process/title matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, and shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###############-----] 78%
 ## Current Slice
 
 ```text
-Windows toggle enhancement shortcut  [####################] 100%
+Windows selected text clipboard fallback  [####################] 100%
 ```
 
 Completed:
 
-- Added a configurable optional `Toggle Enhancement` global shortcut.
-- Persisted the shortcut in JSON settings and settings backup/import.
-- Wired the hotkey to flip `IsEnhancementEnabled`, save settings, and refresh UI status.
-- Kept the shortcut local-only with no commercial or telemetry behavior.
+- Added a selected-text fallback path when UI Automation selection is empty.
+- Captures selected text by sending Ctrl+C, reading clipboard text, and restoring the prior clipboard state.
+- Ensured normal clipboard context is read after fallback restoration.
+- Kept context capture best-effort and local-only.
 
 ## Near-Term Priority
 
