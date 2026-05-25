@@ -485,6 +485,10 @@
                                         Header="Window title contains"
                                         PlaceholderText="chat" />
                                 </Grid>
+                                <TextBox
+                                    x:Name="PowerModeBrowserUrlTextBox"
+                                    Header="Browser URL contains"
+                                    PlaceholderText="example.com/docs" />
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <CheckBox
                                         x:Name="PowerModeEnabledCheckBox"

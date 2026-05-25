@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Enhancement;
 
 namespace VoiceInk.Windows.Core.PowerMode;
 
@@ -34,13 +35,33 @@ public static class PowerModeMatcher
 
         var processPattern = rule.ProcessNamePattern.Trim();
         var titlePattern = rule.WindowTitlePattern.Trim();
-        if (processPattern.Length == 0 && titlePattern.Length == 0)
+        var browserUrlPattern = rule.BrowserUrlPattern.Trim();
+        if (processPattern.Length == 0 && titlePattern.Length == 0 && browserUrlPattern.Length == 0)
         {
             return false;
         }
 
         return MatchesIfConfigured(target.ProcessName, processPattern, rule.MatchKind)
-            && MatchesIfConfigured(target.WindowTitle, titlePattern, rule.MatchKind);
+            && MatchesIfConfigured(target.WindowTitle, titlePattern, rule.MatchKind)
+            && BrowserUrlMatchesIfConfigured(target.BrowserUrl, browserUrlPattern, rule.MatchKind);
+    }
+
+    private static bool BrowserUrlMatchesIfConfigured(string value, string pattern, PowerModeMatchKind matchKind)
+    {
+        if (pattern.Length == 0)
+        {
+            return true;
+        }
+
+        var sanitizedValue = BrowserUrlContextSanitizer.Sanitize(value);
+        if (sanitizedValue.Length == 0)
+        {
+            return false;
+        }
+
+        var sanitizedPattern = BrowserUrlContextSanitizer.Sanitize(pattern);
+        var effectivePattern = sanitizedPattern.Length == 0 ? pattern : sanitizedPattern;
+        return MatchesIfConfigured(sanitizedValue, effectivePattern, matchKind);
     }
 
     private static bool MatchesIfConfigured(string value, string pattern, PowerModeMatchKind matchKind)

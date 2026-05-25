@@ -130,6 +130,110 @@ public sealed class PowerModeMatcherTests
     }
 
     [Fact]
+    public void Resolve_MatchesBrowserUrlRulesAgainstSanitizedUrl()
+    {
+        var settings = BaseSettings() with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Docs Site",
+                    Emoji = "D",
+                    BrowserUrlPattern = "example.com/docs",
+                    ModelPathOverride = "docs.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Secret Query",
+                    Emoji = "S",
+                    BrowserUrlPattern = "token=secret",
+                    ModelPathOverride = "secret.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget(
+                "msedge",
+                "Docs",
+                103,
+                BrowserUrl: "https://example.com/docs?token=secret#part"));
+
+        Assert.Equal("Docs Site", resolution.Rule?.Name);
+        Assert.Equal("docs.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
+    public void Resolve_DoesNotMatchBrowserUrlRulesWhenTargetHasNoUrl()
+    {
+        var settings = BaseSettings() with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Docs Site",
+                    BrowserUrlPattern = "example.com/docs",
+                    ModelPathOverride = "docs.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Default",
+                    IsDefault = true,
+                    ModelPathOverride = "default.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget("msedge", "Docs", 103));
+
+        Assert.Equal("Default", resolution.Rule?.Name);
+        Assert.Equal("default.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
+    public void Resolve_CombinesProcessTitleAndBrowserUrlPatterns()
+    {
+        var settings = BaseSettings() with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Wrong Site",
+                    ProcessNamePattern = "msedge",
+                    WindowTitlePattern = "Docs",
+                    BrowserUrlPattern = "other.example",
+                    ModelPathOverride = "wrong.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Edge Docs",
+                    ProcessNamePattern = "msedge",
+                    WindowTitlePattern = "Docs",
+                    BrowserUrlPattern = "https://example.com/docs",
+                    ModelPathOverride = "edge-docs.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget(
+                "MSEDGE",
+                "Docs - Microsoft Edge",
+                103,
+                BrowserUrl: "https://example.com/docs"));
+
+        Assert.Equal("Edge Docs", resolution.Rule?.Name);
+        Assert.Equal("edge-docs.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
     public void Resolve_PrefersExplicitSelectedEnabledRuleOverTargetAndDefaultRules()
     {
         var selectedRuleId = Guid.Parse("11111111-1111-1111-1111-111111111111");

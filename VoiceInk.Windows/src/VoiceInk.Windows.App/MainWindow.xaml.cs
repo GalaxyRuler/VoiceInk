@@ -5375,11 +5375,14 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            PowerModeActiveWindowTextBlock.Text = $"Process: {target.ProcessName}; Title: {target.WindowTitle}";
+            PowerModeActiveWindowTextBlock.Text = string.IsNullOrWhiteSpace(target.BrowserUrl)
+                ? $"Process: {target.ProcessName}; Title: {target.WindowTitle}"
+                : $"Process: {target.ProcessName}; Title: {target.WindowTitle}; URL: {target.BrowserUrl}";
             if (fillRuleFields)
             {
                 PowerModeProcessTextBox.Text = target.ProcessName;
                 PowerModeWindowTitleTextBox.Text = target.WindowTitle;
+                PowerModeBrowserUrlTextBox.Text = target.BrowserUrl;
             }
 
             RefreshUiFromControllerState("Active window refreshed");
@@ -5486,6 +5489,7 @@ public sealed partial class MainWindow : Window
         PowerModeEmojiTextBox.Text = rule?.Emoji ?? string.Empty;
         PowerModeProcessTextBox.Text = rule?.ProcessNamePattern ?? string.Empty;
         PowerModeWindowTitleTextBox.Text = rule?.WindowTitlePattern ?? string.Empty;
+        PowerModeBrowserUrlTextBox.Text = rule?.BrowserUrlPattern ?? string.Empty;
         PowerModeEnabledCheckBox.IsChecked = rule?.IsEnabled ?? true;
         PowerModeDefaultCheckBox.IsChecked = rule?.IsDefault ?? false;
         PowerModeModelPathTextBox.Text = rule?.ModelPathOverride ?? string.Empty;
@@ -5522,6 +5526,7 @@ public sealed partial class MainWindow : Window
             IsDefault = PowerModeDefaultCheckBox.IsChecked == true,
             ProcessNamePattern = PowerModeProcessTextBox.Text.Trim(),
             WindowTitlePattern = PowerModeWindowTitleTextBox.Text.Trim(),
+            BrowserUrlPattern = PowerModeBrowserUrlTextBox.Text.Trim(),
             ModelPathOverride = TrimToNull(PowerModeModelPathTextBox.Text),
             LanguageOverride = TrimToNull(PowerModeLanguageTextBox.Text),
             IsEnhancementEnabledOverride = SelectedEnhancementOverride(),
@@ -5592,7 +5597,8 @@ public sealed partial class MainWindow : Window
                 new[]
                 {
                     string.IsNullOrWhiteSpace(rule.ProcessNamePattern) ? null : $"Process: {rule.ProcessNamePattern}",
-                    string.IsNullOrWhiteSpace(rule.WindowTitlePattern) ? null : $"Title: {rule.WindowTitlePattern}"
+                    string.IsNullOrWhiteSpace(rule.WindowTitlePattern) ? null : $"Title: {rule.WindowTitlePattern}",
+                    string.IsNullOrWhiteSpace(rule.BrowserUrlPattern) ? null : $"URL: {rule.BrowserUrlPattern}"
                 }.Where(value => value is not null));
         if (string.IsNullOrWhiteSpace(target))
         {

@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Services;
+using VoiceInk.Windows.Native.Text;
 
 namespace VoiceInk.Windows.Native.PowerMode;
 
@@ -11,7 +13,13 @@ public sealed class ActiveWindowPowerModeTargetProvider : IPowerModeTargetProvid
     private const int TitleBufferLength = 512;
     private readonly int currentProcessId = Environment.ProcessId;
     private readonly HashSet<nint> excludedWindowHandles = [];
+    private readonly IBrowserUrlReader browserUrlReader;
     private PowerModeTarget? lastExternalTarget;
+
+    public ActiveWindowPowerModeTargetProvider(IBrowserUrlReader? browserUrlReader = null)
+    {
+        this.browserUrlReader = browserUrlReader ?? new BrowserUrlEnhancementContextProvider();
+    }
 
     public void ExcludeWindowHandle(IntPtr windowHandle)
     {
@@ -21,14 +29,14 @@ public sealed class ActiveWindowPowerModeTargetProvider : IPowerModeTargetProvid
         }
     }
 
-    public Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken)
+    public async Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var windowHandle = GetForegroundWindow();
         if (windowHandle == IntPtr.Zero)
         {
-            return Task.FromResult<PowerModeTarget?>(null);
+            return null;
         }
 
         _ = GetWindowThreadProcessId(windowHandle, out var processId);
@@ -37,19 +45,21 @@ public sealed class ActiveWindowPowerModeTargetProvider : IPowerModeTargetProvid
 
         if (IsExcludedWindow(windowHandle, processId))
         {
-            return Task.FromResult(lastExternalTarget);
+            return lastExternalTarget;
         }
 
         if (string.IsNullOrWhiteSpace(processName) && string.IsNullOrWhiteSpace(title))
         {
-            return Task.FromResult<PowerModeTarget?>(null);
+            return null;
         }
 
+        var browserUrl = await ReadBrowserUrlAsync(cancellationToken);
         lastExternalTarget = new PowerModeTarget(
             processName,
             title,
-            processId == 0 ? null : (int)processId);
-        return Task.FromResult<PowerModeTarget?>(lastExternalTarget);
+            processId == 0 ? null : (int)processId,
+            browserUrl);
+        return lastExternalTarget;
     }
 
     private bool IsExcludedWindow(IntPtr windowHandle, uint processId)
@@ -86,6 +96,23 @@ public sealed class ActiveWindowPowerModeTargetProvider : IPowerModeTargetProvid
             return string.Empty;
         }
         catch (System.ComponentModel.Win32Exception)
+        {
+            return string.Empty;
+        }
+    }
+
+    private async Task<string> ReadBrowserUrlAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var browserUrl = await browserUrlReader.GetBrowserUrlAsync(cancellationToken);
+            return BrowserUrlContextSanitizer.Sanitize(browserUrl);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
         {
             return string.Empty;
         }

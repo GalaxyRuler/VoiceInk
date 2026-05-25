@@ -12,6 +12,7 @@ public sealed record PowerModeRule
     public PowerModeMatchKind MatchKind { get; init; } = PowerModeMatchKind.Contains;
     public string ProcessNamePattern { get; init; } = string.Empty;
     public string WindowTitlePattern { get; init; } = string.Empty;
+    public string BrowserUrlPattern { get; init; } = string.Empty;
     public string? ModelPathOverride { get; init; }
     public string? LanguageOverride { get; init; }
     public bool? IsEnhancementEnabledOverride { get; init; }

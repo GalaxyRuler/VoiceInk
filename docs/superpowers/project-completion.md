@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#################---] 83%
+VoiceInk Windows parity  [#################---] 84%
 ```
 
 ## Area Bars
@@ -22,7 +22,7 @@ VoiceInk Windows parity  [#################---] 83%
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
-| Power Mode | 60% | `[############--------]` | Rule model, process/title matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, and shortcuts remain. |
+| Power Mode | 67% | `[#############-------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Auto-send keys and shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [#################---] 83%
 ## Current Slice
 
 ```text
-Windows browser URL enhancement context  [####################] 100%
+Windows Power Mode URL matching  [####################] 100%
 ```
 
 Completed:
 
-- Added sanitized browser URL context to AI enhancement prompts.
-- Removed query strings, fragments, usernames, passwords, and non-web schemes before prompt rendering.
-- Added a Windows UI Automation browser URL reader for supported foreground browsers.
-- Kept URL reading best-effort and failure-tolerant so enhancement continues without browser context when unavailable.
+- Added browser URL patterns to Power Mode rules.
+- Matched URL rules against sanitized active browser URLs without query strings or fragments.
+- Combined process, title, and URL patterns with existing AND semantics.
+- Exposed a Browser URL field in the Power Mode editor and active-target fill workflow.
 
 ## Near-Term Priority
 
