@@ -22,6 +22,8 @@ public sealed class FloatingRecorderControlPresenterTests
         var state = FloatingRecorderControlPresenter.FromSettings(settings, prompts, []);
 
         Assert.True(state.CanOpenPromptControls);
+        Assert.Equal("AI Enhancement", state.PromptHeaderTitle);
+        Assert.True(state.CanToggleEnhancement);
         Assert.False(state.IsEnhancementEnabled);
         Assert.Equal("Chat", state.PromptTitle);
         Assert.Equal(prompts.Count, state.PromptChoices.Count);
@@ -81,6 +83,8 @@ public sealed class FloatingRecorderControlPresenterTests
             ]);
 
         Assert.True(state.CanOpenPowerModeControls);
+        Assert.Equal("Select Power Mode", state.PowerModeHeaderTitle);
+        Assert.Equal("No Power Modes Available", state.PowerModeEmptyTitle);
         Assert.Equal("Terminal", state.PowerModeTitle);
         Assert.Equal(">", state.PowerModeEmoji);
         Assert.Equal(new Guid?[] { null, Guid.Parse("11111111-1111-1111-1111-111111111111"), selectedRuleId }, state.PowerModeChoices.Select(choice => choice.Id).ToArray());

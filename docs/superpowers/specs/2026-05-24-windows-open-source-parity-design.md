@@ -60,7 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
-- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, functional Prompt/Power cycling controls, and pulse animation.
+- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, no-activate Prompt/Power chooser panels, and pulse animation.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
@@ -168,10 +168,19 @@ Floating-recorder Prompt/Power controls slice completed on 2026-05-25:
 - `DictationController` still captures the recording-start target window, but reloads current settings on stop/cancel so Prompt and Power changes made from the recorder during capture affect the active transcription without changing the paste target.
 - This Windows slice intentionally uses click-to-cycle controls instead of hover popovers because WinUI flyouts can steal focus from the target app; richer no-activate popovers remain a visual fidelity follow-up.
 
+Floating-recorder no-activate popovers slice completed on 2026-05-25:
+
+- Match the macOS `EnhancementPromptPopover` and `PowerModePopover` structure without using WinUI `Flyout`, because Microsoft documents flyouts as light-dismiss controls that trap keyboard focus until dismissed.
+- Host Prompt and Power chooser panels inside the existing floating recorder window so the current `AppWindow.Show(false)` plus `WM_MOUSEACTIVATE -> MA_NOACTIVATE` no-activation behavior still applies.
+- Resize the floating recorder window upward while a chooser is open, keeping the recorder chrome anchored to the bottom-center work area position so it does not slide below the taskbar.
+- Prompt chooser shows an `AI Enhancement` toggle, selected prompt row, prompt rows, disabled styling when enhancement is off, and selecting any prompt enables enhancement before persisting the prompt.
+- Power chooser shows `Select Power Mode`, `Auto`, enabled Power Mode rows, selected-row checkmarks, and `No Power Modes Available` when there are no enabled rules.
+- Stop and Cancel must wait for any in-flight chooser persistence before completing the recording, preserving the race fix from the click-to-cycle slice.
+
 Windows gaps:
 
 - Live partial transcript.
-- Rich Prompt and Power Mode recorder popovers.
+- Hover-driven Prompt and Power Mode popover dismissal.
 - Notch-style recorder.
 
 ### Shortcuts
@@ -459,7 +468,7 @@ Power Mode Windows MVP target:
 - Override model path, language, enhancement enabled state, selected enhancement prompt, trailing-space paste cleanup, filler removal, punctuation cleanup, and lowercase cleanup for that session without rewriting the user's base settings.
 - Store Power Mode name and emoji in history and CSV export for completed and canceled rows.
 - Add a WinUI Power Mode section with rule list, add/update/remove, enable toggle, active-window quick fill, ordering, and basic override controls.
-- Defer browser URL detection, auto-send keys, Power Mode global shortcuts, and recorder popover selection until the next Power Mode slice.
+- Defer browser URL detection, auto-send keys, and Power Mode global shortcuts until later Power Mode slices.
 
 Power Mode slice completed on 2026-05-25:
 
@@ -468,6 +477,7 @@ Power Mode slice completed on 2026-05-25:
 - Captured the matching rule at recording start and used its effective settings for transcription, cleanup, enhancement, insertion, and canceled-history metadata.
 - Added Power Mode name/emoji to SQLite history, CSV export, and the History detail view.
 - Added a WinUI Power Mode section for ordered rules, active-window quick fill, enabled/default toggles, and model/language/enhancement/prompt/cleanup overrides.
+- Added floating-recorder Power Mode chooser integration with Auto plus enabled rule selection.
 
 Windows Win32 grounding:
 
@@ -480,7 +490,6 @@ Windows gaps:
 - Browser URL matching.
 - Auto-send keys.
 - Power Mode shortcuts.
-- Recorder popover integration.
 
 ### Dictionary
 

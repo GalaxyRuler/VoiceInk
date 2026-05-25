@@ -17,12 +17,16 @@ public sealed record FloatingRecorderPowerModeChoice(
     bool IsSelected);
 
 public sealed record FloatingRecorderControlState(
+    string PromptHeaderTitle,
     string PromptTitle,
     bool IsEnhancementEnabled,
+    bool CanToggleEnhancement,
     bool CanOpenPromptControls,
     IReadOnlyList<FloatingRecorderPromptChoice> PromptChoices,
+    string PowerModeHeaderTitle,
     string PowerModeTitle,
     string PowerModeEmoji,
+    string PowerModeEmptyTitle,
     bool CanOpenPowerModeControls,
     IReadOnlyList<FloatingRecorderPowerModeChoice> PowerModeChoices);
 
@@ -74,12 +78,16 @@ public static class FloatingRecorderControlPresenter
             .ToArray();
 
         return new FloatingRecorderControlState(
+            "AI Enhancement",
             selectedPrompt.Title,
             settings.IsEnhancementEnabled,
+            CanToggleEnhancement: true,
             CanOpenPromptControls: promptChoices.Length > 0,
             promptChoices,
+            "Select Power Mode",
             selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
             selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule),
+            "No Power Modes Available",
             CanOpenPowerModeControls: enabledPowerModeRules.Length > 0,
             powerModeChoices);
     }

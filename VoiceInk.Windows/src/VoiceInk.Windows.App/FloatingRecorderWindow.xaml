@@ -4,9 +4,75 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="VoiceInk Recorder">
 
-    <Grid Background="Transparent" Padding="0">
+    <Grid Background="Transparent" Padding="0" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border
+            x:Name="PromptPopoverPanel"
+            Width="220"
+            MaxHeight="232"
+            Padding="12"
+            Margin="10,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Background="#111111"
+            BorderBrush="#333333"
+            BorderThickness="1"
+            CornerRadius="8"
+            Visibility="Collapsed">
+            <StackPanel Spacing="8">
+                <CheckBox
+                    x:Name="PromptEnhancementCheckBox"
+                    AutomationProperties.Name="AI Enhancement"
+                    Checked="PromptEnhancementCheckBox_Changed"
+                    Content="AI Enhancement"
+                    Foreground="White"
+                    Unchecked="PromptEnhancementCheckBox_Changed" />
+
+                <Border Height="1" Background="#2A2A2A" />
+
+                <ScrollViewer MaxHeight="168" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PromptChoicesStackPanel" Spacing="4" />
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
+        <Border
+            x:Name="PowerModePopoverPanel"
+            Width="220"
+            MaxHeight="232"
+            Padding="12"
+            Margin="0,0,10,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="#111111"
+            BorderBrush="#333333"
+            BorderThickness="1"
+            CornerRadius="8"
+            Visibility="Collapsed">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    x:Name="PowerModePopoverHeaderTextBlock"
+                    Foreground="White"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Text="Select Power Mode"
+                    TextTrimming="CharacterEllipsis" />
+
+                <Border Height="1" Background="#2A2A2A" />
+
+                <ScrollViewer MaxHeight="168" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PowerModeChoicesStackPanel" Spacing="4" />
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
         <Border
             x:Name="RecorderChrome"
+            Grid.Row="1"
             Width="384"
             Height="104"
             Padding="14"

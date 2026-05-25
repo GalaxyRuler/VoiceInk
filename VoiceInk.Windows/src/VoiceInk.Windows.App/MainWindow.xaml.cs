@@ -6058,7 +6058,7 @@ public sealed partial class MainWindow : Window
         var floatingWindow = EnsureFloatingRecorderWindow();
         floatingWindow.ApplyControls(
             BuildFloatingRecorderControlState(),
-            controller.State == DictationState.Recording && !operationActive);
+            CanUseFloatingRecorderControls());
         floatingWindow.Apply(state);
         UpdateFloatingRecorderRefreshTimer(state);
     }
@@ -6140,47 +6140,27 @@ public sealed partial class MainWindow : Window
         {
             StopRequested = StopCurrentRecordingAsync,
             CancelRequested = CancelCurrentRecordingAsync,
-            PromptRequested = CycleFloatingRecorderPromptAsync,
-            PowerModeRequested = CycleFloatingRecorderPowerModeAsync
+            PromptEnhancementToggled = SetFloatingRecorderEnhancementAsync,
+            PromptChoiceRequested = SelectFloatingRecorderPromptAsync,
+            PowerModeChoiceRequested = SelectFloatingRecorderPowerModeAsync
         };
         floatingRecorderWindow.Closed += (_, _) => floatingRecorderWindow = null;
         return floatingRecorderWindow;
     }
 
-    private async Task CycleFloatingRecorderPromptAsync()
+    private async Task SetFloatingRecorderEnhancementAsync(bool isEnabled)
     {
         if (!CanUseFloatingRecorderControls())
         {
             return;
         }
 
-        var state = BuildFloatingRecorderControlState();
-        if (!state.CanOpenPromptControls)
-        {
-            return;
-        }
-
-        string status;
-        if (!state.IsEnhancementEnabled)
-        {
-            EnhancementEnabledCheckBox.IsChecked = true;
-            status = "AI enhancement enabled";
-        }
-        else
-        {
-            var promptChoices = state.PromptChoices;
-            var selectedIndex = promptChoices
-                .ToList()
-                .FindIndex(choice => choice.IsSelected);
-            var nextChoice = promptChoices[(selectedIndex + 1 + promptChoices.Count) % promptChoices.Count];
-            SelectEnhancementPrompt(nextChoice.Id);
-            status = $"Prompt: {nextChoice.Title}";
-        }
-
-        await SaveFloatingRecorderControlSettingsAsync(status);
+        EnhancementEnabledCheckBox.IsChecked = isEnabled;
+        await SaveFloatingRecorderControlSettingsAsync(
+            isEnabled ? "AI enhancement enabled" : "AI enhancement disabled");
     }
 
-    private async Task CycleFloatingRecorderPowerModeAsync()
+    private async Task SelectFloatingRecorderPromptAsync(Guid promptId)
     {
         if (!CanUseFloatingRecorderControls())
         {
@@ -6188,22 +6168,36 @@ public sealed partial class MainWindow : Window
         }
 
         var state = BuildFloatingRecorderControlState();
-        if (!state.CanOpenPowerModeControls || state.PowerModeChoices.Count <= 1)
+        var selectedChoice = state.PromptChoices.FirstOrDefault(choice => choice.Id == promptId);
+        if (selectedChoice is null)
         {
-            RefreshUiFromControllerState("No Power Modes available");
             return;
         }
 
-        var choices = state.PowerModeChoices;
-        var selectedIndex = choices
-            .ToList()
-            .FindIndex(choice => choice.IsSelected);
-        var nextChoice = choices[(selectedIndex + 1 + choices.Count) % choices.Count];
-        selectedPowerModeRuleId = nextChoice.Id;
+        EnhancementEnabledCheckBox.IsChecked = true;
+        SelectEnhancementPrompt(promptId);
+        await SaveFloatingRecorderControlSettingsAsync($"Prompt: {selectedChoice.Title}");
+    }
+
+    private async Task SelectFloatingRecorderPowerModeAsync(Guid? ruleId)
+    {
+        if (!CanUseFloatingRecorderControls())
+        {
+            return;
+        }
+
+        var state = BuildFloatingRecorderControlState();
+        var selectedChoice = state.PowerModeChoices.FirstOrDefault(choice => choice.Id == ruleId);
+        if (selectedChoice is null)
+        {
+            return;
+        }
+
+        selectedPowerModeRuleId = ruleId;
         await SaveFloatingRecorderControlSettingsAsync(
-            nextChoice.Id is null
+            ruleId is null
                 ? "Power Mode: Auto"
-                : $"Power Mode: {nextChoice.Title}");
+                : $"Power Mode: {selectedChoice.Title}");
     }
 
     private async Task SaveFloatingRecorderControlSettingsAsync(string status)
