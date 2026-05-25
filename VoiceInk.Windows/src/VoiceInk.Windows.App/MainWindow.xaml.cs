@@ -145,7 +145,10 @@ public sealed partial class MainWindow : Window
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         secretStore = new WindowsCredentialSecretStore();
         textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
-        textEnhancementPipeline = new TextEnhancementPipeline(textEnhancementService, enhancementPrompts);
+        textEnhancementPipeline = new TextEnhancementPipeline(
+            textEnhancementService,
+            enhancementPrompts,
+            new ClipboardEnhancementContextProvider());
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         transcriptionService = new TranscriptionServiceRouter(
             new WhisperNetTranscriptionService(),
@@ -793,6 +796,7 @@ public sealed partial class MainWindow : Window
             OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
             QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
             EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
+            UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
             EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
             EnhancementModelTextBox.Text = settings.EnhancementModel;
             EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
@@ -2875,6 +2879,7 @@ public sealed partial class MainWindow : Window
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
+            UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
             EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
             EnhancementModel = EnhancementModelTextBox.Text.Trim(),
             SelectedEnhancementPromptId = SelectedEnhancementPromptId(),
@@ -3629,6 +3634,7 @@ public sealed partial class MainWindow : Window
         ClearCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
         ApplyTranscriptionProviderSettingsButton.IsEnabled = modelControlsEnabled;
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
+        UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementApiKeyPasswordBox.IsEnabled = enhancementControlsEnabled;

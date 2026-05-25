@@ -65,6 +65,23 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_AppendsClipboardContext()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "send the note",
+            vocabulary: [],
+            context: new EnhancementContext(ClipboardText: "Project Zephyr release notes"));
+
+        Assert.Contains("<CLIPBOARD_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("Project Zephyr release notes", rendered.SystemMessage);
+        Assert.Contains("</CLIPBOARD_CONTEXT>", rendered.SystemMessage);
+    }
+
+    [Fact]
     public void Render_AssistantPromptUsesRawAssistantInstructions()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

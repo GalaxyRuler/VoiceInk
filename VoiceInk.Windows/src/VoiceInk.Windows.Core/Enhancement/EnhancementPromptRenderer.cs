@@ -22,11 +22,13 @@ public static class EnhancementPromptRenderer
     public static EnhancementPromptRenderResult Render(
         EnhancementPrompt prompt,
         string transcript,
-        IReadOnlyList<VocabularyWord> vocabulary)
+        IReadOnlyList<VocabularyWord> vocabulary,
+        EnhancementContext? context = null)
     {
         var systemMessage = prompt.UseSystemInstructions
             ? string.Format(SystemInstructionsTemplate, prompt.PromptText.Trim())
             : prompt.PromptText.Trim();
+        systemMessage += ClipboardContextSection(context);
         systemMessage += VocabularySection(vocabulary);
 
         var userMessage = $"""
@@ -37,6 +39,23 @@ public static class EnhancementPromptRenderer
             """;
 
         return new EnhancementPromptRenderResult(prompt.Title, systemMessage, userMessage);
+    }
+
+    private static string ClipboardContextSection(EnhancementContext? context)
+    {
+        var clipboardText = context?.ClipboardText.Trim();
+        if (string.IsNullOrEmpty(clipboardText))
+        {
+            return string.Empty;
+        }
+
+        return $"""
+
+
+            <CLIPBOARD_CONTEXT>
+            {clipboardText}
+            </CLIPBOARD_CONTEXT>
+            """;
     }
 
     private static string VocabularySection(IReadOnlyList<VocabularyWord> vocabulary)

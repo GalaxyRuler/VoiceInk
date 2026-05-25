@@ -12,15 +12,18 @@ public sealed class TextEnhancementPipeline
 
     private readonly ITextEnhancementService enhancementService;
     private readonly IReadOnlyList<EnhancementPrompt> prompts;
+    private readonly IEnhancementContextProvider contextProvider;
 
     public TextEnhancementPipeline(
         ITextEnhancementService enhancementService,
-        IReadOnlyList<EnhancementPrompt>? prompts = null)
+        IReadOnlyList<EnhancementPrompt>? prompts = null,
+        IEnhancementContextProvider? contextProvider = null)
     {
         this.enhancementService = enhancementService;
         this.prompts = prompts is { Count: > 0 }
             ? prompts
             : EnhancementPromptCatalog.CreateDefaultPrompts();
+        this.contextProvider = contextProvider ?? new EmptyEnhancementContextProvider();
     }
 
     public async Task<TextEnhancementPipelineResult> EnhanceAsync(
@@ -57,7 +60,10 @@ public sealed class TextEnhancementPipeline
         }
 
         var prompt = PromptFor(detection.SelectedPromptId ?? selectedPromptId);
-        var rendered = EnhancementPromptRenderer.Render(prompt, detection.ProcessedText, vocabulary);
+        var context = settings.UseClipboardContext
+            ? await GetContextAsync(cancellationToken)
+            : EnhancementContext.Empty;
+        var rendered = EnhancementPromptRenderer.Render(prompt, detection.ProcessedText, vocabulary, context);
         var request = new TextEnhancementRequest(
             settings.EnhancementEndpoint.Trim(),
             settings.EnhancementModel.Trim(),
@@ -103,6 +109,22 @@ public sealed class TextEnhancementPipeline
         prompts.FirstOrDefault(prompt => prompt.Id == promptId)
         ?? prompts.FirstOrDefault(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId)
         ?? prompts[0];
+
+    private async Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await contextProvider.GetContextAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return EnhancementContext.Empty;
+        }
+    }
 
     private static bool IsProviderConfigured(AppSettings settings) =>
         !string.IsNullOrWhiteSpace(settings.EnhancementEndpoint)

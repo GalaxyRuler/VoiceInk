@@ -50,7 +50,7 @@ Clipboard enhancement context Windows MVP target:
 - Leave selected-text context, screen/OCR context, and browser URL context for later Windows context slices.
 ```
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -64,7 +64,7 @@ Expected: docs-only commit with no whitespace errors.
 
 ## Task 2: Prompt Rendering Red/Green
 
-- [ ] **Step 1: Add failing prompt-renderer test**
+- [x] **Step 1: Add failing prompt-renderer test**
 
 Add this test to `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Enhancement/EnhancementPromptTests.cs`:
 
@@ -87,7 +87,7 @@ public void Render_AppendsClipboardContext()
 }
 ```
 
-- [ ] **Step 2: Run red prompt-renderer test**
+- [x] **Step 2: Run red prompt-renderer test**
 
 Run:
 
@@ -97,7 +97,7 @@ Run:
 
 Expected: compile failure because `EnhancementContext` and the renderer overload do not exist.
 
-- [ ] **Step 3: Implement minimal prompt context model and rendering**
+- [x] **Step 3: Implement minimal prompt context model and rendering**
 
 Create:
 
@@ -131,13 +131,13 @@ private static string ClipboardContextSection(EnhancementContext? context)
 }
 ```
 
-- [ ] **Step 4: Verify prompt-renderer test passes**
+- [x] **Step 4: Verify prompt-renderer test passes**
 
 Run the same focused command. Expected: test passes.
 
 ## Task 3: Enhancement Pipeline Context Provider Red/Green
 
-- [ ] **Step 1: Add failing pipeline tests**
+- [x] **Step 1: Add failing pipeline tests**
 
 Extend `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Enhancement/TextEnhancementPipelineTests.cs` with:
 
@@ -205,7 +205,7 @@ private sealed class FakeEnhancementContextProvider(EnhancementContext context) 
 }
 ```
 
-- [ ] **Step 2: Run red pipeline tests**
+- [x] **Step 2: Run red pipeline tests**
 
 Run:
 
@@ -215,7 +215,7 @@ Run:
 
 Expected: compile failure because `IEnhancementContextProvider`, `UseClipboardContext`, and constructor wiring do not exist.
 
-- [ ] **Step 3: Implement Core context-provider wiring**
+- [x] **Step 3: Implement Core context-provider wiring**
 
 Create:
 
@@ -271,13 +271,13 @@ private async Task<EnhancementContext> GetContextAsync(CancellationToken cancell
 }
 ```
 
-- [ ] **Step 4: Verify pipeline tests pass**
+- [x] **Step 4: Verify pipeline tests pass**
 
 Run the same focused command. Expected: tests pass.
 
 ## Task 4: Settings Persistence Red/Green
 
-- [ ] **Step 1: Add failing settings test update**
+- [x] **Step 1: Add failing settings test update**
 
 In `JsonSettingsStoreTests.SaveAsync_PersistsSettings`, set:
 
@@ -285,7 +285,7 @@ In `JsonSettingsStoreTests.SaveAsync_PersistsSettings`, set:
 UseClipboardContext = true,
 ```
 
-- [ ] **Step 2: Run red settings test**
+- [x] **Step 2: Run red settings test**
 
 Run:
 
@@ -295,13 +295,13 @@ Run:
 
 Expected: compile failure until `AppSettings.UseClipboardContext` exists, then pass through JSON serialization with no custom converter.
 
-- [ ] **Step 3: Verify settings test passes**
+- [x] **Step 3: Verify settings test passes**
 
 Run the same focused command. Expected: test passes after Task 3.
 
 ## Task 5: Native Clipboard Adapter And WinUI Wiring
 
-- [ ] **Step 1: Add native read-only clipboard context provider**
+- [x] **Step 1: Add native read-only clipboard context provider**
 
 Create `VoiceInk.Windows/src/VoiceInk.Windows.Native/Text/ClipboardEnhancementContextProvider.cs`:
 
@@ -345,7 +345,7 @@ public sealed class ClipboardEnhancementContextProvider(int maxCharacters = 4_00
 }
 ```
 
-- [ ] **Step 2: Wire provider into app composition**
+- [x] **Step 2: Wire provider into app composition**
 
 In `MainWindow.xaml.cs`, construct:
 
@@ -356,7 +356,7 @@ textEnhancementPipeline = new TextEnhancementPipeline(
     new ClipboardEnhancementContextProvider());
 ```
 
-- [ ] **Step 3: Add Enhancement toggle to WinUI**
+- [x] **Step 3: Add Enhancement toggle to WinUI**
 
 In `MainWindow.xaml`, add under `EnhancementEnabledCheckBox`:
 
@@ -366,7 +366,7 @@ In `MainWindow.xaml`, add under `EnhancementEnabledCheckBox`:
     Content="Clipboard Context" />
 ```
 
-- [ ] **Step 4: Load and save setting**
+- [x] **Step 4: Load and save setting**
 
 When settings load, set:
 
@@ -386,7 +386,7 @@ In `RefreshUiFromControllerState`, set:
 UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
 ```
 
-- [ ] **Step 5: Verify app build**
+- [x] **Step 5: Verify app build**
 
 Run:
 
@@ -398,7 +398,7 @@ Expected: build succeeds with zero errors.
 
 ## Task 6: Docs, Review, And Commit
 
-- [ ] **Step 1: Update README and parity spec**
+- [x] **Step 1: Update README and parity spec**
 
 Document:
 
@@ -406,7 +406,7 @@ Document:
 - Clipboard context is default-off, local-only, read-only, and skips empty/unavailable clipboard.
 - Selected-text, OCR/screen, browser URL, and richer context status remain later context slices.
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 Run:
 
@@ -418,7 +418,7 @@ Run:
 
 Expected: focused tests pass, full tests pass, build succeeds.
 
-- [ ] **Step 3: Request review and fix Critical/Important findings**
+- [x] **Step 3: Request review and fix Critical/Important findings**
 
 Ask a subagent to review privacy behavior, clipboard-read failure handling, prompt rendering, app setting persistence, and UI wiring.
 

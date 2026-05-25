@@ -11,8 +11,13 @@ public sealed class TextEnhancementPipelineTests
     public async Task EnhanceAsync_DisabledEnhancementReturnsOriginalTextWithoutProviderCall()
     {
         var provider = new FakeTextEnhancementService("ignored");
-        var pipeline = new TextEnhancementPipeline(provider);
-        var settings = ConfiguredSettings() with { IsEnhancementEnabled = false };
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext("ignored clipboard"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = false,
+            UseClipboardContext = true
+        };
 
         var result = await pipeline.EnhanceAsync("hello", settings, vocabulary: [], CancellationToken.None);
 
@@ -20,6 +25,7 @@ public sealed class TextEnhancementPipelineTests
         Assert.Equal("hello", result.FinalText);
         Assert.Null(result.EnhancedText);
         Assert.Equal(0, provider.CallCount);
+        Assert.Equal(0, contextProvider.CallCount);
     }
 
     [Fact]
@@ -48,6 +54,47 @@ public sealed class TextEnhancementPipelineTests
         Assert.NotNull(result.EnhancementDuration);
         Assert.Contains("<CUSTOM_VOCABULARY>", provider.LastRequest!.SystemMessage);
         Assert.Contains("<TRANSCRIPT>", provider.LastRequest.UserMessage);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_IncludesClipboardContextWhenEnabled()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext("Clipboard note"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            UseClipboardContext = true
+        };
+
+        await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal(1, contextProvider.CallCount);
+        Assert.Contains("<CLIPBOARD_CONTEXT>", provider.LastRequest!.SystemMessage);
+        Assert.Contains("Clipboard note", provider.LastRequest.SystemMessage);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_WhenClipboardContextProviderFails_EnhancesWithoutContext()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var contextProvider = new FakeEnhancementContextProvider(EnhancementContext.Empty)
+        {
+            Exception = new InvalidOperationException("clipboard unavailable")
+        };
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            UseClipboardContext = true
+        };
+
+        var result = await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.True(result.AttemptedEnhancement);
+        Assert.Equal("Enhanced note.", result.FinalText);
+        Assert.DoesNotContain("<CLIPBOARD_CONTEXT>", provider.LastRequest!.SystemMessage);
     }
 
     [Fact]
@@ -96,10 +143,12 @@ public sealed class TextEnhancementPipelineTests
     public async Task EnhanceAsync_SkipsShortTextUnlessTriggerWordWasDetected()
     {
         var provider = new FakeTextEnhancementService("Enhanced");
-        var pipeline = new TextEnhancementPipeline(provider);
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext("ignored clipboard"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
         var settings = ConfiguredSettings() with
         {
             IsEnhancementEnabled = true,
+            UseClipboardContext = true,
             SkipShortEnhancement = true,
             ShortEnhancementWordThreshold = 3
         };
@@ -109,6 +158,29 @@ public sealed class TextEnhancementPipelineTests
         Assert.False(result.AttemptedEnhancement);
         Assert.Equal("yes please", result.FinalText);
         Assert.Equal(0, provider.CallCount);
+        Assert.Equal(0, contextProvider.CallCount);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_MissingProviderConfigurationDoesNotReadClipboardContext()
+    {
+        var provider = new FakeTextEnhancementService("ignored");
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext("ignored clipboard"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            UseClipboardContext = true,
+            EnhancementEndpoint = string.Empty
+        };
+
+        var result = await pipeline.EnhanceAsync("hello", settings, [], CancellationToken.None);
+
+        Assert.False(result.AttemptedEnhancement);
+        Assert.Equal("hello", result.FinalText);
+        Assert.Equal("AI enhancement provider is not configured.", result.WarningMessage);
+        Assert.Equal(0, provider.CallCount);
+        Assert.Equal(0, contextProvider.CallCount);
     }
 
     [Fact]
@@ -162,6 +234,23 @@ public sealed class TextEnhancementPipelineTests
                 "openai-compatible",
                 request.Model,
                 TimeSpan.FromMilliseconds(42)));
+        }
+    }
+
+    private sealed class FakeEnhancementContextProvider(EnhancementContext context) : IEnhancementContextProvider
+    {
+        public int CallCount { get; private set; }
+        public Exception? Exception { get; init; }
+
+        public Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken)
+        {
+            CallCount++;
+            if (Exception is not null)
+            {
+                throw Exception;
+            }
+
+            return Task.FromResult(context);
         }
     }
 }

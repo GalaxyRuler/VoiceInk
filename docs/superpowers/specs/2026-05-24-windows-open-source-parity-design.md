@@ -62,7 +62,7 @@ The Windows MVP already has:
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
-- Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, original-text fallback, and successful enhancement insertion.
+- Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
@@ -289,13 +289,14 @@ AI Enhancement slice completed on 2026-05-25:
 - Store the provider API key in Windows Credential Manager rather than JSON settings.
 - Add an Enhancement navigation section for enable/disable, endpoint/model, prompt selection, timeout, skip-short, retry-on-timeout settings, and key save/clear.
 - Run enhancement after local transcription cleanup and before insertion. Store original cleaned text as history `Text`, successful enhancement as `EnhancedText`, plus enhancement provider/model, prompt, duration, and rendered request messages for local diagnostics. Paste the enhanced text. On enhancement failure, paste original cleaned text and keep enhanced text empty so paste-last-enhanced never pastes an error string.
+- Add a default-off `Clipboard Context` setting that reads the current text clipboard without modifying it, appends it to the enhancement system message inside `<CLIPBOARD_CONTEXT>` tags, and gracefully skips empty, non-text, or unavailable clipboard content.
 
 Windows gaps:
 
 - Prompt template persistence.
 - Ollama and Local CLI hooks.
 - Trigger detection.
-- Context capture.
+- Selected-text, screen/OCR, browser URL, and app-specific context capture.
 - Named provider cards and dynamic model lists.
 - Toggle-enhancement shortcut and recorder prompt picker activation.
 - AI re-enhance from History.
@@ -313,9 +314,15 @@ Clipboard enhancement context Windows MVP target:
 - Keep context capture local to the enhancement request and persist only the rendered AI request messages already saved for local History diagnostics.
 - Leave selected-text context, screen/OCR context, and browser URL context for later Windows context slices.
 
+Clipboard enhancement context slice completed on 2026-05-25:
+
+- Added `UseClipboardContext` JSON setting and an Enhancement section `Clipboard Context` toggle.
+- Added Core `EnhancementContext` and `IEnhancementContextProvider` contracts so context capture remains UI-independent and testable.
+- Added read-only Windows clipboard text capture through the native adapter, with empty/unavailable/non-text/failure fallback to no context.
+- Added `<CLIPBOARD_CONTEXT>` rendering before vocabulary in the enhancement system message, matching the macOS prompt contract.
+
 Windows gaps:
 
-- Clipboard context capture.
 - Selected text context through UI Automation or clipboard fallback.
 - Active window title/process.
 - OCR via Windows OCR APIs if available.

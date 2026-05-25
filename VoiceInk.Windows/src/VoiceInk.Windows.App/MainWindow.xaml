@@ -182,6 +182,9 @@
                         <CheckBox
                             x:Name="EnhancementEnabledCheckBox"
                             Content="Enable Enhancement" />
+                        <CheckBox
+                            x:Name="UseClipboardContextCheckBox"
+                            Content="Clipboard Context" />
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

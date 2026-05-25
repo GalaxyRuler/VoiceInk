@@ -51,6 +51,7 @@ public sealed class JsonSettingsStoreTests
             CloudTranscriptionProviderId = "groq",
             CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
             CloudTranscriptionModel = "gpt-4o-transcribe",
+            UseClipboardContext = true,
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(
