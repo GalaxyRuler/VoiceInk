@@ -15,6 +15,9 @@ public sealed class OnboardingSetupStatusServiceTests
         Assert.True(status.HasPrimaryShortcut);
         Assert.True(status.HasAudioInputChoices);
         Assert.False(status.CanCompleteSetup);
+        Assert.Equal("Microphone detected", status.MicrophoneStatusTitle);
+        Assert.Equal("VoiceInk found at least one recording input.", status.MicrophoneStatusMessage);
+        Assert.Equal("Open Windows Microphone Settings", status.MicrophoneActionText);
     }
 
     [Fact]
@@ -32,6 +35,11 @@ public sealed class OnboardingSetupStatusServiceTests
         Assert.True(status.HasPrimaryShortcut);
         Assert.False(status.HasAudioInputChoices);
         Assert.True(status.CanCompleteSetup);
+        Assert.Equal("No microphone detected", status.MicrophoneStatusTitle);
+        Assert.Equal(
+            "Connect or enable a microphone, refresh the device list, or check Windows microphone privacy settings.",
+            status.MicrophoneStatusMessage);
+        Assert.Equal("Check Windows Microphone Settings", status.MicrophoneActionText);
     }
 
     [Fact]

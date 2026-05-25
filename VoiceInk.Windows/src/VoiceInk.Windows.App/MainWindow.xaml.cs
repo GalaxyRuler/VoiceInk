@@ -1645,6 +1645,10 @@ public sealed partial class MainWindow : Window
             Content = "Open Windows Microphone Settings"
         };
         microphoneSettingsButton.Click += (_, _) => OpenWindowsMicrophoneSettings();
+        var refreshMicrophonesButton = new Button
+        {
+            Content = "Refresh Microphones"
+        };
 
         var shortcutTextBox = new TextBox
         {
@@ -1656,10 +1660,37 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = TextWrapping.Wrap
         };
-        RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
+        var microphoneStatusTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
+        RefreshOnboardingStatus(
+            statusTextBlock,
+            microphoneStatusTextBlock,
+            microphoneSettingsButton,
+            modelPathTextBox.Text,
+            shortcutTextBox.Text);
 
-        modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
-        shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(statusTextBlock, modelPathTextBox.Text, shortcutTextBox.Text);
+        refreshMicrophonesButton.Click += async (_, _) => await RefreshOnboardingAudioInputsAsync(
+            audioInputComboBox,
+            statusTextBlock,
+            microphoneStatusTextBlock,
+            microphoneSettingsButton,
+            modelPathTextBox,
+            shortcutTextBox);
+
+        modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
+            statusTextBlock,
+            microphoneStatusTextBlock,
+            microphoneSettingsButton,
+            modelPathTextBox.Text,
+            shortcutTextBox.Text);
+        shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
+            statusTextBlock,
+            microphoneStatusTextBlock,
+            microphoneSettingsButton,
+            modelPathTextBox.Text,
+            shortcutTextBox.Text);
 
         var content = new StackPanel
         {
@@ -1673,7 +1704,17 @@ public sealed partial class MainWindow : Window
         content.Children.Add(modelPathTextBox);
         content.Children.Add(browseModelButton);
         content.Children.Add(audioInputComboBox);
-        content.Children.Add(microphoneSettingsButton);
+        content.Children.Add(microphoneStatusTextBlock);
+        content.Children.Add(new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Children =
+            {
+                refreshMicrophonesButton,
+                microphoneSettingsButton
+            }
+        });
         content.Children.Add(shortcutTextBox);
         content.Children.Add(new TextBlock
         {
@@ -2375,7 +2416,55 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void RefreshOnboardingStatus(TextBlock statusTextBlock, string modelPath, string primaryShortcut)
+    private async Task RefreshOnboardingAudioInputsAsync(
+        ComboBox audioInputComboBox,
+        TextBlock statusTextBlock,
+        TextBlock microphoneStatusTextBlock,
+        Button microphoneSettingsButton,
+        TextBox modelPathTextBox,
+        TextBox shortcutTextBox)
+    {
+        try
+        {
+            var selectedDevice = audioInputComboBox.SelectedItem as AudioInputDeviceChoice;
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
+            audioInputComboBox.ItemsSource = audioInputChoices;
+            audioInputComboBox.SelectedIndex = selectedDevice is null
+                ? AudioInputComboBox.SelectedIndex
+                : audioInputChoices.ToList().FindIndex(choice =>
+                    choice.DeviceNumber == selectedDevice.DeviceNumber
+                    && string.Equals(choice.Name, selectedDevice.Name, StringComparison.OrdinalIgnoreCase));
+            if (audioInputComboBox.SelectedIndex < 0 && audioInputChoices.Count > 0)
+            {
+                audioInputComboBox.SelectedIndex = 0;
+            }
+
+            RefreshOnboardingStatus(
+                statusTextBlock,
+                microphoneStatusTextBlock,
+                microphoneSettingsButton,
+                modelPathTextBox.Text,
+                shortcutTextBox.Text);
+            RefreshUiFromControllerState("Audio inputs refreshed");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusTextBlock.Text = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusTextBlock.Text = $"Audio input refresh failed: {ex.Message}";
+            RefreshUiFromControllerState(statusTextBlock.Text);
+        }
+    }
+
+    private void RefreshOnboardingStatus(
+        TextBlock statusTextBlock,
+        TextBlock? microphoneStatusTextBlock,
+        Button? microphoneSettingsButton,
+        string modelPath,
+        string primaryShortcut)
     {
         var status = OnboardingSetupStatusService.Build(
             new AppSettings
@@ -2388,6 +2477,15 @@ public sealed partial class MainWindow : Window
         statusTextBlock.Text = status.CanCompleteSetup
             ? "Ready to save setup."
             : "Model path and primary shortcut are required to save setup.";
+        if (microphoneStatusTextBlock is not null)
+        {
+            microphoneStatusTextBlock.Text = $"{status.MicrophoneStatusTitle}: {status.MicrophoneStatusMessage}";
+        }
+
+        if (microphoneSettingsButton is not null)
+        {
+            microphoneSettingsButton.Content = status.MicrophoneActionText;
+        }
     }
 
     private bool HasPhysicalAudioInputChoices() =>
