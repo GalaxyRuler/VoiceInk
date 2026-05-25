@@ -321,6 +321,14 @@ Windows gaps:
 - Toggle-enhancement shortcut and recorder prompt picker activation.
 - AI re-enhance from History.
 
+Custom prompt persistence Windows target:
+
+- Persist user-created AI enhancement prompts in JSON settings using the existing Core `EnhancementPrompt` shape: title, prompt text, icon, optional description, trigger words, and `UseSystemInstructions`.
+- Keep predefined prompt text source-controlled while allowing trigger-word overrides to persist for predefined prompts, matching the macOS behavior where predefined prompts are refreshed from source but trigger words can survive.
+- Add Enhancement-section controls for selecting, creating, updating, and deleting prompt templates. Predefined prompts can have trigger words edited but cannot be deleted or have their source prompt text overwritten.
+- Ensure the dictation and Transcribe Audio enhancement pipeline reads the current prompt library after prompt edits without needing to restart the app.
+- Keep prompt persistence local only. No prompt marketplace, account sync, commercial template upsell, telemetry, or bundled paid prompt catalog.
+
 ### Context
 
 macOS can use clipboard context, selected text, active window/screen OCR, browser URL, and app-specific context.
