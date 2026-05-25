@@ -39,12 +39,22 @@ public static class TranscriptionProviderPresetCatalog
             "universal-streaming"
         ]);
 
+    public static TranscriptionProviderPreset Mistral { get; } = new(
+        "mistral",
+        "Mistral",
+        "https://api.mistral.ai/v1/audio/transcriptions",
+        "voxtral-mini-latest",
+        [
+            "voxtral-mini-latest"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
         Groq,
         Deepgram,
-        AssemblyAI
+        AssemblyAI,
+        Mistral
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

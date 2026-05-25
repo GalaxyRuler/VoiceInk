@@ -175,6 +175,38 @@ public sealed class OpenAICompatibleCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_ReadsMistralProviderSecretAndPostsToMistralEndpoint()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"text":"Voxtral text"}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey"] = "mistral-test-secret"
+            }
+        };
+        var service = new OpenAICompatibleCloudTranscriptionService(new HttpClient(handler), secrets);
+
+        var result = await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(
+                endpoint: "https://api.mistral.ai/v1/audio/transcriptions",
+                model: "voxtral-mini-latest",
+                providerId: "mistral"),
+            CancellationToken.None);
+
+        Assert.Equal("Voxtral text", result.Text);
+        Assert.Equal("mistral", result.ProviderName);
+        Assert.Equal("VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey", secrets.LastReadName);
+        Assert.Equal("https://api.mistral.ai/v1/audio/transcriptions", handler.Requests[0].RequestUri?.ToString());
+        Assert.Equal("Bearer", handler.Requests[0].Headers.Authorization?.Scheme);
+        Assert.Equal("mistral-test-secret", handler.Requests[0].Headers.Authorization?.Parameter);
+        Assert.Contains("voxtral-mini-latest", handler.Bodies[0]);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_CustomProviderFallsBackToLegacySecretName()
     {
         using var audioFile = new TempAudioFile();
