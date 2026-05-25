@@ -151,6 +151,31 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void MsixInstallSmokeScript_PrintsPlanByDefaultAndRequiresExecuteForMutation()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "smoke-msix-install.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("Execute", script);
+        Assert.Contains("MSIX install smoke plan", script);
+        Assert.Contains("Add-AppxPackage -Path", script);
+        Assert.Contains("Get-AppxPackage -Name", script);
+        Assert.Contains("Remove-AppxPackage -Package", script);
+        Assert.Contains("PackagePath is required unless -Help is used", script);
+        Assert.Contains("Refusing to smoke package outside artifact root", script);
+        Assert.Contains("Assert-NoReparsePointInPath", script);
+        Assert.Contains("This script does not create or import certificates", script);
+        Assert.Contains("Expected one installed package named", script);
+        Assert.Contains("Refusing to choose a package to remove", script);
+
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

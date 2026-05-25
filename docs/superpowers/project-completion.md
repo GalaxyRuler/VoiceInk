@@ -29,20 +29,20 @@ VoiceInk Windows parity  [##################--] 88%
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
 | Onboarding | 64% | `[#############-------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Broader permission health checks and richer setup polish remain. |
-| Packaging | 46% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
+| Packaging | 49% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX build smoke, shortcut registration, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows onboarding model catalog download  [####################] 100%
+Windows signed MSIX smoke plan  [####################] 100%
 ```
 
 Completed:
 
-- Added a tested onboarding recommended model catalog helper.
-- Added first-run recommended model selection using the existing free/open-source Whisper catalog.
-- Added `Download Recommended Model` to fetch a selected GGML model into app-local model storage.
-- Filled the onboarding model path after download while leaving completion to the existing `Save Setup` action.
+- Added `smoke-msix-install.ps1` for signed MSIX install/query/uninstall smoke planning.
+- Kept the script non-mutating by default.
+- Added an explicit `-Execute` gate for tester-run `Add-AppxPackage`, `Get-AppxPackage`, and exact `Remove-AppxPackage`.
+- Kept certificate creation/import/trust out of automation.
 
 ## Near-Term Priority
 
