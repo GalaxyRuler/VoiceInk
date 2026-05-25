@@ -106,3 +106,4 @@ Temporary Items
 # .NET
 bin/
 obj/
+VoiceInk.Windows/artifacts/

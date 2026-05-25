@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [##############------] 71%
+VoiceInk Windows parity  [##############------] 72%
 ```
 
 ## Area Bars
@@ -29,24 +29,24 @@ VoiceInk Windows parity  [##############------] 71%
 | Settings | 68% | `[##############------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, and recording feedback controls exist. Custom sound picker and visual polish remain. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
-| Packaging | 8% | `[##------------------]` | Source-run docs and runtime workaround exist. MSIX/installer, zip/dev distribution, native dependency layout, uninstall behavior, and installer smoke tests remain. |
+| Packaging | 20% | `[####----------------]` | Source-run docs, runtime workaround, and repeatable self-contained dev ZIP packaging exist. MSIX/installer, signing, shortcut registration, uninstall behavior, and installer smoke tests remain. |
 
 ## Current Slice
 
 ```text
-Floating recorder hover dismissal  [####################] 100%
+Windows dev ZIP packaging  [####################] 100%
 ```
 
 Completed:
 
-- Added macOS-style hover behavior for the Prompt and Power chooser panels.
-- Choosers open on pointer hover over their recorder button.
-- Choosers stay open while the pointer is over the button or panel, then close after a 250 ms delay.
-- Manual click toggles and no-activate behavior remain intact.
+- Added a repo-local PowerShell packaging script for an unpackaged Windows developer ZIP.
+- Publishes `win-x64` with .NET self-contained output and Windows App SDK self-contained deployment properties.
+- Stages a package README next to `VoiceInk.Windows.App.exe`.
+- Keeps generated package output under ignored `VoiceInk.Windows/artifacts/dev-zip`.
 
 ## Near-Term Priority
 
 1. Finish floating recorder fidelity: live partial transcript and notch-style recorder.
 2. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
-3. Add packaging path: zip/dev package first, then MSIX or installer.
+3. Continue packaging from dev ZIP to MSIX or installer with uninstall behavior and smoke tests.
 4. Continue model-management polish with richer provider cards and lifecycle status.

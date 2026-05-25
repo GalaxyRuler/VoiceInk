@@ -739,13 +739,20 @@ Onboarding slice completed on 2026-05-24:
 
 Windows needs open-source friendly packaging.
 
+Dev ZIP packaging slice completed on 2026-05-25:
+
+- Added a repo-local PowerShell packaging script for an unpackaged developer ZIP.
+- The script publishes the WinUI app for `win-x64` as a self-contained .NET output with `WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`, and `PublishSingleFile=false`.
+- Generated package contents are staged under ignored `VoiceInk.Windows/artifacts/dev-zip` output, with a README next to `VoiceInk.Windows.App.exe`.
+- The dev ZIP is explicitly a source-built testing distribution. It does not register package identity, Start Menu shortcuts, uninstall entries, signing, auto-update behavior, or commercial channels.
+
 Windows gaps:
 
 - MSIX or installer project.
-- Zip/dev distribution script.
-- Native dependency placement.
+- Installer/native dependency layout validation.
 - Uninstall behavior.
 - Shortcut registration.
+- Signing/release smoke tests.
 
 ## Milestone Order
 
