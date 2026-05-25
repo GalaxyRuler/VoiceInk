@@ -1318,6 +1318,96 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_CancellationDuringTranscriptionSavesCanceledHistoryAndNoMetric()
+    {
+        using var cts = new CancellationTokenSource();
+        var transcribeEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var transcribeGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var audio = new AudioCaptureResult(@"C:\Recordings\processing-canceled.wav", TimeSpan.FromSeconds(5), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper"))
+        {
+            OnTranscribe = () => transcribeEntered.SetResult(),
+            TranscribeGate = transcribeGate.Task
+        };
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var metrics = new FakeSessionMetricStore();
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                Language = "en"
+            }),
+            sessionMetricStore: metrics);
+
+        await controller.StartAsync(CancellationToken.None);
+
+        var stop = controller.StopAsync(cts.Token);
+        await transcribeEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
+
+        Assert.Equal(DictationState.Idle, controller.State);
+        Assert.False(capture.Started);
+        Assert.Equal(0, insertion.InsertCount);
+        Assert.Empty(metrics.Saved);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal(TranscriptionHistoryStatus.Canceled, saved.Status);
+        Assert.Equal(TranscriptionHistoryItem.CanceledTranscriptionText, saved.Text);
+        Assert.Equal(TranscriptionHistoryItem.CanceledTranscriptionText, saved.OriginalText);
+        Assert.Equal(@"C:\Recordings\processing-canceled.wav", saved.AudioFilePath);
+        Assert.Equal(TimeSpan.FromSeconds(5), saved.AudioDuration);
+        Assert.Equal(TimeSpan.Zero, saved.TranscriptionDuration);
+        Assert.Equal("local-whisper", saved.ProviderName);
+        Assert.Equal("en", saved.Language);
+        Assert.Equal("ggml-base.en.bin", saved.ModelPath);
+    }
+
+    [Fact]
+    public async Task StopAsync_CancellationAfterInsertionDoesNotSaveCanceledHistory()
+    {
+        using var cts = new CancellationTokenSource();
+        var historyEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var historyGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var capture = new FakeAudioCaptureService(
+            new AudioCaptureResult(@"C:\Recordings\inserted-before-cancel.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore
+        {
+            SaveEntered = historyEntered,
+            SaveGate = historyGate.Task
+        };
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper")),
+            insertion,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }));
+
+        await controller.StartAsync(CancellationToken.None);
+
+        var stop = controller.StopAsync(cts.Token);
+        await historyEntered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await cts.CancelAsync();
+        historyGate.SetResult();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
+
+        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal(DictationState.Idle, controller.State);
+        Assert.Empty(history.Items);
+    }
+
+    [Fact]
     public async Task StopAsync_CancellationDuringCaptureStopStillReleasesCaptureBeforePropagating()
     {
         using var cts = new CancellationTokenSource();
@@ -1462,16 +1552,23 @@ public sealed class DictationControllerTests
     {
         public List<TranscriptionHistoryItem> Items { get; } = [];
         public Exception? ExceptionToThrow { get; init; }
+        public TaskCompletionSource? SaveEntered { get; init; }
+        public Task? SaveGate { get; init; }
 
-        public Task SaveAsync(TranscriptionHistoryItem item, CancellationToken cancellationToken)
+        public async Task SaveAsync(TranscriptionHistoryItem item, CancellationToken cancellationToken)
         {
+            SaveEntered?.SetResult();
             if (ExceptionToThrow is not null)
             {
                 throw ExceptionToThrow;
             }
 
+            if (SaveGate is not null)
+            {
+                await SaveGate.WaitAsync(cancellationToken);
+            }
+
             Items.Add(item);
-            return Task.CompletedTask;
         }
 
         public Task<IReadOnlyList<TranscriptionHistoryItem>> ListRecentAsync(int limit, CancellationToken cancellationToken)

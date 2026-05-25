@@ -125,6 +125,7 @@ public sealed partial class MainWindow : Window
     private CancellationTokenSource? audioFileQueueCancellation;
     private CancellationTokenSource? modelDownloadCancellation;
     private Task? modelDownloadTask;
+    private CancellationTokenSource? stopOperationCancellation;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
@@ -499,20 +500,23 @@ public sealed partial class MainWindow : Window
         var statusOverride = "Stopping and inserting";
         var shouldCompleteFeedback = false;
         isStopping = true;
+        stopOperationCancellation?.Dispose();
+        stopOperationCancellation = CancellationTokenSource.CreateLinkedTokenSource(windowLifetime.Token);
+        var stopToken = stopOperationCancellation.Token;
         RefreshUiFromControllerState(statusOverride);
 
         try
         {
-            await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(windowLifetime.Token);
-            await controller.StopAsync(windowLifetime.Token);
+            await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(stopToken);
+            await controller.StopAsync(stopToken);
             shouldCompleteFeedback = controller.LastStopInsertedText;
             await CompleteRecordingFeedbackSessionAsync(playStopSound: shouldCompleteFeedback);
-            await RefreshHistoryAsync(windowLifetime.Token);
-            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
-            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(stopToken);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(stopToken);
+            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(stopToken);
             if (cleanupStatus is not null)
             {
-                await RefreshHistoryAsync(windowLifetime.Token);
+                await RefreshHistoryAsync(stopToken);
             }
 
             recordingStartedAt = null;
@@ -522,6 +526,13 @@ public sealed partial class MainWindow : Window
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
             statusOverride = "Closing";
+        }
+        catch (OperationCanceledException) when (stopOperationCancellation?.IsCancellationRequested == true)
+        {
+            await RefreshHistoryAsync(CancellationToken.None);
+            recordingStartedAt = null;
+            Interlocked.Exchange(ref latestRecordingInputLevel, 0);
+            statusOverride = controller.LastWarning ?? "Processing canceled";
         }
         catch (Exception ex)
         {
@@ -542,6 +553,8 @@ public sealed partial class MainWindow : Window
             }
 
             isStopping = false;
+            stopOperationCancellation?.Dispose();
+            stopOperationCancellation = null;
             RefreshUiFromControllerState(statusOverride);
         }
     }
@@ -559,6 +572,17 @@ public sealed partial class MainWindow : Window
 
     private async Task CancelCurrentRecordingAsync()
     {
+        if (isStopping && IsControllerBusy())
+        {
+            if (stopOperationCancellation?.IsCancellationRequested != true)
+            {
+                stopOperationCancellation?.Cancel();
+            }
+
+            RefreshUiFromControllerState("Canceling processing");
+            return;
+        }
+
         if (isStarting || isStopping || isCanceling || controller.State != DictationState.Recording)
         {
             return;
@@ -6077,8 +6101,8 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && controller.State == DictationState.Recording;
         CancelButton.IsEnabled = settingsLoaded
-            && !operationActive
-            && controller.State == DictationState.Recording;
+            && (!operationActive || isStopping)
+            && controller.State is DictationState.Recording or DictationState.Transcribing or DictationState.Inserting;
         PasteLastButton.IsEnabled = settingsLoaded
             && !operationActive
             && controller.State != DictationState.Recording;
@@ -6827,6 +6851,8 @@ public sealed partial class MainWindow : Window
         audioFileQueueCancellation?.Cancel();
         audioFileQueueCancellation?.Dispose();
         CancelModelDownloadAsync().GetAwaiter().GetResult();
+        stopOperationCancellation?.Cancel();
+        stopOperationCancellation?.Dispose();
         DisposeGlobalHotkeyService();
         DisposeTrayIconService();
         ClearHistoryAudioPlayer();

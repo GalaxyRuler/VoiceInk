@@ -7,14 +7,14 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###############-----] 75%
+VoiceInk Windows parity  [###############-----] 76%
 ```
 
 ## Area Bars
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 78% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, and metrics are in place. Prompt-trigger detection, advanced formatting, and canceling in-flight post-recording work remain. |
+| Core dictation pipeline | 81% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, metrics, and canceling in-flight post-recording work are in place. Prompt-trigger detection and advanced formatting remain. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###############-----] 75%
 ## Current Slice
 
 ```text
-Windows custom recording sounds  [####################] 100%
+Windows cancel dictation processing  [####################] 100%
 ```
 
 Completed:
 
-- Added Core sound mode/import/reset models and recording-session playback snapshots.
-- Added custom start/stop sound Settings controls with Test, Choose, and Reset actions.
-- Added NAudio duration validation and playback for imported `.wav`, `.mp3`, `.aiff`, and `.aif` sounds.
-- Kept imported sounds local under `%LocalAppData%\VoiceInk.Windows\Sounds` with Windows system sound fallback.
+- Added canceled-history preservation when cancellation happens after audio capture stops.
+- Passed cooperative cancellation through transcription, enhancement, insertion, and post-stop refresh work.
+- Enabled Cancel during `Transcribing` and `Inserting` to cancel the active stop pipeline.
+- Avoided completed session metrics and text insertion for canceled processing.
 
 ## Near-Term Priority
 

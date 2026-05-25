@@ -257,9 +257,16 @@ Windows gaps:
 
 - macOS-style formatting pass beyond cleanup preferences.
 - Prompt trigger detection.
-- Prompt-triggered toggle-enhancement shortcut and canceling in-flight enhancement after recording has already stopped.
+- Prompt-triggered toggle-enhancement shortcut.
 - Metrics persistence and views.
-- Dictation-controller history writes for failed recording/transcription sessions and canceled in-flight transcription/enhancement sessions.
+- Dictation-controller history writes for failed recording/transcription sessions.
+
+Cancel-processing slice completed on 2026-05-25:
+
+- `Cancel Recording` now cancels the active post-capture stop pipeline while VoiceInk is transcribing, enhancing, or inserting.
+- `DictationController` preserves the captured audio as a canceled History row when cancellation happens after capture stops and before completed history/metrics are saved.
+- Completed session metrics are not written for canceled processing.
+- Cancellation remains cooperative through .NET cancellation tokens; adapters that ignore tokens may still finish their current call before the UI can return to idle.
 
 ### Model Management
 
@@ -850,7 +857,7 @@ Status on 2026-05-24:
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, canceling in-flight transcription/enhancement, waveform/rate controls, AI re-enhance, and history batch actions.
+- Remaining for this slice: dedicated Dictionary navigation page/richer layout, push-to-talk and hybrid shortcut modes, shortcut key-up handling, prioritized audio input failover, waveform/rate controls, AI re-enhance, and history batch actions.
 - Add focused tests and docs.
 
 ## Verification

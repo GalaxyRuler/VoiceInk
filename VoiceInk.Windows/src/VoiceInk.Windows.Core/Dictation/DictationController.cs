@@ -136,85 +136,103 @@ public sealed class DictationController(
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
                 await NotifyCaptureStoppedAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
+                var hasCompletedHistory = false;
+                var hasInsertedText = false;
 
                 var powerModeResolution = await ResolveCurrentPowerModeForCompletionAsync(cancellationToken);
                 var settings = powerModeResolution.EffectiveSettings;
-                var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
-                var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
-                var vocabularyPrompt = DictionaryService.RenderVocabularyPrompt(vocabulary);
-
-                State = DictationState.Transcribing;
-                var transcription = await transcriptionService.TranscribeAsync(
-                    audio,
-                    TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
-                    cancellationToken);
-
-                var finalText = TextPostProcessor.Process(
-                    transcription.Text,
-                    new TextPostProcessingOptions(
-                        AppendTrailingSpace: settings.AppendTrailingSpace,
-                        RemoveFillerWords: settings.RemoveFillerWords,
-                        WordReplacements: replacements,
-                        PunctuationCleanupMode: settings.PunctuationCleanupMode,
-                        LowercaseTranscription: settings.LowercaseTranscription));
-
-                if (finalText.Length == 0)
-                {
-                    State = DictationState.Idle;
-                    ResetPartialTranscript();
-                    return;
-                }
-
-                var enhancement = enhancementPipeline is null
-                    ? null
-                    : await enhancementPipeline.EnhanceAsync(finalText, settings, vocabulary, cancellationToken);
-                if (enhancement?.WarningMessage is not null)
-                {
-                    LastWarning = enhancement.WarningMessage;
-                }
-
-                State = DictationState.Inserting;
-                await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
-                LastStopInsertedText = true;
 
                 try
                 {
-                    var historyItem = new TranscriptionHistoryItem(
-                        Guid.NewGuid(),
-                        DateTimeOffset.UtcNow,
-                        finalText,
-                        TranscriptionConfiguration.ProviderName(settings),
-                        audio.Duration,
-                        transcription.Duration,
-                        originalText: transcription.Text,
-                        status: TranscriptionHistoryStatus.Completed,
-                        language: settings.Language,
-                        modelPath: TranscriptionConfiguration.ModelMetadata(settings),
-                        promptName: enhancement?.PromptName,
-                        enhancementDuration: enhancement?.EnhancementDuration,
-                        errorMessage: enhancement?.WarningMessage,
-                        audioFilePath: audio.FilePath,
-                        enhancedText: enhancement?.EnhancedText,
-                        enhancementProviderName: enhancement?.EnhancementProviderName,
-                        enhancementModelName: enhancement?.EnhancementModelName,
-                        aiRequestSystemMessage: enhancement?.SystemMessage,
-                        aiRequestUserMessage: enhancement?.UserMessage,
-                        powerModeName: powerModeResolution.PowerModeName,
-                        powerModeEmoji: powerModeResolution.PowerModeEmoji);
-                    await historyStore.SaveAsync(
-                        historyItem,
+                    var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
+                    var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
+                    var vocabularyPrompt = DictionaryService.RenderVocabularyPrompt(vocabulary);
+
+                    State = DictationState.Transcribing;
+                    var transcription = await transcriptionService.TranscribeAsync(
+                        audio,
+                        TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
                         cancellationToken);
-                    var metricsResult = await RecordMetricAsync(historyItem, cancellationToken);
-                    LastWarning ??= metricsResult.WarningMessage;
+
+                    var finalText = TextPostProcessor.Process(
+                        transcription.Text,
+                        new TextPostProcessingOptions(
+                            AppendTrailingSpace: settings.AppendTrailingSpace,
+                            RemoveFillerWords: settings.RemoveFillerWords,
+                            WordReplacements: replacements,
+                            PunctuationCleanupMode: settings.PunctuationCleanupMode,
+                            LowercaseTranscription: settings.LowercaseTranscription));
+
+                    if (finalText.Length == 0)
+                    {
+                        State = DictationState.Idle;
+                        ResetPartialTranscript();
+                        return;
+                    }
+
+                    var enhancement = enhancementPipeline is null
+                        ? null
+                        : await enhancementPipeline.EnhanceAsync(finalText, settings, vocabulary, cancellationToken);
+                    if (enhancement?.WarningMessage is not null)
+                    {
+                        LastWarning = enhancement.WarningMessage;
+                    }
+
+                    State = DictationState.Inserting;
+                    await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
+                    LastStopInsertedText = true;
+                    hasInsertedText = true;
+
+                    try
+                    {
+                        var historyItem = new TranscriptionHistoryItem(
+                            Guid.NewGuid(),
+                            DateTimeOffset.UtcNow,
+                            finalText,
+                            TranscriptionConfiguration.ProviderName(settings),
+                            audio.Duration,
+                            transcription.Duration,
+                            originalText: transcription.Text,
+                            status: TranscriptionHistoryStatus.Completed,
+                            language: settings.Language,
+                            modelPath: TranscriptionConfiguration.ModelMetadata(settings),
+                            promptName: enhancement?.PromptName,
+                            enhancementDuration: enhancement?.EnhancementDuration,
+                            errorMessage: enhancement?.WarningMessage,
+                            audioFilePath: audio.FilePath,
+                            enhancedText: enhancement?.EnhancedText,
+                            enhancementProviderName: enhancement?.EnhancementProviderName,
+                            enhancementModelName: enhancement?.EnhancementModelName,
+                            aiRequestSystemMessage: enhancement?.SystemMessage,
+                            aiRequestUserMessage: enhancement?.UserMessage,
+                            powerModeName: powerModeResolution.PowerModeName,
+                            powerModeEmoji: powerModeResolution.PowerModeEmoji);
+                        await historyStore.SaveAsync(
+                            historyItem,
+                            cancellationToken);
+                        hasCompletedHistory = true;
+                        var metricsResult = await RecordMetricAsync(historyItem, cancellationToken);
+                        LastWarning ??= metricsResult.WarningMessage;
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        State = DictationState.Idle;
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        LastWarning = $"History save failed: {ex.Message}";
+                    }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
+                    if (!hasCompletedHistory && !hasInsertedText)
+                    {
+                        await SaveCanceledHistoryBestEffortAsync(audio, powerModeResolution, CancellationToken.None);
+                    }
+
                     State = DictationState.Idle;
                     throw;
-                }
-                catch (Exception ex)
-                {
-                    LastWarning = $"History save failed: {ex.Message}";
                 }
 
                 State = DictationState.Idle;
@@ -357,6 +375,41 @@ public sealed class DictationController(
     {
         var settings = await settingsStore.LoadAsync(cancellationToken);
         return PowerModeMatcher.Resolve(settings, activePowerModeResolution?.Target);
+    }
+
+    private async Task SaveCanceledHistoryBestEffortAsync(
+        AudioCaptureResult audio,
+        PowerModeResolution powerModeResolution,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var settings = powerModeResolution.EffectiveSettings;
+            await historyStore.SaveAsync(
+                new TranscriptionHistoryItem(
+                    Guid.NewGuid(),
+                    DateTimeOffset.UtcNow,
+                    TranscriptionHistoryItem.CanceledTranscriptionText,
+                    TranscriptionConfiguration.ProviderName(settings),
+                    audio.Duration,
+                    TimeSpan.Zero,
+                    originalText: TranscriptionHistoryItem.CanceledTranscriptionText,
+                    status: TranscriptionHistoryStatus.Canceled,
+                    language: settings.Language,
+                    modelPath: TranscriptionConfiguration.ModelMetadata(settings),
+                    audioFilePath: audio.FilePath,
+                    powerModeName: powerModeResolution.PowerModeName,
+                    powerModeEmoji: powerModeResolution.PowerModeEmoji),
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning = $"History save failed: {ex.Message}";
+        }
     }
 
     private Task<SessionMetricRecorderResult> RecordMetricAsync(
