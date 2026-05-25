@@ -61,6 +61,11 @@ public sealed record AppSettings
     public int ShortEnhancementWordThreshold { get; init; } = 3;
     public bool UseClipboardContext { get; init; }
     public bool UseOcrContext { get; init; }
+    public bool UseOcrCaptureRegion { get; init; }
+    public int OcrCaptureRegionLeft { get; init; }
+    public int OcrCaptureRegionTop { get; init; }
+    public int OcrCaptureRegionWidth { get; init; }
+    public int OcrCaptureRegionHeight { get; init; }
     public bool RemoveFillerWords { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
@@ -122,6 +127,11 @@ public sealed record AppSettings
             ShortEnhancementWordThreshold == other.ShortEnhancementWordThreshold &&
             UseClipboardContext == other.UseClipboardContext &&
             UseOcrContext == other.UseOcrContext &&
+            UseOcrCaptureRegion == other.UseOcrCaptureRegion &&
+            OcrCaptureRegionLeft == other.OcrCaptureRegionLeft &&
+            OcrCaptureRegionTop == other.OcrCaptureRegionTop &&
+            OcrCaptureRegionWidth == other.OcrCaptureRegionWidth &&
+            OcrCaptureRegionHeight == other.OcrCaptureRegionHeight &&
             RemoveFillerWords == other.RemoveFillerWords &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
@@ -202,6 +212,11 @@ public sealed record AppSettings
         hash.Add(ShortEnhancementWordThreshold);
         hash.Add(UseClipboardContext);
         hash.Add(UseOcrContext);
+        hash.Add(UseOcrCaptureRegion);
+        hash.Add(OcrCaptureRegionLeft);
+        hash.Add(OcrCaptureRegionTop);
+        hash.Add(OcrCaptureRegionWidth);
+        hash.Add(OcrCaptureRegionHeight);
         hash.Add(RemoveFillerWords);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);

@@ -295,7 +295,44 @@
                             Content="Clipboard Context" />
                         <CheckBox
                             x:Name="UseOcrContextCheckBox"
-                            Content="Screen OCR Context" />
+                            Content="Screen OCR Context"
+                            Click="OcrContextControl_Click" />
+                        <CheckBox
+                            x:Name="UseOcrCaptureRegionCheckBox"
+                            Content="Constrain OCR Region"
+                            Click="OcrContextControl_Click" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <NumberBox
+                                x:Name="OcrRegionLeftNumberBox"
+                                Grid.Column="0"
+                                Header="Left"
+                                Minimum="-100000"
+                                SmallChange="10" />
+                            <NumberBox
+                                x:Name="OcrRegionTopNumberBox"
+                                Grid.Column="1"
+                                Header="Top"
+                                Minimum="-100000"
+                                SmallChange="10" />
+                            <NumberBox
+                                x:Name="OcrRegionWidthNumberBox"
+                                Grid.Column="2"
+                                Header="Width"
+                                Minimum="0"
+                                SmallChange="10" />
+                            <NumberBox
+                                x:Name="OcrRegionHeightNumberBox"
+                                Grid.Column="3"
+                                Header="Height"
+                                Minimum="0"
+                                SmallChange="10" />
+                        </Grid>
                         <ComboBox
                             x:Name="EnhancementProviderPresetComboBox"
                             DisplayMemberPath="DisplayName"

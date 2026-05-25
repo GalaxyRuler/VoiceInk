@@ -242,7 +242,7 @@ public sealed partial class MainWindow : Window
         textEnhancementPipeline = new TextEnhancementPipeline(
             textEnhancementService,
             () => enhancementPrompts,
-            new WindowsEnhancementContextProvider());
+            new WindowsEnhancementContextProvider(new SettingsBackedOcrTextReader(settingsStore)));
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         deepgramTranscriptionService = new DeepgramCloudTranscriptionService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new DeepgramLiveTranscriptionPreviewService(
@@ -383,6 +383,11 @@ public sealed partial class MainWindow : Window
     private async void ApplyAudioInputButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyAudioInputAsync();
+    }
+
+    private void OcrContextControl_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshUiFromControllerState();
     }
 
     private void AudioInputDeviceChangeWatcher_DevicesChanged(object? sender, EventArgs e)
@@ -1484,6 +1489,11 @@ public sealed partial class MainWindow : Window
         EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
         UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
         UseOcrContextCheckBox.IsChecked = settings.UseOcrContext;
+        UseOcrCaptureRegionCheckBox.IsChecked = settings.UseOcrCaptureRegion;
+        OcrRegionLeftNumberBox.Value = settings.OcrCaptureRegionLeft;
+        OcrRegionTopNumberBox.Value = settings.OcrCaptureRegionTop;
+        OcrRegionWidthNumberBox.Value = settings.OcrCaptureRegionWidth;
+        OcrRegionHeightNumberBox.Value = settings.OcrCaptureRegionHeight;
         suppressEnhancementPresetChanged = true;
         SelectEnhancementPreset(settings.EnhancementProviderId);
         suppressEnhancementPresetChanged = false;
@@ -4797,6 +4807,13 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
+            var ocrRegionError = ValidateOcrRegionSettings();
+            if (ocrRegionError is not null)
+            {
+                RefreshUiFromControllerState(ocrRegionError);
+                return;
+            }
+
             EnhancementTimeoutTextBox.Text = timeoutSeconds.ToString(CultureInfo.InvariantCulture);
             ShortEnhancementThresholdTextBox.Text = shortThreshold.ToString(CultureInfo.InvariantCulture);
             var configurationError = EnhancementConfiguration.ValidateRequiredSettings(
@@ -5419,6 +5436,11 @@ public sealed partial class MainWindow : Window
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
             UseOcrContext = UseOcrContextCheckBox.IsChecked == true,
+            UseOcrCaptureRegion = UseOcrCaptureRegionCheckBox.IsChecked == true,
+            OcrCaptureRegionLeft = CheckedNumberBoxIntValue(OcrRegionLeftNumberBox),
+            OcrCaptureRegionTop = CheckedNumberBoxIntValue(OcrRegionTopNumberBox),
+            OcrCaptureRegionWidth = CheckedNumberBoxIntValue(OcrRegionWidthNumberBox),
+            OcrCaptureRegionHeight = CheckedNumberBoxIntValue(OcrRegionHeightNumberBox),
             EnhancementProviderId = SelectedEnhancementProviderId(),
             EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
             EnhancementModel = EnhancementModelTextBox.Text.Trim(),
@@ -6641,6 +6663,15 @@ public sealed partial class MainWindow : Window
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
         UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
         UseOcrContextCheckBox.IsEnabled = enhancementControlsEnabled;
+        UseOcrCaptureRegionCheckBox.IsEnabled = enhancementControlsEnabled
+            && UseOcrContextCheckBox.IsChecked == true;
+        var ocrRegionControlsEnabled = enhancementControlsEnabled
+            && UseOcrContextCheckBox.IsChecked == true
+            && UseOcrCaptureRegionCheckBox.IsChecked == true;
+        OcrRegionLeftNumberBox.IsEnabled = ocrRegionControlsEnabled;
+        OcrRegionTopNumberBox.IsEnabled = ocrRegionControlsEnabled;
+        OcrRegionWidthNumberBox.IsEnabled = ocrRegionControlsEnabled;
+        OcrRegionHeightNumberBox.IsEnabled = ocrRegionControlsEnabled;
         EnhancementProviderPresetComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
@@ -7082,6 +7113,37 @@ public sealed partial class MainWindow : Window
 
     private double SelectedAudioResumptionDelaySeconds() =>
         DoubleChoiceAtOrDefault(AudioResumptionDelayChoices, AudioResumptionDelayComboBox.SelectedIndex, 0.0);
+
+    private string? ValidateOcrRegionSettings()
+    {
+        if (UseOcrContextCheckBox.IsChecked != true || UseOcrCaptureRegionCheckBox.IsChecked != true)
+        {
+            return null;
+        }
+
+        if (!NumberBoxHasFiniteValue(OcrRegionLeftNumberBox)
+            || !NumberBoxHasFiniteValue(OcrRegionTopNumberBox)
+            || !NumberBoxHasFiniteValue(OcrRegionWidthNumberBox)
+            || !NumberBoxHasFiniteValue(OcrRegionHeightNumberBox))
+        {
+            return "OCR region values must be valid numbers.";
+        }
+
+        if (OcrRegionWidthNumberBox.Value <= 0 || OcrRegionHeightNumberBox.Value <= 0)
+        {
+            return "OCR region width and height must be positive.";
+        }
+
+        return null;
+    }
+
+    private static bool NumberBoxHasFiniteValue(NumberBox numberBox) =>
+        !double.IsNaN(numberBox.Value) && !double.IsInfinity(numberBox.Value);
+
+    private static int CheckedNumberBoxIntValue(NumberBox numberBox) =>
+        NumberBoxHasFiniteValue(numberBox)
+            ? (int)Math.Round(numberBox.Value, MidpointRounding.AwayFromZero)
+            : 0;
 
     private string SelectedPasteMethod() =>
         PasteMethodComboBox.SelectedIndex == 1

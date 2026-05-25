@@ -25,6 +25,17 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
     {
     }
 
+    public WindowsEnhancementContextProvider(IOcrTextReader ocrTextReader)
+        : this(
+            new ClipboardEnhancementContextProvider(),
+            new SelectedTextEnhancementContextProvider(),
+            new SelectedTextClipboardFallbackReader(),
+            new ActiveWindowPowerModeTargetProvider(),
+            new BrowserUrlEnhancementContextProvider(),
+            ocrTextReader)
+    {
+    }
+
     public WindowsEnhancementContextProvider(
         IClipboardTextReader clipboardProvider,
         ISelectedTextReader selectedTextProvider,

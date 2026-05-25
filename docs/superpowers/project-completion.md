@@ -21,7 +21,7 @@ VoiceInk Windows parity  [##################--] 88%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 67% | `[#############-------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, and region-aware OCR capture plumbing exist with graceful degradation. Visible OCR picker UI remains. |
+| Context features | 70% | `[##############------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, and visible numeric OCR region controls exist with graceful degradation. Overlay picker polish remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
@@ -34,18 +34,19 @@ VoiceInk Windows parity  [##################--] 88%
 ## Current Slice
 
 ```text
-Windows OCR capture region contract  [####################] 100%
+Windows OCR region controls  [####################] 100%
 ```
 
 Completed:
 
-- Added an OCR screen capture region contract.
-- Threaded optional region bounds through the OCR reader and desktop capture implementation.
-- Kept full-desktop OCR as the default and skipped empty regions without invoking recognition.
+- Added persisted OCR capture region settings.
+- Added visible WinUI numeric controls for OCR region left/top/width/height.
+- Added a settings-backed OCR reader so saved bounds are used at OCR read time.
+- Kept full-desktop OCR as the default when region mode is off.
 
 ## Near-Term Priority
 
 1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
-2. Add visible OCR picker UI so users can constrain screen context.
+2. Add overlay-style OCR picker polish so users can select screen regions visually.
 3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
 4. Add deeper onboarding model catalog/download and permission health checks.

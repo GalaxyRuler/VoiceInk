@@ -90,6 +90,11 @@ public sealed class JsonSettingsStoreTests
             ],
             UseClipboardContext = true,
             UseOcrContext = true,
+            UseOcrCaptureRegion = true,
+            OcrCaptureRegionLeft = 12,
+            OcrCaptureRegionTop = 34,
+            OcrCaptureRegionWidth = 640,
+            OcrCaptureRegionHeight = 360,
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(
