@@ -782,6 +782,39 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Clipboard" FontWeight="SemiBold" />
+                            <CheckBox
+                                x:Name="RestoreClipboardCheckBox"
+                                Content="Keep Clipboard Content"
+                                Checked="ClipboardSetting_Changed"
+                                Unchecked="ClipboardSetting_Changed" />
+                            <ComboBox
+                                x:Name="ClipboardRestoreDelayComboBox"
+                                Header="Restore Delay"
+                                SelectedIndex="3">
+                                <ComboBoxItem Content="250ms" />
+                                <ComboBoxItem Content="500ms" />
+                                <ComboBoxItem Content="1s" />
+                                <ComboBoxItem Content="2s" />
+                                <ComboBoxItem Content="3s" />
+                                <ComboBoxItem Content="4s" />
+                                <ComboBoxItem Content="5s" />
+                            </ComboBox>
+                            <ComboBox
+                                x:Name="PasteMethodComboBox"
+                                Header="Paste Method"
+                                SelectedIndex="0"
+                                SelectionChanged="ClipboardSettingComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Default" />
+                                <ComboBoxItem Content="Direct Text" />
+                            </ComboBox>
+                            <Button
+                                x:Name="ApplyClipboardSettingsButton"
+                                Content="Apply Clipboard Settings"
+                                Click="ApplyClipboardSettingsButton_Click" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Cleanup" FontWeight="SemiBold" />
                             <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
                             <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />

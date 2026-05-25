@@ -12,6 +12,8 @@ public sealed record AppSettings
     public string Language { get; init; } = "auto";
     public bool AppendTrailingSpace { get; init; }
     public bool RestoreClipboard { get; init; } = true;
+    public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
+    public string PasteMethod { get; init; } = PasteMethodSettings.Default;
     public bool IsTranscriptionCleanupEnabled { get; init; }
     public int TranscriptionRetentionMinutes { get; init; } = 24 * 60;
     public bool IsAudioCleanupEnabled { get; init; }
@@ -55,6 +57,8 @@ public sealed record AppSettings
             Language == other.Language &&
             AppendTrailingSpace == other.AppendTrailingSpace &&
             RestoreClipboard == other.RestoreClipboard &&
+            ClipboardRestoreDelaySeconds.Equals(other.ClipboardRestoreDelaySeconds) &&
+            PasteMethod == other.PasteMethod &&
             IsTranscriptionCleanupEnabled == other.IsTranscriptionCleanupEnabled &&
             TranscriptionRetentionMinutes == other.TranscriptionRetentionMinutes &&
             IsAudioCleanupEnabled == other.IsAudioCleanupEnabled &&
@@ -99,6 +103,8 @@ public sealed record AppSettings
         hash.Add(Language);
         hash.Add(AppendTrailingSpace);
         hash.Add(RestoreClipboard);
+        hash.Add(ClipboardRestoreDelaySeconds);
+        hash.Add(PasteMethod);
         hash.Add(IsTranscriptionCleanupEnabled);
         hash.Add(TranscriptionRetentionMinutes);
         hash.Add(IsAudioCleanupEnabled);

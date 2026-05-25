@@ -37,6 +37,8 @@ public sealed class JsonSettingsStoreTests
             Language = "en",
             AppendTrailingSpace = true,
             RestoreClipboard = false,
+            ClipboardRestoreDelaySeconds = 3.0,
+            PasteMethod = "directText",
             Hotkey = "Ctrl+Shift+D",
             SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",

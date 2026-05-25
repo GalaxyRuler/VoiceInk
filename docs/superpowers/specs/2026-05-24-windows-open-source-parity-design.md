@@ -542,10 +542,27 @@ Settings privacy/onboarding slice completed on 2026-05-25:
 - Added WinUI Settings controls for Privacy cleanup and a confirmed `Reset Onboarding` action that shows first-run setup again on the next launch.
 - Automatic cleanup now runs on launch, after completed recordings, and on a daily in-app timer while the relevant setting is enabled.
 
+Settings clipboard/paste Windows target:
+
+- Add Settings controls matching the macOS intent for `Keep Clipboard Content`, `Restore Delay`, and `Paste Method`.
+- Persist clipboard restore settings with macOS defaults: restore enabled and a 2.0 second delay, clamped to at least 250ms when restoring.
+- Keep the default paste method as clipboard-based paste using simulated Ctrl+V, because it works across rich text targets and preserves the existing Windows behavior.
+- Add a Windows-native `Direct Text` paste method that sends Unicode text input directly without using the clipboard. Document it as a compatibility option, not a replacement for the default.
+- When clipboard restore is enabled, restore only if the clipboard still contains VoiceInk's transient paste payload and session marker, so VoiceInk does not overwrite a user clipboard change made after insertion.
+- Keep clipboard behavior local-only. Never upload clipboard contents or include clipboard snapshots in diagnostics/backups.
+
+Settings clipboard/paste slice completed on 2026-05-25:
+
+- Added JSON settings for clipboard restore delay and paste method with macOS-aligned defaults.
+- Added Settings `Clipboard` controls for `Keep Clipboard Content`, `Restore Delay`, and `Paste Method`.
+- Changed Windows text insertion to read settings at paste time instead of hardcoding clipboard restore behavior.
+- Added session-marked clipboard restore so VoiceInk restores only when its own transient paste payload is still present.
+- Added the Windows `Direct Text` paste method, which sends Unicode text input without touching the clipboard.
+
 Windows gaps:
 
-- Settings surfaces beyond supported shortcut, cleanup, backup, provider, audio, and onboarding controls.
-- Windows equivalents for launch at login, tray behavior, richer diagnostics, and paste method.
+- Settings surfaces beyond supported shortcut, cleanup, backup, provider, audio, onboarding, and clipboard controls.
+- Windows equivalents for launch at login, tray behavior, and richer diagnostics.
 
 ### Audio Input
 

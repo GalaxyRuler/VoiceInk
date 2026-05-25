@@ -64,6 +64,7 @@ public sealed partial class MainWindow : Window
     private const string PowerModeSectionTag = "Power Mode";
     private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
     private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
+    private static readonly double[] ClipboardRestoreDelayChoices = [0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
 
     private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
@@ -171,7 +172,7 @@ public sealed partial class MainWindow : Window
         sessionMetricStore = metricsStore.Store;
         metricsInitializationWarning = metricsStore.Warning;
         settingsStore = new JsonSettingsStore(settingsPath);
-        textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
+        textInjectionService = new ClipboardTextInjectionService(settingsStore);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         secretStore = new WindowsCredentialSecretStore();
         textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
@@ -846,6 +847,33 @@ public sealed partial class MainWindow : Window
         await ApplyShortcutsAsync();
     }
 
+    private async void ApplyClipboardSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyClipboardSettingsAsync();
+    }
+
+    private void ClipboardSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        UpdateClipboardSettingControlState();
+        RefreshUiFromControllerState();
+    }
+
+    private void ClipboardSettingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        UpdateClipboardSettingControlState();
+        RefreshUiFromControllerState();
+    }
+
     private async void ApplyCleanupSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyCleanupSettingsAsync();
@@ -1007,6 +1035,11 @@ public sealed partial class MainWindow : Window
         powerModeRules = settings.PowerModeRules;
         RefreshPowerModePromptChoices(selectedPromptId: null);
         RefreshPowerModeRulesListView();
+        RestoreClipboardCheckBox.IsChecked = settings.RestoreClipboard;
+        ClipboardRestoreDelayComboBox.SelectedIndex = ClipboardRestoreDelayToSelectedIndex(
+            settings.ClipboardRestoreDelaySeconds);
+        PasteMethodComboBox.SelectedIndex = PasteMethodToSelectedIndex(settings.PasteMethod);
+        UpdateClipboardSettingControlState();
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
         AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -1331,6 +1364,28 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Onboarding reset failed: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyClipboardSettingsAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Clipboard settings saved");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Clipboard settings save failed: {ex.Message}");
         }
     }
 
@@ -3940,6 +3995,9 @@ public sealed partial class MainWindow : Window
                 : settings.QuickAddDictionaryHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
+            RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
+            ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
+            PasteMethod = SelectedPasteMethod(),
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
             EnhancementProviderId = SelectedEnhancementProviderId(),
@@ -4883,6 +4941,10 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        ApplyClipboardSettingsButton.IsEnabled = settingsLoaded && !operationActive;
+        RestoreClipboardCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        PasteMethodComboBox.IsEnabled = settingsLoaded && !operationActive;
+        UpdateClipboardSettingControlState();
         ApplyCleanupSettingsButton.IsEnabled = settingsLoaded && !operationActive;
         ResetOnboardingButton.IsEnabled = settingsLoaded && !operationActive;
         TranscriptionCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
@@ -5112,6 +5174,25 @@ public sealed partial class MainWindow : Window
             _ => PunctuationCleanupMode.Keep
         };
 
+    private double SelectedClipboardRestoreDelaySeconds() =>
+        DoubleChoiceAtOrDefault(ClipboardRestoreDelayChoices, ClipboardRestoreDelayComboBox.SelectedIndex, 2.0);
+
+    private string SelectedPasteMethod() =>
+        PasteMethodComboBox.SelectedIndex == 1
+            ? PasteMethodSettings.DirectText
+            : PasteMethodSettings.Default;
+
+    private static int ClipboardRestoreDelayToSelectedIndex(double seconds)
+    {
+        var index = Array.FindIndex(
+            ClipboardRestoreDelayChoices,
+            choice => Math.Abs(choice - seconds) < 0.001);
+        return index >= 0 ? index : 3;
+    }
+
+    private static int PasteMethodToSelectedIndex(string method) =>
+        PasteMethodSettings.Normalize(method) == PasteMethodSettings.DirectText ? 1 : 0;
+
     private int SelectedTranscriptionRetentionMinutes() =>
         ChoiceAtOrDefault(
             TranscriptionRetentionMinuteChoices,
@@ -5144,6 +5225,9 @@ public sealed partial class MainWindow : Window
     private static int ChoiceAtOrDefault(IReadOnlyList<int> choices, int index, int fallback) =>
         index >= 0 && index < choices.Count ? choices[index] : fallback;
 
+    private static double DoubleChoiceAtOrDefault(IReadOnlyList<double> choices, int index, double fallback) =>
+        index >= 0 && index < choices.Count ? choices[index] : fallback;
+
     private static int ChoiceIndexOrDefault(IReadOnlyList<int> choices, int value, int fallbackIndex)
     {
         var index = Array.IndexOf(choices.ToArray(), value);
@@ -5167,6 +5251,14 @@ public sealed partial class MainWindow : Window
             && !isRunningPrivacyCleanup
             && audioCleanupEnabled;
         RunAudioCleanupButton.IsEnabled = canUsePrivacyCleanup && audioCleanupEnabled;
+    }
+
+    private void UpdateClipboardSettingControlState()
+    {
+        ClipboardRestoreDelayComboBox.IsEnabled = settingsLoaded
+            && !IsOperationActive()
+            && RestoreClipboardCheckBox.IsChecked == true
+            && PasteMethodToSelectedIndex(SelectedPasteMethod()) == 0;
     }
 
     private static string TranscriptCleanupStatus(PrivacyCleanupResult cleanup)

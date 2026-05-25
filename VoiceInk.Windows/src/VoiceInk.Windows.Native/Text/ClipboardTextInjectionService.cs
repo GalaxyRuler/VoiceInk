@@ -3,11 +3,13 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using VoiceInk.Windows.Core.Services;
+using VoiceInk.Windows.Core.Text;
 
 namespace VoiceInk.Windows.Native.Text;
 
-public sealed class ClipboardTextInjectionService(bool restoreClipboard) : ITextInjectionService
+public sealed class ClipboardTextInjectionService(ISettingsStore settingsStore) : ITextInjectionService
 {
+    private const string PasteSessionFormat = "VoiceInk.Windows.PasteSessionId";
     private readonly SemaphoreSlim insertionGate = new(1, 1);
 
     public async Task CopyAsync(string text, CancellationToken cancellationToken)
@@ -28,9 +30,21 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
         await insertionGate.WaitAsync(cancellationToken);
         try
         {
+            var settings = await settingsStore.LoadAsync(cancellationToken);
+            if (PasteMethodSettings.Normalize(settings.PasteMethod) == PasteMethodSettings.DirectText)
+            {
+                SendUnicodeText(text);
+                return;
+            }
+
+            var restoreClipboard = settings.RestoreClipboard;
+            var restoreDelay = TimeSpan.FromSeconds(
+                PasteMethodSettings.EffectiveClipboardRestoreDelaySeconds(
+                    settings.ClipboardRestoreDelaySeconds));
+            var sessionId = Guid.NewGuid().ToString("N");
             var previousClipboard = restoreClipboard ? ClipboardSnapshot.Capture() : null;
 
-            ClipboardStaDispatcher.Invoke(() => Clipboard.SetText(text));
+            ClipboardStaDispatcher.Invoke(() => SetPasteSessionClipboard(text, restoreClipboard ? sessionId : null));
             try
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(80), cancellationToken);
@@ -40,11 +54,11 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
             {
                 if (restoreClipboard && previousClipboard is not null)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(400), CancellationToken.None);
+                    await Task.Delay(restoreDelay, CancellationToken.None);
 
                     try
                     {
-                        await previousClipboard.RestoreAsync(CancellationToken.None);
+                        await previousClipboard.RestoreAsync(text, sessionId, CancellationToken.None);
                     }
                     catch
                     {
@@ -56,6 +70,20 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
         {
             insertionGate.Release();
         }
+    }
+
+    private static void SetPasteSessionClipboard(string text, string? sessionId)
+    {
+        if (sessionId is null)
+        {
+            Clipboard.SetText(text);
+            return;
+        }
+
+        var package = new DataObject();
+        package.SetText(text, TextDataFormat.UnicodeText);
+        package.SetData(PasteSessionFormat, autoConvert: false, sessionId);
+        Clipboard.SetDataObject(package, copy: true);
     }
 
     private static void SendCtrlV()
@@ -93,10 +121,47 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
         };
     }
 
+    private static void SendUnicodeText(string text)
+    {
+        foreach (var character in text)
+        {
+            var inputs = new[]
+            {
+                UnicodeInput(character, keyUp: false),
+                UnicodeInput(character, keyUp: true)
+            };
+
+            var sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+            if (sent != inputs.Length)
+            {
+                throw new InvalidOperationException(
+                    "Windows did not accept the direct text keyboard input.",
+                    new Win32Exception(Marshal.GetLastPInvokeError()));
+            }
+        }
+    }
+
+    private static INPUT UnicodeInput(char character, bool keyUp)
+    {
+        return new INPUT
+        {
+            type = InputKeyboard,
+            U = new InputUnion
+            {
+                ki = new KEYBDINPUT
+                {
+                    wScan = character,
+                    dwFlags = KeyEventUnicode | (keyUp ? KeyEventKeyUp : 0)
+                }
+            }
+        };
+    }
+
     private const int InputKeyboard = 1;
     private const ushort VirtualKeyControl = 0x11;
     private const ushort VirtualKeyV = 0x56;
     private const uint KeyEventKeyUp = 0x0002;
+    private const uint KeyEventUnicode = 0x0004;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
@@ -113,10 +178,15 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
             });
         }
 
-        public Task RestoreAsync(CancellationToken cancellationToken)
+        public Task RestoreAsync(string expectedText, string sessionId, CancellationToken cancellationToken)
         {
             return ClipboardStaDispatcher.InvokeAsync(() =>
             {
+                if (!ClipboardStillOwnedByPasteSession(expectedText, sessionId))
+                {
+                    return;
+                }
+
                 if (Data is not null)
                 {
                     Clipboard.SetDataObject(Data, copy: true);
@@ -134,6 +204,27 @@ public sealed class ClipboardTextInjectionService(bool restoreClipboard) : IText
                     Clipboard.Clear();
                 }
             }, cancellationToken);
+        }
+
+        private static bool ClipboardStillOwnedByPasteSession(string expectedText, string sessionId)
+        {
+            if (!Clipboard.ContainsText())
+            {
+                return false;
+            }
+
+            if (!string.Equals(Clipboard.GetText(), expectedText, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!Clipboard.ContainsData(PasteSessionFormat))
+            {
+                return false;
+            }
+
+            return Clipboard.GetDataObject()?.GetData(PasteSessionFormat, autoConvert: false) is string currentSessionId
+                && string.Equals(currentSessionId, sessionId, StringComparison.Ordinal);
         }
 
         private static DataObject? CloneDataObject(IDataObject? source)
