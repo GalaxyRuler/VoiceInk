@@ -15,6 +15,10 @@ public sealed record AppSettings
     public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;
     public bool LaunchAtLogin { get; init; }
+    public bool IsSoundFeedbackEnabled { get; init; } = true;
+    public bool IsSystemMuteEnabled { get; init; } = true;
+    public bool IsPauseMediaEnabled { get; init; }
+    public double AudioResumptionDelaySeconds { get; init; }
     public bool IsTranscriptionCleanupEnabled { get; init; }
     public int TranscriptionRetentionMinutes { get; init; } = 24 * 60;
     public bool IsAudioCleanupEnabled { get; init; }
@@ -61,6 +65,10 @@ public sealed record AppSettings
             ClipboardRestoreDelaySeconds.Equals(other.ClipboardRestoreDelaySeconds) &&
             PasteMethod == other.PasteMethod &&
             LaunchAtLogin == other.LaunchAtLogin &&
+            IsSoundFeedbackEnabled == other.IsSoundFeedbackEnabled &&
+            IsSystemMuteEnabled == other.IsSystemMuteEnabled &&
+            IsPauseMediaEnabled == other.IsPauseMediaEnabled &&
+            AudioResumptionDelaySeconds.Equals(other.AudioResumptionDelaySeconds) &&
             IsTranscriptionCleanupEnabled == other.IsTranscriptionCleanupEnabled &&
             TranscriptionRetentionMinutes == other.TranscriptionRetentionMinutes &&
             IsAudioCleanupEnabled == other.IsAudioCleanupEnabled &&
@@ -108,6 +116,10 @@ public sealed record AppSettings
         hash.Add(ClipboardRestoreDelaySeconds);
         hash.Add(PasteMethod);
         hash.Add(LaunchAtLogin);
+        hash.Add(IsSoundFeedbackEnabled);
+        hash.Add(IsSystemMuteEnabled);
+        hash.Add(IsPauseMediaEnabled);
+        hash.Add(AudioResumptionDelaySeconds);
         hash.Add(IsTranscriptionCleanupEnabled);
         hash.Add(TranscriptionRetentionMinutes);
         hash.Add(IsAudioCleanupEnabled);

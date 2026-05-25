@@ -138,6 +138,8 @@ public static class DiagnosticEventSanitizer
         "Prompt delete failed",
         "Prompt save failed",
         "Quick Add failed",
+        "Recording feedback settings save failed",
+        "Recording feedback settings saved",
         "Running privacy cleanup",
         "Settings export canceled",
         "Settings export failed",

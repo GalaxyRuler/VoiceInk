@@ -5,6 +5,7 @@ using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.PowerMode;
+using VoiceInk.Windows.Core.Recording;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -36,6 +37,7 @@ public sealed class DictationControllerTests
         await controller.StopAsync(CancellationToken.None);
 
         Assert.Equal(DictationState.Idle, controller.State);
+        Assert.True(controller.LastStopInsertedText);
         Assert.Equal("hello world ", insertion.InsertedText);
         Assert.NotNull(transcription.LastOptions);
         Assert.Equal("ggml-base.en.bin", transcription.LastOptions.ModelPath);
@@ -101,6 +103,29 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_NotifiesCaptureStopFeedbackBeforeTranscription()
+    {
+        var feedback = new FakeRecordingCaptureStopFeedback();
+        var transcription = new FakeTranscriptionService(
+            new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper"))
+        {
+            OnTranscribe = () => Assert.Equal(1, feedback.CallCount)
+        };
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings { ModelPath = "ggml-base.en.bin" }),
+            recordingCaptureStopFeedback: feedback);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal(1, feedback.CallCount);
+    }
+
+    [Fact]
     public async Task CancelAsync_StopsCaptureAndSavesCanceledHistoryWithoutTranscribingOrInserting()
     {
         var audio = new AudioCaptureResult(@"C:\Recordings\canceled.wav", TimeSpan.FromSeconds(3), 16000, 1);
@@ -123,6 +148,7 @@ public sealed class DictationControllerTests
         await controller.CancelAsync(CancellationToken.None);
 
         Assert.Equal(DictationState.Idle, controller.State);
+        Assert.False(controller.LastStopInsertedText);
         Assert.False(capture.Started);
         Assert.Equal(1, capture.StopCount);
         Assert.Equal(0, transcription.CallCount);
@@ -959,6 +985,7 @@ public sealed class DictationControllerTests
         await controller.StopAsync(CancellationToken.None);
 
         Assert.Equal(DictationState.Error, controller.State);
+        Assert.False(controller.LastStopInsertedText);
         Assert.Equal("insertion failed", controller.LastError);
     }
 
@@ -1104,6 +1131,7 @@ public sealed class DictationControllerTests
         public int CallCount { get; private set; }
         public Exception? ExceptionToThrow { get; init; }
         public Task? TranscribeGate { get; init; }
+        public Action? OnTranscribe { get; init; }
         public TranscriptionOptions? LastOptions { get; private set; }
 
         public async Task<TranscriptionResult> TranscribeAsync(
@@ -1113,6 +1141,7 @@ public sealed class DictationControllerTests
         {
             CallCount++;
             LastOptions = options;
+            OnTranscribe?.Invoke();
             if (ExceptionToThrow is not null)
             {
                 throw ExceptionToThrow;
@@ -1124,6 +1153,17 @@ public sealed class DictationControllerTests
             }
 
             return result;
+        }
+    }
+
+    private sealed class FakeRecordingCaptureStopFeedback : IRecordingCaptureStopFeedback
+    {
+        public int CallCount { get; private set; }
+
+        public Task CaptureStoppedAsync(CancellationToken cancellationToken)
+        {
+            CallCount++;
+            return Task.CompletedTask;
         }
     }
 

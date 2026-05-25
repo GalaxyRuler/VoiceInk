@@ -41,6 +41,10 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Empty(backup.GeneralSettings.ImportedWhisperModels);
         Assert.Equal(settings.ModelPath, backup.GeneralSettings.ModelPath);
         Assert.Equal(settings.LaunchAtLogin, backup.GeneralSettings.LaunchAtLogin);
+        Assert.Equal(settings.IsSoundFeedbackEnabled, backup.GeneralSettings.IsSoundFeedbackEnabled);
+        Assert.Equal(settings.IsSystemMuteEnabled, backup.GeneralSettings.IsSystemMuteEnabled);
+        Assert.Equal(settings.IsPauseMediaEnabled, backup.GeneralSettings.IsPauseMediaEnabled);
+        Assert.Equal(settings.AudioResumptionDelaySeconds, backup.GeneralSettings.AudioResumptionDelaySeconds);
         Assert.Equal(settings.CloudTranscriptionEndpoint, backup.GeneralSettings.CloudTranscriptionEndpoint);
         Assert.Equal(settings.EnhancementEndpoint, backup.GeneralSettings.EnhancementEndpoint);
         Assert.Equal(settings.SelectedEnhancementPromptId, backup.GeneralSettings.SelectedEnhancementPromptId);
@@ -163,6 +167,10 @@ public sealed class VoiceInkSettingsBackupTests
 
         Assert.Equal("C:\\Models\\ggml-base.en.bin", merged.ModelPath);
         Assert.True(merged.LaunchAtLogin);
+        Assert.False(merged.IsSoundFeedbackEnabled);
+        Assert.True(merged.IsSystemMuteEnabled);
+        Assert.True(merged.IsPauseMediaEnabled);
+        Assert.Equal(4.0, merged.AudioResumptionDelaySeconds);
         Assert.Equal("Ctrl+Shift+D", merged.Hotkey);
         Assert.Equal("https://api.example.test/v1/audio/transcriptions", merged.CloudTranscriptionEndpoint);
         Assert.Equal(current.CustomEnhancementPrompts, merged.CustomEnhancementPrompts);
@@ -257,6 +265,10 @@ public sealed class VoiceInkSettingsBackupTests
             AppendTrailingSpace = true,
             RestoreClipboard = false,
             LaunchAtLogin = true,
+            IsSoundFeedbackEnabled = false,
+            IsSystemMuteEnabled = true,
+            IsPauseMediaEnabled = true,
+            AudioResumptionDelaySeconds = 4.0,
             Hotkey = "Ctrl+Shift+D",
             SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",

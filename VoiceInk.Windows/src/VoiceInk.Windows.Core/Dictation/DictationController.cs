@@ -3,6 +3,7 @@ using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.PowerMode;
+using VoiceInk.Windows.Core.Recording;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -19,7 +20,8 @@ public sealed class DictationController(
     IDictionaryStore? dictionaryStore = null,
     TextEnhancementPipeline? enhancementPipeline = null,
     IPowerModeTargetProvider? powerModeTargetProvider = null,
-    ISessionMetricStore? sessionMetricStore = null)
+    ISessionMetricStore? sessionMetricStore = null,
+    IRecordingCaptureStopFeedback? recordingCaptureStopFeedback = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
@@ -28,6 +30,7 @@ public sealed class DictationController(
     public DictationState State { get; private set; } = DictationState.Idle;
     public string? LastError { get; private set; }
     public string? LastWarning { get; private set; }
+    public bool LastStopInsertedText { get; private set; }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -45,6 +48,7 @@ public sealed class DictationController(
 
             LastError = null;
             LastWarning = null;
+            LastStopInsertedText = false;
 
             try
             {
@@ -98,11 +102,13 @@ public sealed class DictationController(
 
             LastError = null;
             LastWarning = null;
+            LastStopInsertedText = false;
 
             try
             {
                 // Always let capture stop release recorder resources before honoring caller cancellation.
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
+                await NotifyCaptureStoppedAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var powerModeResolution = activePowerModeResolution
@@ -143,6 +149,7 @@ public sealed class DictationController(
 
                 State = DictationState.Inserting;
                 await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
+                LastStopInsertedText = true;
 
                 try
                 {
@@ -223,11 +230,13 @@ public sealed class DictationController(
 
             LastError = null;
             LastWarning = null;
+            LastStopInsertedText = false;
 
             try
             {
                 // Always release recorder resources before honoring caller cancellation.
                 var audio = await audioCapture.StopAsync(CancellationToken.None);
+                await NotifyCaptureStoppedAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var powerModeResolution = activePowerModeResolution
@@ -320,6 +329,26 @@ public sealed class DictationController(
                 sessionMetricStore,
                 SessionMetricRecorder.DefaultSource,
                 cancellationToken);
+
+    private async Task NotifyCaptureStoppedAsync(CancellationToken cancellationToken)
+    {
+        if (recordingCaptureStopFeedback is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await recordingCaptureStopFeedback.CaptureStoppedAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+        }
+    }
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {

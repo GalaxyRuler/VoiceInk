@@ -782,6 +782,41 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Recording Feedback" FontWeight="SemiBold" />
+                            <CheckBox
+                                x:Name="SoundFeedbackCheckBox"
+                                Content="Sound Feedback"
+                                Checked="RecordingFeedbackSetting_Changed"
+                                Unchecked="RecordingFeedbackSetting_Changed" />
+                            <CheckBox
+                                x:Name="MuteSystemAudioCheckBox"
+                                Content="Mute Audio While Recording"
+                                Checked="RecordingFeedbackSetting_Changed"
+                                Unchecked="RecordingFeedbackSetting_Changed" />
+                            <CheckBox
+                                x:Name="PauseMediaCheckBox"
+                                Content="Pause Media While Recording"
+                                Checked="RecordingFeedbackSetting_Changed"
+                                Unchecked="RecordingFeedbackSetting_Changed" />
+                            <ComboBox
+                                x:Name="AudioResumptionDelayComboBox"
+                                Header="Resume Delay"
+                                SelectedIndex="0"
+                                SelectionChanged="RecordingFeedbackSettingComboBox_SelectionChanged">
+                                <ComboBoxItem Content="0s" />
+                                <ComboBoxItem Content="1s" />
+                                <ComboBoxItem Content="2s" />
+                                <ComboBoxItem Content="3s" />
+                                <ComboBoxItem Content="4s" />
+                                <ComboBoxItem Content="5s" />
+                            </ComboBox>
+                            <Button
+                                x:Name="ApplyRecordingFeedbackSettingsButton"
+                                Content="Apply Recording Feedback"
+                                Click="ApplyRecordingFeedbackSettingsButton_Click" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Clipboard" FontWeight="SemiBold" />
                             <CheckBox
                                 x:Name="RestoreClipboardCheckBox"

@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [############--------] 62%
+VoiceInk Windows parity  [#############-------] 63%
 ```
 
 ## Area Bars
@@ -26,7 +26,7 @@ VoiceInk Windows parity  [############--------] 62%
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 68% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, and CSV export exist. Visual parity and reset controls remain. |
-| Settings | 64% | `[#############-------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, and diagnostic log export exist. Remaining recording feedback controls and visual polish remain. |
+| Settings | 68% | `[##############------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, and recording feedback controls exist. Custom sound picker and visual polish remain. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 8% | `[##------------------]` | Source-run docs and runtime workaround exist. MSIX/installer, zip/dev distribution, native dependency layout, uninstall behavior, and installer smoke tests remain. |
@@ -34,20 +34,19 @@ VoiceInk Windows parity  [############--------] 62%
 ## Current Slice
 
 ```text
-Settings diagnostics export  [####################] 100%
+Settings recording feedback  [####################] 100%
 ```
 
 Completed:
 
-- Mac-style local `Export Logs` intent adapted to About / Open Source.
-- User-selected `.log` diagnostic export through a save picker.
-- Safe diagnostic report with system/app context, known file metadata, active state, and recent generic in-app status labels.
-- Secret-query redaction for key/token/secret/credential-looking diagnostic values, including leading key-value lines.
-- Explicit privacy boundary: no API keys, Credential Manager values, environment variables, clipboard contents, transcript/history text, rendered AI prompt contents, or settings file contents.
+- Persist macOS Recording Feedback defaults in Windows settings and backups.
+- Add Settings controls for sound feedback, mute audio, pause media, and resume delay.
+- Wire start/stop sounds, system mute/restore, and opt-in media pause/resume into recording lifecycle.
+- Document Windows-specific graceful degradation for media pause/resume.
 
 ## Near-Term Priority
 
-1. Fill remaining high-impact Settings gaps: remaining recording feedback controls and visual polish.
-2. Improve model management: catalog cards, direct download/import flow, language selection, warmup/preload.
-3. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
+1. Improve model management: catalog cards, direct download/import flow, language selection, warmup/preload.
+2. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
+3. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
 4. Add packaging path: zip/dev package first, then MSIX or installer.

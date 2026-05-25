@@ -23,6 +23,7 @@ using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Privacy;
+using VoiceInk.Windows.Core.Recording;
 using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -40,6 +41,7 @@ using VoiceInk.Windows.Infrastructure.Transcription;
 using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.PowerMode;
+using VoiceInk.Windows.Native.Recording;
 using VoiceInk.Windows.Native.Security;
 using VoiceInk.Windows.Native.Startup;
 using VoiceInk.Windows.Native.Text;
@@ -69,6 +71,7 @@ public sealed partial class MainWindow : Window
     private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
     private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
     private static readonly double[] ClipboardRestoreDelayChoices = [0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
+    private static readonly double[] AudioResumptionDelayChoices = [0, 1, 2, 3, 4, 5];
 
     private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
@@ -87,6 +90,8 @@ public sealed partial class MainWindow : Window
     private readonly HistoryRetryService historyRetryService;
     private readonly PrivacyCleanupService privacyCleanupService;
     private readonly IStartupRegistrationService startupRegistrationService;
+    private readonly RecordingFeedbackCoordinator recordingFeedback;
+    private readonly WindowsSystemAudioFeedback systemAudioFeedback;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
     private readonly List<string> diagnosticEvents = [];
@@ -133,6 +138,7 @@ public sealed partial class MainWindow : Window
     private bool isRunningPrivacyCleanup;
     private bool isExportingDiagnosticLogs;
     private bool isOnboardingOpen;
+    private bool recordingFeedbackSessionActive;
     private bool suppressLaunchAtLoginChanged;
     private readonly bool startHiddenToTray;
     private bool settingsLoaded;
@@ -207,6 +213,11 @@ public sealed partial class MainWindow : Window
             TimeProvider.System,
             recordingsDirectory);
         startupRegistrationService = new RegistryStartupRegistrationService();
+        systemAudioFeedback = new WindowsSystemAudioFeedback();
+        recordingFeedback = new RecordingFeedbackCoordinator(
+            new WindowsRecordingSoundFeedback(),
+            systemAudioFeedback,
+            new WindowsMediaPlaybackFeedback());
         audioFileTranscriptionService = new AudioFileTranscriptionService(
             new MediaFoundationAudioFileImportService(),
             transcriptionService,
@@ -391,20 +402,28 @@ public sealed partial class MainWindow : Window
             }
 
             await SaveSettingsAsync(windowLifetime.Token);
+            await recordingFeedback.BeginAsync(currentSettings, windowLifetime.Token);
+            recordingFeedbackSessionActive = true;
             await controller.StartAsync(windowLifetime.Token);
             if (controller.State == DictationState.Recording)
             {
                 recordingStartedAt = DateTimeOffset.Now;
+            }
+            else
+            {
+                await CancelRecordingFeedbackSessionAsync(immediate: true);
             }
 
             statusOverride = null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
+            await CancelRecordingFeedbackSessionAsync(immediate: true);
             statusOverride = "Closing";
         }
         catch (Exception ex)
         {
+            await CancelRecordingFeedbackSessionAsync(immediate: true);
             statusOverride = $"Start failed: {ex.Message}";
         }
         finally
@@ -427,12 +446,15 @@ public sealed partial class MainWindow : Window
         }
 
         var statusOverride = "Stopping and inserting";
+        var shouldCompleteFeedback = false;
         isStopping = true;
         RefreshUiFromControllerState(statusOverride);
 
         try
         {
             await controller.StopAsync(windowLifetime.Token);
+            shouldCompleteFeedback = controller.LastStopInsertedText;
+            await CompleteRecordingFeedbackSessionAsync(playStopSound: shouldCompleteFeedback);
             await RefreshHistoryAsync(windowLifetime.Token);
             var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
@@ -454,6 +476,18 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
+            if (recordingFeedbackSessionActive)
+            {
+                if (shouldCompleteFeedback)
+                {
+                    await CompleteRecordingFeedbackSessionAsync(playStopSound: true);
+                }
+                else
+                {
+                    await CancelRecordingFeedbackSessionAsync(immediate: true);
+                }
+            }
+
             isStopping = false;
             RefreshUiFromControllerState(statusOverride);
         }
@@ -484,6 +518,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await controller.CancelAsync(windowLifetime.Token);
+            await CancelRecordingFeedbackSessionAsync();
             await RefreshHistoryAsync(windowLifetime.Token);
             var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             recordingStartedAt = null;
@@ -499,9 +534,42 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
+            if (recordingFeedbackSessionActive)
+            {
+                await CancelRecordingFeedbackSessionAsync();
+            }
+
             isCanceling = false;
             RefreshUiFromControllerState(statusOverride);
         }
+    }
+
+    private async Task CompleteRecordingFeedbackSessionAsync(bool playStopSound)
+    {
+        if (!recordingFeedbackSessionActive)
+        {
+            return;
+        }
+
+        recordingFeedbackSessionActive = false;
+        await recordingFeedback.CompleteAsync(playStopSound, CancellationToken.None);
+    }
+
+    private async Task CancelRecordingFeedbackSessionAsync(bool immediate = false)
+    {
+        if (!recordingFeedbackSessionActive)
+        {
+            return;
+        }
+
+        recordingFeedbackSessionActive = false;
+        if (immediate)
+        {
+            await recordingFeedback.CancelImmediatelyAsync(CancellationToken.None);
+            return;
+        }
+
+        await recordingFeedback.CancelAsync(CancellationToken.None);
     }
 
     private async void HotkeyService_HotkeyPressed(object? sender, GlobalHotkeyPressedEventArgs e)
@@ -869,6 +937,33 @@ public sealed partial class MainWindow : Window
         await ApplyClipboardSettingsAsync();
     }
 
+    private async void ApplyRecordingFeedbackSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyRecordingFeedbackSettingsAsync();
+    }
+
+    private void RecordingFeedbackSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        UpdateRecordingFeedbackSettingControlState();
+        RefreshUiFromControllerState();
+    }
+
+    private void RecordingFeedbackSettingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        UpdateRecordingFeedbackSettingControlState();
+        RefreshUiFromControllerState();
+    }
+
     private void ClipboardSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (!settingsLoaded)
@@ -1081,6 +1176,12 @@ public sealed partial class MainWindow : Window
             settings.ClipboardRestoreDelaySeconds);
         PasteMethodComboBox.SelectedIndex = PasteMethodToSelectedIndex(settings.PasteMethod);
         UpdateClipboardSettingControlState();
+        SoundFeedbackCheckBox.IsChecked = settings.IsSoundFeedbackEnabled;
+        MuteSystemAudioCheckBox.IsChecked = settings.IsSystemMuteEnabled;
+        PauseMediaCheckBox.IsChecked = settings.IsPauseMediaEnabled;
+        AudioResumptionDelayComboBox.SelectedIndex = AudioResumptionDelayToSelectedIndex(
+            settings.AudioResumptionDelaySeconds);
+        UpdateRecordingFeedbackSettingControlState();
         var startupWarning = await ApplyStartupStateToUiAsync(settings, cancellationToken);
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
@@ -1458,6 +1559,28 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Clipboard settings save failed: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyRecordingFeedbackSettingsAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Recording feedback settings saved");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Recording feedback settings save failed: {ex.Message}");
         }
     }
 
@@ -4211,6 +4334,10 @@ public sealed partial class MainWindow : Window
             ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
             PasteMethod = SelectedPasteMethod(),
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
+            IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
+            IsSystemMuteEnabled = MuteSystemAudioCheckBox.IsChecked == true,
+            IsPauseMediaEnabled = PauseMediaCheckBox.IsChecked == true,
+            AudioResumptionDelaySeconds = SelectedAudioResumptionDelaySeconds(),
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
             EnhancementProviderId = SelectedEnhancementProviderId(),
@@ -4248,7 +4375,8 @@ public sealed partial class MainWindow : Window
             dictionaryStore,
             textEnhancementPipeline,
             powerModeTargetProvider,
-            sessionMetricStore);
+            sessionMetricStore,
+            recordingFeedback);
 
     private static (ISessionMetricStore Store, string? Warning) CreateSessionMetricStore(string databasePath)
     {
@@ -5227,6 +5355,11 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording;
         ExportDiagnosticLogsButton.IsEnabled = settingsLoaded && !operationActive;
+        ApplyRecordingFeedbackSettingsButton.IsEnabled = settingsLoaded && !operationActive;
+        SoundFeedbackCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        MuteSystemAudioCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        PauseMediaCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        UpdateRecordingFeedbackSettingControlState();
         ApplyClipboardSettingsButton.IsEnabled = settingsLoaded && !operationActive;
         RestoreClipboardCheckBox.IsEnabled = settingsLoaded && !operationActive;
         PasteMethodComboBox.IsEnabled = settingsLoaded && !operationActive;
@@ -5483,6 +5616,9 @@ public sealed partial class MainWindow : Window
     private double SelectedClipboardRestoreDelaySeconds() =>
         DoubleChoiceAtOrDefault(ClipboardRestoreDelayChoices, ClipboardRestoreDelayComboBox.SelectedIndex, 2.0);
 
+    private double SelectedAudioResumptionDelaySeconds() =>
+        DoubleChoiceAtOrDefault(AudioResumptionDelayChoices, AudioResumptionDelayComboBox.SelectedIndex, 0.0);
+
     private string SelectedPasteMethod() =>
         PasteMethodComboBox.SelectedIndex == 1
             ? PasteMethodSettings.DirectText
@@ -5494,6 +5630,15 @@ public sealed partial class MainWindow : Window
             ClipboardRestoreDelayChoices,
             choice => Math.Abs(choice - seconds) < 0.001);
         return index >= 0 ? index : 3;
+    }
+
+    private static int AudioResumptionDelayToSelectedIndex(double seconds)
+    {
+        var normalized = double.IsFinite(seconds) ? Math.Clamp(seconds, 0, 5) : 0;
+        var index = Array.FindIndex(
+            AudioResumptionDelayChoices,
+            choice => Math.Abs(choice - normalized) < 0.001);
+        return index >= 0 ? index : 0;
     }
 
     private static int PasteMethodToSelectedIndex(string method) =>
@@ -5565,6 +5710,13 @@ public sealed partial class MainWindow : Window
             && !IsOperationActive()
             && RestoreClipboardCheckBox.IsChecked == true
             && PasteMethodToSelectedIndex(SelectedPasteMethod()) == 0;
+    }
+
+    private void UpdateRecordingFeedbackSettingControlState()
+    {
+        AudioResumptionDelayComboBox.IsEnabled = settingsLoaded
+            && !IsOperationActive()
+            && (MuteSystemAudioCheckBox.IsChecked == true || PauseMediaCheckBox.IsChecked == true);
     }
 
     private static string TranscriptCleanupStatus(PrivacyCleanupResult cleanup)
@@ -5657,8 +5809,11 @@ public sealed partial class MainWindow : Window
         floatingRecorderRefreshTimer.Stop();
         privacyCleanupTimer.Stop();
         floatingRecorderWindow?.Close();
+        CancelRecordingFeedbackSessionAsync(immediate: true).GetAwaiter().GetResult();
+        recordingFeedback.RestorePendingImmediatelyAsync().GetAwaiter().GetResult();
 
         audioCapture.Dispose();
+        systemAudioFeedback.Dispose();
         windowLifetime.Dispose();
     }
 

@@ -542,6 +542,24 @@ Settings privacy/onboarding slice completed on 2026-05-25:
 - Added WinUI Settings controls for Privacy cleanup and a confirmed `Reset Onboarding` action that shows first-run setup again on the next launch.
 - Automatic cleanup now runs on launch, after completed recordings, and on a daily in-app timer while the relevant setting is enabled.
 
+Settings recording feedback Windows target:
+
+- Add a Settings `Recording Feedback` group matching the macOS settings language for `Sound Feedback`, `Mute Audio While Recording`, `Pause Media While Recording`, and `Resume Delay`.
+- Persist the macOS defaults in Windows JSON settings and General Settings backup/import: sound feedback enabled, mute audio while recording enabled, pause media while recording disabled, and audio resumption delay `0.0` seconds.
+- Play local start/stop feedback sounds only when `Sound Feedback` is enabled. Use Windows system sounds for the source-built MVP until the richer macOS custom sound picker/import workflow is ported.
+- When `Mute Audio While Recording` is enabled, mute the default Windows render endpoint for the recording session and restore it after the configured resume delay only if VoiceInk muted it.
+- When `Pause Media While Recording` is enabled, use Windows Global System Media Transport Controls as an opt-in local equivalent. Pause only when Windows reports a current playing session and resume only that same session after the configured delay. Keep it disabled by default because Windows media session support varies by app.
+- Keep all recording feedback local-only. Do not persist or export media titles, app names, volume levels, or audio session metadata.
+
+Settings recording feedback slice completed on 2026-05-25:
+
+- Added `IsSoundFeedbackEnabled`, `IsSystemMuteEnabled`, `IsPauseMediaEnabled`, and `AudioResumptionDelaySeconds` to Windows JSON settings and General Settings backup/import.
+- Added a Core recording feedback coordinator that snapshots settings at recording start, restores system/media feedback immediately after capture stops, and also restores on cancel, start failure, and window close.
+- Added Settings `Recording Feedback` controls for `Sound Feedback`, `Mute Audio While Recording`, `Pause Media While Recording`, and `Resume Delay`.
+- Added native Windows adapters for start/stop system sounds, default render endpoint mute/restore through Core Audio, and opt-in Global System Media Transport Controls pause/resume.
+- Gated stop sound to successful text insertion, matching the macOS intent that stop feedback follows completed paste rather than mere capture stop.
+- Documented that custom start/stop sound picker/import remains a later slice because Windows needs its own validated sound asset workflow.
+
 Settings clipboard/paste Windows target:
 
 - Add Settings controls matching the macOS intent for `Keep Clipboard Content`, `Restore Delay`, and `Paste Method`.
