@@ -95,6 +95,7 @@ public sealed partial class MainWindow : Window
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
+    private readonly HistoryReenhancementService historyReenhancementService;
     private readonly PrivacyCleanupService privacyCleanupService;
     private readonly IStartupRegistrationService startupRegistrationService;
     private readonly RecordingFeedbackCoordinator recordingFeedback;
@@ -148,6 +149,7 @@ public sealed partial class MainWindow : Window
     private bool isCanceling;
     private bool isPastingLast;
     private bool isRetryingHistory;
+    private bool isReenhancingHistory;
     private bool isQuickAdding;
     private bool isImportingModel;
     private bool isDownloadingModel;
@@ -245,6 +247,11 @@ public sealed partial class MainWindow : Window
             settingsStore,
             dictionaryStore,
             sessionMetricStore);
+        historyReenhancementService = new HistoryReenhancementService(
+            historyStore,
+            settingsStore,
+            textEnhancementPipeline,
+            dictionaryStore);
         privacyCleanupService = new PrivacyCleanupService(
             settingsStore,
             historyStore,
@@ -492,6 +499,7 @@ public sealed partial class MainWindow : Window
             || isCanceling
             || isPastingLast
             || isRetryingHistory
+            || isReenhancingHistory
             || controller.State != DictationState.Recording)
         {
             return;
@@ -1141,6 +1149,11 @@ public sealed partial class MainWindow : Window
     private async void RetryHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await RetrySelectedHistoryAsync();
+    }
+
+    private async void ReEnhanceHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ReenhanceSelectedHistoryAsync();
     }
 
     private void OpenHistoryAudioButton_Click(object sender, RoutedEventArgs e)
@@ -3270,6 +3283,7 @@ public sealed partial class MainWindow : Window
             || isCanceling
             || isPastingLast
             || isRetryingHistory
+            || isReenhancingHistory
             || isQuickAdding
             || controller.State != DictationState.Idle)
         {
@@ -4123,6 +4137,7 @@ public sealed partial class MainWindow : Window
             || isCanceling
             || isPastingLast
             || isRetryingHistory
+            || isReenhancingHistory
             || isQuickAdding)
         {
             return;
@@ -4154,6 +4169,7 @@ public sealed partial class MainWindow : Window
             || isCanceling
             || isPastingLast
             || isRetryingHistory
+            || isReenhancingHistory
             || controller.State == DictationState.Recording)
         {
             return;
@@ -4196,6 +4212,52 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task ReenhanceSelectedHistoryAsync()
+    {
+        if (isReenhancingHistory)
+        {
+            return;
+        }
+
+        var item = SelectedHistoryItem();
+        if (item is null)
+        {
+            RefreshUiFromControllerState("Select a transcription to re-enhance");
+            return;
+        }
+
+        var statusOverride = "Re-enhancing transcription";
+        isReenhancingHistory = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            var result = await historyReenhancementService.ReenhanceAsync(item, windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
+            if (result.Item is not null)
+            {
+                SelectHistoryItem(result.Item.Id);
+            }
+
+            statusOverride = metricsWarning ?? result.Message;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Re-enhance failed: {ex.Message}";
+        }
+        finally
+        {
+            isReenhancingHistory = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private void OpenSelectedHistoryAudio()
     {
         var audioPath = SelectedHistoryAudioPath();
@@ -4223,7 +4285,7 @@ public sealed partial class MainWindow : Window
 
     private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
     {
-        if (isStopping || isCanceling || isPastingLast || isRetryingHistory)
+        if (isStopping || isCanceling || isPastingLast || isRetryingHistory || isReenhancingHistory)
         {
             return;
         }
@@ -5836,6 +5898,7 @@ public sealed partial class MainWindow : Window
         || isCanceling
         || isPastingLast
         || isRetryingHistory
+        || isReenhancingHistory
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
@@ -6220,6 +6283,7 @@ public sealed partial class MainWindow : Window
             && controller.State != DictationState.Recording;
         var powerModeControlsEnabled = CanEditPowerModeRules();
         var historyAudioAvailable = SelectedHistoryAudioPath() is not null;
+        var selectedHistory = SelectedHistoryItem();
         var audioFileQueueEditable = CanEditAudioFileQueue();
         var selectedAudioFileQueueItem = SelectedAudioFileQueueItem();
         var hasPendingAudioFiles = audioFileQueueItems.Any(item => item.Status == AudioFileQueueStatus.Pending);
@@ -6403,6 +6467,11 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording
             && historyAudioAvailable;
+        ReEnhanceHistoryButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording
+            && selectedHistory?.Status == TranscriptionHistoryStatus.Completed;
         OpenHistoryAudioButton.IsEnabled = settingsLoaded && !operationActive && historyAudioAvailable;
 
         var stateStatus = StateToStatusText(controller.State);

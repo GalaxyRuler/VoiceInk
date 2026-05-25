@@ -24,7 +24,7 @@ VoiceInk Windows parity  [#################---] 86%
 | Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
-| History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
+| History | 75% | `[###############-----]` | SQLite detail metadata, search, retry, re-enhance from saved original text, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [#################---] 86%
 ## Current Slice
 
 ```text
-Windows MSIX packaging foundation  [####################] 100%
+Windows History re-enhance action  [####################] 100%
 ```
 
 Completed:
 
-- Added an open-source MSIX package manifest for the Windows app.
-- Added a repo-local `package-msix.ps1` script that requires an external signing certificate and writes artifacts under `VoiceInk.Windows\artifacts`.
-- Added packaging asset tests for manifest metadata, capabilities, and certificate-safety guardrails.
-- Documented signed MSIX build and manual install/uninstall smoke commands.
+- Added a Core re-enhancement service that reruns AI enhancement from a saved History transcript without retranscribing audio.
+- Preserved the source history row by saving a new derived completed item with fresh enhancement metadata.
+- Added a `Re-enhance Selected` History button with operation guards and list refresh/selection behavior.
+- Added focused tests for success, disabled enhancement, missing provider configuration, fallback text, and non-completed source rows.
 
 ## Near-Term Priority
 
-1. Expand streaming/live preview beyond Deepgram and continue waveform visual polish.
-2. Continue Settings visual parity and remaining macOS preferences.
-3. Continue packaging from dev ZIP to MSIX or installer with uninstall behavior and smoke tests.
-4. Continue model-management polish with richer provider cards and lifecycle status.
+1. Build a dedicated History window with richer detail actions, batch operations, and playback controls.
+2. Expand streaming/live preview beyond Deepgram and continue waveform visual polish.
+3. Continue Settings visual parity and remaining macOS preferences.
+4. Continue packaging from MSIX foundation to signed smoke, uninstall behavior, and release signing flow.
