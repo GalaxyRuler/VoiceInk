@@ -79,7 +79,8 @@ public sealed class TextEnhancementPipeline
         var context = await GetContextAsync(
             new EnhancementContextRequest(
                 IncludeClipboard: settings.UseClipboardContext,
-                IncludeSelectedText: true),
+                IncludeSelectedText: true,
+                IncludeOcr: true),
             cancellationToken);
         var rendered = EnhancementPromptRenderer.Render(prompt, detection.ProcessedText, vocabulary, context);
         var request = new TextEnhancementRequest(

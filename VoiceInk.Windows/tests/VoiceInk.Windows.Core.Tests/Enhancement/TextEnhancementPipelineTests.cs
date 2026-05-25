@@ -143,7 +143,8 @@ public sealed class TextEnhancementPipelineTests
                 IncludeClipboard: false,
                 IncludeSelectedText: true,
                 IncludeActiveWindow: true,
-                IncludeBrowserUrl: true),
+                IncludeBrowserUrl: true,
+                IncludeOcr: true),
             contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("Selected note", provider.LastRequest.SystemMessage);
@@ -168,7 +169,8 @@ public sealed class TextEnhancementPipelineTests
                 IncludeClipboard: true,
                 IncludeSelectedText: true,
                 IncludeActiveWindow: true,
-                IncludeBrowserUrl: true),
+                IncludeBrowserUrl: true,
+                IncludeOcr: true),
             contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("<CLIPBOARD_CONTEXT>", provider.LastRequest.SystemMessage);

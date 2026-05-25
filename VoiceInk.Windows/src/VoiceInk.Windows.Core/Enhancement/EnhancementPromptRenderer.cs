@@ -30,6 +30,7 @@ public static class EnhancementPromptRenderer
             : prompt.PromptText.Trim();
         systemMessage += ActiveWindowContextSection(context);
         systemMessage += BrowserUrlContextSection(context);
+        systemMessage += OcrContextSection(context);
         systemMessage += SelectedTextContextSection(context);
         systemMessage += ClipboardContextSection(context);
         systemMessage += VocabularySection(vocabulary);
@@ -87,6 +88,23 @@ public static class EnhancementPromptRenderer
             <BROWSER_URL_CONTEXT>
             URL: {browserUrl}
             </BROWSER_URL_CONTEXT>
+            """;
+    }
+
+    private static string OcrContextSection(EnhancementContext? context)
+    {
+        var ocrText = context?.OcrText.Trim();
+        if (string.IsNullOrEmpty(ocrText))
+        {
+            return string.Empty;
+        }
+
+        return $"""
+
+
+            <SCREEN_OCR_CONTEXT>
+            {ocrText}
+            </SCREEN_OCR_CONTEXT>
             """;
     }
 

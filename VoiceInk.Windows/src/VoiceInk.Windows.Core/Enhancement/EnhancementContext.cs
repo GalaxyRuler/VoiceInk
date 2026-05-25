@@ -5,7 +5,8 @@ public sealed record EnhancementContext(
     string SelectedText = "",
     string ActiveWindowProcessName = "",
     string ActiveWindowTitle = "",
-    string BrowserUrl = "")
+    string BrowserUrl = "",
+    string OcrText = "")
 {
     public static EnhancementContext Empty { get; } = new();
 }

@@ -4,4 +4,5 @@ public sealed record EnhancementContextRequest(
     bool IncludeClipboard,
     bool IncludeSelectedText,
     bool IncludeActiveWindow = true,
-    bool IncludeBrowserUrl = true);
+    bool IncludeBrowserUrl = true,
+    bool IncludeOcr = false);

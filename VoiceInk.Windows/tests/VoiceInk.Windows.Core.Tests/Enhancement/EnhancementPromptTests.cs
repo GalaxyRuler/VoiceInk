@@ -314,6 +314,43 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_AppendsScreenOcrContextBeforeSelectedTextClipboardAndVocabulary()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+        };
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "fix this",
+            vocabulary,
+            new EnhancementContext(
+                ClipboardText: "clipboard note",
+                SelectedText: "selected note",
+                ActiveWindowProcessName: "msedge",
+                ActiveWindowTitle: "Dashboard",
+                BrowserUrl: "https://example.com/dashboard",
+                OcrText: "Invoice total forty two dollars"));
+
+        Assert.Contains("<SCREEN_OCR_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("Invoice total forty two dollars", rendered.SystemMessage);
+        Assert.Contains("</SCREEN_OCR_CONTEXT>", rendered.SystemMessage);
+        var browserUrlIndex = rendered.SystemMessage.LastIndexOf("<BROWSER_URL_CONTEXT>", StringComparison.Ordinal);
+        var ocrIndex = rendered.SystemMessage.LastIndexOf("<SCREEN_OCR_CONTEXT>", StringComparison.Ordinal);
+        var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+        var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
+        var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
+
+        Assert.True(browserUrlIndex < ocrIndex, "OCR context should render after browser URL context.");
+        Assert.True(ocrIndex < selectedTextIndex, "OCR context should render before selected text.");
+        Assert.True(selectedTextIndex < clipboardIndex, "Selected text context should render before clipboard context.");
+        Assert.True(clipboardIndex < vocabularyIndex, "Clipboard context should render before vocabulary context.");
+    }
+
+    [Fact]
     public void Render_AssistantPromptUsesRawAssistantInstructions()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

@@ -150,6 +150,76 @@ public sealed class WindowsEnhancementContextProviderTests
         Assert.Equal(string.Empty, context.BrowserUrl);
     }
 
+    [Fact]
+    public async Task GetContextAsync_IncludesOcrContextWhenRequested()
+    {
+        var ocrReader = new FakeOcrTextReader("Invoice total forty two dollars");
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            new FakeBrowserUrlReader(string.Empty),
+            ocrReader);
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeOcr: true),
+            CancellationToken.None);
+
+        Assert.Equal("Invoice total forty two dollars", context.OcrText);
+        Assert.Equal(1, ocrReader.CallCount);
+    }
+
+    [Fact]
+    public async Task GetContextAsync_SkipsOcrContextWhenNotRequested()
+    {
+        var ocrReader = new FakeOcrTextReader("ignored");
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            new FakeBrowserUrlReader(string.Empty),
+            ocrReader);
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeOcr: false),
+            CancellationToken.None);
+
+        Assert.Equal(string.Empty, context.OcrText);
+        Assert.Equal(0, ocrReader.CallCount);
+    }
+
+    [Fact]
+    public async Task GetContextAsync_IgnoresOcrReaderFailures()
+    {
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            new FakeBrowserUrlReader(string.Empty),
+            new FakeOcrTextReader("ignored")
+            {
+                Exception = new InvalidOperationException("OCR unavailable")
+            });
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeOcr: true),
+            CancellationToken.None);
+
+        Assert.Equal(string.Empty, context.OcrText);
+    }
+
     private sealed class FakeClipboardTextReader(string text, List<string>? calls = null) : IClipboardTextReader
     {
         public Task<string> GetClipboardTextAsync(CancellationToken cancellationToken)
@@ -205,6 +275,23 @@ public sealed class WindowsEnhancementContextProviderTests
             }
 
             return Task.FromResult(url);
+        }
+    }
+
+    private sealed class FakeOcrTextReader(string text) : IOcrTextReader
+    {
+        public int CallCount { get; private set; }
+        public Exception? Exception { get; init; }
+
+        public Task<string> GetOcrTextAsync(CancellationToken cancellationToken)
+        {
+            CallCount++;
+            if (Exception is not null)
+            {
+                throw Exception;
+            }
+
+            return Task.FromResult(text);
         }
     }
 }

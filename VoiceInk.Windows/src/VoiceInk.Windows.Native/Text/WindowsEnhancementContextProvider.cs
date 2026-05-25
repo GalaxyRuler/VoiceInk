@@ -12,6 +12,7 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
     private readonly ISelectedTextClipboardFallbackReader selectedTextFallbackProvider;
     private readonly IPowerModeTargetProvider activeWindowProvider;
     private readonly IBrowserUrlReader browserUrlProvider;
+    private readonly IOcrTextReader ocrTextReader;
 
     public WindowsEnhancementContextProvider()
         : this(
@@ -19,7 +20,8 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
             new SelectedTextEnhancementContextProvider(),
             new SelectedTextClipboardFallbackReader(),
             new ActiveWindowPowerModeTargetProvider(),
-            new BrowserUrlEnhancementContextProvider())
+            new BrowserUrlEnhancementContextProvider(),
+            new EmptyOcrTextReader())
     {
     }
 
@@ -28,13 +30,15 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         ISelectedTextReader selectedTextProvider,
         ISelectedTextClipboardFallbackReader selectedTextFallbackProvider,
         IPowerModeTargetProvider? activeWindowProvider = null,
-        IBrowserUrlReader? browserUrlProvider = null)
+        IBrowserUrlReader? browserUrlProvider = null,
+        IOcrTextReader? ocrTextReader = null)
     {
         this.clipboardProvider = clipboardProvider;
         this.selectedTextProvider = selectedTextProvider;
         this.selectedTextFallbackProvider = selectedTextFallbackProvider;
         this.activeWindowProvider = activeWindowProvider ?? new EmptyPowerModeTargetProvider();
         this.browserUrlProvider = browserUrlProvider ?? new EmptyBrowserUrlReader();
+        this.ocrTextReader = ocrTextReader ?? new EmptyOcrTextReader();
     }
 
     public async Task<EnhancementContext> GetContextAsync(
@@ -53,13 +57,17 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         var browserUrl = request.IncludeBrowserUrl
             ? await ReadBrowserUrlAsync(cancellationToken)
             : string.Empty;
+        var ocrText = request.IncludeOcr
+            ? await ReadOcrTextAsync(cancellationToken)
+            : string.Empty;
 
         return new EnhancementContext(
-            clipboardText,
-            selectedText,
-            activeWindow?.ProcessName ?? string.Empty,
-            activeWindow?.WindowTitle ?? string.Empty,
-            browserUrl);
+            ClipboardText: clipboardText,
+            SelectedText: selectedText,
+            ActiveWindowProcessName: activeWindow?.ProcessName ?? string.Empty,
+            ActiveWindowTitle: activeWindow?.WindowTitle ?? string.Empty,
+            BrowserUrl: browserUrl,
+            OcrText: ocrText);
     }
 
     private async Task<string> ReadSelectedTextAsync(CancellationToken cancellationToken)
@@ -122,6 +130,22 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         {
             var browserUrl = await browserUrlProvider.GetBrowserUrlAsync(cancellationToken);
             return BrowserUrlContextSanitizer.Sanitize(browserUrl);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private async Task<string> ReadOcrTextAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ocrTextReader.GetOcrTextAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
