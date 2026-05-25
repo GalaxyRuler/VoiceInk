@@ -118,6 +118,7 @@ public sealed partial class MainWindow : Window
     private readonly SonioxCloudTranscriptionService sonioxTranscriptionService;
     private readonly SpeechmaticsCloudTranscriptionService speechmaticsTranscriptionService;
     private readonly GeminiCloudTranscriptionService geminiTranscriptionService;
+    private readonly XaiCloudTranscriptionService xaiTranscriptionService;
     private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
@@ -255,6 +256,7 @@ public sealed partial class MainWindow : Window
         sonioxTranscriptionService = new SonioxCloudTranscriptionService(new HttpClient(), secretStore);
         speechmaticsTranscriptionService = new SpeechmaticsCloudTranscriptionService(new HttpClient(), secretStore);
         geminiTranscriptionService = new GeminiCloudTranscriptionService(new HttpClient(), secretStore);
+        xaiTranscriptionService = new XaiCloudTranscriptionService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
             [
                 new DeepgramLiveTranscriptionPreviewService(
@@ -272,7 +274,8 @@ public sealed partial class MainWindow : Window
             elevenLabsTranscriptionService,
             sonioxTranscriptionService,
             speechmaticsTranscriptionService,
-            geminiTranscriptionService);
+            geminiTranscriptionService,
+            xaiTranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,

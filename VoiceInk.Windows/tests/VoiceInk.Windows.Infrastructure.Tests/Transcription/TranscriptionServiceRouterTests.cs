@@ -257,6 +257,44 @@ public sealed class TranscriptionServiceRouterTests
         Assert.Equal(options, gemini.LastOptions);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_RoutesXaiCloudOptionsToXaiService()
+    {
+        var local = new FakeTranscriptionService(new TranscriptionResult("local text", TimeSpan.Zero, "local-whisper"));
+        var cloud = new FakeTranscriptionService(new TranscriptionResult("cloud text", TimeSpan.Zero, "openai-compatible"));
+        var deepgram = new FakeTranscriptionService(new TranscriptionResult("deepgram text", TimeSpan.Zero, "deepgram"));
+        var assemblyAI = new FakeTranscriptionService(new TranscriptionResult("assembly text", TimeSpan.Zero, "assemblyai"));
+        var elevenLabs = new FakeTranscriptionService(new TranscriptionResult("scribe text", TimeSpan.Zero, "elevenlabs"));
+        var soniox = new FakeTranscriptionService(new TranscriptionResult("soniox text", TimeSpan.Zero, "soniox"));
+        var speechmatics = new FakeTranscriptionService(new TranscriptionResult("speechmatics text", TimeSpan.Zero, "speechmatics"));
+        var gemini = new FakeTranscriptionService(new TranscriptionResult("gemini text", TimeSpan.Zero, "gemini"));
+        var xai = new FakeTranscriptionService(new TranscriptionResult("grok text", TimeSpan.Zero, "xai"));
+        var router = new TranscriptionServiceRouter(
+            local,
+            cloud,
+            deepgram,
+            assemblyAI,
+            elevenLabs,
+            soniox,
+            speechmatics,
+            gemini,
+            xai);
+        var options = new TranscriptionOptions(
+            string.Empty,
+            "auto",
+            string.Empty,
+            TranscriptionProviderKind.OpenAICompatible,
+            "https://api.x.ai/v1/stt",
+            "grok-stt",
+            "xai");
+
+        var result = await router.TranscribeAsync(Audio(), options, CancellationToken.None);
+
+        Assert.Equal("grok text", result.Text);
+        Assert.Equal(1, xai.CallCount);
+        Assert.Equal(options, xai.LastOptions);
+    }
+
     private static AudioCaptureResult Audio() =>
         new("sample.wav", TimeSpan.FromSeconds(1), SampleRate: 16000, ChannelCount: 1);
 

@@ -54,6 +54,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("gemini-2.5-flash", gemini.DefaultModel);
         Assert.Contains("gemini-2.5-pro", gemini.ModelIds);
         Assert.Contains("gemini-3-flash-preview", gemini.ModelIds);
+        var xai = Assert.Single(presets, item => item.Id == "xai");
+        Assert.Equal("xAI", xai.DisplayName);
+        Assert.Equal("https://api.x.ai/v1/stt", xai.Endpoint);
+        Assert.Equal("grok-stt", xai.DefaultModel);
+        Assert.Contains("grok-stt", xai.ModelIds);
     }
 
     [Theory]
@@ -67,6 +72,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("soniox", "soniox")]
     [InlineData("speechmatics", "speechmatics")]
     [InlineData("gemini", "gemini")]
+    [InlineData("xai", "xai")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -82,6 +88,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("soniox", "VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey")]
     [InlineData("speechmatics", "VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey")]
     [InlineData("gemini", "VoiceInk.Windows.Transcription.OpenAICompatible.Gemini.ApiKey")]
+    [InlineData("xai", "VoiceInk.Windows.Transcription.OpenAICompatible.xAI.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -120,6 +127,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Gemini.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("gemini"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.xAI.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("xai"));
     }
 
     [Fact]

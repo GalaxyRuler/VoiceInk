@@ -88,6 +88,15 @@ public static class TranscriptionProviderPresetCatalog
             "gemini-3-flash-preview"
         ]);
 
+    public static TranscriptionProviderPreset Xai { get; } = new(
+        "xai",
+        "xAI",
+        "https://api.x.ai/v1/stt",
+        "grok-stt",
+        [
+            "grok-stt"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
@@ -98,7 +107,8 @@ public static class TranscriptionProviderPresetCatalog
         ElevenLabs,
         Soniox,
         Speechmatics,
-        Gemini
+        Gemini,
+        Xai
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>
