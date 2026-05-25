@@ -45,6 +45,9 @@ public sealed partial class HistoryWindow : Window
 
         InitializeComponent();
         Title = "VoiceInk - Transcription History";
+        PlaybackRateComboBox.ItemsSource = HistoryPlaybackRatePresenter.Choices;
+        PlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
+            HistoryPlaybackRatePresenter.DefaultChoice.Value);
         AppWindow.Resize(new SizeInt32(1250, 750));
         Closed += HistoryWindow_Closed;
     }
@@ -147,6 +150,11 @@ public sealed partial class HistoryWindow : Window
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSelectedHistoryDetails();
+    }
+
+    private void PlaybackRateComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyPlaybackRate();
     }
 
     private async Task RefreshHistoryAsync(Guid? selectId = null)
@@ -621,13 +629,22 @@ public sealed partial class HistoryWindow : Window
         }
 
         AudioPlayer.Source = MediaSource.CreateFromUri(new Uri(audioPath, UriKind.Absolute));
-        AudioPlayer.Visibility = Visibility.Visible;
+        PlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
+            HistoryPlaybackRatePresenter.DefaultChoice.Value);
+        ApplyPlaybackRate();
+        AudioPanel.Visibility = Visibility.Visible;
     }
 
     private void ClearAudioPlayer()
     {
         AudioPlayer.Source = null;
-        AudioPlayer.Visibility = Visibility.Collapsed;
+        AudioPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void ApplyPlaybackRate()
+    {
+        var rate = HistoryPlaybackRatePresenter.ChoiceAtOrDefault(PlaybackRateComboBox.SelectedIndex).Value;
+        AudioPlayer.MediaPlayer.PlaybackSession.PlaybackRate = rate;
     }
 
     private void SetBusy(bool busy, string? status = null)

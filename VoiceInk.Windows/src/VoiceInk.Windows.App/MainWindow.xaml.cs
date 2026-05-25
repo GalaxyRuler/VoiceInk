@@ -195,6 +195,9 @@ public sealed partial class MainWindow : Window
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
         MetricsTimeFilterComboBox.ItemsSource = SessionMetricsTimeFilter.AllChoices;
         MetricsTimeFilterComboBox.SelectedIndex = 0;
+        HistoryPlaybackRateComboBox.ItemsSource = HistoryPlaybackRatePresenter.Choices;
+        HistoryPlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
+            HistoryPlaybackRatePresenter.DefaultChoice.Value);
         floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
         floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
         floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
@@ -1187,6 +1190,11 @@ public sealed partial class MainWindow : Window
     private async void DeleteHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await DeleteSelectedHistoryAsync();
+    }
+
+    private void HistoryPlaybackRateComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyHistoryPlaybackRate();
     }
 
     private async void ApplyShortcutsButton_Click(object sender, RoutedEventArgs e)
@@ -4489,13 +4497,22 @@ public sealed partial class MainWindow : Window
         }
 
         HistoryAudioPlayer.Source = MediaSource.CreateFromUri(new Uri(audioPath, UriKind.Absolute));
-        HistoryAudioPlayer.Visibility = Visibility.Visible;
+        HistoryPlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
+            HistoryPlaybackRatePresenter.DefaultChoice.Value);
+        ApplyHistoryPlaybackRate();
+        HistoryAudioPanel.Visibility = Visibility.Visible;
     }
 
     private void ClearHistoryAudioPlayer()
     {
         HistoryAudioPlayer.Source = null;
-        HistoryAudioPlayer.Visibility = Visibility.Collapsed;
+        HistoryAudioPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void ApplyHistoryPlaybackRate()
+    {
+        var rate = HistoryPlaybackRatePresenter.ChoiceAtOrDefault(HistoryPlaybackRateComboBox.SelectedIndex).Value;
+        HistoryAudioPlayer.MediaPlayer.PlaybackSession.PlaybackRate = rate;
     }
 
     private void TryDeleteHistoryAudioFile(TranscriptionHistoryItem item)

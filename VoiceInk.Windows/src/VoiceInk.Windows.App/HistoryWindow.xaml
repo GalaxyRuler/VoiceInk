@@ -99,12 +99,17 @@
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </ScrollViewer>
-                <MediaPlayerElement
-                    x:Name="AudioPlayer"
-                    Grid.Row="2"
-                    Height="72"
-                    AreTransportControlsEnabled="True"
-                    Visibility="Collapsed" />
+                <StackPanel x:Name="AudioPanel" Grid.Row="2" Spacing="4" Visibility="Collapsed">
+                    <ComboBox
+                        x:Name="PlaybackRateComboBox"
+                        Header="Playback Rate"
+                        DisplayMemberPath="Label"
+                        SelectionChanged="PlaybackRateComboBox_SelectionChanged" />
+                    <MediaPlayerElement
+                        x:Name="AudioPlayer"
+                        Height="72"
+                        AreTransportControlsEnabled="True" />
+                </StackPanel>
             </Grid>
 
             <Grid Grid.Column="2" RowSpacing="8">

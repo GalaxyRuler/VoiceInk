@@ -785,11 +785,17 @@
                                     Height="80"
                                     IsReadOnly="True"
                                     TextWrapping="Wrap" />
-                                <MediaPlayerElement
-                                    x:Name="HistoryAudioPlayer"
-                                    Height="72"
-                                    AreTransportControlsEnabled="True"
-                                    Visibility="Collapsed" />
+                                <StackPanel x:Name="HistoryAudioPanel" Spacing="4" Visibility="Collapsed">
+                                    <ComboBox
+                                        x:Name="HistoryPlaybackRateComboBox"
+                                        Header="Playback Rate"
+                                        DisplayMemberPath="Label"
+                                        SelectionChanged="HistoryPlaybackRateComboBox_SelectionChanged" />
+                                    <MediaPlayerElement
+                                        x:Name="HistoryAudioPlayer"
+                                        Height="72"
+                                        AreTransportControlsEnabled="True" />
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
