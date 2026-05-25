@@ -134,6 +134,8 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
+        MetricsTimeFilterComboBox.ItemsSource = SessionMetricsTimeFilter.AllChoices;
+        MetricsTimeFilterComboBox.SelectedIndex = 0;
         floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
         floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
         floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
@@ -755,6 +757,19 @@ public sealed partial class MainWindow : Window
     private async void RefreshMetricsButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshMetricsWithStatusAsync("Metrics refreshed");
+    }
+
+    private async void ExportMetricsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportMetricsAsync();
+    }
+
+    private async void MetricsTimeFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (settingsLoaded)
+        {
+            await RefreshMetricsWithStatusAsync("Metrics filter updated");
+        }
     }
 
     private async void SearchHistoryButton_Click(object sender, RoutedEventArgs e)
@@ -2117,15 +2132,17 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var summary = await sessionMetricStore.GetSummaryAsync(cancellationToken);
+        var filter = SelectedMetricsTimeFilter();
+        var since = filter.Since(DateTimeOffset.Now, TimeZoneInfo.Local);
+        var summary = await sessionMetricStore.GetSummaryAsync(since, cancellationToken);
         var transcriptionStats = await sessionMetricStore.ListTranscriptionModelPerformanceAsync(
-            since: null,
+            since,
             cancellationToken);
         var enhancementStats = await sessionMetricStore.ListEnhancementModelPerformanceAsync(
-            since: null,
+            since,
             cancellationToken);
 
-        MetricsSummaryTextBlock.Text = FormatMetricsSummary(summary);
+        MetricsSummaryTextBlock.Text = FormatMetricsSummary(filter.Label, summary);
         TranscriptionModelPerformanceListView.ItemsSource = transcriptionStats.Count == 0
             ? ["No transcription model metrics yet"]
             : transcriptionStats.Select(TranscriptionModelPerformanceListItem).ToArray();
@@ -2155,9 +2172,59 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static string FormatMetricsSummary(SessionMetricsSummary summary) =>
+    private async Task ExportMetricsAsync()
+    {
+        if (metricsInitializationWarning is not null)
+        {
+            RefreshUiFromControllerState(metricsInitializationWarning);
+            return;
+        }
+
+        try
+        {
+            var filter = SelectedMetricsTimeFilter();
+            var since = filter.Since(DateTimeOffset.Now, TimeZoneInfo.Local);
+            var summary = await sessionMetricStore.GetSummaryAsync(since, windowLifetime.Token);
+            var transcriptionStats = await sessionMetricStore.ListTranscriptionModelPerformanceAsync(
+                since,
+                windowLifetime.Token);
+            var enhancementStats = await sessionMetricStore.ListEnhancementModelPerformanceAsync(
+                since,
+                windowLifetime.Token);
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"VoiceInk-metrics-{filter.Id}-{DateTimeOffset.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("CSV file", [".csv"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                RefreshUiFromControllerState("Metrics export canceled");
+                return;
+            }
+
+            await FileIO.WriteTextAsync(
+                file,
+                MetricsCsvExporter.Export(filter.Label, summary, transcriptionStats, enhancementStats));
+            RefreshUiFromControllerState($"Metrics exported: {file.Name}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Metrics export failed: {ex.Message}");
+        }
+    }
+
+    private static string FormatMetricsSummary(string filterLabel, SessionMetricsSummary summary) =>
         string.Join(
             Environment.NewLine,
+            $"Filter: {filterLabel}",
             $"Sessions Recorded: {summary.TotalSessions.ToString("N0", CultureInfo.CurrentCulture)}",
             $"Words Dictated: {summary.TotalWords.ToString("N0", CultureInfo.CurrentCulture)}",
             $"Words Per Minute: {summary.WordsPerMinute.ToString("0.0", CultureInfo.CurrentCulture)}",
@@ -2193,6 +2260,10 @@ public sealed partial class MainWindow : Window
 
         return $"{duration.TotalSeconds.ToString("0.#", CultureInfo.CurrentCulture)}s";
     }
+
+    private SessionMetricsTimeFilter SelectedMetricsTimeFilter() =>
+        MetricsTimeFilterComboBox.SelectedItem as SessionMetricsTimeFilter
+        ?? SessionMetricsTimeFilter.Last7Days;
 
     private async Task ExportHistoryAsync()
     {
@@ -4084,6 +4155,8 @@ public sealed partial class MainWindow : Window
             && controller.State != DictationState.Recording;
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         RefreshMetricsButton.IsEnabled = settingsLoaded && !operationActive;
+        MetricsTimeFilterComboBox.IsEnabled = settingsLoaded && !operationActive;
+        ExportMetricsButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
         RefreshAudioInputsButton.IsEnabled = settingsLoaded

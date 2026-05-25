@@ -485,11 +485,17 @@ Session Metrics slice completed on 2026-05-25:
 - Completed recorder, Transcribe Audio, and retry flows now record metrics after successful History saves; canceled, failed, and pending rows do not count toward metrics.
 - Added a WinUI `Metrics` sidebar section after History showing dashboard totals, metrics database path, transcription model performance, and enhancement model performance.
 
+Metrics Filters and Export slice completed on 2026-05-25:
+
+- Added macOS-aligned filter choices for Last 7 Days, Last 30 Days, This Year, and All Time, with Last 7 Days as the default Metrics filter.
+- Filtered dashboard summaries, transcription model performance, and enhancement model performance by the selected time range.
+- Added non-destructive local Metrics CSV export through a Windows save picker.
+- Deliberately left reset/delete controls unimplemented because deleting local metrics data requires explicit user approval.
+
 Windows gaps:
 
 - Rich macOS visual dashboard cards and slide-over model performance panel styling.
-- Metrics time filters in the WinUI shell.
-- Metrics export/reset controls.
+- Metrics reset controls are intentionally blocked until a user explicitly approves deleting local metrics data.
 - Diagnostics copy/export expansion beyond the existing About/Open Source local diagnostics actions.
 
 ### Settings

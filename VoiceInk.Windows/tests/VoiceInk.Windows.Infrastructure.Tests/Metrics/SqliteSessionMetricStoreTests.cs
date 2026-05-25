@@ -27,6 +27,28 @@ public sealed class SqliteSessionMetricStoreTests
     }
 
     [Fact]
+    public async Task GetSummaryAsync_WithSinceFiltersOlderMetrics()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteSessionMetricStore(Path.Combine(temp.Path, "metrics.db"));
+        var since = new DateTimeOffset(2026, 5, 25, 12, 0, 0, TimeSpan.Zero);
+        await store.SaveAsync(Metric(
+            timestamp: since.AddMinutes(-1),
+            wordCount: 99,
+            audioDuration: TimeSpan.FromMinutes(9)), CancellationToken.None);
+        await store.SaveAsync(Metric(
+            timestamp: since,
+            wordCount: 20,
+            audioDuration: TimeSpan.FromMinutes(1)), CancellationToken.None);
+
+        var summary = await store.GetSummaryAsync(since, CancellationToken.None);
+
+        Assert.Equal(1, summary.TotalSessions);
+        Assert.Equal(20, summary.TotalWords);
+        Assert.Equal(TimeSpan.FromMinutes(1), summary.TotalAudioDuration);
+    }
+
+    [Fact]
     public async Task SaveAsync_IgnoresDuplicateTranscriptionIds()
     {
         using var temp = new TempDirectory();

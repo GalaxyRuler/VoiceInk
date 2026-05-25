@@ -681,10 +681,21 @@
 
                     <StackPanel x:Name="MetricsSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Metrics" FontSize="24" FontWeight="SemiBold" />
-                        <Button
-                            x:Name="RefreshMetricsButton"
-                            Content="Refresh Metrics"
-                            Click="RefreshMetricsButton_Click" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ComboBox
+                                x:Name="MetricsTimeFilterComboBox"
+                                DisplayMemberPath="Label"
+                                Header="Time Filter"
+                                SelectionChanged="MetricsTimeFilterComboBox_SelectionChanged" />
+                            <Button
+                                x:Name="RefreshMetricsButton"
+                                Content="Refresh Metrics"
+                                Click="RefreshMetricsButton_Click" />
+                            <Button
+                                x:Name="ExportMetricsButton"
+                                Content="Export Metrics CSV"
+                                Click="ExportMetricsButton_Click" />
+                        </StackPanel>
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

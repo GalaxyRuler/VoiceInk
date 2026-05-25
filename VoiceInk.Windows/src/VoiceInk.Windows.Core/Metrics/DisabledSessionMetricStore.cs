@@ -19,6 +19,9 @@ public sealed class DisabledSessionMetricStore : ISessionMetricStore
     public Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
         Task.FromResult(SessionMetricsSummary.Empty);
 
+    public Task<SessionMetricsSummary> GetSummaryAsync(DateTimeOffset? since, CancellationToken cancellationToken) =>
+        Task.FromResult(SessionMetricsSummary.Empty);
+
     public Task<IReadOnlyList<ModelPerformanceStat>> ListTranscriptionModelPerformanceAsync(
         DateTimeOffset? since,
         CancellationToken cancellationToken) =>

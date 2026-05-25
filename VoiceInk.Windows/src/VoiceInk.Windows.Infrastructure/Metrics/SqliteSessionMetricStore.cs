@@ -72,7 +72,12 @@ public sealed class SqliteSessionMetricStore : ISessionMetricStore
         return await command.ExecuteScalarAsync(cancellationToken) is not null;
     }
 
-    public async Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken)
+    public Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+        GetSummaryAsync(since: null, cancellationToken);
+
+    public async Task<SessionMetricsSummary> GetSummaryAsync(
+        DateTimeOffset? since,
+        CancellationToken cancellationToken)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -80,8 +85,10 @@ public sealed class SqliteSessionMetricStore : ISessionMetricStore
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT COUNT(*), COALESCE(SUM(word_count), 0), COALESCE(SUM(audio_duration_ms), 0)
-            FROM session_metrics;
+            FROM session_metrics
+            WHERE ($since_utc_ticks IS NULL OR timestamp_utc_ticks >= $since_utc_ticks);
             """;
+        command.Parameters.AddWithValue("$since_utc_ticks", ValueOrDbNull(since?.UtcDateTime.Ticks));
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken))
