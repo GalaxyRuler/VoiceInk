@@ -76,6 +76,40 @@ public sealed class TextEnhancementPipelineTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_IncludesSelectedTextContextWhenEnhancementRuns()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext(SelectedText: "Selected note"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with { IsEnhancementEnabled = true };
+
+        await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal(new EnhancementContextRequest(IncludeClipboard: false, IncludeSelectedText: true), contextProvider.LastRequest);
+        Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
+        Assert.Contains("Selected note", provider.LastRequest.SystemMessage);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_RequestsClipboardAndSelectedTextWhenClipboardContextEnabled()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var contextProvider = new FakeEnhancementContextProvider(new EnhancementContext("Clipboard note", "Selected note"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            UseClipboardContext = true
+        };
+
+        await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal(new EnhancementContextRequest(IncludeClipboard: true, IncludeSelectedText: true), contextProvider.LastRequest);
+        Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
+        Assert.Contains("<CLIPBOARD_CONTEXT>", provider.LastRequest.SystemMessage);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_WhenClipboardContextProviderFails_EnhancesWithoutContext()
     {
         var provider = new FakeTextEnhancementService("Enhanced note.");
@@ -240,11 +274,15 @@ public sealed class TextEnhancementPipelineTests
     private sealed class FakeEnhancementContextProvider(EnhancementContext context) : IEnhancementContextProvider
     {
         public int CallCount { get; private set; }
+        public EnhancementContextRequest? LastRequest { get; private set; }
         public Exception? Exception { get; init; }
 
-        public Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken)
+        public Task<EnhancementContext> GetContextAsync(
+            EnhancementContextRequest request,
+            CancellationToken cancellationToken)
         {
             CallCount++;
+            LastRequest = request;
             if (Exception is not null)
             {
                 throw Exception;

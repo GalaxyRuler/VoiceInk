@@ -148,7 +148,7 @@ public sealed partial class MainWindow : Window
         textEnhancementPipeline = new TextEnhancementPipeline(
             textEnhancementService,
             enhancementPrompts,
-            new ClipboardEnhancementContextProvider());
+            new WindowsEnhancementContextProvider());
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         transcriptionService = new TranscriptionServiceRouter(
             new WhisperNetTranscriptionService(),

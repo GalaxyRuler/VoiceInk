@@ -39,7 +39,7 @@
 
 Add the selected-text context MVP target under Context.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -53,7 +53,7 @@ Expected: docs-only commit with no whitespace errors.
 
 ## Task 2: Prompt Rendering Red/Green
 
-- [ ] **Step 1: Add failing prompt-renderer test**
+- [x] **Step 1: Add failing prompt-renderer test**
 
 Add this test to `EnhancementPromptTests`:
 
@@ -88,7 +88,7 @@ public void Render_AppendsSelectedTextBeforeClipboardAndVocabulary()
 }
 ```
 
-- [ ] **Step 2: Run red prompt-renderer test**
+- [x] **Step 2: Run red prompt-renderer test**
 
 Run:
 
@@ -98,7 +98,7 @@ Run:
 
 Expected: compile failure because `EnhancementContext.SelectedText` does not exist.
 
-- [ ] **Step 3: Implement selected-text prompt rendering**
+- [x] **Step 3: Implement selected-text prompt rendering**
 
 Change `EnhancementContext` to:
 
@@ -113,13 +113,13 @@ public sealed record EnhancementContext(
 
 Add `SelectedTextContextSection` to `EnhancementPromptRenderer` and append it before `ClipboardContextSection(context)`.
 
-- [ ] **Step 4: Verify prompt-renderer test passes**
+- [x] **Step 4: Verify prompt-renderer test passes**
 
 Run the same focused command. Expected: test passes.
 
 ## Task 3: Pipeline Context Request Red/Green
 
-- [ ] **Step 1: Add failing pipeline tests**
+- [x] **Step 1: Add failing pipeline tests**
 
 Add tests to `TextEnhancementPipelineTests`:
 
@@ -161,7 +161,7 @@ public async Task EnhanceAsync_RequestsClipboardAndSelectedTextWhenClipboardCont
 
 Update `FakeEnhancementContextProvider` to accept `EnhancementContextRequest`.
 
-- [ ] **Step 2: Run red pipeline tests**
+- [x] **Step 2: Run red pipeline tests**
 
 Run:
 
@@ -171,7 +171,7 @@ Run:
 
 Expected: compile failure because `EnhancementContextRequest` and the new provider signature do not exist.
 
-- [ ] **Step 3: Implement Core context request flow**
+- [x] **Step 3: Implement Core context request flow**
 
 Create:
 
@@ -191,13 +191,13 @@ var rendered = EnhancementPromptRenderer.Render(
         cancellationToken));
 ```
 
-- [ ] **Step 4: Verify pipeline tests pass**
+- [x] **Step 4: Verify pipeline tests pass**
 
 Run the same focused command. Expected: tests pass.
 
 ## Task 4: Native UI Automation Provider
 
-- [ ] **Step 1: Add UI Automation references if required**
+- [x] **Step 1: Add UI Automation references if required**
 
 If the build cannot resolve `System.Windows.Automation`, add framework references to `VoiceInk.Windows.Native.csproj`:
 
@@ -206,7 +206,7 @@ If the build cannot resolve `System.Windows.Automation`, add framework reference
 <Reference Include="UIAutomationTypes" />
 ```
 
-- [ ] **Step 2: Refactor clipboard provider to request-aware helper**
+- [x] **Step 2: Refactor clipboard provider to request-aware helper**
 
 Change `ClipboardEnhancementContextProvider` so it exposes:
 
@@ -216,19 +216,19 @@ public async Task<string> GetClipboardTextAsync(CancellationToken cancellationTo
 
 It should keep the same read-only WinRT clipboard behavior and cancellation-aware `AsTask(cancellationToken)`.
 
-- [ ] **Step 3: Add selected-text provider**
+- [x] **Step 3: Add selected-text provider**
 
 Create `SelectedTextEnhancementContextProvider` using `AutomationElement.FocusedElement`, `TextPattern.Pattern`, `GetSelection()`, and `GetText(maxCharacters + 1)`. Catch unsupported/unavailable UI Automation exceptions and return empty text.
 
-- [ ] **Step 4: Add Windows context aggregator**
+- [x] **Step 4: Add Windows context aggregator**
 
 Create `WindowsEnhancementContextProvider` implementing `IEnhancementContextProvider`. It reads selected text when `request.IncludeSelectedText` is true, reads clipboard when `request.IncludeClipboard` is true, catches failures per source, and returns a combined `EnhancementContext`.
 
-- [ ] **Step 5: Wire app composition**
+- [x] **Step 5: Wire app composition**
 
 In `MainWindow.xaml.cs`, replace `new ClipboardEnhancementContextProvider()` with `new WindowsEnhancementContextProvider()`.
 
-- [ ] **Step 6: Verify build**
+- [x] **Step 6: Verify build**
 
 Run:
 
@@ -240,7 +240,7 @@ Expected: build succeeds with zero errors.
 
 ## Task 5: Docs, Review, And Commit
 
-- [ ] **Step 1: Update README and parity spec**
+- [x] **Step 1: Update README and parity spec**
 
 Document:
 
@@ -249,7 +249,7 @@ Document:
 - Unsupported controls, unavailable UI Automation, and empty selections degrade to no selected-text context.
 - Clipboard-copy fallback, OCR/screen context, and browser URL context remain later.
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 Run:
 
@@ -261,7 +261,7 @@ Run:
 
 Expected: focused tests pass, full tests pass, build succeeds.
 
-- [ ] **Step 3: Request review and fix Critical/Important findings**
+- [x] **Step 3: Request review and fix Critical/Important findings**
 
 Ask a subagent to review UI Automation provider risk, no clipboard mutation, prompt parity, and context-provider request semantics.
 

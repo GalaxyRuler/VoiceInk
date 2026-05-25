@@ -28,6 +28,7 @@ public static class EnhancementPromptRenderer
         var systemMessage = prompt.UseSystemInstructions
             ? string.Format(SystemInstructionsTemplate, prompt.PromptText.Trim())
             : prompt.PromptText.Trim();
+        systemMessage += SelectedTextContextSection(context);
         systemMessage += ClipboardContextSection(context);
         systemMessage += VocabularySection(vocabulary);
 
@@ -39,6 +40,23 @@ public static class EnhancementPromptRenderer
             """;
 
         return new EnhancementPromptRenderResult(prompt.Title, systemMessage, userMessage);
+    }
+
+    private static string SelectedTextContextSection(EnhancementContext? context)
+    {
+        var selectedText = context?.SelectedText.Trim();
+        if (string.IsNullOrEmpty(selectedText))
+        {
+            return string.Empty;
+        }
+
+        return $"""
+
+
+            <CURRENTLY_SELECTED_TEXT>
+            {selectedText}
+            </CURRENTLY_SELECTED_TEXT>
+            """;
     }
 
     private static string ClipboardContextSection(EnhancementContext? context)

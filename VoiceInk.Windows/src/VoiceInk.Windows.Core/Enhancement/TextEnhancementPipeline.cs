@@ -60,9 +60,11 @@ public sealed class TextEnhancementPipeline
         }
 
         var prompt = PromptFor(detection.SelectedPromptId ?? selectedPromptId);
-        var context = settings.UseClipboardContext
-            ? await GetContextAsync(cancellationToken)
-            : EnhancementContext.Empty;
+        var context = await GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: settings.UseClipboardContext,
+                IncludeSelectedText: true),
+            cancellationToken);
         var rendered = EnhancementPromptRenderer.Render(prompt, detection.ProcessedText, vocabulary, context);
         var request = new TextEnhancementRequest(
             settings.EnhancementEndpoint.Trim(),
@@ -110,11 +112,13 @@ public sealed class TextEnhancementPipeline
         ?? prompts.FirstOrDefault(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId)
         ?? prompts[0];
 
-    private async Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken)
+    private async Task<EnhancementContext> GetContextAsync(
+        EnhancementContextRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await contextProvider.GetContextAsync(cancellationToken);
+            return await contextProvider.GetContextAsync(request, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

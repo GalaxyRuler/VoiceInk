@@ -2,5 +2,7 @@ namespace VoiceInk.Windows.Core.Enhancement;
 
 public interface IEnhancementContextProvider
 {
-    Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken);
+    Task<EnhancementContext> GetContextAsync(
+        EnhancementContextRequest request,
+        CancellationToken cancellationToken);
 }

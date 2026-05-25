@@ -82,6 +82,39 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_AppendsSelectedTextBeforeClipboardAndVocabulary()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+        };
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "fix this",
+            vocabulary,
+            new EnhancementContext(
+                ClipboardText: "clipboard note",
+                SelectedText: "selected note"));
+
+        Assert.Contains("<CURRENTLY_SELECTED_TEXT>", rendered.SystemMessage);
+        Assert.Contains("selected note", rendered.SystemMessage);
+        Assert.Contains("</CURRENTLY_SELECTED_TEXT>", rendered.SystemMessage);
+        var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+        var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
+        var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
+
+        Assert.True(
+            selectedTextIndex < clipboardIndex,
+            "Selected text context should render before clipboard context.");
+        Assert.True(
+            clipboardIndex < vocabularyIndex,
+            "Clipboard context should render before vocabulary context.");
+    }
+
+    [Fact]
     public void Render_AssistantPromptUsesRawAssistantInstructions()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

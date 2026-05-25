@@ -12,7 +12,19 @@ public sealed class ClipboardEnhancementContextProvider : IEnhancementContextPro
         this.maxCharacters = Math.Max(1, maxCharacters);
     }
 
-    public async Task<EnhancementContext> GetContextAsync(CancellationToken cancellationToken)
+    public async Task<EnhancementContext> GetContextAsync(
+        EnhancementContextRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!request.IncludeClipboard)
+        {
+            return EnhancementContext.Empty;
+        }
+
+        return new EnhancementContext(await GetClipboardTextAsync(cancellationToken));
+    }
+
+    public async Task<string> GetClipboardTextAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -21,17 +33,17 @@ public sealed class ClipboardEnhancementContextProvider : IEnhancementContextPro
             var data = global::Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
             if (!data.Contains(StandardDataFormats.Text))
             {
-                return EnhancementContext.Empty;
+                return string.Empty;
             }
 
             var text = (await data.GetTextAsync().AsTask(cancellationToken)).Trim();
             cancellationToken.ThrowIfCancellationRequested();
             if (text.Length == 0)
             {
-                return EnhancementContext.Empty;
+                return string.Empty;
             }
 
-            return new EnhancementContext(text.Length <= maxCharacters ? text : text[..maxCharacters]);
+            return text.Length <= maxCharacters ? text : text[..maxCharacters];
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -39,7 +51,7 @@ public sealed class ClipboardEnhancementContextProvider : IEnhancementContextPro
         }
         catch
         {
-            return EnhancementContext.Empty;
+            return string.Empty;
         }
     }
 }

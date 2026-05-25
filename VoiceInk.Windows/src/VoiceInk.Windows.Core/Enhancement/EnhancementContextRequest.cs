@@ -1,0 +1,5 @@
+namespace VoiceInk.Windows.Core.Enhancement;
+
+public sealed record EnhancementContextRequest(
+    bool IncludeClipboard,
+    bool IncludeSelectedText);

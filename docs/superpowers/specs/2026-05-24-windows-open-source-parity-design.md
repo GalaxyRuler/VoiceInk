@@ -62,7 +62,7 @@ The Windows MVP already has:
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
 - Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
-- Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
+- Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
@@ -290,13 +290,14 @@ AI Enhancement slice completed on 2026-05-25:
 - Add an Enhancement navigation section for enable/disable, endpoint/model, prompt selection, timeout, skip-short, retry-on-timeout settings, and key save/clear.
 - Run enhancement after local transcription cleanup and before insertion. Store original cleaned text as history `Text`, successful enhancement as `EnhancedText`, plus enhancement provider/model, prompt, duration, and rendered request messages for local diagnostics. Paste the enhanced text. On enhancement failure, paste original cleaned text and keep enhanced text empty so paste-last-enhanced never pastes an error string.
 - Add a default-off `Clipboard Context` setting that reads the current text clipboard without modifying it, appends it to the enhancement system message inside `<CLIPBOARD_CONTEXT>` tags, and gracefully skips empty, non-text, or unavailable clipboard content.
+- Add best-effort selected text capture through read-only Windows UI Automation when enhancement runs, append it to the enhancement system message inside `<CURRENTLY_SELECTED_TEXT>` tags, and gracefully skip unavailable controls, empty selections, or failed reads.
 
 Windows gaps:
 
 - Prompt template persistence.
 - Ollama and Local CLI hooks.
 - Trigger detection.
-- Selected-text, screen/OCR, browser URL, and app-specific context capture.
+- Clipboard-copy fallback for selected text, screen/OCR, browser URL, and app-specific context capture.
 - Named provider cards and dynamic model lists.
 - Toggle-enhancement shortcut and recorder prompt picker activation.
 - AI re-enhance from History.
@@ -329,9 +330,17 @@ Selected-text enhancement context Windows MVP target:
 - Avoid clipboard-copy fallback in this slice so selected-text capture never modifies user clipboard contents.
 - Keep selected text local to the enhancement request and persist only the rendered AI request messages already saved for local History diagnostics.
 
+Selected-text enhancement context slice completed on 2026-05-25:
+
+- Added selected text to Core enhancement context rendering inside `<CURRENTLY_SELECTED_TEXT>` tags before clipboard and vocabulary context.
+- Changed enhancement context providers to receive a request describing which sources to read, so clipboard remains gated by `Clipboard Context` while selected text is best-effort when enhancement runs.
+- Added Windows UI Automation selected-text capture through `AutomationElement.FocusedElement`, `TextPattern.GetSelection()`, and `TextPatternRange.GetText(...)`.
+- Added a Windows context aggregator that isolates selected-text and clipboard read failures and degrades each source independently.
+- Deliberately did not add clipboard-copy fallback for selected text in this slice, preserving clipboard contents.
+
 Windows gaps:
 
-- Selected text context through UI Automation or clipboard fallback.
+- Clipboard-copy fallback for selected text when UI Automation does not expose selection.
 - Active window title/process.
 - OCR via Windows OCR APIs if available.
 - Browser URL detection.
