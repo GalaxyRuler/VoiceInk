@@ -40,6 +40,73 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_ReadsProviderSpecificSecretAndReturnsProviderMetadata()
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"Groq text"}}]}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Enhancement.OpenAICompatible.Custom.ApiKey"] = "custom-secret",
+                ["VoiceInk.Windows.Enhancement.OpenAICompatible.Groq.ApiKey"] = "gsk-test-secret"
+            }
+        };
+        var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), secrets);
+
+        var result = await service.EnhanceAsync(Request(providerId: "groq"), CancellationToken.None);
+
+        Assert.Equal("Groq text", result.Text);
+        Assert.Equal("groq", result.ProviderName);
+        Assert.Equal(["VoiceInk.Windows.Enhancement.OpenAICompatible.Groq.ApiKey"], secrets.ReadNames);
+        Assert.Equal("gsk-test-secret", handler.Requests[0].Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_CustomProviderFallsBackToLegacySecretName()
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"Custom text"}}]}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Enhancement.OpenAICompatible.ApiKey"] = "legacy-custom-secret"
+            }
+        };
+        var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), secrets);
+
+        await service.EnhanceAsync(Request(providerId: "custom"), CancellationToken.None);
+
+        Assert.Equal(
+            [
+                "VoiceInk.Windows.Enhancement.OpenAICompatible.Custom.ApiKey",
+                "VoiceInk.Windows.Enhancement.OpenAICompatible.ApiKey"
+            ],
+            secrets.ReadNames);
+        Assert.Equal("legacy-custom-secret", handler.Requests[0].Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_OllamaProviderDoesNotRequireApiKeyOrBearerToken()
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"Local text"}}]}"""));
+        var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), new FakeSecretStore());
+
+        var result = await service.EnhanceAsync(
+            Request(
+                endpoint: "http://localhost:11434/v1/chat/completions",
+                model: "mistral",
+                providerId: "ollama"),
+            CancellationToken.None);
+
+        Assert.Equal("Local text", result.Text);
+        Assert.Equal("ollama", result.ProviderName);
+        Assert.Null(handler.Requests[0].Headers.Authorization);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_MissingApiKeyFailsBeforeHttp()
     {
         var handler = new QueueHttpMessageHandler(
@@ -68,6 +135,34 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
         Assert.DoesNotContain("sk-test-secret", ex.Message);
     }
 
+    [Theory]
+    [InlineData(
+        "http://api.example.test/v1/chat/completions",
+        "AI enhancement endpoint must use HTTPS unless it targets localhost.")]
+    [InlineData(
+        "https://sk-test-secret@api.example.test/v1/chat/completions",
+        "AI enhancement endpoint must not contain credentials.")]
+    [InlineData(
+        "https://api.example.test/v1/chat/completions?token=sk-test-secret",
+        "AI enhancement endpoint must not contain API keys or tokens in the query string.")]
+    public async Task EnhanceAsync_InsecureOrCredentialBearingEndpointFailsBeforeHttp(
+        string endpoint,
+        string expectedMessage)
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"unused"}}]}"""));
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "sk-test-secret" });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.EnhanceAsync(Request(endpoint: endpoint), CancellationToken.None));
+
+        Assert.Equal(expectedMessage, ex.Message);
+        Assert.DoesNotContain("sk-test-secret", ex.Message);
+        Assert.Empty(handler.Requests);
+    }
+
     [Fact]
     public async Task EnhanceAsync_RetriesTransientHttpFailures()
     {
@@ -83,16 +178,21 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
         Assert.Equal(2, handler.Requests.Count);
     }
 
-    private static TextEnhancementRequest Request(int maxRetries = 3) =>
+    private static TextEnhancementRequest Request(
+        int maxRetries = 3,
+        string endpoint = "https://api.example.test/v1/chat/completions",
+        string model = "test-model",
+        string providerId = "custom") =>
         new(
-            "https://api.example.test/v1/chat/completions",
-            "test-model",
+            endpoint,
+            model,
             "system prompt",
             "user prompt",
             TimeSpan.FromSeconds(7),
             0.3,
             RetryOnTimeout: true,
-            MaxRetries: maxRetries);
+            MaxRetries: maxRetries,
+            ProviderId: providerId);
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json) =>
         new(statusCode)
@@ -126,9 +226,14 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
     private sealed class FakeSecretStore : ISecretStore
     {
         public string? Secret { get; init; }
+        public Dictionary<string, string> Secrets { get; } = [];
+        public List<string> ReadNames { get; } = [];
 
-        public Task<string?> ReadSecretAsync(string name, CancellationToken cancellationToken) =>
-            Task.FromResult(Secret);
+        public Task<string?> ReadSecretAsync(string name, CancellationToken cancellationToken)
+        {
+            ReadNames.Add(name);
+            return Task.FromResult(Secrets.TryGetValue(name, out var secret) ? secret : Secret);
+        }
 
         public Task SaveSecretAsync(string name, string secret, CancellationToken cancellationToken) =>
             Task.CompletedTask;
@@ -137,6 +242,6 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
             Task.CompletedTask;
 
         public Task<bool> HasSecretAsync(string name, CancellationToken cancellationToken) =>
-            Task.FromResult(!string.IsNullOrWhiteSpace(Secret));
+            Task.FromResult(Secrets.ContainsKey(name) || !string.IsNullOrWhiteSpace(Secret));
     }
 }

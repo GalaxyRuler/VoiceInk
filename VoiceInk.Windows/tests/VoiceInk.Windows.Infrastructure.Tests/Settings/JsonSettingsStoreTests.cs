@@ -51,6 +51,9 @@ public sealed class JsonSettingsStoreTests
             CloudTranscriptionProviderId = "groq",
             CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
             CloudTranscriptionModel = "gpt-4o-transcribe",
+            EnhancementProviderId = "gemini",
+            EnhancementEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+            EnhancementModel = "gemini-2.5-flash-lite",
             UseClipboardContext = true,
             ImportedWhisperModels =
             [

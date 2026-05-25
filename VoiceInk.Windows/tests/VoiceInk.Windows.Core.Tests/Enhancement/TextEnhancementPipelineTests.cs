@@ -57,6 +57,26 @@ public sealed class TextEnhancementPipelineTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_PassesSelectedEnhancementProviderIdAndMetadata()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.")
+        {
+            UseRequestProviderName = true
+        };
+        var pipeline = new TextEnhancementPipeline(provider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            EnhancementProviderId = "groq"
+        };
+
+        var result = await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal("groq", provider.LastRequest!.ProviderId);
+        Assert.Equal("groq", result.EnhancementProviderName);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_IncludesClipboardContextWhenEnabled()
     {
         var provider = new FakeTextEnhancementService("Enhanced note.");
@@ -250,6 +270,7 @@ public sealed class TextEnhancementPipelineTests
         public int CallCount { get; private set; }
         public TextEnhancementRequest? LastRequest { get; private set; }
         public Exception? Exception { get; init; }
+        public bool UseRequestProviderName { get; init; }
 
         public Task<TextEnhancementResult> EnhanceAsync(
             TextEnhancementRequest request,
@@ -265,7 +286,9 @@ public sealed class TextEnhancementPipelineTests
 
             return Task.FromResult(new TextEnhancementResult(
                 text,
-                "openai-compatible",
+                UseRequestProviderName
+                    ? EnhancementConfiguration.ProviderNameFor(request.ProviderId)
+                    : "openai-compatible",
                 request.Model,
                 TimeSpan.FromMilliseconds(42)));
         }

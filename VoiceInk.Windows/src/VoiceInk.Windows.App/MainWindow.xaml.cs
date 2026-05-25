@@ -113,6 +113,8 @@ public sealed partial class MainWindow : Window
     private bool suppressModelPathChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
+    private bool suppressEnhancementPresetChanged;
+    private bool suppressEnhancementModelChanged;
     private bool exitRequested;
     private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
@@ -122,6 +124,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
+        EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
         floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
         floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
         floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
@@ -531,6 +534,31 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private void EnhancementProviderPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!suppressEnhancementPresetChanged)
+        {
+            ApplySelectedEnhancementPreset(fillConfiguration: true);
+            if (settingsLoaded)
+            {
+                _ = RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
+            }
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void EnhancementModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!suppressEnhancementModelChanged
+            && EnhancementModelComboBox.SelectedItem is string model)
+        {
+            EnhancementModelTextBox.Text = model;
+        }
+
+        RefreshUiFromControllerState();
+    }
+
     private async void ImportModelButton_Click(object sender, RoutedEventArgs e)
     {
         await ImportLocalModelAsync();
@@ -797,8 +825,12 @@ public sealed partial class MainWindow : Window
             QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
             EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
             UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
+            suppressEnhancementPresetChanged = true;
+            SelectEnhancementPreset(settings.EnhancementProviderId);
+            suppressEnhancementPresetChanged = false;
             EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
             EnhancementModelTextBox.Text = settings.EnhancementModel;
+            RefreshEnhancementModelChoices(settings.EnhancementModel);
             EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
             ShortEnhancementThresholdTextBox.Text = ShortEnhancementThreshold(settings).ToString(CultureInfo.InvariantCulture);
             SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
@@ -835,6 +867,8 @@ public sealed partial class MainWindow : Window
             suppressModelPathChanged = false;
             suppressCloudTranscriptionPresetChanged = false;
             suppressCloudTranscriptionModelChanged = false;
+            suppressEnhancementPresetChanged = false;
+            suppressEnhancementModelChanged = false;
         }
     }
 
@@ -2606,6 +2640,16 @@ public sealed partial class MainWindow : Window
 
             EnhancementTimeoutTextBox.Text = timeoutSeconds.ToString(CultureInfo.InvariantCulture);
             ShortEnhancementThresholdTextBox.Text = shortThreshold.ToString(CultureInfo.InvariantCulture);
+            var configurationError = EnhancementConfiguration.ValidateRequiredSettings(
+                EnhancementEnabledCheckBox.IsChecked == true,
+                EnhancementEndpointTextBox.Text,
+                EnhancementModelTextBox.Text);
+            if (configurationError is not null)
+            {
+                RefreshUiFromControllerState(configurationError);
+                return;
+            }
+
             await SaveSettingsAsync(windowLifetime.Token);
             RefreshUiFromControllerState("Enhancement settings updated");
         }
@@ -2638,13 +2682,20 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState(statusOverride);
         try
         {
+            var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+            if (!preset.RequiresApiKey)
+            {
+                statusOverride = $"{preset.DisplayName} does not require an API key";
+                return;
+            }
+
             await secretStore.SaveSecretAsync(
-                OpenAICompatibleTextEnhancementService.SecretName,
+                EnhancementConfiguration.SecretNameForProvider(preset.Id),
                 secret,
                 windowLifetime.Token);
             EnhancementApiKeyPasswordBox.Password = string.Empty;
             await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
-            statusOverride = "Enhancement API key saved";
+            statusOverride = $"{preset.DisplayName} API key saved";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2673,12 +2724,15 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState(statusOverride);
         try
         {
-            await secretStore.DeleteSecretAsync(
-                OpenAICompatibleTextEnhancementService.SecretName,
-                windowLifetime.Token);
+            var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+            foreach (var secretName in EnhancementConfiguration.SecretNamesForProvider(preset.Id))
+            {
+                await secretStore.DeleteSecretAsync(secretName, windowLifetime.Token);
+            }
+
             EnhancementApiKeyPasswordBox.Password = string.Empty;
             await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
-            statusOverride = "Enhancement API key cleared";
+            statusOverride = $"{preset.DisplayName} API key cleared";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2880,6 +2934,7 @@ public sealed partial class MainWindow : Window
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
+            EnhancementProviderId = SelectedEnhancementProviderId(),
             EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
             EnhancementModel = EnhancementModelTextBox.Text.Trim(),
             SelectedEnhancementPromptId = SelectedEnhancementPromptId(),
@@ -2941,6 +2996,12 @@ public sealed partial class MainWindow : Window
 
     private TranscriptionProviderPreset? SelectedCloudTranscriptionPreset() =>
         CloudTranscriptionPresetComboBox.SelectedItem as TranscriptionProviderPreset;
+
+    private string SelectedEnhancementProviderId() =>
+        SelectedEnhancementPreset()?.Id ?? EnhancementProviderPresetCatalog.Custom.Id;
+
+    private EnhancementProviderPreset? SelectedEnhancementPreset() =>
+        EnhancementProviderPresetComboBox.SelectedItem as EnhancementProviderPreset;
 
     private Guid? SelectedEnhancementPromptId()
     {
@@ -3243,12 +3304,17 @@ public sealed partial class MainWindow : Window
 
     private async Task RefreshEnhancementKeyStatusAsync(CancellationToken cancellationToken)
     {
-        var hasKey = await secretStore.HasSecretAsync(
-            OpenAICompatibleTextEnhancementService.SecretName,
-            cancellationToken);
+        var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+        if (!preset.RequiresApiKey)
+        {
+            EnhancementKeyStatusTextBlock.Text = $"{preset.DisplayName} does not require an API key";
+            return;
+        }
+
+        var hasKey = await HasEnhancementApiKeyAsync(preset.Id, cancellationToken);
         EnhancementKeyStatusTextBlock.Text = hasKey
-            ? "API key stored in Windows Credential Manager"
-            : "No API key stored";
+            ? $"{preset.DisplayName} API key stored in Windows Credential Manager"
+            : $"No {preset.DisplayName} API key stored";
     }
 
     private async Task RefreshCloudTranscriptionKeyStatusAsync(CancellationToken cancellationToken)
@@ -3265,6 +3331,21 @@ public sealed partial class MainWindow : Window
         CancellationToken cancellationToken)
     {
         foreach (var secretName in TranscriptionConfiguration.SecretNamesForCloudProvider(providerId))
+        {
+            if (await secretStore.HasSecretAsync(secretName, cancellationToken))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task<bool> HasEnhancementApiKeyAsync(
+        string providerId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secretName in EnhancementConfiguration.SecretNamesForProvider(providerId))
         {
             if (await secretStore.HasSecretAsync(secretName, cancellationToken))
             {
@@ -3336,6 +3417,55 @@ public sealed partial class MainWindow : Window
         }
 
         suppressCloudTranscriptionModelChanged = false;
+    }
+
+    private void SelectEnhancementPreset(string? providerId)
+    {
+        var preset = EnhancementProviderPresetCatalog.Resolve(providerId);
+        var index = EnhancementProviderPresetCatalog.All.ToList().FindIndex(item => item.Id == preset.Id);
+        EnhancementProviderPresetComboBox.SelectedIndex = Math.Max(0, index);
+    }
+
+    private void ApplySelectedEnhancementPreset(bool fillConfiguration)
+    {
+        var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+        if (fillConfiguration && preset.Id != EnhancementProviderPresetCatalog.Custom.Id)
+        {
+            EnhancementEndpointTextBox.Text = preset.Endpoint;
+            if (string.IsNullOrWhiteSpace(EnhancementModelTextBox.Text)
+                || preset.ModelIds.Count == 0
+                || (preset.ModelIds.Count > 0
+                    && !preset.ModelIds.Any(model => string.Equals(
+                        model,
+                        EnhancementModelTextBox.Text.Trim(),
+                        StringComparison.OrdinalIgnoreCase))))
+            {
+                EnhancementModelTextBox.Text = preset.DefaultModel;
+            }
+        }
+
+        RefreshEnhancementModelChoices(EnhancementModelTextBox.Text);
+    }
+
+    private void RefreshEnhancementModelChoices(string selectedModel)
+    {
+        var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+        suppressEnhancementModelChanged = true;
+        EnhancementModelComboBox.ItemsSource = preset.ModelIds.ToArray();
+        if (preset.ModelIds.Count == 0)
+        {
+            EnhancementModelComboBox.SelectedIndex = -1;
+        }
+        else
+        {
+            var index = preset.ModelIds.ToList().FindIndex(model => string.Equals(
+                model,
+                selectedModel.Trim(),
+                StringComparison.OrdinalIgnoreCase));
+            EnhancementModelComboBox.SelectedIndex = index >= 0 ? index : 0;
+        }
+
+        suppressEnhancementModelChanged = false;
     }
 
     private bool IsOperationActive(
@@ -3575,6 +3705,8 @@ public sealed partial class MainWindow : Window
         var cloudTranscriptionControlsEnabled = modelControlsEnabled
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible;
         var cloudPresetHasModelChoices = SelectedCloudTranscriptionPreset()?.ModelIds.Count > 0;
+        var enhancementPreset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
+        var enhancementPresetHasModelChoices = enhancementPreset.ModelIds.Count > 0;
         var enhancementControlsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
@@ -3635,11 +3767,13 @@ public sealed partial class MainWindow : Window
         ApplyTranscriptionProviderSettingsButton.IsEnabled = modelControlsEnabled;
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
         UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
+        EnhancementProviderPresetComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
-        EnhancementApiKeyPasswordBox.IsEnabled = enhancementControlsEnabled;
-        SaveEnhancementKeyButton.IsEnabled = enhancementControlsEnabled;
-        ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled;
+        EnhancementModelComboBox.IsEnabled = enhancementControlsEnabled && enhancementPresetHasModelChoices;
+        EnhancementApiKeyPasswordBox.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
+        SaveEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
+        ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         EnhancementPromptComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementTimeoutTextBox.IsEnabled = enhancementControlsEnabled;
         ShortEnhancementThresholdTextBox.IsEnabled = enhancementControlsEnabled;

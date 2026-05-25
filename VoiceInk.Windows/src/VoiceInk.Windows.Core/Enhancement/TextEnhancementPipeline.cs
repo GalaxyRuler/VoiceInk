@@ -74,7 +74,8 @@ public sealed class TextEnhancementPipeline
             TimeSpan.FromSeconds(TimeoutSeconds(settings)),
             DefaultTemperature,
             settings.EnhancementRetryOnTimeout,
-            DefaultMaxRetries);
+            DefaultMaxRetries,
+            EnhancementProviderPresetCatalog.Resolve(settings.EnhancementProviderId).Id);
 
         try
         {

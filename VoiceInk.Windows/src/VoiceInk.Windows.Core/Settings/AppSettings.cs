@@ -27,6 +27,7 @@ public sealed record AppSettings
     public string CloudTranscriptionEndpoint { get; init; } = string.Empty;
     public string CloudTranscriptionModel { get; init; } = string.Empty;
     public bool IsEnhancementEnabled { get; init; }
+    public string EnhancementProviderId { get; init; } = "custom";
     public string EnhancementEndpoint { get; init; } = string.Empty;
     public string EnhancementModel { get; init; } = string.Empty;
     public Guid? SelectedEnhancementPromptId { get; init; }
@@ -64,6 +65,7 @@ public sealed record AppSettings
             CloudTranscriptionEndpoint == other.CloudTranscriptionEndpoint &&
             CloudTranscriptionModel == other.CloudTranscriptionModel &&
             IsEnhancementEnabled == other.IsEnhancementEnabled &&
+            EnhancementProviderId == other.EnhancementProviderId &&
             EnhancementEndpoint == other.EnhancementEndpoint &&
             EnhancementModel == other.EnhancementModel &&
             SelectedEnhancementPromptId == other.SelectedEnhancementPromptId &&
@@ -106,6 +108,7 @@ public sealed record AppSettings
         hash.Add(CloudTranscriptionEndpoint);
         hash.Add(CloudTranscriptionModel);
         hash.Add(IsEnhancementEnabled);
+        hash.Add(EnhancementProviderId);
         hash.Add(EnhancementEndpoint);
         hash.Add(EnhancementModel);
         hash.Add(SelectedEnhancementPromptId);

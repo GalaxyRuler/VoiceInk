@@ -36,7 +36,7 @@
 
 Record the provider-preset target under AI Enhancement: custom, Cerebras, Groq, Gemini, OpenAI, OpenRouter, Mistral, and Ollama through the current OpenAI-compatible chat-completions adapter; defer Anthropic, Local CLI, and speech/transcription-only providers.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -49,7 +49,7 @@ Expected: docs-only commit after the plan has been self-reviewed.
 
 ## Task 2: Core Preset Catalog Red/Green
 
-- [ ] **Step 1: Add failing Core tests**
+- [x] **Step 1: Add failing Core tests**
 
 Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Enhancement/EnhancementProviderPresetCatalogTests.cs` with tests that assert:
 
@@ -63,7 +63,7 @@ Create `VoiceInk.Windows/tests/VoiceInk.Windows.Core.Tests/Enhancement/Enhanceme
 - `EnhancementConfiguration.ProviderNameFor("custom")` returns `openai-compatible`; named providers return their IDs.
 - Endpoint validation rejects plain HTTP remote endpoints, embedded credentials, and key/token query parameters while allowing HTTP loopback for Ollama/local development.
 
-- [ ] **Step 2: Run red Core tests**
+- [x] **Step 2: Run red Core tests**
 
 Run:
 
@@ -73,7 +73,7 @@ Run:
 
 Expected: compile failure because the preset catalog/configuration types do not exist.
 
-- [ ] **Step 3: Implement Core catalog and configuration**
+- [x] **Step 3: Implement Core catalog and configuration**
 
 Add:
 
@@ -83,13 +83,13 @@ Add:
 - `TextEnhancementRequest.ProviderId` defaulting to `custom`.
 - `EnhancementConfiguration` constants and methods for `ValidateEndpoint`, `TryCreateEndpoint`, `SecretNameForProvider`, `SecretNamesForProvider`, and `ProviderNameFor`.
 
-- [ ] **Step 4: Verify Core tests pass**
+- [x] **Step 4: Verify Core tests pass**
 
 Run the same focused Core command. Expected: tests pass.
 
 ## Task 3: Pipeline Provider ID Red/Green
 
-- [ ] **Step 1: Add failing pipeline tests**
+- [x] **Step 1: Add failing pipeline tests**
 
 Extend `TextEnhancementPipelineTests` to assert:
 
@@ -97,7 +97,7 @@ Extend `TextEnhancementPipelineTests` to assert:
 - When the fake provider returns provider name from `EnhancementConfiguration.ProviderNameFor(request.ProviderId)`, the pipeline returns enhancement metadata `groq`.
 - Missing endpoint/model still returns original text and does not read context.
 
-- [ ] **Step 2: Run red pipeline tests**
+- [x] **Step 2: Run red pipeline tests**
 
 Run:
 
@@ -107,17 +107,17 @@ Run:
 
 Expected: compile or assertion failure until provider ID flows into the request and metadata.
 
-- [ ] **Step 3: Implement pipeline provider ID flow**
+- [x] **Step 3: Implement pipeline provider ID flow**
 
 Update `TextEnhancementPipeline` to pass `EnhancementProviderPresetCatalog.Resolve(settings.EnhancementProviderId).Id` into `TextEnhancementRequest`.
 
-- [ ] **Step 4: Verify pipeline tests pass**
+- [x] **Step 4: Verify pipeline tests pass**
 
 Run the same focused command. Expected: tests pass.
 
 ## Task 4: Infrastructure Secret Routing And Validation Red/Green
 
-- [ ] **Step 1: Add failing Infrastructure tests**
+- [x] **Step 1: Add failing Infrastructure tests**
 
 Extend `OpenAICompatibleTextEnhancementServiceTests` to assert:
 
@@ -127,7 +127,7 @@ Extend `OpenAICompatibleTextEnhancementServiceTests` to assert:
 - Remote HTTP, embedded credentials, and key/token query endpoint strings fail before HTTP without leaking secrets.
 - HTTP loopback endpoint is allowed for local development.
 
-- [ ] **Step 2: Run red Infrastructure tests**
+- [x] **Step 2: Run red Infrastructure tests**
 
 Run:
 
@@ -137,7 +137,7 @@ Run:
 
 Expected: failures because the adapter still reads the old shared secret, always sends bearer auth, and lacks endpoint hardening.
 
-- [ ] **Step 3: Implement adapter changes**
+- [x] **Step 3: Implement adapter changes**
 
 Change `OpenAICompatibleTextEnhancementService` to:
 
@@ -148,24 +148,24 @@ Change `OpenAICompatibleTextEnhancementService` to:
 - Return `EnhancementConfiguration.ProviderNameFor(request.ProviderId)` in `TextEnhancementResult`.
 - Keep `SecretName` as the legacy custom fallback constant.
 
-- [ ] **Step 4: Verify Infrastructure tests pass**
+- [x] **Step 4: Verify Infrastructure tests pass**
 
 Run the same focused Infrastructure command. Expected: tests pass.
 
 ## Task 5: WinUI Preset Wiring
 
-- [ ] **Step 1: Add Enhancement provider controls**
+- [x] **Step 1: Add Enhancement provider controls**
 
 In `MainWindow.xaml`, add:
 
 - `EnhancementProviderPresetComboBox` above endpoint/model fields with `DisplayMemberPath="DisplayName"`.
 - `EnhancementModelComboBox` below endpoint/model fields for static preset model choices.
 
-- [ ] **Step 2: Load and save selected preset**
+- [x] **Step 2: Load and save selected preset**
 
 In `InitializeAsync`, set the provider combo from `settings.EnhancementProviderId`, then load endpoint/model and model choices. In `CurrentSettingsAsync`, save `EnhancementProviderId = SelectedEnhancementProviderId()`.
 
-- [ ] **Step 3: Wire preset selection and key status**
+- [x] **Step 3: Wire preset selection and key status**
 
 Add helpers mirroring cloud transcription:
 
@@ -178,11 +178,11 @@ Add helpers mirroring cloud transcription:
 
 Update save/clear/status to use provider-specific secret names and display the selected provider name. Skip save/clear/key-required status for non-key providers such as Ollama.
 
-- [ ] **Step 4: Enable and disable controls**
+- [x] **Step 4: Enable and disable controls**
 
 Update `RefreshUiFromControllerState` so provider/model picker controls follow enhancement control state and the API-key controls are disabled for providers that do not require a key.
 
-- [ ] **Step 5: Build for compile coverage**
+- [x] **Step 5: Build for compile coverage**
 
 Run:
 
@@ -194,11 +194,11 @@ Expected: build succeeds.
 
 ## Task 6: Settings Persistence And Docs
 
-- [ ] **Step 1: Extend JSON settings test**
+- [x] **Step 1: Extend JSON settings test**
 
 Update `JsonSettingsStoreTests.SaveAsync_PersistsSettings` to set and assert `EnhancementProviderId = "gemini"`.
 
-- [ ] **Step 2: Verify settings tests**
+- [x] **Step 2: Verify settings tests**
 
 Run:
 
@@ -208,11 +208,11 @@ Run:
 
 Expected: tests pass.
 
-- [ ] **Step 3: Update README**
+- [x] **Step 3: Update README**
 
 Document the Enhancement provider picker, static model presets, per-provider Credential Manager keys, Ollama local endpoint behavior, and endpoint safety validation.
 
-- [ ] **Step 4: Run focused and full verification**
+- [x] **Step 4: Run focused and full verification**
 
 Run:
 
@@ -224,7 +224,7 @@ Run:
 
 Expected: focused tests pass, full tests pass, and Debug x64 build succeeds.
 
-- [ ] **Step 5: Request review and fix Critical/Important findings**
+- [x] **Step 5: Request review and fix Critical/Important findings**
 
 Ask a review subagent to inspect provider preset parity, credential routing, endpoint safety, WinUI wiring, and docs. Fix all Critical and Important findings before committing implementation.
 

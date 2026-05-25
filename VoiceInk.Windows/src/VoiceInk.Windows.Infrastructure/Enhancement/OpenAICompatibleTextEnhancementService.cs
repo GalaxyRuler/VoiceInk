@@ -13,7 +13,7 @@ public sealed class OpenAICompatibleTextEnhancementService(
     HttpClient httpClient,
     ISecretStore secretStore) : ITextEnhancementService
 {
-    public const string SecretName = "VoiceInk.Windows.Enhancement.OpenAICompatible.ApiKey";
+    public const string SecretName = EnhancementConfiguration.LegacyCustomSecretName;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -24,9 +24,12 @@ public sealed class OpenAICompatibleTextEnhancementService(
         TextEnhancementRequest request,
         CancellationToken cancellationToken)
     {
-        if (!Uri.TryCreate(request.Endpoint, UriKind.Absolute, out var endpoint))
+        if (!EnhancementConfiguration.TryCreateEndpoint(
+            request.Endpoint,
+            out var endpoint,
+            out var endpointError))
         {
-            throw new InvalidOperationException("AI enhancement endpoint is invalid.");
+            throw new InvalidOperationException(endpointError);
         }
 
         if (string.IsNullOrWhiteSpace(request.Model))
@@ -34,8 +37,12 @@ public sealed class OpenAICompatibleTextEnhancementService(
             throw new InvalidOperationException("AI enhancement model is required.");
         }
 
-        var apiKey = await secretStore.ReadSecretAsync(SecretName, cancellationToken);
-        if (string.IsNullOrWhiteSpace(apiKey))
+        var provider = EnhancementProviderPresetCatalog.Resolve(request.ProviderId);
+        var providerName = EnhancementConfiguration.ProviderNameFor(provider.Id);
+        var apiKey = provider.RequiresApiKey
+            ? await ReadApiKeyAsync(provider.Id, cancellationToken)
+            : null;
+        if (provider.RequiresApiKey && string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException("AI enhancement provider is not configured.");
         }
@@ -45,7 +52,7 @@ public sealed class OpenAICompatibleTextEnhancementService(
         {
             try
             {
-                return await SendOnceAsync(endpoint, apiKey, request, cancellationToken);
+                return await SendOnceAsync(endpoint!, apiKey, providerName, request, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -74,7 +81,8 @@ public sealed class OpenAICompatibleTextEnhancementService(
 
     private async Task<TextEnhancementResult> SendOnceAsync(
         Uri endpoint,
-        string apiKey,
+        string? apiKey,
+        string providerName,
         TextEnhancementRequest request,
         CancellationToken cancellationToken)
     {
@@ -82,7 +90,11 @@ public sealed class OpenAICompatibleTextEnhancementService(
         timeout.CancelAfter(request.Timeout);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        }
+
         message.Content = new StringContent(
             JsonSerializer.Serialize(
                 new ChatCompletionsRequest(
@@ -138,10 +150,26 @@ public sealed class OpenAICompatibleTextEnhancementService(
 
             return new TextEnhancementResult(
                 content,
-                "openai-compatible",
+                providerName,
                 request.Model,
                 Stopwatch.GetElapsedTime(startedAt));
         }
+    }
+
+    private async Task<string?> ReadApiKeyAsync(
+        string providerId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secretName in EnhancementConfiguration.SecretNamesForProvider(providerId))
+        {
+            var apiKey = await secretStore.ReadSecretAsync(secretName, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                return apiKey;
+            }
+        }
+
+        return null;
     }
 
     private static string ExtractMessageContent(string json)

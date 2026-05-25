@@ -303,6 +303,14 @@ AI enhancement provider preset Windows target:
 - Reject remote enhancement endpoints that use plain HTTP, contain embedded credentials, or contain common key/token query parameters. Plain HTTP remains allowed only for local loopback providers such as Ollama.
 - Keep this as local configuration only: no bundled keys, no sign-up flow, no provider account prompt, no telemetry, and no commercial upgrade surface.
 
+AI enhancement provider preset slice completed on 2026-05-25:
+
+- Added a Core enhancement provider preset catalog for Custom OpenAI-compatible, Cerebras, Groq, Gemini, OpenAI, OpenRouter, Mistral, and Ollama, using macOS display names, endpoints, default models, and static model lists where available.
+- Added `EnhancementProviderId` JSON settings persistence and provider-aware enhancement requests/history metadata.
+- Added provider-specific Windows Credential Manager secret names with legacy custom-key fallback. Ollama is treated as keyless local configuration.
+- Hardened enhancement endpoint validation to reject plain HTTP remote endpoints, embedded credentials, and common key/token query parameters while allowing loopback HTTP for local development.
+- Added WinUI Enhancement provider and preset-model pickers, provider-specific API-key save/clear/status text, and disabled API-key controls for keyless providers.
+
 Windows gaps:
 
 - Prompt template persistence.

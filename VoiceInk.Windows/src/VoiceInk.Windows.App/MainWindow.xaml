@@ -185,6 +185,11 @@
                         <CheckBox
                             x:Name="UseClipboardContextCheckBox"
                             Content="Clipboard Context" />
+                        <ComboBox
+                            x:Name="EnhancementProviderPresetComboBox"
+                            DisplayMemberPath="DisplayName"
+                            Header="AI provider"
+                            SelectionChanged="EnhancementProviderPresetComboBox_SelectionChanged" />
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -201,6 +206,10 @@
                                 Header="Model"
                                 PlaceholderText="model-name" />
                         </Grid>
+                        <ComboBox
+                            x:Name="EnhancementModelComboBox"
+                            Header="Preset model"
+                            SelectionChanged="EnhancementModelComboBox_SelectionChanged" />
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

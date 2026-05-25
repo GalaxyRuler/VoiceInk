@@ -8,4 +8,5 @@ public sealed record TextEnhancementRequest(
     TimeSpan Timeout,
     double Temperature,
     bool RetryOnTimeout,
-    int MaxRetries);
+    int MaxRetries,
+    string ProviderId = "custom");
