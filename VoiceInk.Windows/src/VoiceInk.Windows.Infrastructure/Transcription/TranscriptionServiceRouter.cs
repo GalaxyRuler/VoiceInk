@@ -7,7 +7,8 @@ namespace VoiceInk.Windows.Infrastructure.Transcription;
 public sealed class TranscriptionServiceRouter(
     ITranscriptionService localWhisperService,
     ITranscriptionService openAICompatibleService,
-    ITranscriptionService? deepgramService = null) : ITranscriptionService
+    ITranscriptionService? deepgramService = null,
+    ITranscriptionService? assemblyAIService = null) : ITranscriptionService
 {
     public Task<TranscriptionResult> TranscribeAsync(
         AudioCaptureResult audio,
@@ -19,6 +20,8 @@ public sealed class TranscriptionServiceRouter(
             TranscriptionProviderKind.LocalWhisper => localWhisperService,
             TranscriptionProviderKind.OpenAICompatible when IsDeepgram(options) && deepgramService is not null =>
                 deepgramService,
+            TranscriptionProviderKind.OpenAICompatible when IsAssemblyAI(options) && assemblyAIService is not null =>
+                assemblyAIService,
             TranscriptionProviderKind.OpenAICompatible => openAICompatibleService,
             _ => throw new InvalidOperationException($"Unsupported transcription provider: {options.Provider}.")
         };
@@ -28,4 +31,7 @@ public sealed class TranscriptionServiceRouter(
 
     private static bool IsDeepgram(TranscriptionOptions options) =>
         string.Equals(options.CloudProviderId, "deepgram", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsAssemblyAI(TranscriptionOptions options) =>
+        string.Equals(options.CloudProviderId, "assemblyai", StringComparison.OrdinalIgnoreCase);
 }

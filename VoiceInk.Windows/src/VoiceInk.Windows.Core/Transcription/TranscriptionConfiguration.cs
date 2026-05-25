@@ -66,6 +66,7 @@ public static class TranscriptionConfiguration
         {
             "groq" => "Groq",
             "deepgram" => "Deepgram",
+            "assemblyai" => "AssemblyAI",
             _ => "Custom"
         };
 

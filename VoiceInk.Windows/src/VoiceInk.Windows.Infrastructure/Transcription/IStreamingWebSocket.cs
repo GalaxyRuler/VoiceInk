@@ -9,6 +9,8 @@ public interface IStreamingWebSocket : IAsyncDisposable
 
     Task SendBinaryAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken);
 
+    Task SendTextAsync(string text, CancellationToken cancellationToken);
+
     IAsyncEnumerable<string> ReceiveTextMessagesAsync(CancellationToken cancellationToken);
 
     Task CloseAsync(CancellationToken cancellationToken);

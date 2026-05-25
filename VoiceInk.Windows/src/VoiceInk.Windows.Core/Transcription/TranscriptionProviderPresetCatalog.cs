@@ -29,11 +29,22 @@ public static class TranscriptionProviderPresetCatalog
             "nova-3-medical"
         ]);
 
+    public static TranscriptionProviderPreset AssemblyAI { get; } = new(
+        "assemblyai",
+        "AssemblyAI",
+        "https://streaming.assemblyai.com/v3/ws",
+        "universal-3-pro",
+        [
+            "universal-3-pro",
+            "universal-streaming"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
         Groq,
-        Deepgram
+        Deepgram,
+        AssemblyAI
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

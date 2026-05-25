@@ -7,7 +7,7 @@ namespace VoiceInk.Windows.Core.Tests.Transcription;
 public sealed class TranscriptionProviderPresetCatalogTests
 {
     [Fact]
-    public void All_IncludesCustomGroqAndDeepgramPresets()
+    public void All_IncludesCustomGroqDeepgramAndAssemblyAiPresets()
     {
         var presets = TranscriptionProviderPresetCatalog.All;
 
@@ -23,6 +23,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.deepgram.com/v1/listen", deepgram.Endpoint);
         Assert.Equal("nova-3", deepgram.DefaultModel);
         Assert.Contains("nova-3-medical", deepgram.ModelIds);
+        var assemblyAI = Assert.Single(presets, item => item.Id == "assemblyai");
+        Assert.Equal("AssemblyAI", assemblyAI.DisplayName);
+        Assert.Equal("https://streaming.assemblyai.com/v3/ws", assemblyAI.Endpoint);
+        Assert.Equal("universal-3-pro", assemblyAI.DefaultModel);
+        Assert.Contains("universal-streaming", assemblyAI.ModelIds);
     }
 
     [Theory]
@@ -30,6 +35,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("missing", "custom")]
     [InlineData("groq", "groq")]
     [InlineData("deepgram", "deepgram")]
+    [InlineData("assemblyai", "assemblyai")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -39,6 +45,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("custom", "VoiceInk.Windows.Transcription.OpenAICompatible.Custom.ApiKey")]
     [InlineData("groq", "VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey")]
     [InlineData("deepgram", "VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey")]
+    [InlineData("assemblyai", "VoiceInk.Windows.Transcription.OpenAICompatible.AssemblyAI.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -59,6 +66,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("deepgram"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.AssemblyAI.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("assemblyai"));
     }
 
     [Fact]

@@ -113,7 +113,8 @@ public sealed partial class MainWindow : Window
     private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
     private readonly DeepgramCloudTranscriptionService deepgramTranscriptionService;
-    private readonly DeepgramLiveTranscriptionPreviewService liveTranscriptionPreviewService;
+    private readonly AssemblyAICloudTranscriptionService assemblyAITranscriptionService;
+    private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
@@ -245,13 +246,21 @@ public sealed partial class MainWindow : Window
             new WindowsEnhancementContextProvider(new SettingsBackedOcrTextReader(settingsStore)));
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         deepgramTranscriptionService = new DeepgramCloudTranscriptionService(new HttpClient(), secretStore);
-        liveTranscriptionPreviewService = new DeepgramLiveTranscriptionPreviewService(
-            secretStore,
-            () => new ClientStreamingWebSocket());
+        assemblyAITranscriptionService = new AssemblyAICloudTranscriptionService(new HttpClient(), secretStore);
+        liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
+            [
+                new DeepgramLiveTranscriptionPreviewService(
+                    secretStore,
+                    () => new ClientStreamingWebSocket()),
+                new AssemblyAILiveTranscriptionPreviewService(
+                    secretStore,
+                    () => new ClientStreamingWebSocket())
+            ]);
         transcriptionService = new TranscriptionServiceRouter(
             new WhisperNetTranscriptionService(),
             cloudTranscriptionService,
-            deepgramTranscriptionService);
+            deepgramTranscriptionService,
+            assemblyAITranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,

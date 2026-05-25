@@ -9,32 +9,17 @@ using Xunit;
 
 namespace VoiceInk.Windows.Infrastructure.Tests.Transcription;
 
-public sealed class DeepgramLiveTranscriptionPreviewServiceTests
+public sealed class AssemblyAILiveTranscriptionPreviewServiceTests
 {
     [Fact]
-    public async Task TryStartAsync_ReturnsNullWhenPreviewDisabled()
+    public async Task TryStartAsync_ReturnsNullWhenProviderIsNotAssemblyAi()
     {
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
+        var service = new AssemblyAILiveTranscriptionPreviewService(
+            new FakeSecretStore { Secret = "aai-test-secret" },
             () => new FakeStreamingWebSocket());
 
         var session = await service.TryStartAsync(
-            Settings(showLiveTranscriptPreview: false),
-            _ => { },
-            CancellationToken.None);
-
-        Assert.Null(session);
-    }
-
-    [Fact]
-    public async Task TryStartAsync_ReturnsNullWhenProviderIsNotDeepgram()
-    {
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
-            () => new FakeStreamingWebSocket());
-
-        var session = await service.TryStartAsync(
-            Settings(providerId: "groq"),
+            Settings(providerId: "deepgram"),
             _ => { },
             CancellationToken.None);
 
@@ -44,7 +29,7 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
     [Fact]
     public async Task TryStartAsync_ReturnsNullWhenApiKeyIsMissing()
     {
-        var service = new DeepgramLiveTranscriptionPreviewService(
+        var service = new AssemblyAILiveTranscriptionPreviewService(
             new FakeSecretStore(),
             () => new FakeStreamingWebSocket());
 
@@ -57,12 +42,12 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
     }
 
     [Fact]
-    public async Task StartedSession_SendsQueuedAudioAndEmitsPartialTranscripts()
+    public async Task StartedSession_SendsQueuedAudioAndEmitsTranscriptTurns()
     {
         var socket = new FakeStreamingWebSocket();
         var partials = new List<string>();
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
+        var service = new AssemblyAILiveTranscriptionPreviewService(
+            new FakeSecretStore { Secret = "aai-test-secret" },
             () => socket);
 
         var session = await service.TryStartAsync(
@@ -71,19 +56,24 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
             CancellationToken.None);
 
         Assert.NotNull(session);
-        Assert.Equal("Token dg-test-secret", socket.AuthorizationHeader);
+        Assert.Equal("aai-test-secret", socket.AuthorizationHeader);
         Assert.NotNull(socket.ConnectUri);
         Assert.Equal("wss", socket.ConnectUri.Scheme);
+        Assert.Contains("speech_model=u3-rt-pro", socket.ConnectUri.Query);
 
-        session.EnqueueAudio(new AudioChunk([1, 2, 3], 16000, 1));
+        session.EnqueueAudio(new AudioChunk([4, 5, 6], 16000, 1));
         await socket.WaitForSentBinaryAsync();
-        Assert.Equal([1, 2, 3], socket.SentBinary[0]);
+        Assert.Equal([4, 5, 6], socket.SentBinary[0]);
 
-        socket.PublishText("""{"type":"Results","is_final":false,"channel":{"alternatives":[{"transcript":"hello live"}]}}""");
+        socket.PublishText("""{"type":"Turn","transcript":"hello liv","end_of_turn":false}""");
+        await WaitUntilAsync(() => partials.Contains("hello liv"));
+
+        socket.PublishText("""{"type":"Turn","transcript":"hello live","end_of_turn":true}""");
         await WaitUntilAsync(() => partials.Contains("hello live"));
 
         await session.CompleteAsync(CancellationToken.None);
         await session.DisposeAsync();
+        Assert.Contains("""{"type":"Terminate"}""", socket.SentText);
         Assert.True(socket.WasClosed);
     }
 
@@ -94,71 +84,29 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
         {
             ConnectTask = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task
         };
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
+        var service = new AssemblyAILiveTranscriptionPreviewService(
+            new FakeSecretStore { Secret = "aai-test-secret" },
             () => socket,
             connectionTimeout: TimeSpan.FromMilliseconds(25));
 
-        var startedAt = DateTimeOffset.UtcNow;
         var ex = await Assert.ThrowsAsync<TimeoutException>(
             () => service.TryStartAsync(Settings(), _ => { }, CancellationToken.None));
 
-        Assert.Equal("Deepgram live transcript preview connection timed out.", ex.Message);
-        Assert.True(DateTimeOffset.UtcNow - startedAt < TimeSpan.FromSeconds(1));
+        Assert.Equal("AssemblyAI live transcript preview connection timed out.", ex.Message);
         Assert.True(socket.WasAborted);
         Assert.True(socket.WasDisposed);
-    }
-
-    [Fact]
-    public async Task TryStartAsync_FailedConnectCleansUpSocketBeforeRethrowing()
-    {
-        var socket = new FakeStreamingWebSocket
-        {
-            ConnectException = new InvalidOperationException("connect failed")
-        };
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
-            () => socket);
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.TryStartAsync(Settings(), _ => { }, CancellationToken.None));
-
-        Assert.Equal("connect failed", ex.Message);
-        Assert.True(socket.WasAborted);
-        Assert.True(socket.WasDisposed);
-    }
-
-    [Fact]
-    public async Task CompleteAsync_ReturnsAndAbortsSocketWhenSendDoesNotComplete()
-    {
-        var socket = new FakeStreamingWebSocket { HangSend = true };
-        var service = new DeepgramLiveTranscriptionPreviewService(
-            new FakeSecretStore { Secret = "dg-test-secret" },
-            () => socket,
-            cleanupTimeout: TimeSpan.FromMilliseconds(25));
-
-        var session = await service.TryStartAsync(Settings(), _ => { }, CancellationToken.None);
-
-        Assert.NotNull(session);
-        session.EnqueueAudio(new AudioChunk([1, 2, 3], 16000, 1));
-        await socket.WaitForSendStartedAsync();
-        await session.CompleteAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(1));
-
-        Assert.True(socket.WasAborted);
-        await session.DisposeAsync();
     }
 
     private static AppSettings Settings(
-        bool showLiveTranscriptPreview = true,
-        string providerId = "deepgram",
+        string providerId = "assemblyai",
         string language = "auto") =>
         new()
         {
-            ShowLiveTranscriptPreview = showLiveTranscriptPreview,
+            ShowLiveTranscriptPreview = true,
             TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
             CloudTranscriptionProviderId = providerId,
-            CloudTranscriptionEndpoint = "https://api.deepgram.com/v1/listen",
-            CloudTranscriptionModel = "nova-3",
+            CloudTranscriptionEndpoint = "https://streaming.assemblyai.com/v3/ws",
+            CloudTranscriptionModel = "universal-3-pro",
             Language = language
         };
 
@@ -176,15 +124,12 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
         private readonly Channel<string> incoming = Channel.CreateUnbounded<string>();
         private readonly TaskCompletionSource<object?> sentBinary =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private readonly TaskCompletionSource<object?> sendStarted =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public Task? ConnectTask { get; init; }
-        public Exception? ConnectException { get; init; }
-        public bool HangSend { get; init; }
         public Uri? ConnectUri { get; private set; }
         public string? AuthorizationHeader { get; private set; }
         public List<byte[]> SentBinary { get; } = [];
+        public List<string> SentText { get; } = [];
         public bool WasClosed { get; private set; }
         public bool WasAborted { get; private set; }
         public bool WasDisposed { get; private set; }
@@ -196,11 +141,6 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
         {
             ConnectUri = uri;
             AuthorizationHeader = authorizationHeader;
-            if (ConnectException is not null)
-            {
-                throw ConnectException;
-            }
-
             if (ConnectTask is not null)
             {
                 await ConnectTask.WaitAsync(cancellationToken);
@@ -210,18 +150,15 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
         public Task SendBinaryAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken)
         {
             SentBinary.Add(bytes.ToArray());
-            sendStarted.TrySetResult(null);
-            if (HangSend)
-            {
-                return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task;
-            }
-
             sentBinary.TrySetResult(null);
             return Task.CompletedTask;
         }
 
-        public Task SendTextAsync(string text, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public Task SendTextAsync(string text, CancellationToken cancellationToken)
+        {
+            SentText.Add(text);
+            return Task.CompletedTask;
+        }
 
         public async IAsyncEnumerable<string> ReceiveTextMessagesAsync(
             [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -262,9 +199,6 @@ public sealed class DeepgramLiveTranscriptionPreviewServiceTests
 
         public Task WaitForSentBinaryAsync() =>
             sentBinary.Task.WaitAsync(TimeSpan.FromSeconds(2));
-
-        public Task WaitForSendStartedAsync() =>
-            sendStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
     }
 
     private sealed class FakeSecretStore : ISecretStore

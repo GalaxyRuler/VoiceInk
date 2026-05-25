@@ -24,6 +24,13 @@ public sealed class ClientStreamingWebSocket : IStreamingWebSocket
     public Task SendBinaryAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
         webSocket.SendAsync(bytes, WebSocketMessageType.Binary, endOfMessage: true, cancellationToken).AsTask();
 
+    public Task SendTextAsync(string text, CancellationToken cancellationToken) =>
+        webSocket.SendAsync(
+            Encoding.UTF8.GetBytes(text),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            cancellationToken);
+
     public async IAsyncEnumerable<string> ReceiveTextMessagesAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {

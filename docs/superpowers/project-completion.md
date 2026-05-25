@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [##################--] 88%
+VoiceInk Windows parity  [##################--] 89%
 ```
 
 ## Area Bars
@@ -16,10 +16,10 @@ VoiceInk Windows parity  [##################--] 88%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 76% | `[###############-----]` | Navigation shell, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
-| Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
+| Floating recorder | 86% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram and AssemblyAI interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
-| Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
+| Cloud transcription | 76% | `[###############-----]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, and Deepgram plus AssemblyAI live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [##################--] 88%
 ## Current Slice
 
 ```text
-Windows signed MSIX smoke plan  [####################] 100%
+Windows AssemblyAI live preview  [####################] 100%
 ```
 
 Completed:
 
-- Added `smoke-msix-install.ps1` for signed MSIX install/query/uninstall smoke planning.
-- Kept the script non-mutating by default.
-- Added an explicit `-Execute` gate for tester-run `Add-AppxPackage`, `Get-AppxPackage`, and exact `Remove-AppxPackage`.
-- Kept certificate creation/import/trust out of automation.
+- Added AssemblyAI as a cloud transcription preset with secure provider-specific credential naming.
+- Added AssemblyAI live transcript preview over the existing recorder preview path.
+- Added AssemblyAI batch transcription upload, submit, and poll flow so normal recording completion works with the preset.
+- Routed live preview through a provider-aware composite service instead of hard-wiring Deepgram.
 
 ## Near-Term Priority
 
