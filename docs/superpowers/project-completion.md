@@ -27,26 +27,26 @@ VoiceInk Windows parity  [#################---] 87%
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
-| Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
+| Audio input | 68% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, and live Core Audio device-change refresh exist. Richer active/unavailable UI remains. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 32% | `[######--------------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, and signed MSIX manifest/script foundation exist. End-to-end signed package smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows local screen OCR reader  [####################] 100%
+Windows audio input device-change refresh  [####################] 100%
 ```
 
 Completed:
 
-- Added a local virtual-desktop PNG capture provider.
-- Added `Windows.Media.Ocr` recognition over captured screen snapshots.
-- Wired the default Windows enhancement context provider to use local OCR when `UseOcrContext` is enabled.
-- Kept OCR default-off and graceful on unsupported/failing OCR paths.
+- Added a debounced NAudio Core Audio endpoint notification watcher.
+- Refreshed the audio input chooser when capture devices/default devices change.
+- Reused existing saved-name rebinding and unavailable-device fallback behavior.
+- Avoided rebuilding the recorder controller during active operations.
 
 ## Near-Term Priority
 
-1. Add OCR picker/region polish so users can constrain screen context.
-2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
-3. Continue Settings visual parity and remaining macOS preferences.
+1. Add richer audio input active/unavailable UI.
+2. Add OCR picker/region polish so users can constrain screen context.
+3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
 4. Continue packaging from MSIX foundation to signed smoke, uninstall behavior, and release signing flow.

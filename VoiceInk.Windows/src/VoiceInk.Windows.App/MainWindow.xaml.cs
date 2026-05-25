@@ -103,6 +103,7 @@ public sealed partial class MainWindow : Window
     private readonly WindowsRecordingSoundFeedback recordingSoundFeedback;
     private readonly CustomRecordingSoundImporter customRecordingSoundImporter;
     private readonly WindowsSystemAudioFeedback systemAudioFeedback;
+    private readonly NAudioInputDeviceChangeWatcher audioInputDeviceChangeWatcher;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
     private readonly List<string> diagnosticEvents = [];
@@ -165,6 +166,9 @@ public sealed partial class MainWindow : Window
     private bool isExportingDiagnosticLogs;
     private bool isOnboardingOpen;
     private bool recordingFeedbackSessionActive;
+    private bool isRefreshingAudioInputsFromDeviceChange;
+    private bool pendingAudioInputDeviceChangeRefresh;
+    private bool audioInputDeviceChangeRefreshQueued;
     private bool suppressLaunchAtLoginChanged;
     private readonly bool startHiddenToTray;
     private bool settingsLoaded;
@@ -284,6 +288,8 @@ public sealed partial class MainWindow : Window
             sessionMetricStore);
         dictionaryQuickAddService = new DictionaryQuickAddService(dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
+        audioInputDeviceChangeWatcher = new NAudioInputDeviceChangeWatcher();
+        audioInputDeviceChangeWatcher.DevicesChanged += AudioInputDeviceChangeWatcher_DevicesChanged;
         audioCapture = new NAudioCaptureService(recordingsDirectory);
         audioCapture.LevelAvailable += AudioCapture_LevelAvailable;
         controller = CreateController(audioCapture);
@@ -376,6 +382,16 @@ public sealed partial class MainWindow : Window
     private async void ApplyAudioInputButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyAudioInputAsync();
+    }
+
+    private void AudioInputDeviceChangeWatcher_DevicesChanged(object? sender, EventArgs e)
+    {
+        if (windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        DispatcherQueue.TryEnqueue(QueueAudioInputDeviceChangeRefresh);
     }
 
     private async void ChooseAudioFilesButton_Click(object sender, RoutedEventArgs e)
@@ -5172,6 +5188,72 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task RefreshAudioInputDevicesAfterChangeAsync()
+    {
+        if (windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (!settingsLoaded)
+        {
+            return;
+        }
+
+        if (!CanRefreshAudioInputsFromDeviceChange())
+        {
+            pendingAudioInputDeviceChangeRefresh = true;
+            RefreshUiFromControllerState("Audio inputs changed; refresh when idle");
+            return;
+        }
+
+        if (isRefreshingAudioInputsFromDeviceChange)
+        {
+            pendingAudioInputDeviceChangeRefresh = true;
+            return;
+        }
+
+        isRefreshingAudioInputsFromDeviceChange = true;
+        try
+        {
+            do
+            {
+                pendingAudioInputDeviceChangeRefresh = false;
+                if (!CanRefreshAudioInputsFromDeviceChange())
+                {
+                    pendingAudioInputDeviceChangeRefresh = true;
+                    RefreshUiFromControllerState("Audio inputs changed; refresh when idle");
+                    return;
+                }
+
+                var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+                var warning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
+                if (!CanRefreshAudioInputsFromDeviceChange())
+                {
+                    pendingAudioInputDeviceChangeRefresh = true;
+                    RefreshUiFromControllerState("Audio inputs changed; refresh when idle");
+                    return;
+                }
+
+                RecreateControllerIfAudioInputChanged();
+                RefreshUiFromControllerState(warning ?? "Audio inputs changed");
+            }
+            while (pendingAudioInputDeviceChangeRefresh && CanRefreshAudioInputsFromDeviceChange());
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Audio input refresh failed: {ex.Message}");
+        }
+        finally
+        {
+            isRefreshingAudioInputsFromDeviceChange = false;
+        }
+    }
+
     private async Task<string?> RefreshAudioInputDevicesAsync(
         AppSettings settings,
         CancellationToken cancellationToken)
@@ -6044,6 +6126,13 @@ public sealed partial class MainWindow : Window
     private bool IsControllerBusy() =>
         controller.State is DictationState.Transcribing or DictationState.Inserting;
 
+    private bool CanRefreshAudioInputsFromDeviceChange() =>
+        settingsLoaded
+        && !IsOperationActive()
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording
+        && !windowLifetime.IsCancellationRequested;
+
     private bool CanEditModelLibrary(bool includeCurrentModelImport = true) =>
         settingsLoaded
         && !IsOperationActive(includeCurrentModelImport)
@@ -6631,6 +6720,46 @@ public sealed partial class MainWindow : Window
         StatusTextBlock.Text = displayStatus;
         UpdateFloatingRecorder(displayStatus, operationActive);
         UpdateTrayFromControllerState(displayStatus, operationActive);
+        QueuePendingAudioInputDeviceChangeRefreshIfIdle();
+    }
+
+    private void QueuePendingAudioInputDeviceChangeRefreshIfIdle()
+    {
+        if (!pendingAudioInputDeviceChangeRefresh
+            || isRefreshingAudioInputsFromDeviceChange
+            || !CanRefreshAudioInputsFromDeviceChange())
+        {
+            return;
+        }
+
+        QueueAudioInputDeviceChangeRefresh();
+    }
+
+    private void QueueAudioInputDeviceChangeRefresh()
+    {
+        if (audioInputDeviceChangeRefreshQueued)
+        {
+            pendingAudioInputDeviceChangeRefresh = true;
+            return;
+        }
+
+        audioInputDeviceChangeRefreshQueued = true;
+        var queued = DispatcherQueue.TryEnqueue(async () =>
+        {
+            try
+            {
+                await RefreshAudioInputDevicesAfterChangeAsync();
+            }
+            finally
+            {
+                audioInputDeviceChangeRefreshQueued = false;
+                QueuePendingAudioInputDeviceChangeRefreshIfIdle();
+            }
+        });
+        if (!queued)
+        {
+            audioInputDeviceChangeRefreshQueued = false;
+        }
     }
 
     private void RecordDiagnosticEvent(string status)
@@ -7218,6 +7347,8 @@ public sealed partial class MainWindow : Window
 
         audioCapture.LevelAvailable -= AudioCapture_LevelAvailable;
         audioCapture.Dispose();
+        audioInputDeviceChangeWatcher.DevicesChanged -= AudioInputDeviceChangeWatcher_DevicesChanged;
+        audioInputDeviceChangeWatcher.Dispose();
         recordingSoundFeedback.Dispose();
         systemAudioFeedback.Dispose();
         modelDownloadHttpClient.Dispose();
