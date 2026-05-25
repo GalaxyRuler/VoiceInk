@@ -39,6 +39,7 @@ public sealed class JsonSettingsStoreTests
             RestoreClipboard = false,
             ClipboardRestoreDelaySeconds = 3.0,
             PasteMethod = "directText",
+            LaunchAtLogin = true,
             Hotkey = "Ctrl+Shift+D",
             SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",

@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [############--------] 60%
+VoiceInk Windows parity  [############--------] 61%
 ```
 
 ## Area Bars
@@ -26,7 +26,7 @@ VoiceInk Windows parity  [############--------] 60%
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 68% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, and CSV export exist. Visual parity and reset controls remain. |
-| Settings | 55% | `[###########---------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, and paste method choices exist. Launch at login and richer diagnostics remain. |
+| Settings | 60% | `[############--------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, and launch at login exist. Richer diagnostics remain. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 8% | `[##------------------]` | Source-run docs and runtime workaround exist. MSIX/installer, zip/dev distribution, native dependency layout, uninstall behavior, and installer smoke tests remain. |
@@ -34,20 +34,20 @@ VoiceInk Windows parity  [############--------] 60%
 ## Current Slice
 
 ```text
-Settings clipboard/paste  [####################] 100%
+Settings launch at login  [####################] 100%
 ```
 
 Completed:
 
-- Mac-style `Keep Clipboard Content` setting.
-- Mac-style clipboard restore delay choices with a 250ms minimum.
-- Windows paste method choices: default clipboard paste and `Direct Text`.
-- Session-marked clipboard restore that avoids overwriting user clipboard changes after insertion.
-- Native insertion reads current settings at paste time.
+- Mac-style `Launch at Login` General setting.
+- Per-user Windows startup registration through HKCU Run for the current unpackaged source build.
+- Startup command uses `--voiceink-startup`.
+- Login-started launches hide to tray after initialization.
+- General Settings backup/import carries the launch-at-login setting.
 
 ## Near-Term Priority
 
-1. Fill remaining high-impact Settings gaps: launch-at-login/open-source equivalent and richer diagnostics.
+1. Fill remaining high-impact Settings gaps: richer diagnostics and remaining recording feedback controls.
 2. Improve model management: catalog cards, direct download/import flow, language selection, warmup/preload.
 3. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
 4. Add packaging path: zip/dev package first, then MSIX or installer.

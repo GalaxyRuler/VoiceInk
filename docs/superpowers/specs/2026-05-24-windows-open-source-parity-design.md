@@ -559,10 +559,28 @@ Settings clipboard/paste slice completed on 2026-05-25:
 - Added session-marked clipboard restore so VoiceInk restores only when its own transient paste payload is still present.
 - Added the Windows `Direct Text` paste method, which sends Unicode text input without touching the clipboard.
 
+Settings launch-at-login Windows target:
+
+- Add a Settings `General` toggle named exactly `Launch at Login`, matching the macOS Settings and menu-bar language.
+- Persist launch-at-login as part of Windows `AppSettings` so local settings backup export/import includes it with General Settings.
+- Because the current Windows app is unpackaged (`WindowsPackageType=None`), register startup through the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` value rather than packaged `StartupTask`.
+- Register a quoted executable path plus a `--voiceink-startup` argument. The argument lets source-run and future packaged builds start hidden to the tray instead of stealing focus at sign-in.
+- If the stored Run entry points somewhere else, surface that as an unavailable or warning state rather than silently claiming VoiceInk is registered.
+- On settings save or backup import, apply the OS startup registration and only persist the enabled flag after registration succeeds, so JSON settings and Windows startup state stay aligned.
+- Keep this open-source and local-only: no updater, account, telemetry, or commercial startup channel.
+
+Settings launch-at-login slice completed on 2026-05-25:
+
+- Added `LaunchAtLogin` to Windows JSON settings and General Settings backup/import.
+- Added Settings `General` control named `Launch at Login`.
+- Added a native HKCU Run-key registration service for the current unpackaged source build.
+- Registered startup commands use a quoted executable path and `--voiceink-startup`.
+- Login-started launches hide the main shell to the tray after initialization, preserving tray and shortcut availability without taking focus.
+
 Windows gaps:
 
 - Settings surfaces beyond supported shortcut, cleanup, backup, provider, audio, onboarding, and clipboard controls.
-- Windows equivalents for launch at login, tray behavior, and richer diagnostics.
+- Windows equivalents for tray behavior and richer diagnostics.
 
 ### Audio Input
 

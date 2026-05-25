@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using VoiceInk.Windows.Core.Startup;
 
 namespace VoiceInk.Windows.App;
 
@@ -13,7 +14,11 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        window = new MainWindow();
-        window.Activate();
+        var isLoginStartup = StartupLaunchMode.IsLoginStartup(Environment.GetCommandLineArgs().Skip(1));
+        window = new MainWindow(isLoginStartup);
+        if (!isLoginStartup)
+        {
+            window.Activate();
+        }
     }
 }

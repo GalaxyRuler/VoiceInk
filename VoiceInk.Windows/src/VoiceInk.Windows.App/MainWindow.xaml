@@ -876,6 +876,15 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="General" FontWeight="SemiBold" />
+                            <CheckBox
+                                x:Name="LaunchAtLoginCheckBox"
+                                Content="Launch at Login"
+                                Checked="LaunchAtLoginCheckBox_Changed"
+                                Unchecked="LaunchAtLoginCheckBox_Changed" />
+                            <Button
+                                x:Name="RepairLaunchAtLoginButton"
+                                Content="Reapply Launch at Login"
+                                Click="RepairLaunchAtLoginButton_Click" />
                             <Button
                                 x:Name="ResetOnboardingButton"
                                 Content="Reset Onboarding"

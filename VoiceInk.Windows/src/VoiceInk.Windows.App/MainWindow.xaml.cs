@@ -27,6 +27,7 @@ using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
+using VoiceInk.Windows.Core.Startup;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
 using VoiceInk.Windows.Infrastructure.Dictionary;
@@ -39,6 +40,7 @@ using VoiceInk.Windows.Native.Audio;
 using VoiceInk.Windows.Native.Hotkeys;
 using VoiceInk.Windows.Native.PowerMode;
 using VoiceInk.Windows.Native.Security;
+using VoiceInk.Windows.Native.Startup;
 using VoiceInk.Windows.Native.Text;
 using VoiceInk.Windows.Native.Tray;
 using VoiceInk.Windows.Native.Transcription;
@@ -82,6 +84,7 @@ public sealed partial class MainWindow : Window
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
     private readonly PrivacyCleanupService privacyCleanupService;
+    private readonly IStartupRegistrationService startupRegistrationService;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
     private readonly WindowsCredentialSecretStore secretStore;
@@ -125,6 +128,8 @@ public sealed partial class MainWindow : Window
     private bool isImportingSettingsBackup;
     private bool isRunningPrivacyCleanup;
     private bool isOnboardingOpen;
+    private bool suppressLaunchAtLoginChanged;
+    private readonly bool startHiddenToTray;
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
@@ -139,8 +144,9 @@ public sealed partial class MainWindow : Window
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
 
-    public MainWindow()
+    public MainWindow(bool startHiddenToTray = false)
     {
+        this.startHiddenToTray = startHiddenToTray;
         InitializeComponent();
         CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
@@ -195,6 +201,7 @@ public sealed partial class MainWindow : Window
             historyStore,
             TimeProvider.System,
             recordingsDirectory);
+        startupRegistrationService = new RegistryStartupRegistrationService();
         audioFileTranscriptionService = new AudioFileTranscriptionService(
             new MediaFoundationAudioFileImportService(),
             transcriptionService,
@@ -894,6 +901,21 @@ public sealed partial class MainWindow : Window
         await ResetOnboardingAsync();
     }
 
+    private async void LaunchAtLoginCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!settingsLoaded || suppressLaunchAtLoginChanged)
+        {
+            return;
+        }
+
+        await ApplyLaunchAtLoginAsync(repairRegistration: false);
+    }
+
+    private async void RepairLaunchAtLoginButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyLaunchAtLoginAsync(repairRegistration: true);
+    }
+
     private void CleanupSettingCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateCleanupSettingControlState();
@@ -967,7 +989,15 @@ public sealed partial class MainWindow : Window
             }
 
             RefreshUiFromControllerState(refreshWarning ?? cleanupStatus);
-            await ShowOnboardingIfNeededAsync(settings);
+            if (startHiddenToTray)
+            {
+                HideWindowToTray();
+            }
+
+            if (!startHiddenToTray)
+            {
+                await ShowOnboardingIfNeededAsync(settings);
+            }
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -985,6 +1015,7 @@ public sealed partial class MainWindow : Window
             suppressEnhancementPresetChanged = false;
             suppressEnhancementModelChanged = false;
             suppressEnhancementPromptChanged = false;
+            suppressLaunchAtLoginChanged = false;
         }
     }
 
@@ -1040,6 +1071,7 @@ public sealed partial class MainWindow : Window
             settings.ClipboardRestoreDelaySeconds);
         PasteMethodComboBox.SelectedIndex = PasteMethodToSelectedIndex(settings.PasteMethod);
         UpdateClipboardSettingControlState();
+        var startupWarning = await ApplyStartupStateToUiAsync(settings, cancellationToken);
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
         AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -1058,7 +1090,37 @@ public sealed partial class MainWindow : Window
         await RefreshHistoryAsync(cancellationToken);
         var metricsWarning = await RefreshMetricsBestEffortAsync(cancellationToken);
 
-        return audioInputWarning ?? metricsWarning;
+        return startupWarning ?? audioInputWarning ?? metricsWarning;
+    }
+
+    private async Task<string?> ApplyStartupStateToUiAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken)
+    {
+        var state = await startupRegistrationService.GetStateAsync(cancellationToken);
+        suppressLaunchAtLoginChanged = true;
+        LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
+        suppressLaunchAtLoginChanged = false;
+        RepairLaunchAtLoginButton.Visibility = state.HasExternalValue
+            || (settings.LaunchAtLogin != state.IsEnabled)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        if (state.HasExternalValue)
+        {
+            return "Launch at Login uses a different Windows startup command. Reapply the setting to replace or remove it.";
+        }
+
+        if (settings.LaunchAtLogin && !state.IsEnabled)
+        {
+            return "Launch at Login is enabled in settings but not registered with Windows. Reapply the setting to update it.";
+        }
+
+        if (!settings.LaunchAtLogin && state.IsEnabled)
+        {
+            return "Launch at Login is registered with Windows but disabled in settings. Reapply the setting to update it.";
+        }
+
+        return null;
     }
 
     private async Task ShowOnboardingIfNeededAsync(AppSettings settings)
@@ -1386,6 +1448,80 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Clipboard settings save failed: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyLaunchAtLoginAsync(bool repairRegistration)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var previousSettings = await settingsStore.LoadAsync(windowLifetime.Token);
+        var previousStartupState = await startupRegistrationService.GetStateAsync(windowLifetime.Token);
+        var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+
+        try
+        {
+            if (repairRegistration)
+            {
+                await startupRegistrationService.RepairRegistrationAsync(
+                    settings.LaunchAtLogin,
+                    windowLifetime.Token);
+                try
+                {
+                    await settingsStore.SaveAsync(settings, windowLifetime.Token);
+                }
+                catch
+                {
+                    await startupRegistrationService.RestoreStateAsync(previousStartupState, CancellationToken.None);
+                    throw;
+                }
+            }
+            else
+            {
+                await SaveSettingsAsync(windowLifetime.Token);
+            }
+
+            var warning = await ApplyStartupStateToUiAsync(settings, windowLifetime.Token);
+            RefreshUiFromControllerState(warning ?? "Launch at Login updated");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            await RestoreLaunchAtLoginUiAsync(previousSettings, previousStartupState);
+            RefreshUiFromControllerState($"Launch at Login update failed: {ex.Message}");
+        }
+    }
+
+    private async Task RestoreLaunchAtLoginUiAsync(
+        AppSettings previousSettings,
+        StartupRegistrationState previousStartupState)
+    {
+        try
+        {
+            await startupRegistrationService.RestoreStateAsync(previousStartupState, CancellationToken.None);
+        }
+        catch
+        {
+            // Status already reports the triggering failure; leave the user's external startup state untouched if rollback fails.
+        }
+
+        suppressLaunchAtLoginChanged = true;
+        LaunchAtLoginCheckBox.IsChecked = previousSettings.LaunchAtLogin;
+        suppressLaunchAtLoginChanged = false;
+
+        try
+        {
+            await ApplyStartupStateToUiAsync(previousSettings, windowLifetime.Token);
+        }
+        catch
+        {
+            RepairLaunchAtLoginButton.Visibility = Visibility.Visible;
         }
     }
 
@@ -2071,6 +2207,7 @@ public sealed partial class MainWindow : Window
         isImportingSettingsBackup = true;
         RefreshUiFromControllerState(statusOverride);
         AppSettings? settingsRollbackSnapshot = null;
+        StartupRegistrationState? startupRollbackSnapshot = null;
         bool settingsCommitted = false;
 
         try
@@ -2107,6 +2244,7 @@ public sealed partial class MainWindow : Window
 
             var currentSettings = await settingsStore.LoadAsync(windowLifetime.Token);
             settingsRollbackSnapshot = currentSettings;
+            startupRollbackSnapshot = await startupRegistrationService.GetStateAsync(windowLifetime.Token);
             var importsSettings = ImportsSettingsCategories(selectedCategories);
             AppSettings importedSettings = currentSettings;
 
@@ -2117,9 +2255,10 @@ public sealed partial class MainWindow : Window
                     backup,
                     selectedCategories);
 
-                await SaveImportedSettingsWithShortcutRollbackAsync(
+                await SaveImportedSettingsWithRollbackAsync(
                     importedSettings,
                     currentSettings,
+                    startupRollbackSnapshot,
                     windowLifetime.Token);
                 settingsCommitted = true;
             }
@@ -2164,6 +2303,7 @@ public sealed partial class MainWindow : Window
             {
                 var rollbackWarning = await RestoreSettingsAfterFailedImportAsync(
                     settingsRollbackSnapshot,
+                    startupRollbackSnapshot,
                     windowLifetime.Token);
                 statusOverride = rollbackWarning is null
                     ? $"Settings import failed and previous settings were restored: {ex.Message}"
@@ -2181,9 +2321,10 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task SaveImportedSettingsWithShortcutRollbackAsync(
+    private async Task SaveImportedSettingsWithRollbackAsync(
         AppSettings importedSettings,
         AppSettings previousSettings,
+        StartupRegistrationState previousStartupState,
         CancellationToken cancellationToken)
     {
         if (!TryReplaceGlobalHotkeys(importedSettings, previousSettings))
@@ -2193,16 +2334,36 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            await ApplyStartupRegistrationAsync(importedSettings, cancellationToken);
             await settingsStore.SaveAsync(importedSettings, cancellationToken);
         }
-        catch (Exception saveEx)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            throw;
+        }
+        catch (Exception importEx)
+        {
+            var warnings = new List<string>();
             var rollbackSucceeded = TryReplaceGlobalHotkeys(previousSettings, rollbackSettings: null);
             if (!rollbackSucceeded && hotkeyRegistrationError is not null)
             {
+                warnings.Add($"Previous shortcuts could not be restored: {hotkeyRegistrationError}");
+            }
+
+            try
+            {
+                await startupRegistrationService.RestoreStateAsync(previousStartupState, CancellationToken.None);
+            }
+            catch (Exception rollbackEx)
+            {
+                warnings.Add($"Previous launch-at-login registration could not be restored: {rollbackEx.Message}");
+            }
+
+            if (warnings.Count > 0)
+            {
                 throw new InvalidOperationException(
-                    $"Settings import save failed: {saveEx.Message} Previous shortcuts could not be restored: {hotkeyRegistrationError}",
-                    saveEx);
+                    $"Settings import failed: {importEx.Message} Rollback warning: {string.Join(" ", warnings)}",
+                    importEx);
             }
 
             throw;
@@ -2211,6 +2372,7 @@ public sealed partial class MainWindow : Window
 
     private async Task<string?> RestoreSettingsAfterFailedImportAsync(
         AppSettings previousSettings,
+        StartupRegistrationState? previousStartupState,
         CancellationToken cancellationToken)
     {
         var warnings = new List<string>();
@@ -2221,6 +2383,15 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (previousStartupState is not null)
+            {
+                await startupRegistrationService.RestoreStateAsync(previousStartupState, cancellationToken);
+            }
+            else
+            {
+                await ApplyStartupRegistrationAsync(previousSettings, cancellationToken);
+            }
+
             await settingsStore.SaveAsync(previousSettings, cancellationToken);
         }
         catch (Exception ex)
@@ -3941,8 +4112,39 @@ public sealed partial class MainWindow : Window
 
     private async Task SaveSettingsAsync(CancellationToken cancellationToken)
     {
+        var previousStartupState = await startupRegistrationService.GetStateAsync(cancellationToken);
         var settings = await CurrentSettingsAsync(cancellationToken, includeShortcutFields: false);
-        await settingsStore.SaveAsync(settings, cancellationToken);
+        await ApplyStartupRegistrationAsync(settings, cancellationToken);
+        try
+        {
+            await settingsStore.SaveAsync(settings, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception saveEx)
+        {
+            try
+            {
+                await startupRegistrationService.RestoreStateAsync(previousStartupState, CancellationToken.None);
+            }
+            catch (Exception rollbackEx)
+            {
+                throw new InvalidOperationException(
+                    $"Settings save failed: {saveEx.Message} Previous launch-at-login registration could not be restored: {rollbackEx.Message}",
+                    saveEx);
+            }
+
+            throw;
+        }
+    }
+
+    private async Task ApplyStartupRegistrationAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken)
+    {
+        await startupRegistrationService.SetEnabledAsync(settings.LaunchAtLogin, cancellationToken);
     }
 
     private async Task<AppSettings> CurrentSettingsAsync(
@@ -3998,6 +4200,7 @@ public sealed partial class MainWindow : Window
             RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
             ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
             PasteMethod = SelectedPasteMethod(),
+            LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
             EnhancementProviderId = SelectedEnhancementProviderId(),
@@ -4947,6 +5150,8 @@ public sealed partial class MainWindow : Window
         UpdateClipboardSettingControlState();
         ApplyCleanupSettingsButton.IsEnabled = settingsLoaded && !operationActive;
         ResetOnboardingButton.IsEnabled = settingsLoaded && !operationActive;
+        LaunchAtLoginCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        RepairLaunchAtLoginButton.IsEnabled = settingsLoaded && !operationActive;
         TranscriptionCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
         AudioCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
         UpdateCleanupSettingControlState();

@@ -40,6 +40,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Empty(backup.GeneralSettings.PowerModeRules);
         Assert.Empty(backup.GeneralSettings.ImportedWhisperModels);
         Assert.Equal(settings.ModelPath, backup.GeneralSettings.ModelPath);
+        Assert.Equal(settings.LaunchAtLogin, backup.GeneralSettings.LaunchAtLogin);
         Assert.Equal(settings.CloudTranscriptionEndpoint, backup.GeneralSettings.CloudTranscriptionEndpoint);
         Assert.Equal(settings.EnhancementEndpoint, backup.GeneralSettings.EnhancementEndpoint);
         Assert.Equal(settings.SelectedEnhancementPromptId, backup.GeneralSettings.SelectedEnhancementPromptId);
@@ -161,6 +162,7 @@ public sealed class VoiceInkSettingsBackupTests
             new[] { VoiceInkSettingsBackupCategory.General });
 
         Assert.Equal("C:\\Models\\ggml-base.en.bin", merged.ModelPath);
+        Assert.True(merged.LaunchAtLogin);
         Assert.Equal("Ctrl+Shift+D", merged.Hotkey);
         Assert.Equal("https://api.example.test/v1/audio/transcriptions", merged.CloudTranscriptionEndpoint);
         Assert.Equal(current.CustomEnhancementPrompts, merged.CustomEnhancementPrompts);
@@ -254,6 +256,7 @@ public sealed class VoiceInkSettingsBackupTests
             Language = "en",
             AppendTrailingSpace = true,
             RestoreClipboard = false,
+            LaunchAtLogin = true,
             Hotkey = "Ctrl+Shift+D",
             SecondaryRecordingHotkey = "Ctrl+Alt+S",
             PasteLastTranscriptionHotkey = "Ctrl+Alt+V",

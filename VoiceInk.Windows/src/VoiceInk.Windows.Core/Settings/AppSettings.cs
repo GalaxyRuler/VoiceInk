@@ -14,6 +14,7 @@ public sealed record AppSettings
     public bool RestoreClipboard { get; init; } = true;
     public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;
+    public bool LaunchAtLogin { get; init; }
     public bool IsTranscriptionCleanupEnabled { get; init; }
     public int TranscriptionRetentionMinutes { get; init; } = 24 * 60;
     public bool IsAudioCleanupEnabled { get; init; }
@@ -59,6 +60,7 @@ public sealed record AppSettings
             RestoreClipboard == other.RestoreClipboard &&
             ClipboardRestoreDelaySeconds.Equals(other.ClipboardRestoreDelaySeconds) &&
             PasteMethod == other.PasteMethod &&
+            LaunchAtLogin == other.LaunchAtLogin &&
             IsTranscriptionCleanupEnabled == other.IsTranscriptionCleanupEnabled &&
             TranscriptionRetentionMinutes == other.TranscriptionRetentionMinutes &&
             IsAudioCleanupEnabled == other.IsAudioCleanupEnabled &&
@@ -105,6 +107,7 @@ public sealed record AppSettings
         hash.Add(RestoreClipboard);
         hash.Add(ClipboardRestoreDelaySeconds);
         hash.Add(PasteMethod);
+        hash.Add(LaunchAtLogin);
         hash.Add(IsTranscriptionCleanupEnabled);
         hash.Add(TranscriptionRetentionMinutes);
         hash.Add(IsAudioCleanupEnabled);
