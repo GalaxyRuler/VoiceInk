@@ -437,7 +437,7 @@ Windows gaps:
 
 - Prompt template persistence.
 - Provider-specific Anthropic Messages API and Local CLI hooks.
-- Screen/OCR, browser URL, and app-specific context capture.
+- Screen/OCR, browser URL, and deeper app-specific context capture.
 - Dynamic provider model loading for OpenRouter and Ollama.
 - Recorder prompt picker activation.
 - AI re-enhance from History.
@@ -499,9 +499,14 @@ Selected-text clipboard fallback slice completed on 2026-05-25:
 - The fallback captures the current clipboard, sends Ctrl+C, reads text, truncates it for prompt context, and restores the prior clipboard state in a best-effort finally block.
 - When both selected text and clipboard context are requested, ordinary clipboard context is read only after fallback restoration so it sees the user's original clipboard text.
 
+Active-window enhancement context slice completed on 2026-05-25:
+
+- Added active-window process/title fields to Core enhancement context.
+- Prompt rendering now emits an `<ACTIVE_WINDOW_CONTEXT>` section before selected text, clipboard, and vocabulary sections.
+- Windows context capture reuses the existing foreground-window Power Mode provider and gracefully degrades to no active-window context on failure.
+
 Windows gaps:
 
-- Active window title/process.
 - OCR via Windows OCR APIs if available.
 - Browser URL detection.
 

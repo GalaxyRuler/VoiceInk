@@ -1,4 +1,6 @@
 using VoiceInk.Windows.Core.Enhancement;
+using VoiceInk.Windows.Core.PowerMode;
+using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Native.Text;
 using Xunit;
 
@@ -60,6 +62,26 @@ public sealed class WindowsEnhancementContextProviderTests
         Assert.Equal(["selected", "fallback", "clipboard"], calls);
     }
 
+    [Fact]
+    public async Task GetContextAsync_IncludesActiveWindowContextWhenRequested()
+    {
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(new PowerModeTarget("WINWORD", "Quarterly Planning", 10)));
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeActiveWindow: true),
+            CancellationToken.None);
+
+        Assert.Equal("WINWORD", context.ActiveWindowProcessName);
+        Assert.Equal("Quarterly Planning", context.ActiveWindowTitle);
+    }
+
     private sealed class FakeClipboardTextReader(string text, List<string>? calls = null) : IClipboardTextReader
     {
         public Task<string> GetClipboardTextAsync(CancellationToken cancellationToken)
@@ -93,5 +115,11 @@ public sealed class WindowsEnhancementContextProviderTests
             calls?.Add("fallback");
             return Task.FromResult(text);
         }
+    }
+
+    private sealed class FakePowerModeTargetProvider(PowerModeTarget? target) : IPowerModeTargetProvider
+    {
+        public Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(target);
     }
 }

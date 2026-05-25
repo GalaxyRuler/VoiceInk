@@ -251,6 +251,40 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_AppendsActiveWindowContextBeforeSelectedTextClipboardAndVocabulary()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+        };
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "fix this",
+            vocabulary,
+            new EnhancementContext(
+                ClipboardText: "clipboard note",
+                SelectedText: "selected note",
+                ActiveWindowProcessName: "WINWORD",
+                ActiveWindowTitle: "Quarterly Planning"));
+
+        Assert.Contains("<ACTIVE_WINDOW_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("Process: WINWORD", rendered.SystemMessage);
+        Assert.Contains("Title: Quarterly Planning", rendered.SystemMessage);
+        Assert.Contains("</ACTIVE_WINDOW_CONTEXT>", rendered.SystemMessage);
+        var activeWindowIndex = rendered.SystemMessage.LastIndexOf("<ACTIVE_WINDOW_CONTEXT>", StringComparison.Ordinal);
+        var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+        var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
+        var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
+
+        Assert.True(activeWindowIndex < selectedTextIndex, "Active window context should render before selected text.");
+        Assert.True(selectedTextIndex < clipboardIndex, "Selected text context should render before clipboard context.");
+        Assert.True(clipboardIndex < vocabularyIndex, "Clipboard context should render before vocabulary context.");
+    }
+
+    [Fact]
     public void Render_AssistantPromptUsesRawAssistantInstructions()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

@@ -28,6 +28,7 @@ public static class EnhancementPromptRenderer
         var systemMessage = prompt.UseSystemInstructions
             ? string.Format(SystemInstructionsTemplate, prompt.PromptText.Trim())
             : prompt.PromptText.Trim();
+        systemMessage += ActiveWindowContextSection(context);
         systemMessage += SelectedTextContextSection(context);
         systemMessage += ClipboardContextSection(context);
         systemMessage += VocabularySection(vocabulary);
@@ -40,6 +41,35 @@ public static class EnhancementPromptRenderer
             """;
 
         return new EnhancementPromptRenderResult(prompt.Title, systemMessage, userMessage);
+    }
+
+    private static string ActiveWindowContextSection(EnhancementContext? context)
+    {
+        var processName = context?.ActiveWindowProcessName.Trim();
+        var title = context?.ActiveWindowTitle.Trim();
+        if (string.IsNullOrEmpty(processName) && string.IsNullOrEmpty(title))
+        {
+            return string.Empty;
+        }
+
+        var lines = new List<string>();
+        if (!string.IsNullOrEmpty(processName))
+        {
+            lines.Add($"Process: {processName}");
+        }
+
+        if (!string.IsNullOrEmpty(title))
+        {
+            lines.Add($"Title: {title}");
+        }
+
+        return $"""
+
+
+            <ACTIVE_WINDOW_CONTEXT>
+            {string.Join(Environment.NewLine, lines)}
+            </ACTIVE_WINDOW_CONTEXT>
+            """;
     }
 
     private static string SelectedTextContextSection(EnhancementContext? context)
