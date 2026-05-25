@@ -321,6 +321,14 @@ Clipboard enhancement context slice completed on 2026-05-25:
 - Added read-only Windows clipboard text capture through the native adapter, with empty/unavailable/non-text/failure fallback to no context.
 - Added `<CLIPBOARD_CONTEXT>` rendering before vocabulary in the enhancement system message, matching the macOS prompt contract.
 
+Selected-text enhancement context Windows MVP target:
+
+- Match macOS's best-effort selected-text context by attempting read-only UI Automation selected-text capture when enhancement is about to run.
+- Add selected text to the enhancement system message inside `<CURRENTLY_SELECTED_TEXT>` tags, before clipboard and vocabulary sections, matching macOS prompt ordering.
+- Gracefully skip context when the focused element has no selected text, does not expose UI Automation `TextPattern`, cannot be read, or the read is canceled.
+- Avoid clipboard-copy fallback in this slice so selected-text capture never modifies user clipboard contents.
+- Keep selected text local to the enhancement request and persist only the rendered AI request messages already saved for local History diagnostics.
+
 Windows gaps:
 
 - Selected text context through UI Automation or clipboard fallback.
