@@ -24,7 +24,7 @@ VoiceInk Windows parity  [#################---] 86%
 | Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
-| History | 75% | `[###############-----]` | SQLite detail metadata, search, retry, re-enhance from saved original text, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Waveform/rate controls, batch actions, and dedicated window remain. |
+| History | 77% | `[###############-----]` | SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [#################---] 86%
 ## Current Slice
 
 ```text
-Windows History re-enhance action  [####################] 100%
+Windows History copy actions  [####################] 100%
 ```
 
 Completed:
 
-- Added a Core re-enhancement service that reruns AI enhancement from a saved History transcript without retranscribing audio.
-- Preserved the source history row by saving a new derived completed item with fresh enhancement metadata.
-- Added a `Re-enhance Selected` History button with operation guards and list refresh/selection behavior.
-- Added focused tests for success, disabled enhancement, missing provider configuration, fallback text, and non-completed source rows.
+- Added Core copy selection rules for Original, Final, Enhanced, and AI Request History text.
+- Added History detail buttons for one-click copy actions.
+- Disabled copy buttons when the selected row has no corresponding text.
+- Added focused selector tests for success and missing-text states.
 
 ## Near-Term Priority
 

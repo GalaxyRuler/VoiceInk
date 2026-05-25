@@ -150,6 +150,7 @@ public sealed partial class MainWindow : Window
     private bool isPastingLast;
     private bool isRetryingHistory;
     private bool isReenhancingHistory;
+    private bool isCopyingHistory;
     private bool isQuickAdding;
     private bool isImportingModel;
     private bool isDownloadingModel;
@@ -500,6 +501,7 @@ public sealed partial class MainWindow : Window
             || isPastingLast
             || isRetryingHistory
             || isReenhancingHistory
+            || isCopyingHistory
             || controller.State != DictationState.Recording)
         {
             return;
@@ -1154,6 +1156,26 @@ public sealed partial class MainWindow : Window
     private async void ReEnhanceHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await ReenhanceSelectedHistoryAsync();
+    }
+
+    private async void CopyHistoryOriginalButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopySelectedHistoryTextAsync(HistoryCopyTextKind.Original);
+    }
+
+    private async void CopyHistoryFinalButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopySelectedHistoryTextAsync(HistoryCopyTextKind.Final);
+    }
+
+    private async void CopyHistoryEnhancedButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopySelectedHistoryTextAsync(HistoryCopyTextKind.Enhanced);
+    }
+
+    private async void CopyHistoryAiRequestButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopySelectedHistoryTextAsync(HistoryCopyTextKind.AiRequest);
     }
 
     private void OpenHistoryAudioButton_Click(object sender, RoutedEventArgs e)
@@ -3284,6 +3306,7 @@ public sealed partial class MainWindow : Window
             || isPastingLast
             || isRetryingHistory
             || isReenhancingHistory
+            || isCopyingHistory
             || isQuickAdding
             || controller.State != DictationState.Idle)
         {
@@ -4138,6 +4161,7 @@ public sealed partial class MainWindow : Window
             || isPastingLast
             || isRetryingHistory
             || isReenhancingHistory
+            || isCopyingHistory
             || isQuickAdding)
         {
             return;
@@ -4170,6 +4194,7 @@ public sealed partial class MainWindow : Window
             || isPastingLast
             || isRetryingHistory
             || isReenhancingHistory
+            || isCopyingHistory
             || controller.State == DictationState.Recording)
         {
             return;
@@ -4208,6 +4233,50 @@ public sealed partial class MainWindow : Window
         finally
         {
             isRetryingHistory = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task CopySelectedHistoryTextAsync(HistoryCopyTextKind kind)
+    {
+        if (isCopyingHistory)
+        {
+            return;
+        }
+
+        var item = SelectedHistoryItem();
+        if (item is null)
+        {
+            RefreshUiFromControllerState("Select a transcription to copy");
+            return;
+        }
+
+        var result = HistoryCopyTextSelector.Select(item, kind);
+        if (!result.Success)
+        {
+            RefreshUiFromControllerState(result.Message);
+            return;
+        }
+
+        isCopyingHistory = true;
+        var statusOverride = "Copying history text";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await textInjectionService.CopyAsync(result.Text, windowLifetime.Token);
+            statusOverride = result.Message;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Copy failed: {ex.Message}";
+        }
+        finally
+        {
+            isCopyingHistory = false;
             RefreshUiFromControllerState(statusOverride);
         }
     }
@@ -4285,7 +4354,7 @@ public sealed partial class MainWindow : Window
 
     private async Task PasteLastAsync(LastTranscriptionTextKind textKind)
     {
-        if (isStopping || isCanceling || isPastingLast || isRetryingHistory || isReenhancingHistory)
+        if (isStopping || isCanceling || isPastingLast || isRetryingHistory || isReenhancingHistory || isCopyingHistory)
         {
             return;
         }
@@ -5899,6 +5968,7 @@ public sealed partial class MainWindow : Window
         || isPastingLast
         || isRetryingHistory
         || isReenhancingHistory
+        || isCopyingHistory
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
@@ -6472,6 +6542,18 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording
             && selectedHistory?.Status == TranscriptionHistoryStatus.Completed;
+        CopyHistoryOriginalButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && HistoryCopyTextSelector.HasText(selectedHistory, HistoryCopyTextKind.Original);
+        CopyHistoryFinalButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && HistoryCopyTextSelector.HasText(selectedHistory, HistoryCopyTextKind.Final);
+        CopyHistoryEnhancedButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && HistoryCopyTextSelector.HasText(selectedHistory, HistoryCopyTextKind.Enhanced);
+        CopyHistoryAiRequestButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && HistoryCopyTextSelector.HasText(selectedHistory, HistoryCopyTextKind.AiRequest);
         OpenHistoryAudioButton.IsEnabled = settingsLoaded && !operationActive && historyAudioAvailable;
 
         var stateStatus = StateToStatusText(controller.State);
