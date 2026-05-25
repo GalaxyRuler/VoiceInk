@@ -92,7 +92,8 @@ public sealed class GlobalShortcutTests
             CancelRecordingHotkey = "Ctrl+Alt+C",
             OpenHistoryHotkey = "Ctrl+Alt+H",
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
-            ToggleEnhancementHotkey = "Ctrl+Alt+X"
+            ToggleEnhancementHotkey = "Ctrl+Alt+X",
+            CyclePowerModeHotkey = "Ctrl+Alt+P"
         };
 
         var result = GlobalShortcutSettings.BuildRegistrations(settings);
@@ -144,6 +145,11 @@ public sealed class GlobalShortcutTests
             {
                 Assert.Equal(GlobalShortcutAction.ToggleEnhancement, item.Action);
                 Assert.Equal("Ctrl+Alt+X", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.CyclePowerMode, item.Action);
+                Assert.Equal("Ctrl+Alt+P", item.Shortcut.DisplayText);
             });
     }
 
@@ -270,5 +276,19 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Toggle Enhancement already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicateCyclePowerModeAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            CyclePowerModeHotkey = "Ctrl+Alt+Space"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Cycle Power Mode already uses Ctrl+Alt+Space.");
     }
 }

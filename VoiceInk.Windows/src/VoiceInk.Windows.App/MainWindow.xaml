@@ -891,6 +891,10 @@
                                 x:Name="ToggleEnhancementHotkeyTextBox"
                                 Header="Toggle Enhancement"
                                 PlaceholderText="Ctrl+Alt+X" />
+                            <TextBox
+                                x:Name="CyclePowerModeHotkeyTextBox"
+                                Header="Cycle Power Mode"
+                                PlaceholderText="Ctrl+Alt+P" />
                             <Button
                                 x:Name="ApplyShortcutsButton"
                                 Content="Apply Shortcuts"

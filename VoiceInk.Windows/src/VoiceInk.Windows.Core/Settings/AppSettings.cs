@@ -41,6 +41,7 @@ public sealed record AppSettings
     public string OpenHistoryHotkey { get; init; } = string.Empty;
     public string QuickAddDictionaryHotkey { get; init; } = string.Empty;
     public string ToggleEnhancementHotkey { get; init; } = string.Empty;
+    public string CyclePowerModeHotkey { get; init; } = string.Empty;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];
@@ -100,6 +101,7 @@ public sealed record AppSettings
             OpenHistoryHotkey == other.OpenHistoryHotkey &&
             QuickAddDictionaryHotkey == other.QuickAddDictionaryHotkey &&
             ToggleEnhancementHotkey == other.ToggleEnhancementHotkey &&
+            CyclePowerModeHotkey == other.CyclePowerModeHotkey &&
             AudioInputDeviceNumber == other.AudioInputDeviceNumber &&
             AudioInputDeviceName == other.AudioInputDeviceName &&
             ImportedWhisperModels.SequenceEqual(other.ImportedWhisperModels) &&
@@ -160,6 +162,7 @@ public sealed record AppSettings
         hash.Add(OpenHistoryHotkey);
         hash.Add(QuickAddDictionaryHotkey);
         hash.Add(ToggleEnhancementHotkey);
+        hash.Add(CyclePowerModeHotkey);
         hash.Add(AudioInputDeviceNumber);
         hash.Add(AudioInputDeviceName);
         foreach (var model in ImportedWhisperModels)

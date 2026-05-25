@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#################---] 84%
+VoiceInk Windows parity  [#################---] 85%
 ```
 
 ## Area Bars
@@ -17,12 +17,12 @@ VoiceInk Windows parity  [#################---] 84%
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
-| Shortcuts | 61% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, and toggle enhancement are configurable. Press-and-hold modes, Power Mode shortcuts, and shortcut recorder UI remain. |
+| Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
-| Power Mode | 67% | `[#############-------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Auto-send keys and shortcuts remain. |
+| Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [#################---] 84%
 ## Current Slice
 
 ```text
-Windows Power Mode URL matching  [####################] 100%
+Windows Power Mode cycle shortcut  [####################] 100%
 ```
 
 Completed:
 
-- Added browser URL patterns to Power Mode rules.
-- Matched URL rules against sanitized active browser URLs without query strings or fragments.
-- Combined process, title, and URL patterns with existing AND semantics.
-- Exposed a Browser URL field in the Power Mode editor and active-target fill workflow.
+- Added an optional global `Cycle Power Mode` shortcut.
+- Registered the shortcut with duplicate detection alongside existing hotkeys.
+- Added a Core cycler that rotates Automatic through enabled Power Mode rules in order.
+- Wired WinUI dispatch so the shortcut updates settings and the floating recorder/main shell state.
 
 ## Near-Term Priority
 

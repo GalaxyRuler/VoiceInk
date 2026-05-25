@@ -683,6 +683,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.ToggleEnhancement:
                     await ToggleEnhancementAsync();
                     break;
+                case GlobalShortcutAction.CyclePowerMode:
+                    await CyclePowerModeAsync();
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -1415,6 +1418,7 @@ public sealed partial class MainWindow : Window
         OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
         QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
         ToggleEnhancementHotkeyTextBox.Text = settings.ToggleEnhancementHotkey;
+        CyclePowerModeHotkeyTextBox.Text = settings.CyclePowerModeHotkey;
         EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
         UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
         suppressEnhancementPresetChanged = true;
@@ -4635,6 +4639,37 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task CyclePowerModeAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            selectedPowerModeRuleId = PowerModeShortcutCycler.NextRuleId(settings, powerModeRules);
+            await SaveSettingsAsync(windowLifetime.Token);
+            var selectedRule = selectedPowerModeRuleId is { } ruleId
+                ? powerModeRules.FirstOrDefault(rule => rule.Id == ruleId && rule.IsEnabled)
+                : null;
+            RefreshPowerModeRulesListView(selectedPowerModeRuleId);
+            RefreshUiFromControllerState(
+                selectedRule is null
+                    ? "Power Mode: Auto"
+                    : $"Power Mode: {PowerModeDisplay(selectedRule.Name, selectedRule.Emoji)}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Power Mode shortcut failed: {ex.Message}");
+        }
+    }
+
     private async Task SaveEnhancementKeyAsync()
     {
         if (!settingsLoaded || IsOperationActive(includeCurrentEnhancementKeySave: false))
@@ -5053,6 +5088,9 @@ public sealed partial class MainWindow : Window
             ToggleEnhancementHotkey = includeShortcutFields
                 ? ToggleEnhancementHotkeyTextBox.Text.Trim()
                 : settings.ToggleEnhancementHotkey,
+            CyclePowerModeHotkey = includeShortcutFields
+                ? CyclePowerModeHotkeyTextBox.Text.Trim()
+                : settings.CyclePowerModeHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
