@@ -48,6 +48,12 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://eu1.asr.api.speechmatics.com/v2/jobs", speechmatics.Endpoint);
         Assert.Equal("speechmatics-enhanced", speechmatics.DefaultModel);
         Assert.Contains("speechmatics-enhanced", speechmatics.ModelIds);
+        var gemini = Assert.Single(presets, item => item.Id == "gemini");
+        Assert.Equal("Gemini", gemini.DisplayName);
+        Assert.Equal("https://generativelanguage.googleapis.com/v1beta/models", gemini.Endpoint);
+        Assert.Equal("gemini-2.5-flash", gemini.DefaultModel);
+        Assert.Contains("gemini-2.5-pro", gemini.ModelIds);
+        Assert.Contains("gemini-3-flash-preview", gemini.ModelIds);
     }
 
     [Theory]
@@ -60,6 +66,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("elevenlabs", "elevenlabs")]
     [InlineData("soniox", "soniox")]
     [InlineData("speechmatics", "speechmatics")]
+    [InlineData("gemini", "gemini")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -74,6 +81,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("elevenlabs", "VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey")]
     [InlineData("soniox", "VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey")]
     [InlineData("speechmatics", "VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey")]
+    [InlineData("gemini", "VoiceInk.Windows.Transcription.OpenAICompatible.Gemini.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -109,6 +117,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("speechmatics"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.Gemini.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("gemini"));
     }
 
     [Fact]

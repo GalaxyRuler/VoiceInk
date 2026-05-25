@@ -76,6 +76,18 @@ public static class TranscriptionProviderPresetCatalog
             "speechmatics-enhanced"
         ]);
 
+    public static TranscriptionProviderPreset Gemini { get; } = new(
+        "gemini",
+        "Gemini",
+        "https://generativelanguage.googleapis.com/v1beta/models",
+        "gemini-2.5-flash",
+        [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-3.1-pro-preview",
+            "gemini-3-flash-preview"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
@@ -85,7 +97,8 @@ public static class TranscriptionProviderPresetCatalog
         Mistral,
         ElevenLabs,
         Soniox,
-        Speechmatics
+        Speechmatics,
+        Gemini
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

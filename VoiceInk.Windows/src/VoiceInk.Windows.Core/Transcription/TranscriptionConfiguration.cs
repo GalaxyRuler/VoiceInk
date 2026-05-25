@@ -71,6 +71,7 @@ public static class TranscriptionConfiguration
             "elevenlabs" => "ElevenLabs",
             "soniox" => "Soniox",
             "speechmatics" => "Speechmatics",
+            "gemini" => "Gemini",
             _ => "Custom"
         };
 
