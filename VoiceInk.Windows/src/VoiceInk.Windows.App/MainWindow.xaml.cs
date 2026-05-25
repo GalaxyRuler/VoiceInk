@@ -122,6 +122,7 @@ public sealed partial class MainWindow : Window
     private GlobalHotkeyService? hotkeyService;
     private TrayIconService? trayIconService;
     private FloatingRecorderWindow? floatingRecorderWindow;
+    private HistoryWindow? historyWindow;
     private AudioFileTranscriptionService audioFileTranscriptionService;
     private CancellationTokenSource? audioFileQueueCancellation;
     private CancellationTokenSource? modelDownloadCancellation;
@@ -4169,10 +4170,18 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            RestoreAndActivateWindow();
-            ShowShellSection(HistorySectionTag);
-            await RefreshHistoryAsync(windowLifetime.Token);
-            HistorySearchTextBox.Focus(FocusState.Programmatic);
+            if (historyWindow is null)
+            {
+                historyWindow = new HistoryWindow(
+                    historyStore,
+                    historyRetryService,
+                    historyReenhancementService,
+                    textInjectionService,
+                    recordingsDirectory);
+                historyWindow.Closed += HistoryWindow_Closed;
+            }
+
+            historyWindow.Activate();
             RefreshUiFromControllerState("History opened");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -4182,6 +4191,15 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Open history failed: {ex.Message}");
+        }
+    }
+
+    private void HistoryWindow_Closed(object sender, WindowEventArgs args)
+    {
+        if (historyWindow is not null)
+        {
+            historyWindow.Closed -= HistoryWindow_Closed;
+            historyWindow = null;
         }
     }
 
@@ -7144,6 +7162,13 @@ public sealed partial class MainWindow : Window
         ClearHistoryAudioPlayer();
         floatingRecorderRefreshTimer.Stop();
         privacyCleanupTimer.Stop();
+        if (historyWindow is not null)
+        {
+            historyWindow.Closed -= HistoryWindow_Closed;
+            historyWindow.Close();
+            historyWindow = null;
+        }
+
         floatingRecorderWindow?.Close();
         CancelRecordingFeedbackSessionAsync(immediate: true).GetAwaiter().GetResult();
         recordingFeedback.RestorePendingImmediatelyAsync().GetAwaiter().GetResult();

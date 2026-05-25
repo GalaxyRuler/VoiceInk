@@ -1,0 +1,135 @@
+<Window
+    x:Class="VoiceInk.Windows.App.HistoryWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="VoiceInk - Transcription History">
+
+    <Grid x:Name="RootGrid" Padding="16" RowSpacing="12" Loaded="RootGrid_Loaded">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox
+                x:Name="SearchTextBox"
+                Grid.Column="0"
+                PlaceholderText="Search transcriptions" />
+            <Button x:Name="SearchButton" Grid.Column="1" Content="Search" Click="SearchButton_Click" />
+            <Button x:Name="ClearSearchButton" Grid.Column="2" Content="Clear" Click="ClearSearchButton_Click" />
+            <Button x:Name="RefreshButton" Grid.Column="3" Content="Refresh" Click="RefreshButton_Click" />
+            <Button x:Name="ExportButton" Grid.Column="4" Content="Export CSV" Click="ExportButton_Click" />
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="ListHeaderTextBlock" Text="History" FontSize="18" FontWeight="SemiBold" />
+                <ListView
+                    x:Name="HistoryListView"
+                    Grid.Row="1"
+                    SelectionChanged="HistoryListView_SelectionChanged"
+                    SelectionMode="Single" />
+            </Grid>
+
+            <Grid Grid.Column="1" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="RetryButton" Content="Retry" Click="RetryButton_Click" />
+                    <Button x:Name="ReEnhanceButton" Content="Re-enhance" Click="ReEnhanceButton_Click" />
+                    <Button x:Name="OpenAudioButton" Content="Open Audio" Click="OpenAudioButton_Click" />
+                    <Button x:Name="DeleteButton" Content="Delete" Click="DeleteButton_Click" />
+                </StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="SelectionTextBlock" Text="Select a transcription" TextWrapping="Wrap" />
+                        <TextBox
+                            x:Name="OriginalTextBox"
+                            Header="Original"
+                            AcceptsReturn="True"
+                            Height="150"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                        <TextBox
+                            x:Name="FinalTextBox"
+                            Header="Final"
+                            AcceptsReturn="True"
+                            Height="150"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                        <TextBox
+                            x:Name="EnhancedTextBox"
+                            Header="Enhanced"
+                            AcceptsReturn="True"
+                            Height="150"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+                <MediaPlayerElement
+                    x:Name="AudioPlayer"
+                    Grid.Row="2"
+                    Height="72"
+                    AreTransportControlsEnabled="True"
+                    Visibility="Collapsed" />
+            </Grid>
+
+            <Grid Grid.Column="2" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="Details" FontSize="18" FontWeight="SemiBold" />
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="CopyOriginalButton" Content="Copy Original" Click="CopyOriginalButton_Click" />
+                    <Button x:Name="CopyFinalButton" Content="Copy Final" Click="CopyFinalButton_Click" />
+                    <Button x:Name="CopyEnhancedButton" Content="Copy Enhanced" Click="CopyEnhancedButton_Click" />
+                    <Button x:Name="CopyAiRequestButton" Content="Copy AI Request" Click="CopyAiRequestButton_Click" />
+                </StackPanel>
+                <ScrollViewer Grid.Row="2">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="MetadataTextBlock" Text="No Metadata" TextWrapping="Wrap" />
+                        <TextBox
+                            x:Name="SystemPromptTextBox"
+                            Header="System Prompt"
+                            AcceptsReturn="True"
+                            Height="160"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                        <TextBox
+                            x:Name="UserMessageTextBox"
+                            Header="User Message"
+                            AcceptsReturn="True"
+                            Height="160"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <TextBlock x:Name="StatusTextBlock" Grid.Row="2" Text="Ready" TextWrapping="Wrap" />
+    </Grid>
+</Window>
