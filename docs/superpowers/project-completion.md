@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#################---] 85%
+VoiceInk Windows parity  [#################---] 86%
 ```
 
 ## Area Bars
@@ -29,20 +29,20 @@ VoiceInk Windows parity  [#################---] 85%
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
-| Packaging | 20% | `[####----------------]` | Source-run docs, runtime workaround, and repeatable self-contained dev ZIP packaging exist. MSIX/installer, signing, shortcut registration, uninstall behavior, and installer smoke tests remain. |
+| Packaging | 32% | `[######--------------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, and signed MSIX manifest/script foundation exist. End-to-end signed package smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows Power Mode cycle shortcut  [####################] 100%
+Windows MSIX packaging foundation  [####################] 100%
 ```
 
 Completed:
 
-- Added an optional global `Cycle Power Mode` shortcut.
-- Registered the shortcut with duplicate detection alongside existing hotkeys.
-- Added a Core cycler that rotates Automatic through enabled Power Mode rules in order.
-- Wired WinUI dispatch so the shortcut updates settings and the floating recorder/main shell state.
+- Added an open-source MSIX package manifest for the Windows app.
+- Added a repo-local `package-msix.ps1` script that requires an external signing certificate and writes artifacts under `VoiceInk.Windows\artifacts`.
+- Added packaging asset tests for manifest metadata, capabilities, and certificate-safety guardrails.
+- Documented signed MSIX build and manual install/uninstall smoke commands.
 
 ## Near-Term Priority
 
