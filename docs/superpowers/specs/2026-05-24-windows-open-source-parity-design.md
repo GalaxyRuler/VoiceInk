@@ -255,7 +255,13 @@ Implemented core:
 Windows gaps:
 
 - macOS-style formatting pass beyond cleanup preferences.
-- Dictation-controller history writes for failed recording/transcription sessions.
+
+Failed dictation history slice completed on 2026-05-25:
+
+- When audio capture has already stopped, post-capture dictation failures now save a best-effort `Failed` History row.
+- Failed rows preserve provider, language, model metadata, audio duration/path, Power Mode metadata, and the error message.
+- Failed rows do not insert text and do not record session metrics.
+- Capture-start and capture-stop failures without a stopped audio result still avoid History writes.
 
 Toggle Enhancement Shortcut slice completed on 2026-05-25:
 

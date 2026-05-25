@@ -1111,11 +1111,12 @@ public sealed class DictationControllerTests
         {
             ExceptionToThrow = new InvalidOperationException("model failed")
         };
+        var history = new FakeHistoryStore();
         var controller = new DictationController(
             capture,
             transcription,
             new FakeTextInjectionService(),
-            new FakeHistoryStore(),
+            history,
             new FakeSettingsStore(new AppSettings
             {
                 ModelPath = "ggml-base.en.bin"
@@ -1126,6 +1127,14 @@ public sealed class DictationControllerTests
 
         Assert.Equal(DictationState.Error, controller.State);
         Assert.Equal("model failed", controller.LastError);
+        var failed = Assert.Single(history.Items);
+        Assert.Equal(TranscriptionHistoryStatus.Failed, failed.Status);
+        Assert.Equal("Transcription Failed: model failed", failed.Text);
+        Assert.Equal("model failed", failed.ErrorMessage);
+        Assert.Equal(audio.FilePath, failed.AudioFilePath);
+        Assert.Equal(audio.Duration, failed.AudioDuration);
+        Assert.Equal("local-whisper", failed.ProviderName);
+        Assert.Equal("ggml-base.en.bin", failed.ModelPath);
     }
 
     [Fact]

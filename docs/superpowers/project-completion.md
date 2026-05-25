@@ -7,14 +7,14 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [################----] 80%
+VoiceInk Windows parity  [################----] 81%
 ```
 
 ## Area Bars
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 81% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
+| Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 61% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, and toggle enhancement are configurable. Press-and-hold modes, Power Mode shortcuts, and shortcut recorder UI remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [################----] 80%
 ## Current Slice
 
 ```text
-Windows active window enhancement context  [####################] 100%
+Windows failed dictation history  [####################] 100%
 ```
 
 Completed:
 
-- Added active-window process/title fields to enhancement context.
-- Rendered active-window context before selected text, clipboard, and vocabulary.
-- Reused the existing native foreground-window Power Mode provider.
-- Kept foreground-window reads best-effort and local-only.
+- Added best-effort failed History rows after capture stop succeeds but post-capture dictation work fails.
+- Failed rows preserve provider, language, model, audio duration/path, Power Mode metadata, and error message.
+- Failed rows remain out of metrics and do not insert text.
+- Capture-start/stop failures without an audio result still avoid History writes.
 
 ## Near-Term Priority
 

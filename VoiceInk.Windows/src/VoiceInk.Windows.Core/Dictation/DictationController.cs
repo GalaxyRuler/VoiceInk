@@ -234,6 +234,22 @@ public sealed class DictationController(
                     State = DictationState.Idle;
                     throw;
                 }
+                catch (Exception ex)
+                {
+                    if (!hasCompletedHistory)
+                    {
+                        await SaveFailedHistoryBestEffortAsync(
+                            audio,
+                            powerModeResolution,
+                            ex.Message,
+                            CancellationToken.None);
+                    }
+
+                    State = DictationState.Error;
+                    LastError = ex.Message;
+                    ResetPartialTranscript();
+                    return;
+                }
 
                 State = DictationState.Idle;
                 ResetPartialTranscript();
@@ -397,6 +413,44 @@ public sealed class DictationController(
                     status: TranscriptionHistoryStatus.Canceled,
                     language: settings.Language,
                     modelPath: TranscriptionConfiguration.ModelMetadata(settings),
+                    audioFilePath: audio.FilePath,
+                    powerModeName: powerModeResolution.PowerModeName,
+                    powerModeEmoji: powerModeResolution.PowerModeEmoji),
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning = $"History save failed: {ex.Message}";
+        }
+    }
+
+    private async Task SaveFailedHistoryBestEffortAsync(
+        AudioCaptureResult audio,
+        PowerModeResolution powerModeResolution,
+        string errorMessage,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var settings = powerModeResolution.EffectiveSettings;
+            var safeError = string.IsNullOrWhiteSpace(errorMessage) ? "Transcription failed" : errorMessage;
+            await historyStore.SaveAsync(
+                new TranscriptionHistoryItem(
+                    Guid.NewGuid(),
+                    DateTimeOffset.UtcNow,
+                    $"{TranscriptionHistoryItem.FailedTranscriptionPrefix} {safeError}",
+                    TranscriptionConfiguration.ProviderName(settings),
+                    audio.Duration,
+                    TimeSpan.Zero,
+                    originalText: $"{TranscriptionHistoryItem.FailedTranscriptionPrefix} {safeError}",
+                    status: TranscriptionHistoryStatus.Failed,
+                    language: settings.Language,
+                    modelPath: TranscriptionConfiguration.ModelMetadata(settings),
+                    errorMessage: safeError,
                     audioFilePath: audio.FilePath,
                     powerModeName: powerModeResolution.PowerModeName,
                     powerModeEmoji: powerModeResolution.PowerModeEmoji),

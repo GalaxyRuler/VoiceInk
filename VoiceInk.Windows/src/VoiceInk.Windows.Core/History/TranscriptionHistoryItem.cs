@@ -3,6 +3,7 @@ namespace VoiceInk.Windows.Core.History;
 public sealed record TranscriptionHistoryItem
 {
     public const string CanceledTranscriptionText = "The transcription was canceled.";
+    public const string FailedTranscriptionPrefix = "Transcription Failed:";
 
     public Guid Id { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
