@@ -60,6 +60,16 @@ public sealed class SqliteSessionMetricStore : ISessionMetricStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task ClearAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM session_metrics;";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken)
     {
         await using var connection = new SqliteConnection(connectionString);

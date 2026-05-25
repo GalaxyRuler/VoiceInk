@@ -179,6 +179,9 @@ public sealed class SessionMetricRecorderTests
             return Task.CompletedTask;
         }
 
+        public Task ClearAsync(CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
         public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken)
         {
             HasTranscriptionCallCount++;

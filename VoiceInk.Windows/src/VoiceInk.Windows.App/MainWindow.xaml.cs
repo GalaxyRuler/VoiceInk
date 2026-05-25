@@ -1088,6 +1088,11 @@ public sealed partial class MainWindow : Window
         await ExportMetricsAsync();
     }
 
+    private async void ResetMetricsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetMetricsAsync();
+    }
+
     private async void MetricsTimeFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (settingsLoaded)
@@ -3876,6 +3881,53 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task ResetMetricsAsync()
+    {
+        if (metricsInitializationWarning is not null)
+        {
+            RefreshUiFromControllerState(metricsInitializationWarning);
+            return;
+        }
+
+        if (IsOperationActive())
+        {
+            RefreshUiFromControllerState("Finish the current operation before resetting metrics");
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Reset metrics?",
+            Content = "This deletes local session metrics and model performance totals. History, recordings, models, settings, and diagnostics stay unchanged.",
+            PrimaryButtonText = "Reset",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            RefreshUiFromControllerState("Metrics reset canceled");
+            return;
+        }
+
+        try
+        {
+            await sessionMetricStore.ClearAsync(windowLifetime.Token);
+            await RefreshMetricsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("Metrics reset");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Metrics reset failed: {ex.Message}");
+        }
+    }
+
     private static string FormatMetricsSummary(string filterLabel, SessionMetricsSummary summary) =>
         string.Join(
             Environment.NewLine,
@@ -6117,6 +6169,7 @@ public sealed partial class MainWindow : Window
         RefreshMetricsButton.IsEnabled = settingsLoaded && !operationActive;
         MetricsTimeFilterComboBox.IsEnabled = settingsLoaded && !operationActive;
         ExportMetricsButton.IsEnabled = settingsLoaded && !operationActive;
+        ResetMetricsButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
         ExportSettingsBackupButton.IsEnabled = settingsLoaded && !operationActive;

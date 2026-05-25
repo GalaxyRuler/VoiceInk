@@ -7,25 +7,25 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###############-----] 76%
+VoiceInk Windows parity  [###############-----] 77%
 ```
 
 ## Area Bars
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 81% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, metrics, and canceling in-flight post-recording work are in place. Prompt-trigger detection and advanced formatting remain. |
+| Core dictation pipeline | 81% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
-| AI enhancement | 70% | `[##############------]` | OpenAI-compatible enhancement, presets, prompts, context, retries/timeouts, and secure keys exist. Trigger-word mode, local/Ollama-style hooks, and richer assistant workflows remain. |
+| AI enhancement | 72% | `[##############------]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, and secure keys exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
 | Power Mode | 60% | `[############--------]` | Rule model, process/title matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, and shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
-| Metrics | 68% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, and CSV export exist. Visual parity and reset controls remain. |
+| Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###############-----] 76%
 ## Current Slice
 
 ```text
-Windows cancel dictation processing  [####################] 100%
+Windows metrics reset controls  [####################] 100%
 ```
 
 Completed:
 
-- Added canceled-history preservation when cancellation happens after audio capture stops.
-- Passed cooperative cancellation through transcription, enhancement, insertion, and post-stop refresh work.
-- Enabled Cancel during `Transcribing` and `Inserting` to cancel the active stop pipeline.
-- Avoided completed session metrics and text insertion for canceled processing.
+- Added `ISessionMetricStore.ClearAsync` and SQLite-backed local metrics deletion.
+- Added a confirmed `Reset Metrics` command in the Metrics section.
+- Kept reset local-only and scoped to metrics, leaving History, recordings, models, settings, and diagnostics untouched.
+- Cleaned stale tracker notes for already-implemented prompt-trigger activation.
 
 ## Near-Term Priority
 

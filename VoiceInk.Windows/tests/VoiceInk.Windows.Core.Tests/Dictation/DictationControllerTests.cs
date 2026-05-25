@@ -1642,6 +1642,9 @@ public sealed class DictationControllerTests
             return Task.CompletedTask;
         }
 
+        public Task ClearAsync(CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
         public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken) =>
             Task.FromResult(Saved.Any(metric => metric.TranscriptionId == transcriptionId));
 

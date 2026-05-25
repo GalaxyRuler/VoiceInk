@@ -5,6 +5,7 @@ namespace VoiceInk.Windows.Core.Services;
 public interface ISessionMetricStore
 {
     Task SaveAsync(SessionMetric metric, CancellationToken cancellationToken);
+    Task ClearAsync(CancellationToken cancellationToken);
     Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken);
     Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken);
     Task<SessionMetricsSummary> GetSummaryAsync(DateTimeOffset? since, CancellationToken cancellationToken) =>

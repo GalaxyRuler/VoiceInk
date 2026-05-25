@@ -250,7 +250,7 @@ macOS pipeline order:
 
 Implemented core:
 
-- Hallucination marker cleanup, filler-word filtering, whitespace normalization, word replacements, punctuation cleanup, lowercase output, and trailing-space handling.
+- Hallucination marker cleanup, filler-word filtering, whitespace normalization, word replacements, punctuation cleanup, lowercase output, trailing-space handling, and prompt trigger detection.
 - History model/storage/export support for completed, failed, and canceled statuses.
 
 Windows gaps:
@@ -435,7 +435,6 @@ Windows gaps:
 
 - Prompt template persistence.
 - Provider-specific Anthropic Messages API and Local CLI hooks.
-- Trigger detection.
 - Clipboard-copy fallback for selected text, screen/OCR, browser URL, and app-specific context capture.
 - Dynamic provider model loading for OpenRouter and Ollama.
 - Toggle-enhancement shortcut and recorder prompt picker activation.
@@ -609,12 +608,16 @@ Metrics Filters and Export slice completed on 2026-05-25:
 - Added macOS-aligned filter choices for Last 7 Days, Last 30 Days, This Year, and All Time, with Last 7 Days as the default Metrics filter.
 - Filtered dashboard summaries, transcription model performance, and enhancement model performance by the selected time range.
 - Added non-destructive local Metrics CSV export through a Windows save picker.
-- Deliberately left reset/delete controls unimplemented because deleting local metrics data requires explicit user approval.
+
+Metrics Reset slice completed on 2026-05-25:
+
+- Added a confirmed local-only Metrics reset command in the Metrics section.
+- Added `ISessionMetricStore.ClearAsync` with SQLite `session_metrics` row deletion and no-op disabled-store behavior.
+- Reset deletes only local metrics rows; History, recordings, models, settings, and diagnostics remain unchanged.
 
 Windows gaps:
 
 - Rich macOS visual dashboard cards and slide-over model performance panel styling.
-- Metrics reset controls are intentionally blocked until a user explicitly approves deleting local metrics data.
 - Diagnostics copy/export expansion beyond the existing About/Open Source local diagnostics actions.
 
 ### Settings

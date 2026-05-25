@@ -799,6 +799,10 @@
                                 x:Name="ExportMetricsButton"
                                 Content="Export Metrics CSV"
                                 Click="ExportMetricsButton_Click" />
+                            <Button
+                                x:Name="ResetMetricsButton"
+                                Content="Reset Metrics"
+                                Click="ResetMetricsButton_Click" />
                         </StackPanel>
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>

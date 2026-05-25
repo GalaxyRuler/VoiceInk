@@ -13,6 +13,9 @@ public sealed class DisabledSessionMetricStore : ISessionMetricStore
     public Task SaveAsync(SessionMetric metric, CancellationToken cancellationToken) =>
         Task.CompletedTask;
 
+    public Task ClearAsync(CancellationToken cancellationToken) =>
+        Task.CompletedTask;
+
     public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken) =>
         Task.FromResult(true);
 

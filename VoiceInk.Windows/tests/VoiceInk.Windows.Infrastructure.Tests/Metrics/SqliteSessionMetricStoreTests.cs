@@ -65,6 +65,34 @@ public sealed class SqliteSessionMetricStoreTests
     }
 
     [Fact]
+    public async Task ClearAsync_RemovesMetricsAndAllowsFutureSaves()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteSessionMetricStore(Path.Combine(temp.Path, "metrics.db"));
+        var clearedTranscriptionId = Guid.NewGuid();
+        await store.SaveAsync(Metric(
+            transcriptionId: clearedTranscriptionId,
+            wordCount: 10,
+            transcriptionModelName: "base",
+            transcriptionDuration: TimeSpan.FromSeconds(2),
+            enhancementModelName: "gpt-4o-mini",
+            enhancementDuration: TimeSpan.FromSeconds(1)), CancellationToken.None);
+
+        await store.ClearAsync(CancellationToken.None);
+
+        Assert.False(await store.HasTranscriptionAsync(clearedTranscriptionId, CancellationToken.None));
+        Assert.Equal(SessionMetricsSummary.Empty, await store.GetSummaryAsync(CancellationToken.None));
+        Assert.Empty(await store.ListTranscriptionModelPerformanceAsync(null, CancellationToken.None));
+        Assert.Empty(await store.ListEnhancementModelPerformanceAsync(null, CancellationToken.None));
+
+        await store.SaveAsync(Metric(transcriptionId: clearedTranscriptionId, wordCount: 7), CancellationToken.None);
+
+        var summary = await store.GetSummaryAsync(CancellationToken.None);
+        Assert.Equal(1, summary.TotalSessions);
+        Assert.Equal(7, summary.TotalWords);
+    }
+
+    [Fact]
     public async Task ListTranscriptionModelPerformanceAsync_GroupsAndSortsByAverageProcessingTime()
     {
         using var temp = new TempDirectory();
