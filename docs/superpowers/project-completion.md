@@ -29,20 +29,20 @@ VoiceInk Windows parity  [##################--] 88%
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
-| Packaging | 43% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
+| Packaging | 46% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows OCR region controls  [####################] 100%
+Windows MSIX packaging preflight  [####################] 100%
 ```
 
 Completed:
 
-- Added persisted OCR capture region settings.
-- Added visible WinUI numeric controls for OCR region left/top/width/height.
-- Added a settings-backed OCR reader so saved bounds are used at OCR read time.
-- Kept full-desktop OCR as the default when region mode is off.
+- Added `package-msix.ps1 -Preflight` for certificate-free packaging readiness checks.
+- Validated project/manifest paths and artifact-root containment before packaging.
+- Printed the signed package command shape, MSIX publish properties, validator command, and manual install/query/uninstall smoke path.
+- Kept certificate creation, certificate import, install, uninstall, signing, and secret handling out of automation.
 
 ## Near-Term Priority
 

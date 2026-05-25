@@ -73,6 +73,28 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void MsixPackagingScript_ProvidesCertificateFreePreflightWithoutMachineMutation()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "package-msix.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("Preflight", script);
+        Assert.Contains("PackageCertificateKeyFile is required for signed packaging", script);
+        Assert.Contains("MSIX packaging preflight passed", script);
+        Assert.Contains("test-msix-package.ps1", script);
+        Assert.Contains("Add-AppxPackage -Path", script);
+        Assert.Contains("Remove-AppxPackage -Package", script);
+        Assert.Contains("dotnet publish", script);
+
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void DevZipSmokeScript_ValidatesExpectedPackageContentsWithoutInstalling()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-dev-zip.ps1");

@@ -9,6 +9,7 @@ param(
     [string]$PackageCertificateKeyFile,
     [Parameter(Mandatory = $false)]
     [string]$PackageCertificatePassword,
+    [switch]$Preflight,
     [switch]$Help
 )
 
@@ -17,8 +18,10 @@ $ErrorActionPreference = "Stop"
 
 function Show-Usage {
     Write-Host "Usage: .\VoiceInk.Windows\scripts\package-msix.ps1 -PackageCertificateKeyFile path [-PackageCertificatePassword value] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
+    Write-Host "       .\VoiceInk.Windows\scripts\package-msix.ps1 -Preflight [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
     Write-Host ""
     Write-Host "Creates a signed MSIX package under VoiceInk.Windows\artifacts\msix."
+    Write-Host "Preflight validates paths, project files, publish properties, and manual smoke commands without requiring a certificate or running dotnet publish."
     Write-Host "Relative DotNetPath, OutputRoot, and PackageCertificateKeyFile values are resolved from the repository root."
     Write-Host "OutputRoot must be inside VoiceInk.Windows\artifacts."
     Write-Host "This script does not create certificates or import certificates into Windows. Provide a maintainer-owned signing certificate."
@@ -80,6 +83,27 @@ function Assert-OutputRootInsideArtifacts {
     }
 }
 
+function Write-MsixPublishProperties {
+    param(
+        [string]$CertificatePath
+    )
+
+    Write-Host "MSIX publish properties:"
+    Write-Host "  -p:Platform=x64"
+    Write-Host "  -p:WindowsPackageType=MSIX"
+    Write-Host "  -p:AppxManifest=Package.appxmanifest"
+    Write-Host "  -p:GenerateAppxPackageOnBuild=true"
+    Write-Host "  -p:AppxBundle=Never"
+    Write-Host "  -p:UapAppxPackageBuildMode=SideloadOnly"
+    Write-Host "  -p:AppxPackageSigningEnabled=true"
+    if ([string]::IsNullOrWhiteSpace($CertificatePath)) {
+        Write-Host "  -p:PackageCertificateKeyFile=<maintainer-owned-pfx>"
+    }
+    else {
+        Write-Host "  -p:PackageCertificateKeyFile=`"$CertificatePath`""
+    }
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -89,17 +113,8 @@ $scriptRoot = $PSScriptRoot
 $windowsRoot = (Resolve-Path -LiteralPath (Join-Path $scriptRoot "..")).Path
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $windowsRoot "..")).Path
 $appProject = Join-Path $windowsRoot "src\VoiceInk.Windows.App\VoiceInk.Windows.App.csproj"
+$appManifest = Join-Path $windowsRoot "src\VoiceInk.Windows.App\Package.appxmanifest"
 $dotnet = Resolve-ToolPath -RequestedPath $DotNetPath -RepositoryRoot $repoRoot
-
-if ([string]::IsNullOrWhiteSpace($PackageCertificateKeyFile)) {
-    throw "PackageCertificateKeyFile is required. Provide a maintainer-owned signing certificate path."
-}
-
-if (![System.IO.Path]::IsPathRooted($PackageCertificateKeyFile)) {
-    $PackageCertificateKeyFile = Join-Path $repoRoot $PackageCertificateKeyFile
-}
-
-$PackageCertificateKeyFile = (Resolve-Path -LiteralPath $PackageCertificateKeyFile).Path
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     $OutputRoot = Join-Path $windowsRoot "artifacts\msix"
@@ -115,6 +130,51 @@ $artifactRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 $publishRoot = Join-Path $artifactRoot "publish"
 Assert-PathInside -CandidatePath $publishRoot -RootPath $artifactRoot
 
+if (!(Test-Path -LiteralPath $appProject -PathType Leaf)) {
+    throw "Windows app project was not found: $appProject"
+}
+
+if (!(Test-Path -LiteralPath $appManifest -PathType Leaf)) {
+    throw "MSIX package manifest was not found: $appManifest"
+}
+
+if ($Preflight) {
+    Write-Host "MSIX packaging preflight passed:"
+    Write-Host "  Repository root: $repoRoot"
+    Write-Host "  Windows root: $windowsRoot"
+    Write-Host "  App project: $appProject"
+    Write-Host "  Package manifest: $appManifest"
+    Write-Host "  DotNet path: $dotnet"
+    Write-Host "  Artifact root: $artifactRoot"
+    Write-Host "  Publish root: $publishRoot"
+    Write-Host "  Configuration: $Configuration"
+    Write-Host "  Runtime identifier: $RuntimeIdentifier"
+    Write-Host ""
+    Write-MsixPublishProperties -CertificatePath $null
+    Write-Host ""
+    Write-Host "Signed package build command shape:"
+    Write-Host "  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath `"$dotnet`" -Configuration $Configuration -RuntimeIdentifier $RuntimeIdentifier -PackageCertificateKeyFile <path-to-maintainer-pfx>"
+    Write-Host ""
+    Write-Host "Manual smoke commands after a signed package is produced and the signing certificate is trusted on a test machine:"
+    Write-Host "  .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath <path-to-msix>"
+    Write-Host "  Add-AppxPackage -Path <path-to-msix>"
+    Write-Host "  Get-AppxPackage VoiceInk.Windows"
+    Write-Host "  Remove-AppxPackage -Package <package-full-name>"
+    Write-Host ""
+    Write-Host "Preflight does not run dotnet publish, sign packages, create or import certificates, install packages, uninstall packages, or read certificate passwords."
+    exit 0
+}
+
+if ([string]::IsNullOrWhiteSpace($PackageCertificateKeyFile)) {
+    throw "PackageCertificateKeyFile is required for signed packaging. Provide a maintainer-owned signing certificate path, or run with -Preflight to validate packaging inputs without a certificate."
+}
+
+if (![System.IO.Path]::IsPathRooted($PackageCertificateKeyFile)) {
+    $PackageCertificateKeyFile = Join-Path $repoRoot $PackageCertificateKeyFile
+}
+
+$PackageCertificateKeyFile = (Resolve-Path -LiteralPath $PackageCertificateKeyFile).Path
+
 New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
 if (Test-Path -LiteralPath $publishRoot) {
     Remove-Item -LiteralPath $publishRoot -Recurse -Force
@@ -128,6 +188,7 @@ else {
 }
 
 Write-Host "Publishing signed VoiceInk for Windows MSIX ($Configuration, $RuntimeIdentifier)..."
+Write-MsixPublishProperties -CertificatePath $PackageCertificateKeyFile
 & $dotnet publish $appProject `
     -c $Configuration `
     -r $RuntimeIdentifier `
