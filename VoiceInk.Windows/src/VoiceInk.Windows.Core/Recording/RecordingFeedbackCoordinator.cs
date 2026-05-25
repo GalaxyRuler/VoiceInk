@@ -27,7 +27,7 @@ public sealed class RecordingFeedbackCoordinator(
 
         if (session.SoundFeedbackEnabled)
         {
-            Try(soundFeedback.PlayStartSound);
+            Try(() => soundFeedback.PlayStartSound(session.SoundSettings.Start));
         }
 
         if (session.SystemMuteEnabled)
@@ -68,7 +68,7 @@ public sealed class RecordingFeedbackCoordinator(
 
         if (playStopSound && session.SoundFeedbackEnabled)
         {
-            Try(soundFeedback.PlayStopSound);
+            Try(() => soundFeedback.PlayStopSound(session.SoundSettings.Stop));
         }
     }
 
@@ -194,6 +194,7 @@ public sealed class RecordingFeedbackCoordinator(
 
     private sealed record RecordingFeedbackSession(
         bool SoundFeedbackEnabled,
+        RecordingSoundSettings SoundSettings,
         bool SystemMuteEnabled,
         bool PauseMediaEnabled,
         TimeSpan AudioResumptionDelay)
@@ -201,6 +202,7 @@ public sealed class RecordingFeedbackCoordinator(
         public static RecordingFeedbackSession From(AppSettings settings) =>
             new(
                 settings.IsSoundFeedbackEnabled,
+                RecordingSoundSettings.From(settings),
                 settings.IsSystemMuteEnabled,
                 settings.IsPauseMediaEnabled,
                 TimeSpan.FromSeconds(NormalizedDelaySeconds(settings.AudioResumptionDelaySeconds)));

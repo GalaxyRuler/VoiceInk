@@ -892,6 +892,60 @@
                                 Content="Sound Feedback"
                                 Checked="RecordingFeedbackSetting_Changed"
                                 Unchecked="RecordingFeedbackSetting_Changed" />
+                            <ComboBox
+                                x:Name="StartSoundComboBox"
+                                Header="Start Sound"
+                                SelectedIndex="0"
+                                SelectionChanged="RecordingFeedbackSettingComboBox_SelectionChanged">
+                                <ComboBoxItem Content="System Default" />
+                                <ComboBoxItem x:Name="StartCustomSoundComboBoxItem" Content="Custom Sound" />
+                            </ComboBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    x:Name="TestStartSoundButton"
+                                    Content="Test"
+                                    Click="TestStartSoundButton_Click" />
+                                <Button
+                                    x:Name="ChooseStartSoundButton"
+                                    Content="Choose"
+                                    Click="ChooseStartSoundButton_Click" />
+                                <Button
+                                    x:Name="ResetStartSoundButton"
+                                    Content="Reset"
+                                    Click="ResetStartSoundButton_Click" />
+                            </StackPanel>
+                            <TextBlock
+                                x:Name="StartSoundStatusTextBlock"
+                                Text="No custom sound"
+                                TextWrapping="Wrap"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox
+                                x:Name="StopSoundComboBox"
+                                Header="Stop Sound"
+                                SelectedIndex="0"
+                                SelectionChanged="RecordingFeedbackSettingComboBox_SelectionChanged">
+                                <ComboBoxItem Content="System Default" />
+                                <ComboBoxItem x:Name="StopCustomSoundComboBoxItem" Content="Custom Sound" />
+                            </ComboBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    x:Name="TestStopSoundButton"
+                                    Content="Test"
+                                    Click="TestStopSoundButton_Click" />
+                                <Button
+                                    x:Name="ChooseStopSoundButton"
+                                    Content="Choose"
+                                    Click="ChooseStopSoundButton_Click" />
+                                <Button
+                                    x:Name="ResetStopSoundButton"
+                                    Content="Reset"
+                                    Click="ResetStopSoundButton_Click" />
+                            </StackPanel>
+                            <TextBlock
+                                x:Name="StopSoundStatusTextBlock"
+                                Text="No custom sound"
+                                TextWrapping="Wrap"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <CheckBox
                                 x:Name="MuteSystemAudioCheckBox"
                                 Content="Mute Audio While Recording"

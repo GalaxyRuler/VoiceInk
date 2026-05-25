@@ -45,6 +45,10 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(settings.ShowLiveTranscriptPreview, backup.GeneralSettings.ShowLiveTranscriptPreview);
         Assert.Equal(settings.RecorderStyle, backup.GeneralSettings.RecorderStyle);
         Assert.Equal(settings.IsSoundFeedbackEnabled, backup.GeneralSettings.IsSoundFeedbackEnabled);
+        Assert.Equal(settings.StartSoundMode, backup.GeneralSettings.StartSoundMode);
+        Assert.Equal(settings.StopSoundMode, backup.GeneralSettings.StopSoundMode);
+        Assert.Equal(settings.CustomStartSoundPath, backup.GeneralSettings.CustomStartSoundPath);
+        Assert.Equal(settings.CustomStopSoundPath, backup.GeneralSettings.CustomStopSoundPath);
         Assert.Equal(settings.IsSystemMuteEnabled, backup.GeneralSettings.IsSystemMuteEnabled);
         Assert.Equal(settings.IsPauseMediaEnabled, backup.GeneralSettings.IsPauseMediaEnabled);
         Assert.Equal(settings.AudioResumptionDelaySeconds, backup.GeneralSettings.AudioResumptionDelaySeconds);
@@ -175,6 +179,10 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.True(merged.ShowLiveTranscriptPreview);
         Assert.Equal("notch", merged.RecorderStyle);
         Assert.False(merged.IsSoundFeedbackEnabled);
+        Assert.Equal("custom", merged.StartSoundMode);
+        Assert.Equal("custom", merged.StopSoundMode);
+        Assert.Equal(@"C:\VoiceInk\Sounds\CustomStartSound.wav", merged.CustomStartSoundPath);
+        Assert.Equal(@"C:\VoiceInk\Sounds\CustomStopSound.mp3", merged.CustomStopSoundPath);
         Assert.True(merged.IsSystemMuteEnabled);
         Assert.True(merged.IsPauseMediaEnabled);
         Assert.Equal(4.0, merged.AudioResumptionDelaySeconds);
@@ -278,6 +286,10 @@ public sealed class VoiceInkSettingsBackupTests
             ShowLiveTranscriptPreview = true,
             RecorderStyle = "notch",
             IsSoundFeedbackEnabled = false,
+            StartSoundMode = "custom",
+            StopSoundMode = "custom",
+            CustomStartSoundPath = @"C:\VoiceInk\Sounds\CustomStartSound.wav",
+            CustomStopSoundPath = @"C:\VoiceInk\Sounds\CustomStopSound.mp3",
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,
             AudioResumptionDelaySeconds = 4.0,

@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###############-----] 74%
+VoiceInk Windows parity  [###############-----] 75%
 ```
 
 ## Area Bars
@@ -26,7 +26,7 @@ VoiceInk Windows parity  [###############-----] 74%
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 68% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, and CSV export exist. Visual parity and reset controls remain. |
-| Settings | 69% | `[##############------]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, and recording feedback controls exist. Custom sound picker and visual polish remain. |
+| Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 20% | `[####----------------]` | Source-run docs, runtime workaround, and repeatable self-contained dev ZIP packaging exist. MSIX/installer, signing, shortcut registration, uninstall behavior, and installer smoke tests remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [###############-----] 74%
 ## Current Slice
 
 ```text
-Windows Deepgram live transcript preview  [####################] 100%
+Windows custom recording sounds  [####################] 100%
 ```
 
 Completed:
 
-- Added Core live preview session contracts and NAudio PCM chunk publishing.
-- Added Deepgram cloud preset, secure provider-specific key name, direct batch transcription, and routing.
-- Added Deepgram websocket interim transcript preview for the floating recorder with serialized audio sends.
-- Kept final insertion/history on the stopped-recording transcription result and live preview text in memory only.
+- Added Core sound mode/import/reset models and recording-session playback snapshots.
+- Added custom start/stop sound Settings controls with Test, Choose, and Reset actions.
+- Added NAudio duration validation and playback for imported `.wav`, `.mp3`, `.aiff`, and `.aif` sounds.
+- Kept imported sounds local under `%LocalAppData%\VoiceInk.Windows\Sounds` with Windows system sound fallback.
 
 ## Near-Term Priority
 
 1. Expand streaming/live preview beyond Deepgram and continue waveform visual polish.
-2. Fill remaining Settings polish: custom sound picker/import and visual parity.
+2. Continue Settings visual parity and remaining macOS preferences.
 3. Continue packaging from dev ZIP to MSIX or installer with uninstall behavior and smoke tests.
 4. Continue model-management polish with richer provider cards and lifecycle status.

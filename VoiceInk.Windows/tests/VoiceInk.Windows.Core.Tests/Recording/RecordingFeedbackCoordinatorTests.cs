@@ -44,7 +44,11 @@ public sealed class RecordingFeedbackCoordinatorTests
             IsSoundFeedbackEnabled = true,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,
-            AudioResumptionDelaySeconds = 3
+            AudioResumptionDelaySeconds = 3,
+            StartSoundMode = RecordingSoundModeSettings.Custom,
+            CustomStartSoundPath = @"C:\VoiceInk\Sounds\CustomStartSound.wav",
+            StopSoundMode = RecordingSoundModeSettings.Custom,
+            CustomStopSoundPath = @"C:\VoiceInk\Sounds\CustomStopSound.wav"
         };
 
         await coordinator.BeginAsync(settings, CancellationToken.None);
@@ -53,12 +57,20 @@ public sealed class RecordingFeedbackCoordinatorTests
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = false,
             IsPauseMediaEnabled = false,
-            AudioResumptionDelaySeconds = 0
+            AudioResumptionDelaySeconds = 0,
+            StartSoundMode = RecordingSoundModeSettings.SystemDefault,
+            CustomStartSoundPath = string.Empty,
+            StopSoundMode = RecordingSoundModeSettings.SystemDefault,
+            CustomStopSoundPath = string.Empty
         }, CancellationToken.None);
         await coordinator.CaptureStoppedAsync(CancellationToken.None);
         await coordinator.CompleteAsync(playStopSound: true, CancellationToken.None);
 
         Assert.Equal(["start", "stop"], sound.Events);
+        Assert.Equal(RecordingSoundModeSettings.Custom, sound.StartSettings.Single().Mode);
+        Assert.Equal(@"C:\VoiceInk\Sounds\CustomStartSound.wav", sound.StartSettings.Single().CustomSoundPath);
+        Assert.Equal(RecordingSoundModeSettings.Custom, sound.StopSettings.Single().Mode);
+        Assert.Equal(@"C:\VoiceInk\Sounds\CustomStopSound.wav", sound.StopSettings.Single().CustomSoundPath);
         Assert.Equal(1, systemAudio.MuteCount);
         Assert.Equal([TimeSpan.FromSeconds(3)], systemAudio.RestoreDelays);
         Assert.Equal(1, media.PauseCount);
@@ -187,10 +199,20 @@ public sealed class RecordingFeedbackCoordinatorTests
     private sealed class FakeRecordingSoundFeedback : IRecordingSoundFeedback
     {
         public List<string> Events { get; } = [];
+        public List<RecordingSoundPlaybackSettings> StartSettings { get; } = [];
+        public List<RecordingSoundPlaybackSettings> StopSettings { get; } = [];
 
-        public void PlayStartSound() => Events.Add("start");
+        public void PlayStartSound(RecordingSoundPlaybackSettings settings)
+        {
+            Events.Add("start");
+            StartSettings.Add(settings);
+        }
 
-        public void PlayStopSound() => Events.Add("stop");
+        public void PlayStopSound(RecordingSoundPlaybackSettings settings)
+        {
+            Events.Add("stop");
+            StopSettings.Add(settings);
+        }
     }
 
     private sealed class FakeSystemAudioFeedback : ISystemAudioFeedback

@@ -78,6 +78,7 @@ public sealed partial class MainWindow : Window
     private readonly string appDataDirectory;
     private readonly string modelsDirectory;
     private readonly string recordingsDirectory;
+    private readonly string soundsDirectory;
     private readonly string dictionaryPath;
     private readonly string historyPath;
     private readonly string metricsPath;
@@ -97,6 +98,8 @@ public sealed partial class MainWindow : Window
     private readonly PrivacyCleanupService privacyCleanupService;
     private readonly IStartupRegistrationService startupRegistrationService;
     private readonly RecordingFeedbackCoordinator recordingFeedback;
+    private readonly WindowsRecordingSoundFeedback recordingSoundFeedback;
+    private readonly CustomRecordingSoundImporter customRecordingSoundImporter;
     private readonly WindowsSystemAudioFeedback systemAudioFeedback;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
@@ -137,6 +140,8 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
+    private string customStartSoundPath = string.Empty;
+    private string customStopSoundPath = string.Empty;
     private bool isStarting;
     private bool isStopping;
     private bool isCanceling;
@@ -201,6 +206,7 @@ public sealed partial class MainWindow : Window
             "VoiceInk.Windows");
         modelsDirectory = Path.Combine(appDataDirectory, "Models");
         recordingsDirectory = Path.Combine(appDataDirectory, "Recordings");
+        soundsDirectory = Path.Combine(appDataDirectory, "Sounds");
         dictionaryPath = Path.Combine(appDataDirectory, "dictionary.json");
         historyPath = Path.Combine(appDataDirectory, "history.db");
         metricsPath = Path.Combine(appDataDirectory, "metrics.db");
@@ -244,9 +250,14 @@ public sealed partial class MainWindow : Window
             TimeProvider.System,
             recordingsDirectory);
         startupRegistrationService = new RegistryStartupRegistrationService();
+        recordingSoundFeedback = new WindowsRecordingSoundFeedback();
+        customRecordingSoundImporter = new CustomRecordingSoundImporter(
+            new LocalRecordingSoundFileSystem(),
+            new WindowsRecordingSoundFileProbe(),
+            soundsDirectory);
         systemAudioFeedback = new WindowsSystemAudioFeedback();
         recordingFeedback = new RecordingFeedbackCoordinator(
-            new WindowsRecordingSoundFeedback(),
+            recordingSoundFeedback,
             systemAudioFeedback,
             new WindowsMediaPlaybackFeedback());
         audioFileTranscriptionService = new AudioFileTranscriptionService(
@@ -1122,6 +1133,36 @@ public sealed partial class MainWindow : Window
         await ApplyRecordingFeedbackSettingsAsync();
     }
 
+    private void TestStartSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        TestRecordingSound(RecordingSoundKind.Start);
+    }
+
+    private void TestStopSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        TestRecordingSound(RecordingSoundKind.Stop);
+    }
+
+    private async void ChooseStartSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ChooseRecordingSoundAsync(RecordingSoundKind.Start);
+    }
+
+    private async void ChooseStopSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ChooseRecordingSoundAsync(RecordingSoundKind.Stop);
+    }
+
+    private async void ResetStartSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetRecordingSoundAsync(RecordingSoundKind.Start);
+    }
+
+    private async void ResetStopSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetRecordingSoundAsync(RecordingSoundKind.Stop);
+    }
+
     private void RecordingFeedbackSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (!settingsLoaded)
@@ -1130,6 +1171,7 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateRecordingFeedbackSettingControlState();
+        RefreshRecordingSoundControls();
         RefreshUiFromControllerState();
     }
 
@@ -1141,6 +1183,7 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateRecordingFeedbackSettingControlState();
+        RefreshRecordingSoundControls();
         RefreshUiFromControllerState();
     }
 
@@ -1372,6 +1415,15 @@ public sealed partial class MainWindow : Window
         RecorderStyleComboBox.SelectedIndex = RecorderStyleToSelectedIndex(settings.RecorderStyle);
         suppressRecorderStyleChanged = false;
         SoundFeedbackCheckBox.IsChecked = settings.IsSoundFeedbackEnabled;
+        customStartSoundPath = settings.CustomStartSoundPath;
+        customStopSoundPath = settings.CustomStopSoundPath;
+        StartSoundComboBox.SelectedIndex = RecordingSoundModeToSelectedIndex(
+            settings.StartSoundMode,
+            customStartSoundPath);
+        StopSoundComboBox.SelectedIndex = RecordingSoundModeToSelectedIndex(
+            settings.StopSoundMode,
+            customStopSoundPath);
+        RefreshRecordingSoundControls();
         MuteSystemAudioCheckBox.IsChecked = settings.IsSystemMuteEnabled;
         PauseMediaCheckBox.IsChecked = settings.IsPauseMediaEnabled;
         AudioResumptionDelayComboBox.SelectedIndex = AudioResumptionDelayToSelectedIndex(
@@ -1776,6 +1828,128 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Recording feedback settings save failed: {ex.Message}");
+        }
+    }
+
+    private void TestRecordingSound(RecordingSoundKind kind)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var settings = CurrentRecordingSoundPlaybackSettings(kind);
+        if (kind == RecordingSoundKind.Start)
+        {
+            recordingSoundFeedback.PlayStartSound(settings);
+            RefreshRecordingSoundControls(startStatus: RecordingSoundStatus(kind, settings, tested: true));
+        }
+        else
+        {
+            recordingSoundFeedback.PlayStopSound(settings);
+            RefreshRecordingSoundControls(stopStatus: RecordingSoundStatus(kind, settings, tested: true));
+        }
+
+        UpdateRecordingFeedbackSettingControlState();
+    }
+
+    private async Task ChooseRecordingSoundAsync(RecordingSoundKind kind)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var statusPrefix = kind == RecordingSoundKind.Start ? "Start sound" : "Stop sound";
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.List,
+                SuggestedStartLocation = PickerLocationId.MusicLibrary
+            };
+            picker.FileTypeFilter.Add(".wav");
+            picker.FileTypeFilter.Add(".mp3");
+            picker.FileTypeFilter.Add(".aiff");
+            picker.FileTypeFilter.Add(".aif");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+            {
+                RefreshUiFromControllerState($"{statusPrefix} import canceled");
+                return;
+            }
+
+            var result = customRecordingSoundImporter.Import(file.Path, kind);
+            if (!result.IsSuccess)
+            {
+                RefreshUiFromControllerState($"{statusPrefix} import failed: {result.ErrorMessage}");
+                return;
+            }
+
+            if (kind == RecordingSoundKind.Start)
+            {
+                customStartSoundPath = result.CustomSoundPath;
+                StartSoundComboBox.SelectedIndex = 1;
+                RefreshRecordingSoundControls(startStatus: $"Custom sound: {result.FileName}");
+            }
+            else
+            {
+                customStopSoundPath = result.CustomSoundPath;
+                StopSoundComboBox.SelectedIndex = 1;
+                RefreshRecordingSoundControls(stopStatus: $"Custom sound: {result.FileName}");
+            }
+
+            UpdateRecordingFeedbackSettingControlState();
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState($"{statusPrefix} imported");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"{statusPrefix} import failed: {ex.Message}");
+        }
+    }
+
+    private async Task ResetRecordingSoundAsync(RecordingSoundKind kind)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var statusPrefix = kind == RecordingSoundKind.Start ? "Start sound" : "Stop sound";
+        try
+        {
+            customRecordingSoundImporter.Reset(kind);
+            if (kind == RecordingSoundKind.Start)
+            {
+                customStartSoundPath = string.Empty;
+                StartSoundComboBox.SelectedIndex = 0;
+                RefreshRecordingSoundControls(startStatus: "No custom sound");
+            }
+            else
+            {
+                customStopSoundPath = string.Empty;
+                StopSoundComboBox.SelectedIndex = 0;
+                RefreshRecordingSoundControls(stopStatus: "No custom sound");
+            }
+
+            UpdateRecordingFeedbackSettingControlState();
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState($"{statusPrefix} reset");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"{statusPrefix} reset failed: {ex.Message}");
         }
     }
 
@@ -4783,6 +4957,10 @@ public sealed partial class MainWindow : Window
             ShowLiveTranscriptPreview = ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
             RecorderStyle = SelectedRecorderStyle(),
             IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
+            StartSoundMode = SelectedStartSoundMode(),
+            StopSoundMode = SelectedStopSoundMode(),
+            CustomStartSoundPath = customStartSoundPath,
+            CustomStopSoundPath = customStopSoundPath,
             IsSystemMuteEnabled = MuteSystemAudioCheckBox.IsChecked == true,
             IsPauseMediaEnabled = PauseMediaCheckBox.IsChecked == true,
             AudioResumptionDelaySeconds = SelectedAudioResumptionDelaySeconds(),
@@ -6379,6 +6557,46 @@ public sealed partial class MainWindow : Window
             ? RecorderStyleSettings.Notch
             : RecorderStyleSettings.Mini;
 
+    private string SelectedStartSoundMode() =>
+        StartSoundComboBox.SelectedIndex == 1
+            ? RecordingSoundModeSettings.Custom
+            : RecordingSoundModeSettings.SystemDefault;
+
+    private string SelectedStopSoundMode() =>
+        StopSoundComboBox.SelectedIndex == 1
+            ? RecordingSoundModeSettings.Custom
+            : RecordingSoundModeSettings.SystemDefault;
+
+    private RecordingSoundPlaybackSettings CurrentRecordingSoundPlaybackSettings(RecordingSoundKind kind) =>
+        kind == RecordingSoundKind.Start
+            ? new RecordingSoundPlaybackSettings(SelectedStartSoundMode(), customStartSoundPath)
+            : new RecordingSoundPlaybackSettings(SelectedStopSoundMode(), customStopSoundPath);
+
+    private static int RecordingSoundModeToSelectedIndex(string? mode, string customSoundPath) =>
+        RecordingSoundModeSettings.Normalize(mode) == RecordingSoundModeSettings.Custom
+            && !string.IsNullOrWhiteSpace(customSoundPath)
+                ? 1
+                : 0;
+
+    private static string RecordingSoundStatus(
+        RecordingSoundKind kind,
+        RecordingSoundPlaybackSettings settings,
+        bool tested = false)
+    {
+        var soundName = kind == RecordingSoundKind.Start ? "Start" : "Stop";
+        if (!settings.UsesCustomSound)
+        {
+            return tested
+                ? $"{soundName} system sound tested"
+                : "No custom sound";
+        }
+
+        var fileName = Path.GetFileName(settings.CustomSoundPath);
+        return tested
+            ? $"{soundName} custom sound tested: {fileName}"
+            : $"Custom sound: {fileName}";
+    }
+
     private static int ClipboardRestoreDelayToSelectedIndex(double seconds)
     {
         var index = Array.FindIndex(
@@ -6470,8 +6688,52 @@ public sealed partial class MainWindow : Window
             && PasteMethodToSelectedIndex(SelectedPasteMethod()) == 0;
     }
 
+    private void RefreshRecordingSoundControls(string? startStatus = null, string? stopStatus = null)
+    {
+        var hasStartCustomSound = !string.IsNullOrWhiteSpace(customStartSoundPath);
+        var hasStopCustomSound = !string.IsNullOrWhiteSpace(customStopSoundPath);
+
+        StartCustomSoundComboBoxItem.Content = hasStartCustomSound
+            ? $"Custom: {Path.GetFileName(customStartSoundPath)}"
+            : "Custom Sound";
+        StopCustomSoundComboBoxItem.Content = hasStopCustomSound
+            ? $"Custom: {Path.GetFileName(customStopSoundPath)}"
+            : "Custom Sound";
+        StartCustomSoundComboBoxItem.Visibility = hasStartCustomSound
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        StopCustomSoundComboBoxItem.Visibility = hasStopCustomSound
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (!hasStartCustomSound && StartSoundComboBox.SelectedIndex == 1)
+        {
+            StartSoundComboBox.SelectedIndex = 0;
+        }
+
+        if (!hasStopCustomSound && StopSoundComboBox.SelectedIndex == 1)
+        {
+            StopSoundComboBox.SelectedIndex = 0;
+        }
+
+        StartSoundStatusTextBlock.Text = startStatus
+            ?? RecordingSoundStatus(RecordingSoundKind.Start, CurrentRecordingSoundPlaybackSettings(RecordingSoundKind.Start));
+        StopSoundStatusTextBlock.Text = stopStatus
+            ?? RecordingSoundStatus(RecordingSoundKind.Stop, CurrentRecordingSoundPlaybackSettings(RecordingSoundKind.Stop));
+    }
+
     private void UpdateRecordingFeedbackSettingControlState()
     {
+        var canEditSounds = settingsLoaded && !IsOperationActive();
+        StartSoundComboBox.IsEnabled = canEditSounds;
+        StopSoundComboBox.IsEnabled = canEditSounds;
+        TestStartSoundButton.IsEnabled = canEditSounds;
+        TestStopSoundButton.IsEnabled = canEditSounds;
+        ChooseStartSoundButton.IsEnabled = canEditSounds;
+        ChooseStopSoundButton.IsEnabled = canEditSounds;
+        ResetStartSoundButton.IsEnabled = canEditSounds && !string.IsNullOrWhiteSpace(customStartSoundPath);
+        ResetStopSoundButton.IsEnabled = canEditSounds && !string.IsNullOrWhiteSpace(customStopSoundPath);
+
         AudioResumptionDelayComboBox.IsEnabled = settingsLoaded
             && !IsOperationActive()
             && (MuteSystemAudioCheckBox.IsChecked == true || PauseMediaCheckBox.IsChecked == true);
@@ -6576,6 +6838,7 @@ public sealed partial class MainWindow : Window
 
         audioCapture.LevelAvailable -= AudioCapture_LevelAvailable;
         audioCapture.Dispose();
+        recordingSoundFeedback.Dispose();
         systemAudioFeedback.Dispose();
         modelDownloadHttpClient.Dispose();
         windowLifetime.Dispose();

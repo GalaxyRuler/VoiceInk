@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Enhancement;
+using VoiceInk.Windows.Core.Recording;
 using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Text;
 
@@ -20,6 +21,10 @@ public sealed record AppSettings
     public bool ShowLiveTranscriptPreview { get; init; }
     public string RecorderStyle { get; init; } = RecorderStyleSettings.Mini;
     public bool IsSoundFeedbackEnabled { get; init; } = true;
+    public string StartSoundMode { get; init; } = RecordingSoundModeSettings.SystemDefault;
+    public string StopSoundMode { get; init; } = RecordingSoundModeSettings.SystemDefault;
+    public string CustomStartSoundPath { get; init; } = string.Empty;
+    public string CustomStopSoundPath { get; init; } = string.Empty;
     public bool IsSystemMuteEnabled { get; init; } = true;
     public bool IsPauseMediaEnabled { get; init; }
     public double AudioResumptionDelaySeconds { get; init; }
@@ -74,6 +79,10 @@ public sealed record AppSettings
             ShowLiveTranscriptPreview == other.ShowLiveTranscriptPreview &&
             RecorderStyle == other.RecorderStyle &&
             IsSoundFeedbackEnabled == other.IsSoundFeedbackEnabled &&
+            StartSoundMode == other.StartSoundMode &&
+            StopSoundMode == other.StopSoundMode &&
+            CustomStartSoundPath == other.CustomStartSoundPath &&
+            CustomStopSoundPath == other.CustomStopSoundPath &&
             IsSystemMuteEnabled == other.IsSystemMuteEnabled &&
             IsPauseMediaEnabled == other.IsPauseMediaEnabled &&
             AudioResumptionDelaySeconds.Equals(other.AudioResumptionDelaySeconds) &&
@@ -129,6 +138,10 @@ public sealed record AppSettings
         hash.Add(ShowLiveTranscriptPreview);
         hash.Add(RecorderStyle);
         hash.Add(IsSoundFeedbackEnabled);
+        hash.Add(StartSoundMode);
+        hash.Add(StopSoundMode);
+        hash.Add(CustomStartSoundPath);
+        hash.Add(CustomStopSoundPath);
         hash.Add(IsSystemMuteEnabled);
         hash.Add(IsPauseMediaEnabled);
         hash.Add(AudioResumptionDelaySeconds);

@@ -84,6 +84,7 @@ The Windows MVP already has:
 - Paste-last final and enhanced-preferred history actions.
 - History search and confirmed single-item delete.
 - Settings JSON backup export/import with category selection for General Settings, Custom Prompts, Power Mode, Dictionary, and Custom Model Definitions, with Credential Manager API keys intentionally excluded.
+- Settings custom start/stop sound import, local app-owned sound storage, test playback, reset, and Windows system sound fallback.
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
 - Refreshable audio input list with System Default/custom microphone selection.
 
@@ -656,7 +657,7 @@ Settings recording feedback Windows target:
 
 - Add a Settings `Recording Feedback` group matching the macOS settings language for `Sound Feedback`, `Mute Audio While Recording`, `Pause Media While Recording`, and `Resume Delay`.
 - Persist the macOS defaults in Windows JSON settings and General Settings backup/import: sound feedback enabled, mute audio while recording enabled, pause media while recording disabled, and audio resumption delay `0.0` seconds.
-- Play local start/stop feedback sounds only when `Sound Feedback` is enabled. Use Windows system sounds for the source-built MVP until the richer macOS custom sound picker/import workflow is ported.
+- Play local start/stop feedback sounds only when `Sound Feedback` is enabled. Use Windows system sounds as the built-in default, with a validated custom sound picker/import workflow for user-selected start and stop sounds.
 - When `Mute Audio While Recording` is enabled, mute the default Windows render endpoint for the recording session and restore it after the configured resume delay only if VoiceInk muted it.
 - When `Pause Media While Recording` is enabled, use Windows Global System Media Transport Controls as an opt-in local equivalent. Pause only when Windows reports a current playing session and resume only that same session after the configured delay. Keep it disabled by default because Windows media session support varies by app.
 - Keep all recording feedback local-only. Do not persist or export media titles, app names, volume levels, or audio session metadata.
@@ -668,7 +669,16 @@ Settings recording feedback slice completed on 2026-05-25:
 - Added Settings `Recording Feedback` controls for `Sound Feedback`, `Mute Audio While Recording`, `Pause Media While Recording`, and `Resume Delay`.
 - Added native Windows adapters for start/stop system sounds, default render endpoint mute/restore through Core Audio, and opt-in Global System Media Transport Controls pause/resume.
 - Gated stop sound to successful text insertion, matching the macOS intent that stop feedback follows completed paste rather than mere capture stop.
-- Documented that custom start/stop sound picker/import remains a later slice because Windows needs its own validated sound asset workflow.
+- Documented that Windows system sounds remain the built-in default until source-controlled open-source sound assets are added.
+
+Settings custom recording sounds slice completed on 2026-05-25:
+
+- Added `StartSoundMode`, `StopSoundMode`, `CustomStartSoundPath`, and `CustomStopSoundPath` to Windows JSON settings and General Settings backup/import.
+- Added Core sound settings projection so recording feedback uses the start-of-recording sound configuration snapshot.
+- Added a validated custom sound importer that accepts `.wav`, `.mp3`, `.aiff`, and `.aif`, requires finite positive duration no longer than 3 seconds, copies sounds into `%LocalAppData%\VoiceInk.Windows\Sounds`, and replaces/resets app-owned custom files by sound kind.
+- Added NAudio validation/playback for custom sounds with Windows system sound fallback.
+- Added Settings `Start Sound` and `Stop Sound` controls with `System Default`, imported custom sound selection, `Test`, `Choose`, and `Reset` actions.
+- Kept sound files local-only and excluded from diagnostics/secrets flows.
 
 Settings clipboard/paste Windows target:
 
