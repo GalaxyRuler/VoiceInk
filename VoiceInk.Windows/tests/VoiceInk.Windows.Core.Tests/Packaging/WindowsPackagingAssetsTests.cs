@@ -72,6 +72,28 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void DevZipSmokeScript_ValidatesExpectedPackageContentsWithoutInstalling()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-dev-zip.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("VoiceInk.Windows.App.exe", script);
+        Assert.Contains("VoiceInk.Windows.App.deps.json", script);
+        Assert.Contains("VoiceInk.Windows.App.runtimeconfig.json", script);
+        Assert.Contains("VOICEINK-WINDOWS-README.txt", script);
+        Assert.Contains("Microsoft.WindowsAppRuntime.Bootstrap.dll", script);
+        Assert.Contains("Expand-Archive", script);
+        Assert.Contains("Refusing to inspect path outside artifact root", script);
+        Assert.Contains("Refusing to use a package inside the extraction cleanup root", script);
+        Assert.Contains("Assert-PathOutside -CandidatePath $resolvedPackagePath -RootPath $extractRoot", script);
+        Assert.Contains("Dev ZIP smoke validation passed", script);
+
+        Assert.DoesNotContain("Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Remove-Item -LiteralPath $PackagePath", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
