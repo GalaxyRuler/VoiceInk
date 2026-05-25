@@ -21,7 +21,7 @@ VoiceInk Windows parity  [#################---] 87%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 58% | `[############--------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, and the OCR context contract/no-op native hook exist with graceful degradation. Full Windows screen capture OCR remains. |
+| Context features | 60% | `[############--------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, and default-off OCR context settings/no-op native hook exist with graceful degradation. Full Windows screen capture OCR remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [#################---] 87%
 ## Current Slice
 
 ```text
-Windows OCR context contract  [####################] 100%
+Windows OCR context settings gate  [####################] 100%
 ```
 
 Completed:
 
-- Added Core OCR context/request fields for AI enhancement.
-- Added `<SCREEN_OCR_CONTEXT>` prompt rendering before selected text and clipboard context.
-- Added the Windows native OCR reader interface with a default local no-op implementation.
-- Wired OCR context into the native provider with graceful failure handling.
+- Added default-off `UseOcrContext` settings persistence.
+- Gated OCR enhancement context requests behind `UseOcrContext`.
+- Added the Enhancement page `Screen OCR Context` checkbox.
+- Kept real Windows capture/OCR behind a future explicit implementation path.
 
 ## Near-Term Priority
 

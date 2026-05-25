@@ -89,6 +89,7 @@ public sealed class JsonSettingsStoreTests
                     UseSystemInstructions: true)
             ],
             UseClipboardContext = true,
+            UseOcrContext = true,
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(

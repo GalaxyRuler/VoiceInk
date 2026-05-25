@@ -293,6 +293,9 @@
                         <CheckBox
                             x:Name="UseClipboardContextCheckBox"
                             Content="Clipboard Context" />
+                        <CheckBox
+                            x:Name="UseOcrContextCheckBox"
+                            Content="Screen OCR Context" />
                         <ComboBox
                             x:Name="EnhancementProviderPresetComboBox"
                             DisplayMemberPath="DisplayName"

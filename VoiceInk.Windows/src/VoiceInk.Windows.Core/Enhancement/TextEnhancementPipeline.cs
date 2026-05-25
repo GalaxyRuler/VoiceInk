@@ -80,7 +80,7 @@ public sealed class TextEnhancementPipeline
             new EnhancementContextRequest(
                 IncludeClipboard: settings.UseClipboardContext,
                 IncludeSelectedText: true,
-                IncludeOcr: true),
+                IncludeOcr: settings.UseOcrContext),
             cancellationToken);
         var rendered = EnhancementPromptRenderer.Render(prompt, detection.ProcessedText, vocabulary, context);
         var request = new TextEnhancementRequest(

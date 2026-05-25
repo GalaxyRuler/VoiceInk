@@ -1466,6 +1466,7 @@ public sealed partial class MainWindow : Window
         CyclePowerModeHotkeyTextBox.Text = settings.CyclePowerModeHotkey;
         EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
         UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
+        UseOcrContextCheckBox.IsChecked = settings.UseOcrContext;
         suppressEnhancementPresetChanged = true;
         SelectEnhancementPreset(settings.EnhancementProviderId);
         suppressEnhancementPresetChanged = false;
@@ -5299,6 +5300,7 @@ public sealed partial class MainWindow : Window
             AudioResumptionDelaySeconds = SelectedAudioResumptionDelaySeconds(),
             IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
             UseClipboardContext = UseClipboardContextCheckBox.IsChecked == true,
+            UseOcrContext = UseOcrContextCheckBox.IsChecked == true,
             EnhancementProviderId = SelectedEnhancementProviderId(),
             EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
             EnhancementModel = EnhancementModelTextBox.Text.Trim(),
@@ -6513,6 +6515,7 @@ public sealed partial class MainWindow : Window
         ApplyTranscriptionProviderSettingsButton.IsEnabled = modelControlsEnabled;
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
         UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
+        UseOcrContextCheckBox.IsEnabled = enhancementControlsEnabled;
         EnhancementProviderPresetComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;

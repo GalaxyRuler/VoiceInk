@@ -144,10 +144,37 @@ public sealed class TextEnhancementPipelineTests
                 IncludeSelectedText: true,
                 IncludeActiveWindow: true,
                 IncludeBrowserUrl: true,
-                IncludeOcr: true),
+                IncludeOcr: false),
             contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("Selected note", provider.LastRequest.SystemMessage);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_IncludesOcrContextOnlyWhenEnabled()
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var contextProvider = new FakeEnhancementContextProvider(
+            new EnhancementContext(OcrText: "Screen text from dashboard"));
+        var pipeline = new TextEnhancementPipeline(provider, contextProvider: contextProvider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            UseOcrContext = true
+        };
+
+        await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: true,
+                IncludeActiveWindow: true,
+                IncludeBrowserUrl: true,
+                IncludeOcr: true),
+            contextProvider.LastRequest);
+        Assert.Contains("<SCREEN_OCR_CONTEXT>", provider.LastRequest!.SystemMessage);
+        Assert.Contains("Screen text from dashboard", provider.LastRequest.SystemMessage);
     }
 
     [Fact]
@@ -170,7 +197,7 @@ public sealed class TextEnhancementPipelineTests
                 IncludeSelectedText: true,
                 IncludeActiveWindow: true,
                 IncludeBrowserUrl: true,
-                IncludeOcr: true),
+                IncludeOcr: false),
             contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("<CLIPBOARD_CONTEXT>", provider.LastRequest.SystemMessage);

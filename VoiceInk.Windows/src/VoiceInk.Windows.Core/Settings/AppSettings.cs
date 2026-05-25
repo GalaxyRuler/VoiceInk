@@ -60,6 +60,7 @@ public sealed record AppSettings
     public bool SkipShortEnhancement { get; init; } = true;
     public int ShortEnhancementWordThreshold { get; init; } = 3;
     public bool UseClipboardContext { get; init; }
+    public bool UseOcrContext { get; init; }
     public bool RemoveFillerWords { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
@@ -120,6 +121,7 @@ public sealed record AppSettings
             SkipShortEnhancement == other.SkipShortEnhancement &&
             ShortEnhancementWordThreshold == other.ShortEnhancementWordThreshold &&
             UseClipboardContext == other.UseClipboardContext &&
+            UseOcrContext == other.UseOcrContext &&
             RemoveFillerWords == other.RemoveFillerWords &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
@@ -199,6 +201,7 @@ public sealed record AppSettings
         hash.Add(SkipShortEnhancement);
         hash.Add(ShortEnhancementWordThreshold);
         hash.Add(UseClipboardContext);
+        hash.Add(UseOcrContext);
         hash.Add(RemoveFillerWords);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);
