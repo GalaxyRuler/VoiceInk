@@ -150,7 +150,7 @@ git diff --check
 
 Review focus: no fake partials, Deepgram request correctness, websocket send serialization, session cleanup on stop/cancel/failure, no key leaks, final transcription path still works.
 
-- [ ] **Step 4: Commit slice**
+- [x] **Step 4: Commit slice**
 
 ```powershell
 git add VoiceInk.Windows README.md docs\superpowers
