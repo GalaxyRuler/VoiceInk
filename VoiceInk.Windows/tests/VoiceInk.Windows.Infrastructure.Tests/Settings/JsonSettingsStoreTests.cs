@@ -60,6 +60,7 @@ public sealed class JsonSettingsStoreTests
             CancelRecordingHotkey = "Ctrl+Alt+C",
             OpenHistoryHotkey = "Ctrl+Alt+H",
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
+            ToggleEnhancementHotkey = "Ctrl+Alt+X",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
             HasCompletedOnboarding = true,

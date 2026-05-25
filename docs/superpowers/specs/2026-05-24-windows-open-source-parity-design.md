@@ -69,7 +69,7 @@ The Windows MVP already has:
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Local Whisper catalog cards with direct GGML `.bin` downloads into the app data models folder and default model selection.
-- Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
+- Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, quick add to dictionary, and toggle enhancement.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
 - Persistent JSON-backed dictionary storage.
@@ -223,14 +223,13 @@ macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hy
 
 Implemented:
 
-- Configurable key+modifier shortcuts for primary and secondary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, open history, and quick add to dictionary.
+- Configurable key+modifier shortcuts for primary and secondary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, open history, quick add to dictionary, and toggle enhancement.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
 
 Windows gaps:
 
 - Press-and-hold key-up handling.
-- Toggle-enhancement and Power Mode shortcuts.
-- Canceling in-flight transcription/enhancement after recording has already stopped.
+- Power Mode shortcuts.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
 
@@ -256,10 +255,13 @@ Implemented core:
 Windows gaps:
 
 - macOS-style formatting pass beyond cleanup preferences.
-- Prompt trigger detection.
-- Prompt-triggered toggle-enhancement shortcut.
-- Metrics persistence and views.
 - Dictation-controller history writes for failed recording/transcription sessions.
+
+Toggle Enhancement Shortcut slice completed on 2026-05-25:
+
+- Added `ToggleEnhancementHotkey` to settings, global shortcut registration, JSON persistence, and settings backup/import.
+- Added a Settings > Shortcuts `Toggle Enhancement` field and a `GlobalShortcutAction.ToggleEnhancement` dispatch path.
+- Pressing the shortcut flips the persisted `IsEnhancementEnabled` setting and updates the Enhancement checkbox/status.
 
 Cancel-processing slice completed on 2026-05-25:
 
@@ -437,7 +439,7 @@ Windows gaps:
 - Provider-specific Anthropic Messages API and Local CLI hooks.
 - Clipboard-copy fallback for selected text, screen/OCR, browser URL, and app-specific context capture.
 - Dynamic provider model loading for OpenRouter and Ollama.
-- Toggle-enhancement shortcut and recorder prompt picker activation.
+- Recorder prompt picker activation.
 - AI re-enhance from History.
 
 Custom prompt persistence Windows target:

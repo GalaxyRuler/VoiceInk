@@ -74,6 +74,14 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        AddRegistration(
+            settings.ToggleEnhancementHotkey,
+            GlobalShortcutAction.ToggleEnhancement,
+            "Toggle Enhancement",
+            required: false,
+            registrations,
+            errors,
+            usedShortcuts);
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }

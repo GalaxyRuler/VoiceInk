@@ -8,5 +8,6 @@ public enum GlobalShortcutAction
     RetryLastTranscription,
     CancelRecording,
     OpenHistoryWindow,
-    QuickAddToDictionary
+    QuickAddToDictionary,
+    ToggleEnhancement
 }

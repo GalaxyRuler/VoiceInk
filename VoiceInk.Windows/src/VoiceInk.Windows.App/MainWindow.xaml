@@ -883,6 +883,10 @@
                                 x:Name="QuickAddHotkeyTextBox"
                                 Header="Quick Add to Dictionary"
                                 PlaceholderText="Ctrl+Alt+D" />
+                            <TextBox
+                                x:Name="ToggleEnhancementHotkeyTextBox"
+                                Header="Toggle Enhancement"
+                                PlaceholderText="Ctrl+Alt+X" />
                             <Button
                                 x:Name="ApplyShortcutsButton"
                                 Content="Apply Shortcuts"

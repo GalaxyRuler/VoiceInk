@@ -680,6 +680,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.QuickAddToDictionary:
                     await ShowQuickAddDictionaryAsync();
                     break;
+                case GlobalShortcutAction.ToggleEnhancement:
+                    await ToggleEnhancementAsync();
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -1410,6 +1413,7 @@ public sealed partial class MainWindow : Window
         CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
         OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
         QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
+        ToggleEnhancementHotkeyTextBox.Text = settings.ToggleEnhancementHotkey;
         EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
         UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
         suppressEnhancementPresetChanged = true;
@@ -4606,6 +4610,30 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task ToggleEnhancementAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            var isEnabled = EnhancementEnabledCheckBox.IsChecked != true;
+            EnhancementEnabledCheckBox.IsChecked = isEnabled;
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(isEnabled ? "Enhancement enabled" : "Enhancement disabled");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Enhancement toggle failed: {ex.Message}");
+        }
+    }
+
     private async Task SaveEnhancementKeyAsync()
     {
         if (!settingsLoaded || IsOperationActive(includeCurrentEnhancementKeySave: false))
@@ -5023,6 +5051,9 @@ public sealed partial class MainWindow : Window
             QuickAddDictionaryHotkey = includeShortcutFields
                 ? QuickAddHotkeyTextBox.Text.Trim()
                 : settings.QuickAddDictionaryHotkey,
+            ToggleEnhancementHotkey = includeShortcutFields
+                ? ToggleEnhancementHotkeyTextBox.Text.Trim()
+                : settings.ToggleEnhancementHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
             RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
