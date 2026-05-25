@@ -111,8 +111,7 @@ public sealed class DictationController(
                 await NotifyCaptureStoppedAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var powerModeResolution = activePowerModeResolution
-                    ?? PowerModeMatcher.Resolve(await settingsStore.LoadAsync(cancellationToken), target: null);
+                var powerModeResolution = await ResolveCurrentPowerModeForCompletionAsync(cancellationToken);
                 var settings = powerModeResolution.EffectiveSettings;
                 var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
                 var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
@@ -239,8 +238,7 @@ public sealed class DictationController(
                 await NotifyCaptureStoppedAsync(CancellationToken.None);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var powerModeResolution = activePowerModeResolution
-                    ?? PowerModeMatcher.Resolve(await settingsStore.LoadAsync(cancellationToken), target: null);
+                var powerModeResolution = await ResolveCurrentPowerModeForCompletionAsync(cancellationToken);
                 var settings = powerModeResolution.EffectiveSettings;
                 try
                 {
@@ -317,6 +315,13 @@ public sealed class DictationController(
             LastWarning = $"Power Mode detection failed: {ex.Message}";
             return PowerModeMatcher.Resolve(settings, target: null);
         }
+    }
+
+    private async Task<PowerModeResolution> ResolveCurrentPowerModeForCompletionAsync(
+        CancellationToken cancellationToken)
+    {
+        var settings = await settingsStore.LoadAsync(cancellationToken);
+        return PowerModeMatcher.Resolve(settings, activePowerModeResolution?.Target);
     }
 
     private Task<SessionMetricRecorderResult> RecordMetricAsync(

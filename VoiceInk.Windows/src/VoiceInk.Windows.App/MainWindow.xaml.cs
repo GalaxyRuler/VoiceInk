@@ -109,6 +109,7 @@ public sealed partial class MainWindow : Window
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
+    private readonly FloatingRecorderControlUpdateCoordinator floatingRecorderControlUpdates = new();
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
     private readonly DispatcherQueueTimer privacyCleanupTimer;
@@ -132,6 +133,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<TranscriptionLanguageChoice> languageChoices = [];
     private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
+    private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private bool isStarting;
     private bool isStopping;
@@ -481,6 +483,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(windowLifetime.Token);
             await controller.StopAsync(windowLifetime.Token);
             shouldCompleteFeedback = controller.LastStopInsertedText;
             await CompleteRecordingFeedbackSessionAsync(playStopSound: shouldCompleteFeedback);
@@ -547,6 +550,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(windowLifetime.Token);
             await controller.CancelAsync(windowLifetime.Token);
             await CancelRecordingFeedbackSessionAsync();
             await RefreshHistoryAsync(windowLifetime.Token);
@@ -1285,6 +1289,7 @@ public sealed partial class MainWindow : Window
         RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
         RefreshPromptEditorFields();
         powerModeRules = settings.PowerModeRules;
+        selectedPowerModeRuleId = settings.SelectedPowerModeRuleId;
         RefreshPowerModePromptChoices(selectedPromptId: null);
         RefreshPowerModeRulesListView();
         RestoreClipboardCheckBox.IsChecked = settings.RestoreClipboard;
@@ -4731,6 +4736,7 @@ public sealed partial class MainWindow : Window
             TranscriptionRetentionMinutes = SelectedTranscriptionRetentionMinutes(),
             IsAudioCleanupEnabled = AudioCleanupCheckBox.IsChecked == true,
             AudioRetentionPeriod = SelectedAudioRetentionDays(),
+            SelectedPowerModeRuleId = SelectedPowerModeRuleId(),
             PowerModeRules = powerModeRules.ToArray()
         };
     }
@@ -4949,6 +4955,12 @@ public sealed partial class MainWindow : Window
             : null;
     }
 
+    private Guid? SelectedPowerModeRuleId() =>
+        selectedPowerModeRuleId is { } ruleId
+        && powerModeRules.Any(rule => rule.IsEnabled && rule.Id == ruleId)
+            ? ruleId
+            : null;
+
     private EnhancementPrompt? PromptEditorPrompt() =>
         promptEditorPromptId is { } promptId
             ? enhancementPrompts.FirstOrDefault(prompt => prompt.Id == promptId)
@@ -5063,6 +5075,11 @@ public sealed partial class MainWindow : Window
         }
 
         powerModeRules = powerModeRules.Where(rule => rule.Id != selectedRule.Id).ToArray();
+        if (selectedPowerModeRuleId == selectedRule.Id)
+        {
+            selectedPowerModeRuleId = null;
+        }
+
         await SaveSettingsAsync(windowLifetime.Token);
         RefreshPowerModeRulesListView();
         RefreshUiFromControllerState("Power Mode rule removed");
@@ -6038,8 +6055,27 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        EnsureFloatingRecorderWindow().Apply(state);
+        var floatingWindow = EnsureFloatingRecorderWindow();
+        floatingWindow.ApplyControls(
+            BuildFloatingRecorderControlState(),
+            controller.State == DictationState.Recording && !operationActive);
+        floatingWindow.Apply(state);
         UpdateFloatingRecorderRefreshTimer(state);
+    }
+
+    private FloatingRecorderControlState BuildFloatingRecorderControlState()
+    {
+        var settings = new AppSettings
+        {
+            IsEnhancementEnabled = EnhancementEnabledCheckBox.IsChecked == true,
+            SelectedEnhancementPromptId = SelectedEnhancementPromptId(),
+            SelectedPowerModeRuleId = SelectedPowerModeRuleId()
+        };
+
+        return FloatingRecorderControlPresenter.FromSettings(
+            settings,
+            enhancementPrompts,
+            powerModeRules);
     }
 
     private void QueueMeterRefresh()
@@ -6103,10 +6139,123 @@ public sealed partial class MainWindow : Window
         floatingRecorderWindow = new FloatingRecorderWindow
         {
             StopRequested = StopCurrentRecordingAsync,
-            CancelRequested = CancelCurrentRecordingAsync
+            CancelRequested = CancelCurrentRecordingAsync,
+            PromptRequested = CycleFloatingRecorderPromptAsync,
+            PowerModeRequested = CycleFloatingRecorderPowerModeAsync
         };
         floatingRecorderWindow.Closed += (_, _) => floatingRecorderWindow = null;
         return floatingRecorderWindow;
+    }
+
+    private async Task CycleFloatingRecorderPromptAsync()
+    {
+        if (!CanUseFloatingRecorderControls())
+        {
+            return;
+        }
+
+        var state = BuildFloatingRecorderControlState();
+        if (!state.CanOpenPromptControls)
+        {
+            return;
+        }
+
+        string status;
+        if (!state.IsEnhancementEnabled)
+        {
+            EnhancementEnabledCheckBox.IsChecked = true;
+            status = "AI enhancement enabled";
+        }
+        else
+        {
+            var promptChoices = state.PromptChoices;
+            var selectedIndex = promptChoices
+                .ToList()
+                .FindIndex(choice => choice.IsSelected);
+            var nextChoice = promptChoices[(selectedIndex + 1 + promptChoices.Count) % promptChoices.Count];
+            SelectEnhancementPrompt(nextChoice.Id);
+            status = $"Prompt: {nextChoice.Title}";
+        }
+
+        await SaveFloatingRecorderControlSettingsAsync(status);
+    }
+
+    private async Task CycleFloatingRecorderPowerModeAsync()
+    {
+        if (!CanUseFloatingRecorderControls())
+        {
+            return;
+        }
+
+        var state = BuildFloatingRecorderControlState();
+        if (!state.CanOpenPowerModeControls || state.PowerModeChoices.Count <= 1)
+        {
+            RefreshUiFromControllerState("No Power Modes available");
+            return;
+        }
+
+        var choices = state.PowerModeChoices;
+        var selectedIndex = choices
+            .ToList()
+            .FindIndex(choice => choice.IsSelected);
+        var nextChoice = choices[(selectedIndex + 1 + choices.Count) % choices.Count];
+        selectedPowerModeRuleId = nextChoice.Id;
+        await SaveFloatingRecorderControlSettingsAsync(
+            nextChoice.Id is null
+                ? "Power Mode: Auto"
+                : $"Power Mode: {nextChoice.Title}");
+    }
+
+    private async Task SaveFloatingRecorderControlSettingsAsync(string status)
+    {
+        try
+        {
+            await floatingRecorderControlUpdates.RunUpdateAsync(
+                async cancellationToken =>
+                {
+                    try
+                    {
+                        RefreshUiFromControllerState(status);
+                        await SaveSettingsAsync(cancellationToken);
+                        RefreshUiFromControllerState(status);
+                    }
+                    catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+                    {
+                        RefreshUiFromControllerState("Closing");
+                    }
+                    catch (Exception ex)
+                    {
+                        RefreshUiFromControllerState($"Recorder control update failed: {ex.Message}");
+                    }
+                },
+                windowLifetime.Token);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Recorder control update failed: {ex.Message}");
+        }
+    }
+
+    private bool CanUseFloatingRecorderControls() =>
+        settingsLoaded
+        && controller.State == DictationState.Recording
+        && !IsOperationActive()
+        && !floatingRecorderControlUpdates.IsUpdating
+        && !windowLifetime.IsCancellationRequested;
+
+    private void SelectEnhancementPrompt(Guid promptId)
+    {
+        var selectedIndex = enhancementPrompts
+            .ToList()
+            .FindIndex(prompt => prompt.Id == promptId);
+        if (selectedIndex >= 0)
+        {
+            EnhancementPromptComboBox.SelectedIndex = selectedIndex;
+        }
     }
 
     private void UpdateTrayFromControllerState(string displayStatus, bool operationActive)

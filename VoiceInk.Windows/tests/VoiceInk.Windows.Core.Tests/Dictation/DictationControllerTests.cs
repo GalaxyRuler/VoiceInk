@@ -371,7 +371,7 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
-    public async Task StopAsync_UsesPowerModeResolvedAtRecordingStart()
+    public async Task StopAsync_UsesRecordingStartTargetWithLatestSettingsAtStop()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
         var capture = new FakeAudioCaptureService(audio);
@@ -416,7 +416,8 @@ public sealed class DictationControllerTests
                     Emoji = "O",
                     ProcessNamePattern = "teams",
                     ModelPathOverride = "other.bin",
-                    LanguageOverride = "fr"
+                    LanguageOverride = "fr",
+                    AppendTrailingSpaceOverride = true
                 }
             ]
         };
@@ -424,13 +425,66 @@ public sealed class DictationControllerTests
 
         Assert.Equal(1, targetProvider.CallCount);
         Assert.Equal("hello ", insertion.InsertedText);
-        Assert.Equal("chat.bin", transcription.LastOptions?.ModelPath);
-        Assert.Equal("en", transcription.LastOptions?.Language);
+        Assert.Equal("other.bin", transcription.LastOptions?.ModelPath);
+        Assert.Equal("fr", transcription.LastOptions?.Language);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("Chat", saved.PowerModeName);
-        Assert.Equal("C", saved.PowerModeEmoji);
-        Assert.Equal("chat.bin", saved.ModelPath);
-        Assert.Equal("en", saved.Language);
+        Assert.Equal("Other", saved.PowerModeName);
+        Assert.Equal("O", saved.PowerModeEmoji);
+        Assert.Equal("other.bin", saved.ModelPath);
+        Assert.Equal("fr", saved.Language);
+    }
+
+    [Fact]
+    public async Task StopAsync_UsesPromptSelectedDuringRecording()
+    {
+        var customPromptId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var prompts = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Concat(
+            [
+                new EnhancementPrompt(
+                    customPromptId,
+                    "Standup",
+                    "Format as a standup update.",
+                    "list.bullet",
+                    "Daily update",
+                    IsPredefined: false,
+                    TriggerWords: [],
+                    UseSystemInstructions: true)
+            ])
+            .ToArray();
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            EnhancementEndpoint = "https://example.test/v1/chat/completions",
+            EnhancementModel = "test-model",
+            IsEnhancementEnabled = true,
+            SelectedEnhancementPromptId = EnhancementPromptCatalog.DefaultPromptId,
+            SkipShortEnhancement = false
+        });
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello world", TimeSpan.FromMilliseconds(150), "local-whisper")),
+            insertion,
+            history,
+            settings,
+            enhancementPipeline: new TextEnhancementPipeline(
+                new FakeTextEnhancementService("standup text"),
+                prompts));
+
+        await controller.StartAsync(CancellationToken.None);
+        settings.CurrentSettings = settings.CurrentSettings with
+        {
+            SelectedEnhancementPromptId = customPromptId
+        };
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("standup text", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("Standup", saved.PromptName);
     }
 
     [Fact]

@@ -49,6 +49,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(settings.CloudTranscriptionEndpoint, backup.GeneralSettings.CloudTranscriptionEndpoint);
         Assert.Equal(settings.EnhancementEndpoint, backup.GeneralSettings.EnhancementEndpoint);
         Assert.Equal(settings.SelectedEnhancementPromptId, backup.GeneralSettings.SelectedEnhancementPromptId);
+        Assert.Equal(settings.SelectedPowerModeRuleId, backup.GeneralSettings.SelectedPowerModeRuleId);
         var prompt = Assert.Single(backup.CustomPrompts);
         Assert.Equal(promptId, prompt.Id);
         Assert.Equal("Standup", prompt.Title);
@@ -178,6 +179,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(current.CustomEnhancementPrompts, merged.CustomEnhancementPrompts);
         Assert.Equal(current.SelectedEnhancementPromptId, merged.SelectedEnhancementPromptId);
         Assert.Equal(current.PowerModeRules, merged.PowerModeRules);
+        Assert.Equal(current.SelectedPowerModeRuleId, merged.SelectedPowerModeRuleId);
         Assert.Equal(current.ImportedWhisperModels, merged.ImportedWhisperModels);
     }
 
@@ -234,6 +236,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal("Standup", Assert.Single(merged.CustomEnhancementPrompts).Title);
         Assert.Equal(promptId, merged.SelectedEnhancementPromptId);
         Assert.Equal("Terminal", Assert.Single(merged.PowerModeRules).Name);
+        Assert.Equal(Guid.Parse("33333333-3333-3333-3333-333333333333"), merged.SelectedPowerModeRuleId);
         Assert.Equal("ggml-base.en", Assert.Single(merged.ImportedWhisperModels).DisplayName);
     }
 
@@ -315,6 +318,7 @@ public sealed class VoiceInkSettingsBackupTests
             RemoveFillerWords = false,
             PunctuationCleanupMode = PunctuationCleanupMode.RemoveTrailingPeriod,
             LowercaseTranscription = true,
+            SelectedPowerModeRuleId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             PowerModeRules =
             [
                 new PowerModeRule

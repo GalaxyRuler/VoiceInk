@@ -53,6 +53,7 @@ public sealed record AppSettings
     public bool RemoveFillerWords { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
+    public Guid? SelectedPowerModeRuleId { get; init; }
     public PowerModeRule[] PowerModeRules { get; init; } = [];
 
     public bool Equals(AppSettings? other)
@@ -104,6 +105,7 @@ public sealed record AppSettings
             RemoveFillerWords == other.RemoveFillerWords &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
+            SelectedPowerModeRuleId == other.SelectedPowerModeRuleId &&
             PowerModeRules.SequenceEqual(other.PowerModeRules);
     }
 
@@ -174,6 +176,7 @@ public sealed record AppSettings
         hash.Add(RemoveFillerWords);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);
+        hash.Add(SelectedPowerModeRuleId);
         foreach (var rule in PowerModeRules)
         {
             hash.Add(rule);

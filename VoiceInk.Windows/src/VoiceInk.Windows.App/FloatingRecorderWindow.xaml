@@ -31,8 +31,16 @@
                     <Button
                         x:Name="PromptButton"
                         Grid.Column="0"
-                        Content="Prompt"
-                        IsEnabled="False" />
+                        AutomationProperties.Name="Recorder prompt"
+                        Click="PromptButton_Click"
+                        IsEnabled="False"
+                        MaxWidth="92"
+                        ToolTipService.ToolTip="Prompt">
+                        <TextBlock
+                            x:Name="PromptButtonTextBlock"
+                            Text="Prompt"
+                            TextTrimming="CharacterEllipsis" />
+                    </Button>
 
                     <StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Center">
                         <TextBlock
@@ -53,8 +61,16 @@
                     <Button
                         x:Name="PowerModeButton"
                         Grid.Column="2"
-                        Content="Power"
-                        IsEnabled="False" />
+                        AutomationProperties.Name="Recorder Power Mode"
+                        Click="PowerModeButton_Click"
+                        IsEnabled="False"
+                        MaxWidth="92"
+                        ToolTipService.ToolTip="Power Mode">
+                        <TextBlock
+                            x:Name="PowerModeButtonTextBlock"
+                            Text="Auto"
+                            TextTrimming="CharacterEllipsis" />
+                    </Button>
                 </Grid>
 
                 <Grid Grid.Row="1" ColumnSpacing="12">

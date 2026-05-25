@@ -60,7 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
-- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, pulse animation, and Prompt/Power Mode affordance labels.
+- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, functional Prompt/Power cycling controls, and pulse animation.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
@@ -159,10 +159,20 @@ Floating-recorder controls slice completed on 2026-05-25:
 - Routed recorder controls through the existing guarded `StopCurrentRecordingAsync` and `CancelCurrentRecordingAsync` commands so tray, shortcut, main-window, and recorder behavior stays consistent.
 - Kept `AppWindow.Show(activateWindow: false)` and added a Win32 `WM_MOUSEACTIVATE` subclass returning `MA_NOACTIVATE`, allowing recorder clicks to process without activating the recorder window or stealing the paste target.
 
+Floating-recorder Prompt/Power controls slice completed on 2026-05-25:
+
+- Added a Core `FloatingRecorderControlPresenter` for test-covered Prompt and Power control labels, enabled states, and selected choices.
+- Prompt control now enables AI enhancement on first click and cycles through available prompts after enhancement is enabled, using the same app-level enhancement prompt settings as the Enhancement page.
+- Power control now cycles `Auto` plus enabled Power Mode rules through an explicit selected Power Mode rule id, using the same rules shown on the Power Mode page.
+- `PowerModeMatcher` prefers the explicit selected rule when it is enabled, then falls back to active-window/default matching.
+- `DictationController` still captures the recording-start target window, but reloads current settings on stop/cancel so Prompt and Power changes made from the recorder during capture affect the active transcription without changing the paste target.
+- This Windows slice intentionally uses click-to-cycle controls instead of hover popovers because WinUI flyouts can steal focus from the target app; richer no-activate popovers remain a visual fidelity follow-up.
+
 Windows gaps:
 
 - Live partial transcript.
-- Prompt and Power Mode controls in recorder.
+- Rich Prompt and Power Mode recorder popovers.
+- Notch-style recorder.
 
 ### Shortcuts
 

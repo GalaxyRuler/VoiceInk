@@ -19,6 +19,7 @@ public static class VoiceInkSettingsBackupMerger
             {
                 CustomEnhancementPrompts = current.CustomEnhancementPrompts,
                 SelectedEnhancementPromptId = current.SelectedEnhancementPromptId,
+                SelectedPowerModeRuleId = current.SelectedPowerModeRuleId,
                 PowerModeRules = current.PowerModeRules,
                 ImportedWhisperModels = current.ImportedWhisperModels
             };
@@ -36,7 +37,12 @@ public static class VoiceInkSettingsBackupMerger
 
         if (selected.Contains(VoiceInkSettingsBackupCategory.PowerMode))
         {
-            result = result with { PowerModeRules = backup.PowerModeConfigs.ToArray() };
+            result = result with
+            {
+                PowerModeRules = backup.PowerModeConfigs.ToArray(),
+                SelectedPowerModeRuleId = backup.GeneralSettings?.SelectedPowerModeRuleId
+                    ?? result.SelectedPowerModeRuleId
+            };
         }
 
         if (selected.Contains(VoiceInkSettingsBackupCategory.CustomModelDefinitions))

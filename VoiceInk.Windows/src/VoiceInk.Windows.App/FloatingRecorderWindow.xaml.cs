@@ -2,6 +2,7 @@ using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System.Runtime.InteropServices;
 using VoiceInk.Windows.Core.Recorder;
@@ -41,6 +42,10 @@ public sealed partial class FloatingRecorderWindow : Window
 
     public Func<Task>? CancelRequested { get; set; }
 
+    public Func<Task>? PromptRequested { get; set; }
+
+    public Func<Task>? PowerModeRequested { get; set; }
+
     public void Apply(FloatingRecorderViewState state)
     {
         TitleTextBlock.Text = state.Title;
@@ -59,6 +64,28 @@ public sealed partial class FloatingRecorderWindow : Window
         }
 
         HideWindow();
+    }
+
+    public void ApplyControls(FloatingRecorderControlState state, bool canUseControls)
+    {
+        PromptButtonTextBlock.Text = state.IsEnhancementEnabled ? state.PromptTitle : "Prompt";
+        PromptButton.IsEnabled = canUseControls && state.CanOpenPromptControls;
+        ToolTipService.SetToolTip(
+            PromptButton,
+            state.IsEnhancementEnabled
+                ? $"Prompt: {state.PromptTitle}"
+                : "Enable AI enhancement");
+
+        var powerModeLabel = state.PowerModeTitle == "Auto"
+            ? "Auto"
+            : $"{state.PowerModeEmoji} {state.PowerModeTitle}";
+        PowerModeButtonTextBlock.Text = powerModeLabel;
+        PowerModeButton.IsEnabled = canUseControls && state.CanOpenPowerModeControls;
+        ToolTipService.SetToolTip(
+            PowerModeButton,
+            state.CanOpenPowerModeControls
+                ? $"Power Mode: {powerModeLabel}"
+                : "No Power Modes available");
     }
 
     private void ConfigureWindow()
@@ -189,6 +216,26 @@ public sealed partial class FloatingRecorderWindow : Window
         await CancelRequested();
     }
 
+    private async void PromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (PromptRequested is null)
+        {
+            return;
+        }
+
+        await PromptRequested();
+    }
+
+    private async void PowerModeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (PowerModeRequested is null)
+        {
+            return;
+        }
+
+        await PowerModeRequested();
+    }
+
     private void TryInstallNoActivateSubclass()
     {
         var hwnd = WindowNative.GetWindowHandle(this);
@@ -205,6 +252,8 @@ public sealed partial class FloatingRecorderWindow : Window
         pulseTimer.Stop();
         StopRequested = null;
         CancelRequested = null;
+        PromptRequested = null;
+        PowerModeRequested = null;
 
         var hwnd = WindowNative.GetWindowHandle(this);
         if (subclassInstalled && hwnd != IntPtr.Zero)

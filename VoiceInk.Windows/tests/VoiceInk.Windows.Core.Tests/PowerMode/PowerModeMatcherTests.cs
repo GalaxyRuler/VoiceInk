@@ -130,6 +130,78 @@ public sealed class PowerModeMatcherTests
     }
 
     [Fact]
+    public void Resolve_PrefersExplicitSelectedEnabledRuleOverTargetAndDefaultRules()
+    {
+        var selectedRuleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var settings = BaseSettings() with
+        {
+            SelectedPowerModeRuleId = selectedRuleId,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = selectedRuleId,
+                    Name = "Manual",
+                    Emoji = "M",
+                    ModelPathOverride = "manual.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Target",
+                    Emoji = "T",
+                    ProcessNamePattern = "code",
+                    ModelPathOverride = "target.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Default",
+                    Emoji = "*",
+                    IsDefault = true,
+                    ModelPathOverride = "default.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(settings, new PowerModeTarget("code", "Program.cs", 500));
+
+        Assert.Equal("Manual", resolution.Rule?.Name);
+        Assert.Equal("M", resolution.PowerModeEmoji);
+        Assert.Equal("manual.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
+    public void Resolve_IgnoresMissingOrDisabledExplicitRuleAndFallsBackToTargetMatch()
+    {
+        var disabledRuleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var settings = BaseSettings() with
+        {
+            SelectedPowerModeRuleId = disabledRuleId,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = disabledRuleId,
+                    Name = "Disabled",
+                    IsEnabled = false,
+                    ModelPathOverride = "disabled.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Target",
+                    Emoji = "T",
+                    ProcessNamePattern = "code",
+                    ModelPathOverride = "target.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(settings, new PowerModeTarget("code", "Program.cs", 501));
+
+        Assert.Equal("Target", resolution.Rule?.Name);
+        Assert.Equal("target.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
     public void Resolve_KeepsBaseSettingsWhenNoRuleMatchesOrOverrideIsBlank()
     {
         var settings = BaseSettings() with
