@@ -292,13 +292,24 @@ AI Enhancement slice completed on 2026-05-25:
 - Add a default-off `Clipboard Context` setting that reads the current text clipboard without modifying it, appends it to the enhancement system message inside `<CLIPBOARD_CONTEXT>` tags, and gracefully skips empty, non-text, or unavailable clipboard content.
 - Add best-effort selected text capture through read-only Windows UI Automation when enhancement runs, append it to the enhancement system message inside `<CURRENTLY_SELECTED_TEXT>` tags, and gracefully skip unavailable controls, empty selections, or failed reads.
 
+AI enhancement provider preset Windows target:
+
+- Match the macOS provider picker terminology for enhancement providers where the current Windows OpenAI-compatible chat-completions adapter can make a faithful request: Custom OpenAI-compatible, Cerebras, Groq, Gemini, OpenAI, OpenRouter, Mistral, and Ollama.
+- Keep Anthropic, Local CLI, and speech/transcription-only providers as later slices because they need a provider-specific request body, process execution hook, or transcription-oriented adapter rather than the existing OpenAI-compatible chat-completions request.
+- Persist a provider ID in JSON settings while continuing to store API keys only in Windows Credential Manager.
+- Store API keys per provider preset so choosing Groq, Gemini, OpenAI, or another provider does not overwrite the custom provider key.
+- Preserve the legacy single enhancement secret name as a custom-provider fallback so existing local settings keep working.
+- Use provider display names and model choices from the macOS source of truth, while documenting that users may still type any compatible model ID.
+- Reject remote enhancement endpoints that use plain HTTP, contain embedded credentials, or contain common key/token query parameters. Plain HTTP remains allowed only for local loopback providers such as Ollama.
+- Keep this as local configuration only: no bundled keys, no sign-up flow, no provider account prompt, no telemetry, and no commercial upgrade surface.
+
 Windows gaps:
 
 - Prompt template persistence.
-- Ollama and Local CLI hooks.
+- Provider-specific Anthropic Messages API and Local CLI hooks.
 - Trigger detection.
 - Clipboard-copy fallback for selected text, screen/OCR, browser URL, and app-specific context capture.
-- Named provider cards and dynamic model lists.
+- Dynamic provider model loading for OpenRouter and Ollama.
 - Toggle-enhancement shortcut and recorder prompt picker activation.
 - AI re-enhance from History.
 
