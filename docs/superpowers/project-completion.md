@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#################---] 87%
+VoiceInk Windows parity  [##################--] 88%
 ```
 
 ## Area Bars
@@ -29,24 +29,24 @@ VoiceInk Windows parity  [#################---] 87%
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 68% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, and live Core Audio device-change refresh exist. Richer active/unavailable UI remains. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
-| Packaging | 38% | `[########------------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, and signed MSIX manifest/script foundation exist. End-to-end signed MSIX smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
+| Packaging | 43% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows dev ZIP smoke validator  [####################] 100%
+Windows MSIX artifact validator  [####################] 100%
 ```
 
 Completed:
 
-- Added a non-installing dev ZIP/package-folder smoke validator.
-- Validated required executable, runtime config, deps, Windows App SDK bootstrap, and README files.
-- Verified a freshly built Debug dev ZIP with the new smoke script.
-- Kept the smoke path artifact-local and certificate-free.
+- Added a non-installing MSIX artifact validator.
+- Validated required MSIX container files, app executable, manifest identity, and capabilities.
+- Verified the validator against a synthetic artifact-local `.msix` without using a signing certificate.
+- Kept install, uninstall, certificate trust, and app launch as explicit manual smoke steps.
 
 ## Near-Term Priority
 
-1. Continue packaging from dev ZIP smoke to signed MSIX smoke, uninstall behavior, and release signing flow.
+1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
 2. Add richer audio input active/unavailable UI.
 3. Add OCR picker/region polish so users can constrain screen context.
 4. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.

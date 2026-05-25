@@ -94,6 +94,41 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("Remove-Item -LiteralPath $PackagePath", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void MsixPackageSmokeScript_ValidatesPackageContentsWithoutInstalling()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-msix-package.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("AppxManifest.xml", script);
+        Assert.Contains("AppxBlockMap.xml", script);
+        Assert.Contains("AppxSignature.p7x", script);
+        Assert.Contains("VoiceInk.Windows.App.exe", script);
+        Assert.Contains("VoiceInk.Windows", script);
+        Assert.Contains("CN=VoiceInkOpenSource", script);
+        Assert.Contains("runFullTrust", script);
+        Assert.Contains("microphone", script);
+        Assert.Contains("Refusing to inspect path outside artifact root", script);
+        Assert.Contains("Refusing to use a package inside the extraction cleanup root", script);
+        Assert.Contains("Assert-NoReparsePointInPath", script);
+        Assert.Contains("Refusing to use reparse-point path for MSIX smoke validation", script);
+        Assert.Contains("MSIX artifact validation passed", script);
+        Assert.Contains("Manual signed MSIX smoke commands", script);
+        Assert.Contains("This script does not cryptographically verify the package signature", script);
+        Assert.Contains("PackagePath is required unless -Help is used", script);
+        Assert.Contains("Add-AppxPackage -Path", script);
+        Assert.Contains("Remove-AppxPackage -Package", script);
+
+        Assert.DoesNotContain("[Parameter(Mandatory = $true)]", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("signtool", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
