@@ -81,6 +81,7 @@ The Windows MVP already has:
 - Picker-based CSV history export.
 - Paste-last final and enhanced-preferred history actions.
 - History search and confirmed single-item delete.
+- Settings JSON backup export/import with category selection for General Settings, Custom Prompts, Power Mode, Dictionary, and Custom Model Definitions, with Credential Manager API keys intentionally excluded.
 - Shortcut parser validation and duplicate detection for supported global shortcut actions.
 - Refreshable audio input list with System Default/custom microphone selection.
 
@@ -502,10 +503,30 @@ Windows gaps:
 
 macOS settings cover shortcuts, middle-click recording, sound feedback, mute/pause media, clipboard restore delay, paste method, recorder style, Power Mode behavior, privacy cleanup, backup import/export, diagnostics, launch at login, onboarding reset, and update checks.
 
+Settings backup Windows MVP target:
+
+- Add local-only JSON export from the Settings section using the same user language as macOS: `Export Settings` and `Import Settings`.
+- Export one backup containing the current Windows settings, custom enhancement prompts, Power Mode rules, imported model references, and dictionary vocabulary/replacements.
+- Let import choose the same categories as macOS where Windows has equivalent data: General Settings, Custom Prompts, Power Mode, Dictionary, and Custom Model Definitions.
+- Merge dictionary imports non-destructively using the existing duplicate-aware dictionary import behavior.
+- Apply imported settings to the current UI state after import so later saves do not overwrite imported values with stale controls.
+- Validate and register imported global shortcuts before saving them; if registration fails, keep the previous shortcuts and settings active.
+- Never export Credential Manager API keys or any other secret material. Clear credential-bearing provider endpoints from backups rather than serializing embedded credentials or key/token query parameters. After importing provider settings or prompts, show a reminder that API keys must be reconfigured locally.
+- Keep history and metrics exports separate CSV workflows rather than adding them to settings backup, because they are user data rather than app configuration.
+
+Settings backup slice completed on 2026-05-25:
+
+- Added a Core backup schema that exports general Windows settings, custom prompts, Power Mode rules, imported local model references, vocabulary words, and word replacements to one local JSON file.
+- Added category merge behavior for General Settings, Custom Prompts, Power Mode, Dictionary, and Custom Model Definitions.
+- Added Settings section `Export Settings` and `Import Settings` buttons using Windows App SDK file pickers and a category-selection import dialog.
+- Import validates and registers imported global shortcuts before saving settings, and restores prior registrations if saving fails.
+- Backup files include a secret-exclusion notice and do not export Credential Manager API keys, tokens, credentials, or other secret material. Provider endpoint fields with embedded credentials or key/token query parameters are cleared during export.
+- History and metrics remain separate local CSV exports rather than part of the settings backup.
+
 Windows gaps:
 
 - Most settings beyond model path, cleanup, and the supported global shortcut fields.
-- Windows equivalents for launch at login, tray behavior, audio device selection, privacy cleanup, backup, diagnostics, and paste method.
+- Windows equivalents for launch at login, tray behavior, deeper privacy cleanup, reset onboarding, richer diagnostics, and paste method.
 
 ### Audio Input
 

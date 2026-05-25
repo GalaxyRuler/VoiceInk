@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.AudioFiles;
+using VoiceInk.Windows.Core.Backup;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Enhancement;
@@ -114,6 +115,8 @@ public sealed partial class MainWindow : Window
     private bool isTranscribingAudioFiles;
     private bool isSavingEnhancementKey;
     private bool isSavingCloudTranscriptionKey;
+    private bool isExportingSettingsBackup;
+    private bool isImportingSettingsBackup;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -823,6 +826,16 @@ public sealed partial class MainWindow : Window
         await ApplyShortcutsAsync();
     }
 
+    private async void ExportSettingsBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportSettingsBackupAsync();
+    }
+
+    private async void ImportSettingsBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ImportSettingsBackupAsync();
+    }
+
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSelectedHistoryDetails();
@@ -866,62 +879,14 @@ public sealed partial class MainWindow : Window
         try
         {
             var settings = await settingsStore.LoadAsync(windowLifetime.Token);
-            if (!modelPathEdited)
-            {
-                suppressModelPathChanged = true;
-                ModelPathTextBox.Text = settings.ModelPath;
-                suppressModelPathChanged = false;
-            }
-
-            localWhisperModels = settings.ImportedWhisperModels;
-            RefreshModelChoices(settings.ModelPath);
-            TranscriptionProviderComboBox.SelectedIndex = TranscriptionProviderToSelectedIndex(settings.TranscriptionProvider);
-            suppressCloudTranscriptionPresetChanged = true;
-            SelectCloudTranscriptionPreset(settings.CloudTranscriptionProviderId);
-            suppressCloudTranscriptionPresetChanged = false;
-            CloudTranscriptionEndpointTextBox.Text = settings.CloudTranscriptionEndpoint;
-            CloudTranscriptionModelTextBox.Text = settings.CloudTranscriptionModel;
-            RefreshCloudTranscriptionModelChoices(settings.CloudTranscriptionModel);
-            RecordingHotkeyTextBox.Text = settings.Hotkey;
-            SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
-            PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
-            PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
-            RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
-            CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
-            OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
-            QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
-            EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
-            UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
-            suppressEnhancementPresetChanged = true;
-            SelectEnhancementPreset(settings.EnhancementProviderId);
-            suppressEnhancementPresetChanged = false;
-            EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
-            EnhancementModelTextBox.Text = settings.EnhancementModel;
-            RefreshEnhancementModelChoices(settings.EnhancementModel);
-            enhancementPrompts = EnhancementPromptLibrary.BuildPrompts(settings.CustomEnhancementPrompts);
-            EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
-            ShortEnhancementThresholdTextBox.Text = ShortEnhancementThreshold(settings).ToString(CultureInfo.InvariantCulture);
-            SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
-            EnhancementRetryOnTimeoutCheckBox.IsChecked = settings.EnhancementRetryOnTimeout;
-            RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
-            RefreshPromptEditorFields();
-            powerModeRules = settings.PowerModeRules;
-            RefreshPowerModePromptChoices(selectedPromptId: null);
-            RefreshPowerModeRulesListView();
-            RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
-            LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
-            AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
-            PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
-            await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
-            await RefreshEnhancementKeyStatusAsync(windowLifetime.Token);
-            var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
-            await RefreshDictionaryAsync(windowLifetime.Token);
-            await RefreshHistoryAsync(windowLifetime.Token);
-            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
+            var refreshWarning = await ApplySettingsToUiAsync(
+                settings,
+                forceModelPath: false,
+                cancellationToken: windowLifetime.Token);
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
-            RefreshUiFromControllerState(audioInputWarning ?? metricsWarning);
+            RefreshUiFromControllerState(refreshWarning);
             await ShowOnboardingIfNeededAsync(settings);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -941,6 +906,67 @@ public sealed partial class MainWindow : Window
             suppressEnhancementModelChanged = false;
             suppressEnhancementPromptChanged = false;
         }
+    }
+
+    private async Task<string?> ApplySettingsToUiAsync(
+        AppSettings settings,
+        bool forceModelPath,
+        CancellationToken cancellationToken)
+    {
+        if (forceModelPath || !modelPathEdited)
+        {
+            suppressModelPathChanged = true;
+            ModelPathTextBox.Text = settings.ModelPath;
+            suppressModelPathChanged = false;
+        }
+
+        localWhisperModels = settings.ImportedWhisperModels;
+        RefreshModelChoices(settings.ModelPath);
+        TranscriptionProviderComboBox.SelectedIndex = TranscriptionProviderToSelectedIndex(settings.TranscriptionProvider);
+        suppressCloudTranscriptionPresetChanged = true;
+        SelectCloudTranscriptionPreset(settings.CloudTranscriptionProviderId);
+        suppressCloudTranscriptionPresetChanged = false;
+        CloudTranscriptionEndpointTextBox.Text = settings.CloudTranscriptionEndpoint;
+        CloudTranscriptionModelTextBox.Text = settings.CloudTranscriptionModel;
+        RefreshCloudTranscriptionModelChoices(settings.CloudTranscriptionModel);
+        RecordingHotkeyTextBox.Text = settings.Hotkey;
+        SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
+        PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
+        PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
+        RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
+        CancelHotkeyTextBox.Text = settings.CancelRecordingHotkey;
+        OpenHistoryHotkeyTextBox.Text = settings.OpenHistoryHotkey;
+        QuickAddHotkeyTextBox.Text = settings.QuickAddDictionaryHotkey;
+        EnhancementEnabledCheckBox.IsChecked = settings.IsEnhancementEnabled;
+        UseClipboardContextCheckBox.IsChecked = settings.UseClipboardContext;
+        suppressEnhancementPresetChanged = true;
+        SelectEnhancementPreset(settings.EnhancementProviderId);
+        suppressEnhancementPresetChanged = false;
+        EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
+        EnhancementModelTextBox.Text = settings.EnhancementModel;
+        RefreshEnhancementModelChoices(settings.EnhancementModel);
+        enhancementPrompts = EnhancementPromptLibrary.BuildPrompts(settings.CustomEnhancementPrompts);
+        EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
+        ShortEnhancementThresholdTextBox.Text = ShortEnhancementThreshold(settings).ToString(CultureInfo.InvariantCulture);
+        SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
+        EnhancementRetryOnTimeoutCheckBox.IsChecked = settings.EnhancementRetryOnTimeout;
+        RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
+        RefreshPromptEditorFields();
+        powerModeRules = settings.PowerModeRules;
+        RefreshPowerModePromptChoices(selectedPromptId: null);
+        RefreshPowerModeRulesListView();
+        RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
+        LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
+        AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
+        PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+        await RefreshCloudTranscriptionKeyStatusAsync(cancellationToken);
+        await RefreshEnhancementKeyStatusAsync(cancellationToken);
+        var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, cancellationToken);
+        await RefreshDictionaryAsync(cancellationToken);
+        await RefreshHistoryAsync(cancellationToken);
+        var metricsWarning = await RefreshMetricsBestEffortAsync(cancellationToken);
+
+        return audioInputWarning ?? metricsWarning;
     }
 
     private async Task ShowOnboardingIfNeededAsync(AppSettings settings)
@@ -1591,6 +1617,304 @@ public sealed partial class MainWindow : Window
         {
             RefreshUiFromControllerState($"Dictionary import failed: {ex.Message}");
         }
+    }
+
+    private async Task ExportSettingsBackupAsync()
+    {
+        if (!CanUseSettingsBackup())
+        {
+            return;
+        }
+
+        var statusOverride = "Preparing settings backup";
+        isExportingSettingsBackup = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"VoiceInk_Settings_Backup_{DateTimeOffset.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("JSON file", [".json"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                statusOverride = "Settings export canceled";
+                return;
+            }
+
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: true);
+            var vocabulary = await dictionaryStore.ListVocabularyAsync(windowLifetime.Token);
+            var replacements = await dictionaryStore.ListReplacementsAsync(windowLifetime.Token);
+            var json = VoiceInkSettingsBackup.Export(
+                settings,
+                vocabulary,
+                replacements,
+                DateTimeOffset.UtcNow);
+
+            await FileIO.WriteTextAsync(file, json);
+            statusOverride = $"Settings exported: {file.Name}";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Settings export failed: {ex.Message}";
+        }
+        finally
+        {
+            isExportingSettingsBackup = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task ImportSettingsBackupAsync()
+    {
+        if (!CanImportSettingsBackup())
+        {
+            return;
+        }
+
+        var statusOverride = "Opening settings backup";
+        isImportingSettingsBackup = true;
+        RefreshUiFromControllerState(statusOverride);
+        AppSettings? settingsRollbackSnapshot = null;
+        bool settingsCommitted = false;
+
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.List,
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            picker.FileTypeFilter.Add(".json");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+            {
+                statusOverride = "Settings import canceled";
+                return;
+            }
+
+            var json = await FileIO.ReadTextAsync(file);
+            var backup = VoiceInkSettingsBackup.Parse(json);
+            var selectedCategories = await ShowSettingsBackupImportOptionsDialogAsync(backup);
+            if (selectedCategories is null)
+            {
+                statusOverride = "Settings import canceled";
+                return;
+            }
+
+            if (selectedCategories.Count == 0)
+            {
+                statusOverride = "Select at least one backup category";
+                return;
+            }
+
+            var currentSettings = await settingsStore.LoadAsync(windowLifetime.Token);
+            settingsRollbackSnapshot = currentSettings;
+            var importsSettings = ImportsSettingsCategories(selectedCategories);
+            AppSettings importedSettings = currentSettings;
+
+            if (importsSettings)
+            {
+                importedSettings = VoiceInkSettingsBackupMerger.Merge(
+                    currentSettings,
+                    backup,
+                    selectedCategories);
+
+                await SaveImportedSettingsWithShortcutRollbackAsync(
+                    importedSettings,
+                    currentSettings,
+                    windowLifetime.Token);
+                settingsCommitted = true;
+            }
+
+            if (importsSettings)
+            {
+                modelPathEdited = false;
+                var refreshWarning = await ApplySettingsToUiAsync(
+                    importedSettings,
+                    forceModelPath: true,
+                    cancellationToken: windowLifetime.Token);
+                if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
+                {
+                    RecreateController();
+                }
+
+                statusOverride = refreshWarning;
+            }
+
+            DictionaryImportResult? dictionaryResult = null;
+            if (selectedCategories.Contains(VoiceInkSettingsBackupCategory.Dictionary))
+            {
+                dictionaryResult = await dictionaryStore.ImportBackupAsync(
+                    VoiceInkSettingsBackup.ExportDictionaryJson(backup),
+                    windowLifetime.Token);
+            }
+
+            if (!importsSettings && dictionaryResult is not null)
+            {
+                await RefreshDictionaryAsync(windowLifetime.Token);
+            }
+
+            statusOverride = BuildSettingsImportStatus(selectedCategories, dictionaryResult, statusOverride);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            if (settingsCommitted && settingsRollbackSnapshot is not null)
+            {
+                var rollbackWarning = await RestoreSettingsAfterFailedImportAsync(
+                    settingsRollbackSnapshot,
+                    windowLifetime.Token);
+                statusOverride = rollbackWarning is null
+                    ? $"Settings import failed and previous settings were restored: {ex.Message}"
+                    : $"Settings import failed: {ex.Message} Previous settings restore warning: {rollbackWarning}";
+            }
+            else
+            {
+                statusOverride = $"Settings import failed: {ex.Message}";
+            }
+        }
+        finally
+        {
+            isImportingSettingsBackup = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task SaveImportedSettingsWithShortcutRollbackAsync(
+        AppSettings importedSettings,
+        AppSettings previousSettings,
+        CancellationToken cancellationToken)
+    {
+        if (!TryReplaceGlobalHotkeys(importedSettings, previousSettings))
+        {
+            throw new InvalidOperationException(hotkeyRegistrationError ?? "Imported shortcut is unavailable.");
+        }
+
+        try
+        {
+            await settingsStore.SaveAsync(importedSettings, cancellationToken);
+        }
+        catch (Exception saveEx)
+        {
+            var rollbackSucceeded = TryReplaceGlobalHotkeys(previousSettings, rollbackSettings: null);
+            if (!rollbackSucceeded && hotkeyRegistrationError is not null)
+            {
+                throw new InvalidOperationException(
+                    $"Settings import save failed: {saveEx.Message} Previous shortcuts could not be restored: {hotkeyRegistrationError}",
+                    saveEx);
+            }
+
+            throw;
+        }
+    }
+
+    private async Task<string?> RestoreSettingsAfterFailedImportAsync(
+        AppSettings previousSettings,
+        CancellationToken cancellationToken)
+    {
+        var warnings = new List<string>();
+        if (!TryReplaceGlobalHotkeys(previousSettings, rollbackSettings: null))
+        {
+            warnings.Add(hotkeyRegistrationError ?? "Previous shortcuts could not be restored.");
+        }
+
+        try
+        {
+            await settingsStore.SaveAsync(previousSettings, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            warnings.Add($"Previous settings could not be saved: {ex.Message}");
+        }
+
+        try
+        {
+            modelPathEdited = false;
+            await ApplySettingsToUiAsync(
+                previousSettings,
+                forceModelPath: true,
+                cancellationToken);
+            if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
+            {
+                RecreateController();
+            }
+        }
+        catch (Exception ex)
+        {
+            warnings.Add($"Previous settings could not be refreshed in the UI: {ex.Message}");
+        }
+
+        return warnings.Count == 0
+            ? null
+            : string.Join(" ", warnings);
+    }
+
+    private async Task<IReadOnlyList<VoiceInkSettingsBackupCategory>?> ShowSettingsBackupImportOptionsDialogAsync(
+        VoiceInkSettingsBackupFile backup)
+    {
+        var choices = VoiceInkSettingsBackupCategories.All
+            .Select(choice => new
+            {
+                Choice = choice,
+                CheckBox = new CheckBox
+                {
+                    Content = choice.Title,
+                    IsChecked = true
+                }
+            })
+            .ToArray();
+
+        var content = new StackPanel { Spacing = 10 };
+        content.Children.Add(new TextBlock
+        {
+            Text = string.Join(
+                Environment.NewLine,
+                $"Backup version: {backup.Version}",
+                $"Platform: {backup.Platform}",
+                backup.SecretNotice),
+            TextWrapping = TextWrapping.Wrap
+        });
+
+        foreach (var choice in choices)
+        {
+            content.Children.Add(choice.CheckBox);
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Import Settings",
+            Content = content,
+            PrimaryButtonText = "Import",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            return null;
+        }
+
+        return choices
+            .Where(choice => choice.CheckBox.IsChecked == true)
+            .Select(choice => choice.Choice.Category)
+            .ToArray();
     }
 
     private async Task ShowQuickAddDictionaryAsync()
@@ -3890,6 +4214,8 @@ public sealed partial class MainWindow : Window
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
+        || isExportingSettingsBackup
+        || isImportingSettingsBackup
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
         || (includeCurrentModelImport && isImportingModel);
@@ -3902,6 +4228,56 @@ public sealed partial class MainWindow : Window
         && !IsOperationActive(includeCurrentModelImport)
         && !IsControllerBusy()
         && controller.State != DictationState.Recording;
+
+    private bool CanUseSettingsBackup() =>
+        settingsLoaded
+        && !IsOperationActive()
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording;
+
+    private bool CanImportSettingsBackup() => CanUseSettingsBackup();
+
+    private static bool ImportsSettingsCategories(
+        IReadOnlyCollection<VoiceInkSettingsBackupCategory> categories) =>
+        categories.Any(category => category != VoiceInkSettingsBackupCategory.Dictionary);
+
+    private static string BuildSettingsImportStatus(
+        IReadOnlyCollection<VoiceInkSettingsBackupCategory> categories,
+        DictionaryImportResult? dictionaryResult,
+        string? warning)
+    {
+        var imported = string.Join(", ", categories.Select(SettingsBackupCategoryTitle));
+        var status = $"Settings imported: {imported}";
+        if (dictionaryResult is not null)
+        {
+            status += $" ({dictionaryResult.ImportedVocabularyCount} vocabulary, "
+                + $"{dictionaryResult.ImportedReplacementCount} replacements, "
+                + $"{dictionaryResult.SkippedDuplicateCount} skipped)";
+        }
+
+        if (SettingsImportNeedsApiKeyReminder(categories))
+        {
+            status += ". Reconfigure API keys locally.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(warning))
+        {
+            status += $" {warning}";
+        }
+
+        return status;
+    }
+
+    private static bool SettingsImportNeedsApiKeyReminder(
+        IReadOnlyCollection<VoiceInkSettingsBackupCategory> categories) =>
+        categories.Contains(VoiceInkSettingsBackupCategory.General)
+        || categories.Contains(VoiceInkSettingsBackupCategory.CustomPrompts)
+        || categories.Contains(VoiceInkSettingsBackupCategory.CustomModelDefinitions);
+
+    private static string SettingsBackupCategoryTitle(VoiceInkSettingsBackupCategory category) =>
+        VoiceInkSettingsBackupCategories.All
+            .First(choice => choice.Category == category)
+            .Title;
 
     private void InitializeNavigationItems()
     {
@@ -4159,6 +4535,11 @@ public sealed partial class MainWindow : Window
         ExportMetricsButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
+        ExportSettingsBackupButton.IsEnabled = settingsLoaded && !operationActive;
+        ImportSettingsBackupButton.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
         RefreshAudioInputsButton.IsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
