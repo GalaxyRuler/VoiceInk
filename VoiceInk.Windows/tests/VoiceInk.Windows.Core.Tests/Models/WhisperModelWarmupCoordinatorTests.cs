@@ -123,18 +123,22 @@ public sealed class WhisperModelWarmupCoordinatorTests
     }
 
     [Fact]
-    public async Task TryStart_RunsWarmupServiceAwayFromCallerThread()
+    public async Task TryStart_KeepsWarmupTaskPendingWhileServiceIsStillRunning()
     {
-        var service = new ThreadRecordingWarmupService();
+        var service = new BlockingWarmupService();
         var coordinator = new WhisperModelWarmupCoordinator(service, _ => true);
-        var callerThreadId = Environment.CurrentManagedThreadId;
 
         var result = coordinator.TryStart(LocalSettings(), "manual", CancellationToken.None);
+        await service.WaitUntilStartedAsync();
 
         Assert.True(result.Started);
         Assert.NotNull(result.WarmupTask);
+        Assert.False(result.WarmupTask.IsCompleted);
+        Assert.Equal(WhisperModelWarmupStatus.Warming, coordinator.State.Status);
+
+        service.Complete();
         await result.WarmupTask;
-        Assert.NotEqual(callerThreadId, service.ThreadId);
+        Assert.Equal(WhisperModelWarmupStatus.Succeeded, coordinator.State.Status);
     }
 
     [Fact]
@@ -219,17 +223,6 @@ public sealed class WhisperModelWarmupCoordinatorTests
     {
         public Task WarmupAsync(TranscriptionOptions options, CancellationToken cancellationToken) =>
             Task.FromException(exception);
-    }
-
-    private sealed class ThreadRecordingWarmupService : IWhisperModelWarmupService
-    {
-        public int ThreadId { get; private set; }
-
-        public Task WarmupAsync(TranscriptionOptions options, CancellationToken cancellationToken)
-        {
-            ThreadId = Environment.CurrentManagedThreadId;
-            return Task.CompletedTask;
-        }
     }
 
     private sealed class SynchronousBlockingWarmupService(TimeSpan delay) : IWhisperModelWarmupService
