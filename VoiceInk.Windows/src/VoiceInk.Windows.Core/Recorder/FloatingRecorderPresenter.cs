@@ -11,11 +11,13 @@ public static class FloatingRecorderPresenter
         bool isOperationActive,
         double inputLevel = 0,
         string? partialTranscript = null,
-        bool showLiveTranscriptPreview = false)
+        bool showLiveTranscriptPreview = false,
+        string? recorderStyle = null)
     {
         var safeInputLevel = double.IsFinite(inputLevel) ? Math.Clamp(inputLevel, 0, 1) : 0;
         var liveTranscript = LiveTranscriptForState(state, partialTranscript, showLiveTranscriptPreview);
         var hasLiveTranscript = liveTranscript.Length > 0;
+        var normalizedRecorderStyle = RecorderStyleSettings.Normalize(recorderStyle);
         return state switch
         {
             DictationState.Recording => new(
@@ -28,7 +30,8 @@ public static class FloatingRecorderPresenter
                 ShowPulse: true,
                 InputLevel: safeInputLevel,
                 LiveTranscript: liveTranscript,
-                HasLiveTranscript: hasLiveTranscript),
+                HasLiveTranscript: hasLiveTranscript,
+                RecorderStyle: normalizedRecorderStyle),
             DictationState.Transcribing => new(
                 true,
                 "Transcribing",
@@ -36,7 +39,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(elapsed),
                 CanStop: false,
                 CanCancel: false,
-                ShowPulse: true),
+                ShowPulse: true,
+                RecorderStyle: normalizedRecorderStyle),
             DictationState.Inserting => new(
                 true,
                 "Inserting",
@@ -44,7 +48,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(elapsed),
                 CanStop: false,
                 CanCancel: false,
-                ShowPulse: true),
+                ShowPulse: true,
+                RecorderStyle: normalizedRecorderStyle),
             DictationState.Error => new(
                 isOperationActive,
                 "Error",
@@ -52,7 +57,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(elapsed),
                 CanStop: false,
                 CanCancel: false,
-                ShowPulse: false),
+                ShowPulse: false,
+                RecorderStyle: normalizedRecorderStyle),
             _ when isOperationActive => new(
                 true,
                 string.IsNullOrWhiteSpace(status) ? "Working" : status,
@@ -60,7 +66,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(elapsed),
                 CanStop: false,
                 CanCancel: false,
-                ShowPulse: true),
+                ShowPulse: true,
+                RecorderStyle: normalizedRecorderStyle),
             _ => new(
                 false,
                 "Idle",
@@ -68,7 +75,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(TimeSpan.Zero),
                 CanStop: false,
                 CanCancel: false,
-                ShowPulse: false)
+                ShowPulse: false,
+                RecorderStyle: normalizedRecorderStyle)
         };
     }
 

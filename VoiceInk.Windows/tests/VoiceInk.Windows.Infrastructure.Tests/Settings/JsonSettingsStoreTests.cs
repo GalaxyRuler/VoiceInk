@@ -43,6 +43,7 @@ public sealed class JsonSettingsStoreTests
             LaunchAtLogin = true,
             PrewarmModelOnWake = false,
             ShowLiveTranscriptPreview = true,
+            RecorderStyle = "notch",
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,

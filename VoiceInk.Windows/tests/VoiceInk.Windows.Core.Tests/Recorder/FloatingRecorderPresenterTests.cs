@@ -22,6 +22,7 @@ public sealed class FloatingRecorderPresenterTests
         Assert.True(state.CanCancel);
         Assert.True(state.ShowPulse);
         Assert.Equal(0, state.InputLevel);
+        Assert.Equal(RecorderStyleSettings.Mini, state.RecorderStyle);
     }
 
     [Fact]
@@ -50,6 +51,35 @@ public sealed class FloatingRecorderPresenterTests
 
         Assert.True(state.HasLiveTranscript);
         Assert.Equal("hello from the live recorder", state.LiveTranscript);
+    }
+
+    [Fact]
+    public void FromState_NotchStyle_CarriesNormalizedRecorderStyle()
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(12),
+            "Recording",
+            isOperationActive: false,
+            recorderStyle: "notch");
+
+        Assert.Equal(RecorderStyleSettings.Notch, state.RecorderStyle);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("unknown")]
+    public void FromState_UnknownStyle_FallsBackToMini(string? recorderStyle)
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(12),
+            "Recording",
+            isOperationActive: false,
+            recorderStyle: recorderStyle);
+
+        Assert.Equal(RecorderStyleSettings.Mini, state.RecorderStyle);
     }
 
     [Theory]

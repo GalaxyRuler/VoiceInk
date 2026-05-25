@@ -60,7 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
-- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, no-activate Prompt/Power chooser panels, and pulse animation.
+- Always-on-top floating recorder with Mini and Notch styles during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, no-activate Prompt/Power chooser panels, and pulse animation.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
@@ -192,10 +192,19 @@ Floating-recorder live transcript preview plumbing slice completed on 2026-05-25
 - Added a compact live transcript panel above the Windows floating recorder chrome. The panel expands the existing no-activate recorder window upward and collapses when no live text is available.
 - This slice intentionally does not generate fake partial text. Real Windows streaming transcription providers remain a later provider slice.
 
+Floating-recorder recorder-style slice completed on 2026-05-25:
+
+- Added a macOS-compatible `RecorderStyle` setting with `mini` default and `notch` option, persisted in JSON settings and General Settings backup/import.
+- Added a Settings `Interface` control named `Recorder Style` with `Mini` and `Notch` choices.
+- Extended the Core floating recorder view state with normalized recorder style so WinUI renders style from presenter output instead of reading settings directly.
+- Kept the existing mini recorder as the default bottom-center style.
+- Added a Windows notch-style adaptation that moves the no-activate always-on-top recorder to the top center of the current work area, uses a black top-edge pill shape, and expands downward for live transcript preview and Prompt/Power chooser panels.
+- Preserved no-activate mouse behavior, Stop/Cancel commands, Prompt/Power controls, live microphone meter, processing pulse, and live transcript gating across both styles.
+
 Windows gaps:
 
 - Real streaming partial transcript sources for Windows providers.
-- Notch-style recorder.
+- Pixel-perfect macOS physical notch geometry is intentionally not implemented because Windows does not expose macOS safe-area notch metrics; the Windows equivalent is a top-center notch-style recorder.
 
 ### Shortcuts
 

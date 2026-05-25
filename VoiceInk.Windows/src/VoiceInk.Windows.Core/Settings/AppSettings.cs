@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Enhancement;
+using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Text;
 
 namespace VoiceInk.Windows.Core.Settings;
@@ -17,6 +18,7 @@ public sealed record AppSettings
     public bool LaunchAtLogin { get; init; }
     public bool PrewarmModelOnWake { get; init; } = true;
     public bool ShowLiveTranscriptPreview { get; init; }
+    public string RecorderStyle { get; init; } = RecorderStyleSettings.Mini;
     public bool IsSoundFeedbackEnabled { get; init; } = true;
     public bool IsSystemMuteEnabled { get; init; } = true;
     public bool IsPauseMediaEnabled { get; init; }
@@ -70,6 +72,7 @@ public sealed record AppSettings
             LaunchAtLogin == other.LaunchAtLogin &&
             PrewarmModelOnWake == other.PrewarmModelOnWake &&
             ShowLiveTranscriptPreview == other.ShowLiveTranscriptPreview &&
+            RecorderStyle == other.RecorderStyle &&
             IsSoundFeedbackEnabled == other.IsSoundFeedbackEnabled &&
             IsSystemMuteEnabled == other.IsSystemMuteEnabled &&
             IsPauseMediaEnabled == other.IsPauseMediaEnabled &&
@@ -124,6 +127,7 @@ public sealed record AppSettings
         hash.Add(LaunchAtLogin);
         hash.Add(PrewarmModelOnWake);
         hash.Add(ShowLiveTranscriptPreview);
+        hash.Add(RecorderStyle);
         hash.Add(IsSoundFeedbackEnabled);
         hash.Add(IsSystemMuteEnabled);
         hash.Add(IsPauseMediaEnabled);

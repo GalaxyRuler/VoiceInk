@@ -17,11 +17,17 @@ public sealed partial class FloatingRecorderWindow : Window
     private const uint WindowMessageMouseActivate = 0x0021;
     private const int MouseActivateNoActivate = 3;
     private const nuint NoActivateSubclassId = 1;
-    private const int RecorderWindowWidth = 384;
-    private const int RecorderWindowCollapsedHeight = 104;
-    private const int RecorderWindowLiveTranscriptHeight = 176;
-    private const int RecorderWindowExpandedHeight = 352;
-    private const int RecorderWindowExpandedWithLiveTranscriptHeight = 424;
+    private const int MiniRecorderWindowWidth = 384;
+    private const int MiniRecorderCollapsedHeight = 104;
+    private const int MiniRecorderLiveTranscriptHeight = 176;
+    private const int MiniRecorderExpandedHeight = 352;
+    private const int MiniRecorderExpandedWithLiveTranscriptHeight = 424;
+    private const int NotchRecorderWindowWidth = 360;
+    private const int NotchRecorderLiveTranscriptWindowWidth = 400;
+    private const int NotchRecorderCollapsedHeight = 88;
+    private const int NotchRecorderLiveTranscriptHeight = 160;
+    private const int NotchRecorderExpandedHeight = 328;
+    private const int NotchRecorderExpandedWithLiveTranscriptHeight = 400;
     private const double MinimumBarHeight = 8;
     private const double MaximumBarHeight = 32;
     private static readonly TimeSpan PopoverDismissalDelay = TimeSpan.FromMilliseconds(250);
@@ -37,6 +43,7 @@ public sealed partial class FloatingRecorderWindow : Window
     private bool suppressPromptEnhancementChanged;
     private bool canUseRecorderControls;
     private bool hasLiveTranscript;
+    private string recorderStyle = RecorderStyleSettings.Mini;
     private RecorderControlPopover pendingDismissalPopover = RecorderControlPopover.None;
     private int pulseStep;
     private double inputLevel;
@@ -78,6 +85,7 @@ public sealed partial class FloatingRecorderWindow : Window
         CancelRecordingButton.IsEnabled = state.CanCancel;
         var showLiveTranscript = state.HasLiveTranscript;
         hasLiveTranscript = showLiveTranscript;
+        recorderStyle = RecorderStyleSettings.Normalize(state.RecorderStyle);
         LiveTranscriptPanel.Visibility = showLiveTranscript ? Visibility.Visible : Visibility.Collapsed;
         LiveTranscriptTextBlock.Text = showLiveTranscript ? state.LiveTranscript : string.Empty;
         inputLevel = double.IsFinite(state.InputLevel) ? Math.Clamp(state.InputLevel, 0, 1) : 0;
@@ -275,18 +283,82 @@ public sealed partial class FloatingRecorderWindow : Window
 
     private void ResizeForCurrentContent()
     {
-        var height = activePopover == RecorderControlPopover.None
-            ? hasLiveTranscript
-                ? RecorderWindowLiveTranscriptHeight
-                : RecorderWindowCollapsedHeight
-            : hasLiveTranscript
-                ? RecorderWindowExpandedWithLiveTranscriptHeight
-                : RecorderWindowExpandedHeight;
-        AppWindow.Resize(new SizeInt32(RecorderWindowWidth, height));
+        var width = RecorderWindowWidthForCurrentContent();
+        var height = RecorderWindowHeightForCurrentContent();
+        ApplyRecorderStyle(width);
+        AppWindow.Resize(new SizeInt32(width, height));
         if (isShown)
         {
-            MoveBottomCenter();
+            MoveForCurrentRecorderStyle();
         }
+    }
+
+    private int RecorderWindowWidthForCurrentContent() =>
+        IsNotchRecorder
+            ? hasLiveTranscript
+                ? NotchRecorderLiveTranscriptWindowWidth
+                : NotchRecorderWindowWidth
+            : MiniRecorderWindowWidth;
+
+    private int RecorderWindowHeightForCurrentContent()
+    {
+        if (!IsNotchRecorder)
+        {
+            return activePopover == RecorderControlPopover.None
+                ? hasLiveTranscript
+                    ? MiniRecorderLiveTranscriptHeight
+                    : MiniRecorderCollapsedHeight
+                : hasLiveTranscript
+                    ? MiniRecorderExpandedWithLiveTranscriptHeight
+                    : MiniRecorderExpandedHeight;
+        }
+
+        return activePopover == RecorderControlPopover.None
+            ? hasLiveTranscript
+                ? NotchRecorderLiveTranscriptHeight
+                : NotchRecorderCollapsedHeight
+            : hasLiveTranscript
+                ? NotchRecorderExpandedWithLiveTranscriptHeight
+                : NotchRecorderExpandedHeight;
+    }
+
+    private bool IsNotchRecorder =>
+        RecorderStyleSettings.Normalize(recorderStyle) == RecorderStyleSettings.Notch;
+
+    private void ApplyRecorderStyle(int width)
+    {
+        RecorderChrome.Width = width;
+        LiveTranscriptPanel.Width = width;
+        Grid.SetRow(RecorderChrome, IsNotchRecorder ? 0 : 2);
+        Grid.SetRow(PromptPopoverPanel, IsNotchRecorder ? 2 : 0);
+        Grid.SetRow(PowerModePopoverPanel, IsNotchRecorder ? 2 : 0);
+        Grid.SetRow(LiveTranscriptPanel, 1);
+
+        if (IsNotchRecorder)
+        {
+            RecorderChrome.Height = NotchRecorderCollapsedHeight;
+            RecorderChrome.Padding = new Thickness(12, 10, 12, 10);
+            RecorderChrome.CornerRadius = new CornerRadius(0, 0, 20, 20);
+            RecorderChrome.BorderThickness = new Thickness(0, 0, 0, 1);
+            LiveTranscriptPanel.CornerRadius = new CornerRadius(0, 0, 14, 14);
+            PromptPopoverPanel.VerticalAlignment = VerticalAlignment.Top;
+            PowerModePopoverPanel.VerticalAlignment = VerticalAlignment.Top;
+            DetailTextBlock.Visibility = Visibility.Collapsed;
+            ShortcutHintTextBlock.Visibility = Visibility.Collapsed;
+            TitleTextBlock.FontSize = 13;
+            return;
+        }
+
+        RecorderChrome.Height = MiniRecorderCollapsedHeight;
+        RecorderChrome.Padding = new Thickness(14);
+        RecorderChrome.CornerRadius = new CornerRadius(18);
+        RecorderChrome.BorderThickness = new Thickness(1);
+        LiveTranscriptPanel.CornerRadius = new CornerRadius(14);
+        PromptPopoverPanel.VerticalAlignment = VerticalAlignment.Bottom;
+        PowerModePopoverPanel.VerticalAlignment = VerticalAlignment.Bottom;
+        DetailTextBlock.Visibility = Visibility.Visible;
+        ShortcutHintTextBlock.Visibility = Visibility.Visible;
+        TitleTextBlock.FontSize = 16;
     }
 
     private void ApplyPromptHoverAction(FloatingRecorderPopoverHoverAction action) =>
@@ -395,7 +467,7 @@ public sealed partial class FloatingRecorderWindow : Window
 
     private void ConfigureWindow()
     {
-        AppWindow.Resize(new SizeInt32(RecorderWindowWidth, RecorderWindowCollapsedHeight));
+        ResizeForCurrentContent();
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsAlwaysOnTop = true;
@@ -405,24 +477,48 @@ public sealed partial class FloatingRecorderWindow : Window
             presenter.SetBorderAndTitleBar(false, false);
         }
 
+        MoveForCurrentRecorderStyle();
+    }
+
+    private void MoveForCurrentRecorderStyle()
+    {
+        if (IsNotchRecorder)
+        {
+            MoveTopCenter();
+            return;
+        }
+
         MoveBottomCenter();
+    }
+
+    private DisplayArea CurrentDisplayArea()
+    {
+        var windowId = Win32Interop.GetWindowIdFromWindow(WindowNative.GetWindowHandle(this));
+        return DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Primary);
     }
 
     private void MoveBottomCenter()
     {
-        var windowId = Win32Interop.GetWindowIdFromWindow(WindowNative.GetWindowHandle(this));
-        var displayArea = DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Primary);
+        var displayArea = CurrentDisplayArea();
         var workArea = displayArea.WorkArea;
-        var x = workArea.X + (workArea.Width - AppWindow.Size.Width) / 2;
+        var x = workArea.X + Math.Max(0, (workArea.Width - AppWindow.Size.Width) / 2);
         var y = workArea.Y + workArea.Height - AppWindow.Size.Height - 24;
         AppWindow.Move(new PointInt32(x, y));
+    }
+
+    private void MoveTopCenter()
+    {
+        var displayArea = CurrentDisplayArea();
+        var workArea = displayArea.WorkArea;
+        var x = workArea.X + Math.Max(0, (workArea.Width - AppWindow.Size.Width) / 2);
+        AppWindow.Move(new PointInt32(x, workArea.Y));
     }
 
     private void ShowWindow()
     {
         if (!isShown)
         {
-            MoveBottomCenter();
+            MoveForCurrentRecorderStyle();
             AppWindow.Show(activateWindow: false);
             isShown = true;
         }

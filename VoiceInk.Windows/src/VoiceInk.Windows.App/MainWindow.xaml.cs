@@ -160,6 +160,7 @@ public sealed partial class MainWindow : Window
     private bool suppressLanguageChanged;
     private bool suppressPrewarmChanged;
     private bool suppressLiveTranscriptPreviewChanged;
+    private bool suppressRecorderStyleChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
     private bool suppressEnhancementPresetChanged;
@@ -854,6 +855,35 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void RecorderStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (suppressRecorderStyleChanged
+            || !settingsLoaded
+            || IsOperationActive()
+            || IsControllerBusy()
+            || controller.State == DictationState.Recording)
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(
+                SelectedRecorderStyle() == RecorderStyleSettings.Notch
+                    ? "Recorder style: Notch"
+                    : "Recorder style: Mini");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Recorder style update failed: {ex.Message}");
+        }
+    }
+
     private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyTranscriptionProviderSettingsAsync();
@@ -1261,6 +1291,7 @@ public sealed partial class MainWindow : Window
             suppressModelPathChanged = false;
             suppressPrewarmChanged = false;
             suppressLiveTranscriptPreviewChanged = false;
+            suppressRecorderStyleChanged = false;
             suppressCloudTranscriptionPresetChanged = false;
             suppressCloudTranscriptionModelChanged = false;
             suppressEnhancementPresetChanged = false;
@@ -1330,6 +1361,9 @@ public sealed partial class MainWindow : Window
         suppressLiveTranscriptPreviewChanged = true;
         ShowLiveTranscriptPreviewCheckBox.IsChecked = settings.ShowLiveTranscriptPreview;
         suppressLiveTranscriptPreviewChanged = false;
+        suppressRecorderStyleChanged = true;
+        RecorderStyleComboBox.SelectedIndex = RecorderStyleToSelectedIndex(settings.RecorderStyle);
+        suppressRecorderStyleChanged = false;
         SoundFeedbackCheckBox.IsChecked = settings.IsSoundFeedbackEnabled;
         MuteSystemAudioCheckBox.IsChecked = settings.IsSystemMuteEnabled;
         PauseMediaCheckBox.IsChecked = settings.IsPauseMediaEnabled;
@@ -4740,6 +4774,7 @@ public sealed partial class MainWindow : Window
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
             PrewarmModelOnWake = PrewarmModelOnWakeCheckBox.IsChecked == true,
             ShowLiveTranscriptPreview = ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
+            RecorderStyle = SelectedRecorderStyle(),
             IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
             IsSystemMuteEnabled = MuteSystemAudioCheckBox.IsChecked == true,
             IsPauseMediaEnabled = PauseMediaCheckBox.IsChecked == true,
@@ -5918,6 +5953,10 @@ public sealed partial class MainWindow : Window
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
         ShowLiveTranscriptPreviewCheckBox.IsEnabled = modelControlsEnabled;
+        RecorderStyleComboBox.IsEnabled = settingsLoaded
+            && !operationActive
+            && !controllerBusy
+            && controller.State != DictationState.Recording;
         WarmupSelectedModelButton.IsEnabled = modelControlsEnabled
             && !modelWarmupActive
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
@@ -6081,7 +6120,8 @@ public sealed partial class MainWindow : Window
             recorderActivityActive && operationActive,
             inputLevel,
             controller.PartialTranscript,
-            ShowLiveTranscriptPreviewCheckBox.IsChecked == true);
+            ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
+            SelectedRecorderStyle());
 
         if (!state.IsVisible && floatingRecorderWindow is null)
         {
@@ -6326,6 +6366,11 @@ public sealed partial class MainWindow : Window
             ? PasteMethodSettings.DirectText
             : PasteMethodSettings.Default;
 
+    private string SelectedRecorderStyle() =>
+        RecorderStyleComboBox.SelectedIndex == 1
+            ? RecorderStyleSettings.Notch
+            : RecorderStyleSettings.Mini;
+
     private static int ClipboardRestoreDelayToSelectedIndex(double seconds)
     {
         var index = Array.FindIndex(
@@ -6345,6 +6390,9 @@ public sealed partial class MainWindow : Window
 
     private static int PasteMethodToSelectedIndex(string method) =>
         PasteMethodSettings.Normalize(method) == PasteMethodSettings.DirectText ? 1 : 0;
+
+    private static int RecorderStyleToSelectedIndex(string? style) =>
+        RecorderStyleSettings.Normalize(style) == RecorderStyleSettings.Notch ? 1 : 0;
 
     private int SelectedTranscriptionRetentionMinutes() =>
         ChoiceAtOrDefault(

@@ -43,6 +43,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(settings.LaunchAtLogin, backup.GeneralSettings.LaunchAtLogin);
         Assert.Equal(settings.PrewarmModelOnWake, backup.GeneralSettings.PrewarmModelOnWake);
         Assert.Equal(settings.ShowLiveTranscriptPreview, backup.GeneralSettings.ShowLiveTranscriptPreview);
+        Assert.Equal(settings.RecorderStyle, backup.GeneralSettings.RecorderStyle);
         Assert.Equal(settings.IsSoundFeedbackEnabled, backup.GeneralSettings.IsSoundFeedbackEnabled);
         Assert.Equal(settings.IsSystemMuteEnabled, backup.GeneralSettings.IsSystemMuteEnabled);
         Assert.Equal(settings.IsPauseMediaEnabled, backup.GeneralSettings.IsPauseMediaEnabled);
@@ -172,6 +173,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.True(merged.LaunchAtLogin);
         Assert.False(merged.PrewarmModelOnWake);
         Assert.True(merged.ShowLiveTranscriptPreview);
+        Assert.Equal("notch", merged.RecorderStyle);
         Assert.False(merged.IsSoundFeedbackEnabled);
         Assert.True(merged.IsSystemMuteEnabled);
         Assert.True(merged.IsPauseMediaEnabled);
@@ -274,6 +276,7 @@ public sealed class VoiceInkSettingsBackupTests
             LaunchAtLogin = true,
             PrewarmModelOnWake = false,
             ShowLiveTranscriptPreview = true,
+            RecorderStyle = "notch",
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,

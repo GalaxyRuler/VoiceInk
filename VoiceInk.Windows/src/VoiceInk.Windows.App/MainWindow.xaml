@@ -921,6 +921,18 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Interface" FontWeight="SemiBold" />
+                            <ComboBox
+                                x:Name="RecorderStyleComboBox"
+                                Header="Recorder Style"
+                                SelectedIndex="0"
+                                SelectionChanged="RecorderStyleComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Mini" />
+                                <ComboBoxItem Content="Notch" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Clipboard" FontWeight="SemiBold" />
                             <CheckBox
                                 x:Name="RestoreClipboardCheckBox"

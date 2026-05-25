@@ -10,4 +10,5 @@ public sealed record FloatingRecorderViewState(
     bool ShowPulse,
     double InputLevel = 0,
     string LiveTranscript = "",
-    bool HasLiveTranscript = false);
+    bool HasLiveTranscript = false,
+    string RecorderStyle = RecorderStyleSettings.Mini);
