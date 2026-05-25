@@ -21,7 +21,7 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
             new SelectedTextClipboardFallbackReader(),
             new ActiveWindowPowerModeTargetProvider(),
             new BrowserUrlEnhancementContextProvider(),
-            new EmptyOcrTextReader())
+            new WindowsScreenOcrTextReader())
     {
     }
 

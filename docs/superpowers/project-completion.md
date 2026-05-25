@@ -21,7 +21,7 @@ VoiceInk Windows parity  [#################---] 87%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 60% | `[############--------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, and default-off OCR context settings/no-op native hook exist with graceful degradation. Full Windows screen capture OCR remains. |
+| Context features | 65% | `[#############-------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, and default-off local screen OCR context exist with graceful degradation. Picker/region OCR polish remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [#################---] 87%
 ## Current Slice
 
 ```text
-Windows OCR context settings gate  [####################] 100%
+Windows local screen OCR reader  [####################] 100%
 ```
 
 Completed:
 
-- Added default-off `UseOcrContext` settings persistence.
-- Gated OCR enhancement context requests behind `UseOcrContext`.
-- Added the Enhancement page `Screen OCR Context` checkbox.
-- Kept real Windows capture/OCR behind a future explicit implementation path.
+- Added a local virtual-desktop PNG capture provider.
+- Added `Windows.Media.Ocr` recognition over captured screen snapshots.
+- Wired the default Windows enhancement context provider to use local OCR when `UseOcrContext` is enabled.
+- Kept OCR default-off and graceful on unsupported/failing OCR paths.
 
 ## Near-Term Priority
 
-1. Implement full Windows screen capture plus `Windows.Media.Ocr` bitmap recognition behind the OCR reader.
+1. Add OCR picker/region polish so users can constrain screen context.
 2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
 3. Continue Settings visual parity and remaining macOS preferences.
 4. Continue packaging from MSIX foundation to signed smoke, uninstall behavior, and release signing flow.
