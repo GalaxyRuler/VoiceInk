@@ -70,6 +70,7 @@ public static class TranscriptionConfiguration
             "mistral" => "Mistral",
             "elevenlabs" => "ElevenLabs",
             "soniox" => "Soniox",
+            "speechmatics" => "Speechmatics",
             _ => "Custom"
         };
 

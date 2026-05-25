@@ -19,7 +19,7 @@ VoiceInk Windows parity  [##################--] 89%
 | Floating recorder | 86% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram and AssemblyAI interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
-| Cloud transcription | 81% | `[################----]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram plus AssemblyAI live preview streaming exist. More provider-specific adapters, richer cards, provider test requests, and more streaming providers remain. |
+| Cloud transcription | 83% | `[#################---]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram plus AssemblyAI live preview streaming exist. More provider-specific adapters, richer cards, provider test requests, and more streaming providers remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [##################--] 89%
 ## Current Slice
 
 ```text
-Windows Soniox transcription  [####################] 100%
+Windows Speechmatics transcription  [####################] 100%
 ```
 
 Completed:
 
-- Added Soniox as a cloud transcription preset with `stt-async-v4`.
-- Added provider-specific secure credential naming for Soniox.
-- Added a Soniox async batch adapter for file upload, transcription creation, polling, transcript-token rendering, and best-effort cleanup.
-- Routed Soniox through the provider-specific adapter while leaving realtime Soniox for a later slice.
+- Added Speechmatics as a cloud transcription preset with `speechmatics-enhanced`.
+- Added provider-specific secure credential naming for Speechmatics.
+- Added a Speechmatics Jobs API batch adapter for multipart job creation, polling, plain-text transcript fetch, and best-effort cleanup.
+- Routed Speechmatics through the provider-specific adapter while leaving realtime Speechmatics preview for a later streaming slice.
 
 ## Near-Term Priority
 

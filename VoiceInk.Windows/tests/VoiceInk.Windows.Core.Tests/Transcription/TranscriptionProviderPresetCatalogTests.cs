@@ -43,6 +43,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.soniox.com/v1/transcriptions", soniox.Endpoint);
         Assert.Equal("stt-async-v4", soniox.DefaultModel);
         Assert.Contains("stt-async-v4", soniox.ModelIds);
+        var speechmatics = Assert.Single(presets, item => item.Id == "speechmatics");
+        Assert.Equal("Speechmatics", speechmatics.DisplayName);
+        Assert.Equal("https://eu1.asr.api.speechmatics.com/v2/jobs", speechmatics.Endpoint);
+        Assert.Equal("speechmatics-enhanced", speechmatics.DefaultModel);
+        Assert.Contains("speechmatics-enhanced", speechmatics.ModelIds);
     }
 
     [Theory]
@@ -54,6 +59,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("mistral", "mistral")]
     [InlineData("elevenlabs", "elevenlabs")]
     [InlineData("soniox", "soniox")]
+    [InlineData("speechmatics", "speechmatics")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -67,6 +73,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("mistral", "VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey")]
     [InlineData("elevenlabs", "VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey")]
     [InlineData("soniox", "VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey")]
+    [InlineData("speechmatics", "VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -99,6 +106,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("soniox"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("speechmatics"));
     }
 
     [Fact]

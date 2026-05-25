@@ -116,6 +116,7 @@ public sealed partial class MainWindow : Window
     private readonly AssemblyAICloudTranscriptionService assemblyAITranscriptionService;
     private readonly ElevenLabsCloudTranscriptionService elevenLabsTranscriptionService;
     private readonly SonioxCloudTranscriptionService sonioxTranscriptionService;
+    private readonly SpeechmaticsCloudTranscriptionService speechmaticsTranscriptionService;
     private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
@@ -251,6 +252,7 @@ public sealed partial class MainWindow : Window
         assemblyAITranscriptionService = new AssemblyAICloudTranscriptionService(new HttpClient(), secretStore);
         elevenLabsTranscriptionService = new ElevenLabsCloudTranscriptionService(new HttpClient(), secretStore);
         sonioxTranscriptionService = new SonioxCloudTranscriptionService(new HttpClient(), secretStore);
+        speechmaticsTranscriptionService = new SpeechmaticsCloudTranscriptionService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
             [
                 new DeepgramLiveTranscriptionPreviewService(
@@ -266,7 +268,8 @@ public sealed partial class MainWindow : Window
             deepgramTranscriptionService,
             assemblyAITranscriptionService,
             elevenLabsTranscriptionService,
-            sonioxTranscriptionService);
+            sonioxTranscriptionService,
+            speechmaticsTranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,

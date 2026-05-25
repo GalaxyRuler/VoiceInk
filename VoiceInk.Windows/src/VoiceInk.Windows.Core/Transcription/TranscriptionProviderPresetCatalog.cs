@@ -67,6 +67,15 @@ public static class TranscriptionProviderPresetCatalog
             "stt-async-v4"
         ]);
 
+    public static TranscriptionProviderPreset Speechmatics { get; } = new(
+        "speechmatics",
+        "Speechmatics",
+        "https://eu1.asr.api.speechmatics.com/v2/jobs",
+        "speechmatics-enhanced",
+        [
+            "speechmatics-enhanced"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
@@ -75,7 +84,8 @@ public static class TranscriptionProviderPresetCatalog
         AssemblyAI,
         Mistral,
         ElevenLabs,
-        Soniox
+        Soniox,
+        Speechmatics
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

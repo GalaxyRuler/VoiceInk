@@ -10,7 +10,8 @@ public sealed class TranscriptionServiceRouter(
     ITranscriptionService? deepgramService = null,
     ITranscriptionService? assemblyAIService = null,
     ITranscriptionService? elevenLabsService = null,
-    ITranscriptionService? sonioxService = null) : ITranscriptionService
+    ITranscriptionService? sonioxService = null,
+    ITranscriptionService? speechmaticsService = null) : ITranscriptionService
 {
     public Task<TranscriptionResult> TranscribeAsync(
         AudioCaptureResult audio,
@@ -28,6 +29,8 @@ public sealed class TranscriptionServiceRouter(
                 elevenLabsService,
             TranscriptionProviderKind.OpenAICompatible when IsSoniox(options) && sonioxService is not null =>
                 sonioxService,
+            TranscriptionProviderKind.OpenAICompatible when IsSpeechmatics(options) && speechmaticsService is not null =>
+                speechmaticsService,
             TranscriptionProviderKind.OpenAICompatible => openAICompatibleService,
             _ => throw new InvalidOperationException($"Unsupported transcription provider: {options.Provider}.")
         };
@@ -46,4 +49,7 @@ public sealed class TranscriptionServiceRouter(
 
     private static bool IsSoniox(TranscriptionOptions options) =>
         string.Equals(options.CloudProviderId, "soniox", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSpeechmatics(TranscriptionOptions options) =>
+        string.Equals(options.CloudProviderId, "speechmatics", StringComparison.OrdinalIgnoreCase);
 }
