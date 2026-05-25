@@ -19,7 +19,7 @@ VoiceInk Windows parity  [##################--] 89%
 | Floating recorder | 86% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram and AssemblyAI interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
-| Cloud transcription | 77% | `[###############-----]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Mistral Voxtral batch transcription through the multipart adapter, and Deepgram plus AssemblyAI live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
+| Cloud transcription | 79% | `[################----]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram plus AssemblyAI live preview streaming exist. More provider-specific adapters, richer cards, provider test requests, and more streaming providers remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [##################--] 89%
 ## Current Slice
 
 ```text
-Windows Mistral transcription preset  [####################] 100%
+Windows ElevenLabs transcription  [####################] 100%
 ```
 
 Completed:
 
-- Added Mistral as a cloud transcription preset with the Voxtral endpoint and model.
-- Added provider-specific secure credential naming for Mistral.
-- Verified Mistral uses the existing OpenAI-compatible multipart transcription adapter.
-- Documented that Mistral streaming remains a later slice.
+- Added ElevenLabs as a cloud transcription preset with Scribe v2/v1 model choices.
+- Added provider-specific secure credential naming for ElevenLabs.
+- Added an ElevenLabs batch transcription adapter using `xi-api-key` and multipart `model_id`.
+- Routed ElevenLabs through the provider-specific adapter while leaving realtime Scribe for a later slice.
 
 ## Near-Term Priority
 

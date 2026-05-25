@@ -48,13 +48,24 @@ public static class TranscriptionProviderPresetCatalog
             "voxtral-mini-latest"
         ]);
 
+    public static TranscriptionProviderPreset ElevenLabs { get; } = new(
+        "elevenlabs",
+        "ElevenLabs",
+        "https://api.elevenlabs.io/v1/speech-to-text",
+        "scribe_v2",
+        [
+            "scribe_v2",
+            "scribe_v1"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
         Groq,
         Deepgram,
         AssemblyAI,
-        Mistral
+        Mistral,
+        ElevenLabs
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

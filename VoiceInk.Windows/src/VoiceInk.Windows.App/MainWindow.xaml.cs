@@ -114,6 +114,7 @@ public sealed partial class MainWindow : Window
     private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
     private readonly DeepgramCloudTranscriptionService deepgramTranscriptionService;
     private readonly AssemblyAICloudTranscriptionService assemblyAITranscriptionService;
+    private readonly ElevenLabsCloudTranscriptionService elevenLabsTranscriptionService;
     private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
@@ -247,6 +248,7 @@ public sealed partial class MainWindow : Window
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         deepgramTranscriptionService = new DeepgramCloudTranscriptionService(new HttpClient(), secretStore);
         assemblyAITranscriptionService = new AssemblyAICloudTranscriptionService(new HttpClient(), secretStore);
+        elevenLabsTranscriptionService = new ElevenLabsCloudTranscriptionService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
             [
                 new DeepgramLiveTranscriptionPreviewService(
@@ -260,7 +262,8 @@ public sealed partial class MainWindow : Window
             new WhisperNetTranscriptionService(),
             cloudTranscriptionService,
             deepgramTranscriptionService,
-            assemblyAITranscriptionService);
+            assemblyAITranscriptionService,
+            elevenLabsTranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,

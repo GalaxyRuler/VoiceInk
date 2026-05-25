@@ -7,7 +7,7 @@ namespace VoiceInk.Windows.Core.Tests.Transcription;
 public sealed class TranscriptionProviderPresetCatalogTests
 {
     [Fact]
-    public void All_IncludesCustomGroqDeepgramAssemblyAiAndMistralPresets()
+    public void All_IncludesCustomGroqDeepgramAssemblyAiMistralAndElevenLabsPresets()
     {
         var presets = TranscriptionProviderPresetCatalog.All;
 
@@ -33,6 +33,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.mistral.ai/v1/audio/transcriptions", mistral.Endpoint);
         Assert.Equal("voxtral-mini-latest", mistral.DefaultModel);
         Assert.Contains("voxtral-mini-latest", mistral.ModelIds);
+        var elevenLabs = Assert.Single(presets, item => item.Id == "elevenlabs");
+        Assert.Equal("ElevenLabs", elevenLabs.DisplayName);
+        Assert.Equal("https://api.elevenlabs.io/v1/speech-to-text", elevenLabs.Endpoint);
+        Assert.Equal("scribe_v2", elevenLabs.DefaultModel);
+        Assert.Contains("scribe_v1", elevenLabs.ModelIds);
     }
 
     [Theory]
@@ -42,6 +47,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("deepgram", "deepgram")]
     [InlineData("assemblyai", "assemblyai")]
     [InlineData("mistral", "mistral")]
+    [InlineData("elevenlabs", "elevenlabs")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -53,6 +59,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("deepgram", "VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey")]
     [InlineData("assemblyai", "VoiceInk.Windows.Transcription.OpenAICompatible.AssemblyAI.ApiKey")]
     [InlineData("mistral", "VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey")]
+    [InlineData("elevenlabs", "VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -79,6 +86,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("mistral"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("elevenlabs"));
     }
 
     [Fact]

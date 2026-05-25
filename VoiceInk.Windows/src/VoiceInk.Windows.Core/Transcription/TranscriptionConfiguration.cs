@@ -68,6 +68,7 @@ public static class TranscriptionConfiguration
             "deepgram" => "Deepgram",
             "assemblyai" => "AssemblyAI",
             "mistral" => "Mistral",
+            "elevenlabs" => "ElevenLabs",
             _ => "Custom"
         };
 

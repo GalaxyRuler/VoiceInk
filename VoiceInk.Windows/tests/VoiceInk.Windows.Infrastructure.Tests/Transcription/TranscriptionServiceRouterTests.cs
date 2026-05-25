@@ -106,6 +106,37 @@ public sealed class TranscriptionServiceRouterTests
         Assert.Equal(options, assemblyAI.LastOptions);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_RoutesElevenLabsCloudOptionsToElevenLabsService()
+    {
+        var local = new FakeTranscriptionService(new TranscriptionResult("local text", TimeSpan.Zero, "local-whisper"));
+        var cloud = new FakeTranscriptionService(new TranscriptionResult("cloud text", TimeSpan.Zero, "openai-compatible"));
+        var deepgram = new FakeTranscriptionService(new TranscriptionResult("deepgram text", TimeSpan.Zero, "deepgram"));
+        var assemblyAI = new FakeTranscriptionService(new TranscriptionResult("assembly text", TimeSpan.Zero, "assemblyai"));
+        var elevenLabs = new FakeTranscriptionService(new TranscriptionResult("scribe text", TimeSpan.Zero, "elevenlabs"));
+        var router = new TranscriptionServiceRouter(local, cloud, deepgram, assemblyAI, elevenLabs);
+        var audio = Audio();
+        var options = new TranscriptionOptions(
+            string.Empty,
+            "en",
+            string.Empty,
+            TranscriptionProviderKind.OpenAICompatible,
+            "https://api.elevenlabs.io/v1/speech-to-text",
+            "scribe_v2",
+            "elevenlabs");
+
+        var result = await router.TranscribeAsync(audio, options, CancellationToken.None);
+
+        Assert.Equal("scribe text", result.Text);
+        Assert.Equal(0, local.CallCount);
+        Assert.Equal(0, cloud.CallCount);
+        Assert.Equal(0, deepgram.CallCount);
+        Assert.Equal(0, assemblyAI.CallCount);
+        Assert.Equal(1, elevenLabs.CallCount);
+        Assert.Equal(audio, elevenLabs.LastAudio);
+        Assert.Equal(options, elevenLabs.LastOptions);
+    }
+
     private static AudioCaptureResult Audio() =>
         new("sample.wav", TimeSpan.FromSeconds(1), SampleRate: 16000, ChannelCount: 1);
 
