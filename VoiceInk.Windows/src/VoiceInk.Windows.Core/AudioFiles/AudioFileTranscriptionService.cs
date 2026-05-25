@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
@@ -13,7 +14,8 @@ public sealed class AudioFileTranscriptionService(
     IHistoryStore historyStore,
     ISettingsStore settingsStore,
     IDictionaryStore? dictionaryStore = null,
-    TextEnhancementPipeline? enhancementPipeline = null)
+    TextEnhancementPipeline? enhancementPipeline = null,
+    ISessionMetricStore? sessionMetricStore = null)
 {
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
 
@@ -77,6 +79,7 @@ public sealed class AudioFileTranscriptionService(
                 aiRequestSystemMessage: enhancement?.SystemMessage,
                 aiRequestUserMessage: enhancement?.UserMessage);
             await historyStore.SaveAsync(item, cancellationToken);
+            await RecordMetricAsync(item, cancellationToken);
 
             return new AudioFileTranscriptionResult(true, "File transcription saved", item);
         }
@@ -89,6 +92,17 @@ public sealed class AudioFileTranscriptionService(
             return new AudioFileTranscriptionResult(false, ex.Message);
         }
     }
+
+    private Task<SessionMetricRecorderResult> RecordMetricAsync(
+        TranscriptionHistoryItem item,
+        CancellationToken cancellationToken) =>
+        sessionMetricStore is null
+            ? Task.FromResult(new SessionMetricRecorderResult(false))
+            : SessionMetricRecorder.RecordAsync(
+                item,
+                sessionMetricStore,
+                "audio-file",
+                cancellationToken);
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {

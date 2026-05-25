@@ -679,6 +679,55 @@
                         </Grid>
                     </StackPanel>
 
+                    <StackPanel x:Name="MetricsSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Metrics" FontSize="24" FontWeight="SemiBold" />
+                        <Button
+                            x:Name="RefreshMetricsButton"
+                            Content="Refresh Metrics"
+                            Click="RefreshMetricsButton_Click" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <TextBlock Text="Dashboard" FontWeight="SemiBold" />
+                                <TextBlock
+                                    x:Name="MetricsSummaryTextBlock"
+                                    Text="Metrics not loaded"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <TextBlock Text="Storage" FontWeight="SemiBold" />
+                                <TextBox
+                                    x:Name="MetricsDatabasePathTextBox"
+                                    Header="Metrics database"
+                                    IsReadOnly="True"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <TextBlock Text="Transcription Models" FontWeight="SemiBold" />
+                                <ListView
+                                    x:Name="TranscriptionModelPerformanceListView"
+                                    Height="180"
+                                    SelectionMode="None" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <TextBlock Text="Enhancement Models" FontWeight="SemiBold" />
+                                <ListView
+                                    x:Name="EnhancementModelPerformanceListView"
+                                    Height="180"
+                                    SelectionMode="None" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
                     <StackPanel x:Name="SettingsSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" />
                         <StackPanel Spacing="8">

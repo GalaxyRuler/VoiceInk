@@ -3,6 +3,7 @@ using VoiceInk.Windows.Core.AudioFiles;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -153,6 +154,36 @@ public sealed class AudioFileTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_RecordsSessionMetricWithAudioFileSource()
+    {
+        var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 44100, 2);
+        var history = new FakeHistoryStore();
+        var metrics = new FakeSessionMetricStore();
+        var service = new AudioFileTranscriptionService(
+            new FakeAudioFileImportService(importedAudio),
+            new FakeTranscriptionService(new TranscriptionResult(
+                "file metrics text",
+                TimeSpan.FromSeconds(3),
+                "local-whisper")),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }),
+            sessionMetricStore: metrics);
+
+        var result = await service.TranscribeAsync("source.mp3", "recordings", CancellationToken.None);
+
+        Assert.True(result.Success);
+        var saved = Assert.Single(history.Items);
+        var metric = Assert.Single(metrics.Saved);
+        Assert.Equal(saved.Id, metric.TranscriptionId);
+        Assert.Equal("audio-file", metric.Source);
+        Assert.Equal(3, metric.WordCount);
+        Assert.Equal(TimeSpan.FromSeconds(12), metric.AudioDuration);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_ReturnsFailureWhenFinalTextIsEmpty()
     {
         var service = new AudioFileTranscriptionService(
@@ -300,6 +331,33 @@ public sealed class AudioFileTranscriptionServiceTests
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);
+    }
+
+    private sealed class FakeSessionMetricStore : ISessionMetricStore
+    {
+        public List<SessionMetric> Saved { get; } = [];
+
+        public Task SaveAsync(SessionMetric metric, CancellationToken cancellationToken)
+        {
+            Saved.Add(metric);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken) =>
+            Task.FromResult(Saved.Any(metric => metric.TranscriptionId == transcriptionId));
+
+        public Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(SessionMetricsSummary.Empty);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListTranscriptionModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListEnhancementModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
     }
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore

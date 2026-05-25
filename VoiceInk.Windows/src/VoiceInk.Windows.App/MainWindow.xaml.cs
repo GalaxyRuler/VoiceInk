@@ -16,10 +16,12 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Recorder;
+using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shell;
 using VoiceInk.Windows.Core.Shortcuts;
@@ -28,6 +30,7 @@ using VoiceInk.Windows.Core.Transcription;
 using VoiceInk.Windows.Infrastructure.Dictionary;
 using VoiceInk.Windows.Infrastructure.Enhancement;
 using VoiceInk.Windows.Infrastructure.History;
+using VoiceInk.Windows.Infrastructure.Metrics;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Infrastructure.Transcription;
 using VoiceInk.Windows.Native.Audio;
@@ -52,6 +55,7 @@ public sealed partial class MainWindow : Window
     private const string AudioInputSectionTag = "Audio Input";
     private const string DictionarySectionTag = "Dictionary";
     private const string HistorySectionTag = "History";
+    private const string MetricsSectionTag = "Metrics";
     private const string SettingsSectionTag = "Settings";
     private const string AboutSectionTag = "About";
     private const string EnhancementSectionTag = "Enhancement";
@@ -61,11 +65,14 @@ public sealed partial class MainWindow : Window
     private readonly string recordingsDirectory;
     private readonly string dictionaryPath;
     private readonly string historyPath;
+    private readonly string metricsPath;
     private readonly string settingsPath;
     private readonly Dictionary<string, NavigationViewItem> navigationItemsByTag = [];
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
+    private readonly ISessionMetricStore sessionMetricStore;
     private readonly JsonSettingsStore settingsStore;
+    private readonly string? metricsInitializationWarning;
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
@@ -141,10 +148,14 @@ public sealed partial class MainWindow : Window
         recordingsDirectory = Path.Combine(appDataDirectory, "Recordings");
         dictionaryPath = Path.Combine(appDataDirectory, "dictionary.json");
         historyPath = Path.Combine(appDataDirectory, "history.db");
+        metricsPath = Path.Combine(appDataDirectory, "metrics.db");
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
 
         dictionaryStore = new JsonDictionaryStore(dictionaryPath);
         historyStore = new SqliteHistoryStore(historyPath);
+        var metricsStore = CreateSessionMetricStore(metricsPath);
+        sessionMetricStore = metricsStore.Store;
+        metricsInitializationWarning = metricsStore.Warning;
         settingsStore = new JsonSettingsStore(settingsPath);
         textInjectionService = new ClipboardTextInjectionService(restoreClipboard: true);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
@@ -162,14 +173,16 @@ public sealed partial class MainWindow : Window
             transcriptionService,
             historyStore,
             settingsStore,
-            dictionaryStore);
+            dictionaryStore,
+            sessionMetricStore);
         audioFileTranscriptionService = new AudioFileTranscriptionService(
             new MediaFoundationAudioFileImportService(),
             transcriptionService,
             historyStore,
             settingsStore,
             dictionaryStore,
-            textEnhancementPipeline);
+            textEnhancementPipeline,
+            sessionMetricStore);
         dictionaryQuickAddService = new DictionaryQuickAddService(dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
@@ -202,6 +215,10 @@ public sealed partial class MainWindow : Window
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             ShowShellSection(tag);
+            if (tag == MetricsSectionTag)
+            {
+                _ = RefreshMetricsWithStatusAsync("Metrics refreshed");
+            }
         }
     }
 
@@ -385,8 +402,9 @@ public sealed partial class MainWindow : Window
         {
             await controller.StopAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             recordingStartedAt = null;
-            statusOverride = null;
+            statusOverride = controller.LastWarning is null ? metricsWarning : null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -429,8 +447,9 @@ public sealed partial class MainWindow : Window
         {
             await controller.CancelAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             recordingStartedAt = null;
-            statusOverride = controller.LastWarning ?? "Recording canceled";
+            statusOverride = controller.LastWarning ?? metricsWarning ?? "Recording canceled";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -733,6 +752,11 @@ public sealed partial class MainWindow : Window
         await RefreshHistoryWithStatusAsync("History refreshed");
     }
 
+    private async void RefreshMetricsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshMetricsWithStatusAsync("Metrics refreshed");
+    }
+
     private async void SearchHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshHistoryWithStatusAsync("History search updated");
@@ -878,10 +902,11 @@ public sealed partial class MainWindow : Window
             var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
             await RefreshDictionaryAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
-            RefreshUiFromControllerState(audioInputWarning);
+            RefreshUiFromControllerState(audioInputWarning ?? metricsWarning);
             await ShowOnboardingIfNeededAsync(settings);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -1913,7 +1938,8 @@ public sealed partial class MainWindow : Window
             }
 
             await RefreshHistoryAsync(windowLifetime.Token);
-            statusOverride = "Audio file queue processed";
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
+            statusOverride = metricsWarning ?? "Audio file queue processed";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2063,6 +2089,111 @@ public sealed partial class MainWindow : Window
         RefreshSelectedHistoryDetails();
     }
 
+    private async Task RefreshMetricsWithStatusAsync(string status)
+    {
+        try
+        {
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(metricsWarning ?? status);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Metrics refresh failed: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshMetricsAsync(CancellationToken cancellationToken)
+    {
+        MetricsDatabasePathTextBox.Text = metricsPath;
+        if (metricsInitializationWarning is not null)
+        {
+            MetricsSummaryTextBlock.Text = metricsInitializationWarning;
+            TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
+            EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
+            return;
+        }
+
+        var summary = await sessionMetricStore.GetSummaryAsync(cancellationToken);
+        var transcriptionStats = await sessionMetricStore.ListTranscriptionModelPerformanceAsync(
+            since: null,
+            cancellationToken);
+        var enhancementStats = await sessionMetricStore.ListEnhancementModelPerformanceAsync(
+            since: null,
+            cancellationToken);
+
+        MetricsSummaryTextBlock.Text = FormatMetricsSummary(summary);
+        TranscriptionModelPerformanceListView.ItemsSource = transcriptionStats.Count == 0
+            ? ["No transcription model metrics yet"]
+            : transcriptionStats.Select(TranscriptionModelPerformanceListItem).ToArray();
+        EnhancementModelPerformanceListView.ItemsSource = enhancementStats.Count == 0
+            ? ["No enhancement model metrics yet"]
+            : enhancementStats.Select(EnhancementModelPerformanceListItem).ToArray();
+    }
+
+    private async Task<string?> RefreshMetricsBestEffortAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await RefreshMetricsAsync(cancellationToken);
+            return metricsInitializationWarning;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            MetricsDatabasePathTextBox.Text = metricsPath;
+            MetricsSummaryTextBlock.Text = $"Metrics unavailable: {ex.Message}";
+            TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
+            EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
+            return $"Metrics refresh failed: {ex.Message}";
+        }
+    }
+
+    private static string FormatMetricsSummary(SessionMetricsSummary summary) =>
+        string.Join(
+            Environment.NewLine,
+            $"Sessions Recorded: {summary.TotalSessions.ToString("N0", CultureInfo.CurrentCulture)}",
+            $"Words Dictated: {summary.TotalWords.ToString("N0", CultureInfo.CurrentCulture)}",
+            $"Words Per Minute: {summary.WordsPerMinute.ToString("0.0", CultureInfo.CurrentCulture)}",
+            $"Keystrokes Saved: {summary.KeystrokesSaved.ToString("N0", CultureInfo.CurrentCulture)}",
+            $"Time Saved: {FormatMetricDuration(summary.TimeSaved)}",
+            $"Audio Duration: {FormatMetricDuration(summary.TotalAudioDuration)}");
+
+    private static string TranscriptionModelPerformanceListItem(ModelPerformanceStat stat) =>
+        $"{stat.Name} - {stat.SessionCount:N0} sessions, {stat.SpeedFactor:0.0}x, "
+        + $"{FormatMetricDuration(stat.AverageProcessingDuration)} avg processing, "
+        + $"{FormatMetricDuration(stat.AverageAudioDuration)} avg audio";
+
+    private static string EnhancementModelPerformanceListItem(ModelPerformanceStat stat) =>
+        $"{stat.Name} - {stat.SessionCount:N0} sessions, "
+        + $"{FormatMetricDuration(stat.AverageProcessingDuration)} avg enhancement";
+
+    private static string FormatMetricDuration(TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero)
+        {
+            return "0s";
+        }
+
+        if (duration.TotalHours >= 1)
+        {
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m";
+        }
+
+        if (duration.TotalMinutes >= 1)
+        {
+            return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
+        }
+
+        return $"{duration.TotalSeconds.ToString("0.#", CultureInfo.CurrentCulture)}s";
+    }
+
     private async Task ExportHistoryAsync()
     {
         try
@@ -2174,12 +2305,13 @@ public sealed partial class MainWindow : Window
             await SaveSettingsAsync(windowLifetime.Token);
             var result = await historyRetryService.RetryAsync(item, windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
+            var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             if (result.Item is not null)
             {
                 SelectHistoryItem(result.Item.Id);
             }
 
-            statusOverride = result.Message;
+            statusOverride = metricsWarning ?? result.Message;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2252,9 +2384,10 @@ public sealed partial class MainWindow : Window
             {
                 HistorySearchTextBox.Text = string.Empty;
                 await RefreshHistoryAsync(windowLifetime.Token);
+                var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
                 SelectHistoryItem(result.Item.Id);
                 await textInjectionService.CopyAsync(result.Item.Text, windowLifetime.Token);
-                statusOverride = "Retry transcription copied";
+                statusOverride = metricsWarning ?? "Retry transcription copied";
             }
             else
             {
@@ -3113,7 +3246,20 @@ public sealed partial class MainWindow : Window
             settingsStore,
             dictionaryStore,
             textEnhancementPipeline,
-            powerModeTargetProvider);
+            powerModeTargetProvider,
+            sessionMetricStore);
+
+    private static (ISessionMetricStore Store, string? Warning) CreateSessionMetricStore(string databasePath)
+    {
+        try
+        {
+            return (new SqliteSessionMetricStore(databasePath), null);
+        }
+        catch (Exception ex)
+        {
+            return (DisabledSessionMetricStore.Instance, $"Metrics disabled: {ex.Message}");
+        }
+    }
 
     private int? SelectedAudioInputDeviceNumber() =>
         SelectedAudioInputDeviceChoice()?.DeviceNumber;
@@ -3723,6 +3869,7 @@ public sealed partial class MainWindow : Window
         AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
         DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
         HistorySectionPanel.Visibility = tag == HistorySectionTag ? Visibility.Visible : Visibility.Collapsed;
+        MetricsSectionPanel.Visibility = tag == MetricsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         SettingsSectionPanel.Visibility = tag == SettingsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         AboutSectionPanel.Visibility = tag == AboutSectionTag ? Visibility.Visible : Visibility.Collapsed;
 
@@ -3936,6 +4083,7 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording;
         RefreshHistoryButton.IsEnabled = settingsLoaded && !operationActive;
+        RefreshMetricsButton.IsEnabled = settingsLoaded && !operationActive;
         ExportHistoryButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyShortcutsButton.IsEnabled = settingsLoaded && !operationActive;
         RefreshAudioInputsButton.IsEnabled = settingsLoaded

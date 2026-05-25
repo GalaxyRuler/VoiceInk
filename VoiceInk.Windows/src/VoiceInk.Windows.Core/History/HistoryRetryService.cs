@@ -1,5 +1,6 @@
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
@@ -10,7 +11,8 @@ public sealed class HistoryRetryService(
     ITranscriptionService transcriptionService,
     IHistoryStore historyStore,
     ISettingsStore settingsStore,
-    IDictionaryStore? dictionaryStore = null)
+    IDictionaryStore? dictionaryStore = null,
+    ISessionMetricStore? sessionMetricStore = null)
 {
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
 
@@ -80,8 +82,20 @@ public sealed class HistoryRetryService(
             audioFilePath: source.AudioFilePath);
 
         await historyStore.SaveAsync(item, cancellationToken);
+        await RecordMetricAsync(item, cancellationToken);
         return new HistoryRetryResult(true, "Retry transcription saved", item);
     }
+
+    private Task<SessionMetricRecorderResult> RecordMetricAsync(
+        TranscriptionHistoryItem item,
+        CancellationToken cancellationToken) =>
+        sessionMetricStore is null
+            ? Task.FromResult(new SessionMetricRecorderResult(false))
+            : SessionMetricRecorder.RecordAsync(
+                item,
+                sessionMetricStore,
+                "retry",
+                cancellationToken);
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {

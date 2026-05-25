@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
@@ -167,6 +168,38 @@ public sealed class HistoryRetryServiceTests
         Assert.Equal(audio.Path, transcription.LastAudio?.FilePath);
         Assert.Equal("ggml-base.en.bin", transcription.LastOptions?.ModelPath);
         Assert.Equal("en", transcription.LastOptions?.Language);
+    }
+
+    [Fact]
+    public async Task RetryAsync_RecordsSessionMetricWithRetrySource()
+    {
+        using var audio = new TempAudioFile();
+        var history = new FakeHistoryStore();
+        var metrics = new FakeSessionMetricStore();
+        var service = new HistoryRetryService(
+            new FakeTranscriptionService(new TranscriptionResult(
+                "retry metrics text",
+                TimeSpan.FromSeconds(2),
+                "local-whisper")),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }),
+            sessionMetricStore: metrics);
+
+        var result = await service.RetryAsync(HistoryItem(audio.Path) with
+        {
+            AudioDuration = TimeSpan.FromSeconds(9)
+        }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var saved = Assert.Single(history.Items);
+        var metric = Assert.Single(metrics.Saved);
+        Assert.Equal(saved.Id, metric.TranscriptionId);
+        Assert.Equal("retry", metric.Source);
+        Assert.Equal(3, metric.WordCount);
+        Assert.Equal(TimeSpan.FromSeconds(9), metric.AudioDuration);
     }
 
     [Fact]
@@ -364,6 +397,33 @@ public sealed class HistoryRetryServiceTests
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);
+    }
+
+    private sealed class FakeSessionMetricStore : ISessionMetricStore
+    {
+        public List<SessionMetric> Saved { get; } = [];
+
+        public Task SaveAsync(SessionMetric metric, CancellationToken cancellationToken)
+        {
+            Saved.Add(metric);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken) =>
+            Task.FromResult(Saved.Any(metric => metric.TranscriptionId == transcriptionId));
+
+        public Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(SessionMetricsSummary.Empty);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListTranscriptionModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListEnhancementModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
     }
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore

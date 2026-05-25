@@ -3,6 +3,7 @@ using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -70,6 +71,36 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_RecordsSessionMetricForCompletedHistory()
+    {
+        var audio = new AudioCaptureResult(@"C:\Recordings\sample.wav", TimeSpan.FromSeconds(4), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var history = new FakeHistoryStore();
+        var metrics = new FakeSessionMetricStore();
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello metrics", TimeSpan.FromSeconds(1), "local-whisper")),
+            new FakeTextInjectionService(),
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }),
+            sessionMetricStore: metrics);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        var saved = Assert.Single(history.Items);
+        var metric = Assert.Single(metrics.Saved);
+        Assert.Equal(saved.Id, metric.TranscriptionId);
+        Assert.Equal("recorder", metric.Source);
+        Assert.Equal(2, metric.WordCount);
+        Assert.Equal(TimeSpan.FromSeconds(4), metric.AudioDuration);
+        Assert.Equal("ggml-base.en.bin", metric.TranscriptionModelName);
+    }
+
+    [Fact]
     public async Task CancelAsync_StopsCaptureAndSavesCanceledHistoryWithoutTranscribingOrInserting()
     {
         var audio = new AudioCaptureResult(@"C:\Recordings\canceled.wav", TimeSpan.FromSeconds(3), 16000, 1);
@@ -106,6 +137,29 @@ public sealed class DictationControllerTests
         Assert.Equal("en", saved.Language);
         Assert.Equal("ggml-base.en.bin", saved.ModelPath);
         Assert.Equal(@"C:\Recordings\canceled.wav", saved.AudioFilePath);
+    }
+
+    [Fact]
+    public async Task CancelAsync_DoesNotRecordSessionMetric()
+    {
+        var audio = new AudioCaptureResult(@"C:\Recordings\canceled.wav", TimeSpan.FromSeconds(3), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var metrics = new FakeSessionMetricStore();
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin"
+            }),
+            sessionMetricStore: metrics);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.CancelAsync(CancellationToken.None);
+
+        Assert.Empty(metrics.Saved);
     }
 
     [Fact]
@@ -1137,6 +1191,33 @@ public sealed class DictationControllerTests
         {
             return Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);
         }
+    }
+
+    private sealed class FakeSessionMetricStore : ISessionMetricStore
+    {
+        public List<SessionMetric> Saved { get; } = [];
+
+        public Task SaveAsync(SessionMetric metric, CancellationToken cancellationToken)
+        {
+            Saved.Add(metric);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> HasTranscriptionAsync(Guid transcriptionId, CancellationToken cancellationToken) =>
+            Task.FromResult(Saved.Any(metric => metric.TranscriptionId == transcriptionId));
+
+        public Task<SessionMetricsSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(SessionMetricsSummary.Empty);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListTranscriptionModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
+
+        public Task<IReadOnlyList<ModelPerformanceStat>> ListEnhancementModelPerformanceAsync(
+            DateTimeOffset? since,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ModelPerformanceStat>>([]);
     }
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore

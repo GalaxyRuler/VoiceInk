@@ -64,6 +64,7 @@ The Windows MVP already has:
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
+- Metrics navigation section backed by local SQLite `metrics.db`, with session totals, words dictated, words per minute, estimated keystrokes/time saved, transcription model performance, and enhancement model performance.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
@@ -467,12 +468,29 @@ Windows gaps:
 
 macOS metrics include session metrics, model speed factors, enhancement timing, dashboard summaries, model performance panels, and system diagnostics.
 
+Session metrics Windows MVP target:
+
+- Add separate session metric persistence rather than deriving all dashboard state directly from recent History rows.
+- Record one metric for each completed recorder, Transcribe Audio, or retry history item, keyed by transcription/history id so retries create their own rows and duplicate saves do not double-count.
+- Store transcription id, timestamp, source, word count, audio duration, transcription model name, transcription duration, speed factor, Power Mode name, enhancement model name, and enhancement duration.
+- Count words from enhanced text only when enhancement ran and produced non-empty enhanced text; otherwise count the final cleaned transcription text.
+- Keep canceled and failed history rows visible in History but out of session metrics, matching macOS recorder metric behavior.
+- Add a Metrics sidebar section with sessions recorded, words dictated, words per minute, keystrokes saved, time saved, transcription model performance, and enhancement model performance.
+- Keep diagnostics copy/export open-source and local-only.
+
+Session Metrics slice completed on 2026-05-25:
+
+- Added Core `SessionMetric`, dashboard summary, model performance stats, pure aggregation, and a `SessionMetricRecorder` matching macOS completed-session behavior.
+- Added `ISessionMetricStore` and `SqliteSessionMetricStore` with idempotent `transcription_id` persistence, schema migration, summary queries, and filtered model/enhancement performance aggregation.
+- Completed recorder, Transcribe Audio, and retry flows now record metrics after successful History saves; canceled, failed, and pending rows do not count toward metrics.
+- Added a WinUI `Metrics` sidebar section after History showing dashboard totals, metrics database path, transcription model performance, and enhancement model performance.
+
 Windows gaps:
 
-- Session metric persistence.
-- Dashboard.
-- Model performance aggregation.
-- Diagnostics copy/export.
+- Rich macOS visual dashboard cards and slide-over model performance panel styling.
+- Metrics time filters in the WinUI shell.
+- Metrics export/reset controls.
+- Diagnostics copy/export expansion beyond the existing About/Open Source local diagnostics actions.
 
 ### Settings
 

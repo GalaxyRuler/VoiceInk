@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
+using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -17,7 +18,8 @@ public sealed class DictationController(
     ISettingsStore settingsStore,
     IDictionaryStore? dictionaryStore = null,
     TextEnhancementPipeline? enhancementPipeline = null,
-    IPowerModeTargetProvider? powerModeTargetProvider = null)
+    IPowerModeTargetProvider? powerModeTargetProvider = null,
+    ISessionMetricStore? sessionMetricStore = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
@@ -144,30 +146,33 @@ public sealed class DictationController(
 
                 try
                 {
+                    var historyItem = new TranscriptionHistoryItem(
+                        Guid.NewGuid(),
+                        DateTimeOffset.UtcNow,
+                        finalText,
+                        TranscriptionConfiguration.ProviderName(settings),
+                        audio.Duration,
+                        transcription.Duration,
+                        originalText: transcription.Text,
+                        status: TranscriptionHistoryStatus.Completed,
+                        language: settings.Language,
+                        modelPath: TranscriptionConfiguration.ModelMetadata(settings),
+                        promptName: enhancement?.PromptName,
+                        enhancementDuration: enhancement?.EnhancementDuration,
+                        errorMessage: enhancement?.WarningMessage,
+                        audioFilePath: audio.FilePath,
+                        enhancedText: enhancement?.EnhancedText,
+                        enhancementProviderName: enhancement?.EnhancementProviderName,
+                        enhancementModelName: enhancement?.EnhancementModelName,
+                        aiRequestSystemMessage: enhancement?.SystemMessage,
+                        aiRequestUserMessage: enhancement?.UserMessage,
+                        powerModeName: powerModeResolution.PowerModeName,
+                        powerModeEmoji: powerModeResolution.PowerModeEmoji);
                     await historyStore.SaveAsync(
-                        new TranscriptionHistoryItem(
-                            Guid.NewGuid(),
-                            DateTimeOffset.UtcNow,
-                            finalText,
-                            TranscriptionConfiguration.ProviderName(settings),
-                            audio.Duration,
-                            transcription.Duration,
-                            originalText: transcription.Text,
-                            status: TranscriptionHistoryStatus.Completed,
-                            language: settings.Language,
-                            modelPath: TranscriptionConfiguration.ModelMetadata(settings),
-                            promptName: enhancement?.PromptName,
-                            enhancementDuration: enhancement?.EnhancementDuration,
-                            errorMessage: enhancement?.WarningMessage,
-                            audioFilePath: audio.FilePath,
-                            enhancedText: enhancement?.EnhancedText,
-                            enhancementProviderName: enhancement?.EnhancementProviderName,
-                            enhancementModelName: enhancement?.EnhancementModelName,
-                            aiRequestSystemMessage: enhancement?.SystemMessage,
-                            aiRequestUserMessage: enhancement?.UserMessage,
-                            powerModeName: powerModeResolution.PowerModeName,
-                            powerModeEmoji: powerModeResolution.PowerModeEmoji),
+                        historyItem,
                         cancellationToken);
+                    var metricsResult = await RecordMetricAsync(historyItem, cancellationToken);
+                    LastWarning ??= metricsResult.WarningMessage;
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -304,6 +309,17 @@ public sealed class DictationController(
             return PowerModeMatcher.Resolve(settings, target: null);
         }
     }
+
+    private Task<SessionMetricRecorderResult> RecordMetricAsync(
+        TranscriptionHistoryItem item,
+        CancellationToken cancellationToken) =>
+        sessionMetricStore is null
+            ? Task.FromResult(new SessionMetricRecorderResult(false))
+            : SessionMetricRecorder.RecordAsync(
+                item,
+                sessionMetricStore,
+                SessionMetricRecorder.DefaultSource,
+                cancellationToken);
 
     private sealed class EmptyDictionaryStore : IDictionaryStore
     {
