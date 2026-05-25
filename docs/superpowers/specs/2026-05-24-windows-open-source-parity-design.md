@@ -177,10 +177,16 @@ Floating-recorder no-activate popovers slice completed on 2026-05-25:
 - Power chooser shows `Select Power Mode`, `Auto`, enabled Power Mode rows, selected-row checkmarks, and `No Power Modes Available` when there are no enabled rules.
 - Stop and Cancel must wait for any in-flight chooser persistence before completing the recording, preserving the race fix from the click-to-cycle slice.
 
+Floating-recorder hover-dismissal slice completed on 2026-05-25:
+
+- Prompt and Power chooser panels now open on pointer hover over their recorder buttons.
+- The open chooser remains visible while the pointer is over either the button or the chooser panel.
+- The chooser closes after a 250 ms delay once the pointer leaves both regions, matching the macOS recorder popover timing.
+- Manual click toggles still work, and all behavior stays inside the existing no-activate recorder window.
+
 Windows gaps:
 
 - Live partial transcript.
-- Hover-driven Prompt and Power Mode popover dismissal.
 - Notch-style recorder.
 
 ### Shortcuts

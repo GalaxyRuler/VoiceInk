@@ -22,6 +22,8 @@
             BorderBrush="#333333"
             BorderThickness="1"
             CornerRadius="8"
+            PointerEntered="PromptPopoverPanel_PointerEntered"
+            PointerExited="PromptPopoverPanel_PointerExited"
             Visibility="Collapsed">
             <StackPanel Spacing="8">
                 <CheckBox
@@ -52,6 +54,8 @@
             BorderBrush="#333333"
             BorderThickness="1"
             CornerRadius="8"
+            PointerEntered="PowerModePopoverPanel_PointerEntered"
+            PointerExited="PowerModePopoverPanel_PointerExited"
             Visibility="Collapsed">
             <StackPanel Spacing="8">
                 <TextBlock
@@ -101,6 +105,8 @@
                         Click="PromptButton_Click"
                         IsEnabled="False"
                         MaxWidth="92"
+                        PointerEntered="PromptButton_PointerEntered"
+                        PointerExited="PromptButton_PointerExited"
                         ToolTipService.ToolTip="Prompt">
                         <TextBlock
                             x:Name="PromptButtonTextBlock"
@@ -131,6 +137,8 @@
                         Click="PowerModeButton_Click"
                         IsEnabled="False"
                         MaxWidth="92"
+                        PointerEntered="PowerModeButton_PointerEntered"
+                        PointerExited="PowerModeButton_PointerExited"
                         ToolTipService.ToolTip="Power Mode">
                         <TextBlock
                             x:Name="PowerModeButtonTextBlock"

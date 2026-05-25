@@ -22,7 +22,11 @@ public sealed partial class FloatingRecorderWindow : Window
     private const int RecorderWindowExpandedHeight = 352;
     private const double MinimumBarHeight = 8;
     private const double MaximumBarHeight = 32;
+    private static readonly TimeSpan PopoverDismissalDelay = TimeSpan.FromMilliseconds(250);
     private readonly DispatcherQueueTimer pulseTimer;
+    private readonly DispatcherQueueTimer popoverDismissalTimer;
+    private readonly FloatingRecorderPopoverHoverController promptPopoverHover = new();
+    private readonly FloatingRecorderPopoverHoverController powerModePopoverHover = new();
     private readonly SubclassProc subclassProc;
     private FloatingRecorderControlState? latestControlState;
     private RecorderControlPopover activePopover = RecorderControlPopover.None;
@@ -30,6 +34,7 @@ public sealed partial class FloatingRecorderWindow : Window
     private bool subclassInstalled;
     private bool suppressPromptEnhancementChanged;
     private bool canUseRecorderControls;
+    private RecorderControlPopover pendingDismissalPopover = RecorderControlPopover.None;
     private int pulseStep;
     private double inputLevel;
 
@@ -44,6 +49,11 @@ public sealed partial class FloatingRecorderWindow : Window
         pulseTimer = DispatcherQueue.CreateTimer();
         pulseTimer.Interval = TimeSpan.FromMilliseconds(180);
         pulseTimer.Tick += (_, _) => AdvancePulse();
+
+        popoverDismissalTimer = DispatcherQueue.CreateTimer();
+        popoverDismissalTimer.Interval = PopoverDismissalDelay;
+        popoverDismissalTimer.IsRepeating = false;
+        popoverDismissalTimer.Tick += (_, _) => DismissalTimer_Tick();
     }
 
     public Func<Task>? StopRequested { get; set; }
@@ -114,6 +124,7 @@ public sealed partial class FloatingRecorderWindow : Window
         if (!canUseControls)
         {
             SetActivePopover(RecorderControlPopover.None);
+            CancelPendingPopoverDismissal();
         }
     }
 
@@ -229,7 +240,22 @@ public sealed partial class FloatingRecorderWindow : Window
             return;
         }
 
+        CancelPendingPopoverDismissal();
         activePopover = popover;
+        if (popover == RecorderControlPopover.None)
+        {
+            promptPopoverHover.Reset();
+            powerModePopoverHover.Reset();
+        }
+        else if (popover == RecorderControlPopover.Prompt)
+        {
+            powerModePopoverHover.Reset();
+        }
+        else
+        {
+            promptPopoverHover.Reset();
+        }
+
         PromptPopoverPanel.Visibility = popover == RecorderControlPopover.Prompt
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -244,6 +270,85 @@ public sealed partial class FloatingRecorderWindow : Window
         if (isShown)
         {
             MoveBottomCenter();
+        }
+    }
+
+    private void ApplyPromptHoverAction(FloatingRecorderPopoverHoverAction action) =>
+        ApplyHoverAction(RecorderControlPopover.Prompt, action);
+
+    private void ApplyPowerModeHoverAction(FloatingRecorderPopoverHoverAction action) =>
+        ApplyHoverAction(RecorderControlPopover.PowerMode, action);
+
+    private void ApplyHoverAction(
+        RecorderControlPopover popover,
+        FloatingRecorderPopoverHoverAction action)
+    {
+        switch (action)
+        {
+            case FloatingRecorderPopoverHoverAction.Open:
+                if (CanOpenPopover(popover))
+                {
+                    CancelPendingPopoverDismissal();
+                    SetActivePopover(popover);
+                }
+
+                break;
+            case FloatingRecorderPopoverHoverAction.ScheduleDismissal:
+                if (activePopover == popover)
+                {
+                    SchedulePopoverDismissal(popover);
+                }
+
+                break;
+            case FloatingRecorderPopoverHoverAction.CancelDismissal:
+                CancelPendingPopoverDismissal();
+                break;
+            case FloatingRecorderPopoverHoverAction.Close:
+                if (activePopover == popover)
+                {
+                    SetActivePopover(RecorderControlPopover.None);
+                }
+
+                break;
+            case FloatingRecorderPopoverHoverAction.None:
+            default:
+                break;
+        }
+    }
+
+    private bool CanOpenPopover(RecorderControlPopover popover) =>
+        canUseRecorderControls
+        && latestControlState is not null
+        && (popover != RecorderControlPopover.Prompt || latestControlState.CanOpenPromptControls);
+
+    private void SchedulePopoverDismissal(RecorderControlPopover popover)
+    {
+        pendingDismissalPopover = popover;
+        popoverDismissalTimer.Stop();
+        popoverDismissalTimer.Start();
+    }
+
+    private void CancelPendingPopoverDismissal()
+    {
+        pendingDismissalPopover = RecorderControlPopover.None;
+        if (popoverDismissalTimer.IsRunning)
+        {
+            popoverDismissalTimer.Stop();
+        }
+    }
+
+    private void DismissalTimer_Tick()
+    {
+        var popover = pendingDismissalPopover;
+        pendingDismissalPopover = RecorderControlPopover.None;
+        switch (popover)
+        {
+            case RecorderControlPopover.Prompt:
+                ApplyPromptHoverAction(promptPopoverHover.DismissalTimerElapsed());
+                break;
+            case RecorderControlPopover.PowerMode:
+                ApplyPowerModeHoverAction(powerModePopoverHover.DismissalTimerElapsed());
+                break;
         }
     }
 
@@ -407,6 +512,7 @@ public sealed partial class FloatingRecorderWindow : Window
             return;
         }
 
+        promptPopoverHover.Reset();
         SetActivePopover(activePopover == RecorderControlPopover.Prompt
             ? RecorderControlPopover.None
             : RecorderControlPopover.Prompt);
@@ -419,10 +525,35 @@ public sealed partial class FloatingRecorderWindow : Window
             return;
         }
 
+        powerModePopoverHover.Reset();
         SetActivePopover(activePopover == RecorderControlPopover.PowerMode
             ? RecorderControlPopover.None
             : RecorderControlPopover.PowerMode);
     }
+
+    private void PromptButton_PointerEntered(object sender, RoutedEventArgs e) =>
+        ApplyPromptHoverAction(promptPopoverHover.ButtonEntered());
+
+    private void PromptButton_PointerExited(object sender, RoutedEventArgs e) =>
+        ApplyPromptHoverAction(promptPopoverHover.ButtonExited());
+
+    private void PromptPopoverPanel_PointerEntered(object sender, RoutedEventArgs e) =>
+        ApplyPromptHoverAction(promptPopoverHover.PanelEntered());
+
+    private void PromptPopoverPanel_PointerExited(object sender, RoutedEventArgs e) =>
+        ApplyPromptHoverAction(promptPopoverHover.PanelExited());
+
+    private void PowerModeButton_PointerEntered(object sender, RoutedEventArgs e) =>
+        ApplyPowerModeHoverAction(powerModePopoverHover.ButtonEntered());
+
+    private void PowerModeButton_PointerExited(object sender, RoutedEventArgs e) =>
+        ApplyPowerModeHoverAction(powerModePopoverHover.ButtonExited());
+
+    private void PowerModePopoverPanel_PointerEntered(object sender, RoutedEventArgs e) =>
+        ApplyPowerModeHoverAction(powerModePopoverHover.PanelEntered());
+
+    private void PowerModePopoverPanel_PointerExited(object sender, RoutedEventArgs e) =>
+        ApplyPowerModeHoverAction(powerModePopoverHover.PanelExited());
 
     private async void PromptEnhancementCheckBox_Changed(object sender, RoutedEventArgs e)
     {
@@ -450,6 +581,7 @@ public sealed partial class FloatingRecorderWindow : Window
     private void FloatingRecorderWindow_Closed(object sender, WindowEventArgs args)
     {
         pulseTimer.Stop();
+        popoverDismissalTimer.Stop();
         StopRequested = null;
         CancelRequested = null;
         PromptEnhancementToggled = null;

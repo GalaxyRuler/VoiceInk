@@ -16,7 +16,7 @@ VoiceInk Windows parity  [##############------] 71%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 78% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, and metrics are in place. Prompt-trigger detection, advanced formatting, and canceling in-flight post-recording work remain. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
-| Floating recorder | 68% | `[##############------]` | Compact recorder shows recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, and no-activate Prompt/Power chooser panels. Live transcript, notch style, and hover-delay popover dismissal remain. |
+| Floating recorder | 70% | `[##############------]` | Compact recorder shows recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, and hover-dismissable no-activate Prompt/Power chooser panels. Live transcript and notch style remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [##############------] 71%
 ## Current Slice
 
 ```text
-Floating recorder Prompt/Power popovers  [####################] 100%
+Floating recorder hover dismissal  [####################] 100%
 ```
 
 Completed:
 
-- Added no-activate in-window Prompt and Power chooser panels to the floating recorder.
-- Prompt chooser exposes an AI Enhancement toggle and selectable prompt rows; selecting a prompt enables enhancement and persists the prompt.
-- Power Mode chooser exposes Auto plus enabled Power Mode rules and persists the explicit selection.
-- Dictation completion now uses the original recording target with latest Prompt/Power settings so in-recording changes affect the active result.
+- Added macOS-style hover behavior for the Prompt and Power chooser panels.
+- Choosers open on pointer hover over their recorder button.
+- Choosers stay open while the pointer is over the button or panel, then close after a 250 ms delay.
+- Manual click toggles and no-activate behavior remain intact.
 
 ## Near-Term Priority
 
-1. Finish floating recorder fidelity: live partial transcript, hover-delay popover dismissal, and notch-style recorder.
+1. Finish floating recorder fidelity: live partial transcript and notch-style recorder.
 2. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
 3. Add packaging path: zip/dev package first, then MSIX or installer.
 4. Continue model-management polish with richer provider cards and lifecycle status.
