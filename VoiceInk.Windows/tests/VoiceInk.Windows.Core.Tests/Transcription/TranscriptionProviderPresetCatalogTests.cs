@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Transcription;
+using VoiceInk.Windows.Core.Settings;
 using Xunit;
 
 namespace VoiceInk.Windows.Core.Tests.Transcription;
@@ -48,5 +49,37 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("groq"));
+    }
+
+    [Fact]
+    public void BuildOptions_NormalizesLocalWhisperLanguageForEnglishOnlyModel()
+    {
+        var options = TranscriptionConfiguration.BuildOptions(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Language = "fr"
+            },
+            prompt: "");
+
+        Assert.Equal("en", options.Language);
+    }
+
+    [Fact]
+    public void BuildOptions_KeepsCloudLanguageIndependentFromLocalWhisperModel()
+    {
+        var options = TranscriptionConfiguration.BuildOptions(
+            new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Language = "fr",
+                CloudTranscriptionEndpoint = "https://api.example.test/v1/audio/transcriptions",
+                CloudTranscriptionModel = "whisper-large-v3"
+            },
+            prompt: "");
+
+        Assert.Equal("fr", options.Language);
+        Assert.Equal(TranscriptionProviderKind.OpenAICompatible, options.Provider);
     }
 }

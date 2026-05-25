@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Models;
 
 namespace VoiceInk.Windows.Core.Transcription;
 
@@ -51,7 +52,7 @@ public static class TranscriptionConfiguration
     public static TranscriptionOptions BuildOptions(AppSettings settings, string prompt) =>
         new(
             settings.ModelPath,
-            settings.Language,
+            LanguageForProvider(settings),
             prompt,
             settings.TranscriptionProvider,
             settings.CloudTranscriptionEndpoint,
@@ -127,6 +128,14 @@ public static class TranscriptionConfiguration
 
         return null;
     }
+
+    private static string LanguageForProvider(AppSettings settings) =>
+        settings.TranscriptionProvider == TranscriptionProviderKind.LocalWhisper
+            ? WhisperLanguageCatalog.CompatibleLanguageOrFallback(
+                settings.ModelPath,
+                settings.ImportedWhisperModels,
+                settings.Language)
+            : settings.Language;
 
     private static bool ContainsSecretQueryParameter(Uri uri)
     {

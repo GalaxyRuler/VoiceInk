@@ -165,6 +165,14 @@
                                 x:Name="ModelDownloadStatusTextBlock"
                                 TextWrapping="Wrap" />
                         </StackPanel>
+                        <ComboBox
+                            x:Name="LanguageComboBox"
+                            DisplayMemberPath="DisplayName"
+                            Header="Transcription Language"
+                            SelectionChanged="LanguageComboBox_SelectionChanged" />
+                        <TextBlock
+                            x:Name="LanguageDescriptionTextBlock"
+                            TextWrapping="Wrap" />
                         <TextBox
                             x:Name="ModelPathTextBox"
                             Header="Local whisper model path"

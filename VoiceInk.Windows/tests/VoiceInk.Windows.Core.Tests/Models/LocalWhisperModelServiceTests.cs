@@ -106,6 +106,68 @@ public sealed class LocalWhisperModelServiceTests
     }
 
     [Fact]
+    public void LanguageChoices_ForEnglishOnlyCatalogModel_ReturnsEnglishOnly()
+    {
+        var choices = WhisperLanguageCatalog.ChoicesForModelPath(
+            "C:\\Models\\ggml-base.en.bin",
+            []);
+
+        var choice = Assert.Single(choices);
+        Assert.Equal("en", choice.Code);
+        Assert.Equal("English", choice.DisplayName);
+    }
+
+    [Fact]
+    public void LanguageChoices_ForMultilingualCatalogModel_ReturnsAutoFirstAndWhisperLanguages()
+    {
+        var choices = WhisperLanguageCatalog.ChoicesForModelPath(
+            "C:\\Models\\ggml-base.bin",
+            []);
+
+        Assert.Equal("auto", choices[0].Code);
+        Assert.Equal("Auto-detect", choices[0].DisplayName);
+        Assert.Contains(choices, item => item.Code == "en" && item.DisplayName == "English");
+        Assert.Contains(choices, item => item.Code == "fr" && item.DisplayName == "French");
+        Assert.Contains(choices, item => item.Code == "de" && item.DisplayName == "German");
+        Assert.Contains(choices, item => item.Code == "ja" && item.DisplayName == "Japanese");
+        Assert.Contains(choices, item => item.Code == "zh" && item.DisplayName == "Chinese");
+    }
+
+    [Fact]
+    public void LanguageChoices_ForImportedUnknownModel_TreatsModelAsMultilingual()
+    {
+        var imported = new LocalWhisperModel(
+            "D:\\Models\\custom-medical.bin",
+            "custom-medical",
+            DateTimeOffset.UnixEpoch);
+
+        var choices = WhisperLanguageCatalog.ChoicesForModelPath(imported.Path, [imported]);
+
+        Assert.Equal("auto", choices[0].Code);
+        Assert.Contains(choices, item => item.Code == "en");
+        Assert.Contains(choices, item => item.Code == "es");
+    }
+
+    [Theory]
+    [InlineData("C:\\Models\\ggml-base.bin", "fr", "fr")]
+    [InlineData("C:\\Models\\ggml-base.bin", "", "auto")]
+    [InlineData("C:\\Models\\ggml-base.bin", "zz", "auto")]
+    [InlineData("C:\\Models\\ggml-base.en.bin", "fr", "en")]
+    [InlineData("C:\\Models\\ggml-base.en.bin", "auto", "en")]
+    public void CompatibleLanguageOrFallback_UsesModelCapabilities(
+        string modelPath,
+        string selectedLanguage,
+        string expectedLanguage)
+    {
+        var language = WhisperLanguageCatalog.CompatibleLanguageOrFallback(
+            modelPath,
+            [],
+            selectedLanguage);
+
+        Assert.Equal(expectedLanguage, language);
+    }
+
+    [Fact]
     public void Import_BinPath_AddsModelWithFileDisplayName()
     {
         var importedAt = DateTimeOffset.Parse("2026-05-24T12:00:00Z");

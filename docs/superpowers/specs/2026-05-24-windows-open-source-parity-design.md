@@ -226,9 +226,23 @@ Model catalog downloads slice completed on 2026-05-25:
 - Downloaded catalog models are saved under `%LocalAppData%\VoiceInk.Windows\Models`, replace existing entries with the same GGML name, persist in JSON settings, and become the default local model path after successful download.
 - Core ML encoder downloads remain omitted because they are macOS-only acceleration assets.
 
+Model language selection Windows target:
+
+- Add a macOS-style `Transcription Language` control to AI Models.
+- Use local Whisper model capability metadata so `.en` catalog models force `en`, while multilingual catalog models and imported `.bin` models offer `auto` plus Whisper language codes.
+- Keep the current language if it is supported when the default model changes. Fall back to `en` for English-only models and `auto` for multilingual models when the saved language is blank or incompatible.
+- Persist the selected language in JSON settings so dictation, Transcribe Audio, cloud transcription, history retry, and Power Mode overlays keep using the shared `AppSettings.Language` flow.
+- Keep native Apple language asset downloads omitted on Windows.
+
+Model language selection slice completed on 2026-05-25:
+
+- Added a Core Whisper language catalog using macOS language names and Whisper language-code support.
+- Added model-aware language fallback rules: English-only `.en` catalog models force `en`; multilingual catalog and imported local models offer `auto` plus Whisper language codes.
+- Added an AI Models `Transcription Language` combo that updates when the selected model path changes, disables selection for English-only models, and persists user selections to JSON settings.
+- Reused the existing `AppSettings.Language` flow, so dictation, Transcribe Audio, cloud transcription, history retry, and Power Mode overlays consume the selected language without platform-specific branching.
+
 Windows gaps:
 
-- Language picker bound to model capabilities.
 - Warmup/preload.
 - Provider cards and secure API key storage.
 

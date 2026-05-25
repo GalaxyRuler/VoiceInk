@@ -127,6 +127,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
     private IReadOnlyList<LocalWhisperModel> modelChoices = [];
     private IReadOnlyList<WhisperModelCatalogItem> modelCatalogItems = [];
+    private IReadOnlyList<TranscriptionLanguageChoice> languageChoices = [];
     private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
@@ -152,6 +153,7 @@ public sealed partial class MainWindow : Window
     private bool settingsLoaded;
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
+    private bool suppressLanguageChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
     private bool suppressEnhancementPresetChanged;
@@ -641,6 +643,32 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private async void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (suppressLanguageChanged)
+        {
+            return;
+        }
+
+        if (settingsLoaded && !IsOperationActive())
+        {
+            try
+            {
+                await SaveSettingsAsync(windowLifetime.Token);
+            }
+            catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                RefreshUiFromControllerState($"Language save failed: {ex.Message}");
+                return;
+            }
+        }
+
+        RefreshUiFromControllerState();
+    }
+
     private void TranscriptionProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (settingsLoaded)
@@ -648,6 +676,7 @@ public sealed partial class MainWindow : Window
             _ = RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
         }
 
+        RefreshLanguageChoices(ModelPathTextBox.Text, selectedLanguage: SelectedLanguageCode());
         RefreshUiFromControllerState();
     }
 
@@ -1172,8 +1201,9 @@ public sealed partial class MainWindow : Window
         }
 
         localWhisperModels = settings.ImportedWhisperModels;
-        RefreshModelChoices(settings.ModelPath);
         TranscriptionProviderComboBox.SelectedIndex = TranscriptionProviderToSelectedIndex(settings.TranscriptionProvider);
+        RefreshModelChoices(settings.ModelPath);
+        RefreshLanguageChoices(settings.ModelPath, settings.Language);
         suppressCloudTranscriptionPresetChanged = true;
         SelectCloudTranscriptionPreset(settings.CloudTranscriptionProviderId);
         suppressCloudTranscriptionPresetChanged = false;
@@ -2084,6 +2114,7 @@ public sealed partial class MainWindow : Window
     private async Task UseLocalModelPathAsync(string modelPath, string displayName)
     {
         ModelPathTextBox.Text = modelPath;
+        RefreshLanguageChoices(modelPath, selectedLanguage: SelectedLanguageCode());
         await SaveSettingsAsync(windowLifetime.Token);
         RefreshModelChoices(modelPath);
         SelectCatalogModelByName(Path.GetFileNameWithoutExtension(modelPath));
@@ -2136,6 +2167,7 @@ public sealed partial class MainWindow : Window
                 localWhisperModels,
                 downloadedModel);
             ModelPathTextBox.Text = downloadedModel.Path;
+            RefreshLanguageChoices(downloadedModel.Path, selectedLanguage: SelectedLanguageCode());
             await SaveSettingsAsync(windowLifetime.Token);
             RefreshModelChoices(downloadedModel.Path);
             SelectCatalogModelByName(selectedName);
@@ -4509,6 +4541,7 @@ public sealed partial class MainWindow : Window
         return settings with
         {
             ModelPath = ModelPathTextBox.Text,
+            Language = SelectedLanguageCode(),
             ImportedWhisperModels = localWhisperModels.ToArray(),
             TranscriptionProvider = SelectedTranscriptionProvider(),
             CloudTranscriptionProviderId = SelectedCloudTranscriptionProviderId(),
@@ -4631,6 +4664,14 @@ public sealed partial class MainWindow : Window
             : null;
     }
 
+    private string SelectedLanguageCode()
+    {
+        var selectedIndex = LanguageComboBox.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < languageChoices.Count
+            ? languageChoices[selectedIndex].Code
+            : CompatibleLanguageForSelectedProvider(selectedLanguage: null);
+    }
+
     private TranscriptionProviderKind SelectedTranscriptionProvider() =>
         TranscriptionProviderComboBox.SelectedIndex == 1
             ? TranscriptionProviderKind.OpenAICompatible
@@ -4674,6 +4715,7 @@ public sealed partial class MainWindow : Window
                 string.Equals(model.Path, trimmedPath, StringComparison.OrdinalIgnoreCase));
 
         RefreshModelCatalogItems(modelPath);
+        RefreshLanguageChoices(modelPath, selectedLanguage: SelectedLanguageCode());
     }
 
     private void RefreshModelCatalogItems(string? selectedPath = null)
@@ -4714,6 +4756,47 @@ public sealed partial class MainWindow : Window
             .ToList()
             .FindIndex(model => string.Equals(model.Name, modelName, StringComparison.OrdinalIgnoreCase));
         LocalModelCatalogListView.SelectedIndex = selectedIndex;
+    }
+
+    private void RefreshLanguageChoices(string? selectedPath = null, string? selectedLanguage = null)
+    {
+        var modelPath = selectedPath ?? ModelPathTextBox.Text;
+        languageChoices = SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
+            ? WhisperLanguageCatalog.ChoicesForModelPath(modelPath, localWhisperModels)
+            : WhisperLanguageCatalog.MultilingualChoices;
+        var compatibleLanguage = CompatibleLanguageForSelectedProvider(selectedLanguage, modelPath);
+
+        suppressLanguageChanged = true;
+        LanguageComboBox.ItemsSource = languageChoices;
+        LanguageComboBox.SelectedIndex = languageChoices
+            .ToList()
+            .FindIndex(choice => string.Equals(choice.Code, compatibleLanguage, StringComparison.OrdinalIgnoreCase));
+        suppressLanguageChanged = false;
+
+        var isEnglishOnly = languageChoices.Count == 1 && languageChoices[0].Code == "en";
+        LanguageDescriptionTextBlock.Text = isEnglishOnly
+            ? "This is an English-optimized model and only supports English transcription."
+            : SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
+                ? "This model supports multiple languages. Select a specific language or auto-detect."
+                : "Cloud transcription language is provider-dependent. Select a specific language or auto-detect.";
+    }
+
+    private string CompatibleLanguageForSelectedProvider(string? selectedLanguage, string? modelPath = null)
+    {
+        if (SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper)
+        {
+            return WhisperLanguageCatalog.CompatibleLanguageOrFallback(
+                modelPath ?? ModelPathTextBox.Text,
+                localWhisperModels,
+                selectedLanguage);
+        }
+
+        var normalizedLanguage = selectedLanguage?.Trim() ?? string.Empty;
+        return languageChoices.Any(choice =>
+            string.Equals(choice.Code, normalizedLanguage, StringComparison.OrdinalIgnoreCase))
+            ? languageChoices.First(choice =>
+                string.Equals(choice.Code, normalizedLanguage, StringComparison.OrdinalIgnoreCase)).Code
+            : "auto";
     }
 
     private void RefreshEnhancementPromptChoices(Guid? selectedPromptId)
@@ -5641,6 +5724,7 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording;
         ModelPathTextBox.IsEnabled = modelControlsEnabled;
+        LanguageComboBox.IsEnabled = modelControlsEnabled && languageChoices.Count > 1;
         LocalModelCatalogListView.IsEnabled = modelControlsEnabled;
         DownloadCatalogModelButton.IsEnabled = modelControlsEnabled
             && selectedCatalogModel is not null
