@@ -60,7 +60,7 @@ The Windows MVP already has:
 - Clipboard-based text insertion.
 - Minimal WinUI shell.
 - Native Windows tray icon with show/hide, recording toggle, Quick Add, History, and Quit commands.
-- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, pulse animation, and Prompt/Power Mode affordance labels.
+- Compact always-on-top floating mini-recorder during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, pulse animation, and Prompt/Power Mode affordance labels.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
@@ -141,7 +141,7 @@ Floating-recorder slice completed on 2026-05-25:
 - Added a compact always-on-top Windows mini-recorder adapted from `MiniRecorderPanel` and `MiniRecorderView`.
 - Shows while recording, transcribing, inserting, or during an explicit operation status such as starting, stopping, or canceling.
 - Shows state title, detail text, elapsed timer, animated pulse bars, and disabled Prompt/Power Mode affordance labels for design continuity.
-- Keeps stop on global shortcuts, tray commands, and main-window controls, and keeps cancel on global shortcuts and main-window controls in this slice so the floating recorder cannot steal focus from the dictation target before paste insertion.
+- Kept stop on global shortcuts, tray commands, and main-window controls, and kept cancel on global shortcuts and main-window controls in this slice while the no-activate recorder command path was deferred.
 - Uses a Core `FloatingRecorderPresenter` for state-to-UI mapping.
 - Leaves live partial transcript, real audio meter waveform, notch style, prompt picker behavior, and Power Mode behavior for later slices.
 
@@ -152,10 +152,16 @@ Floating-recorder level-meter slice completed on 2026-05-25:
 - Added live five-bar microphone level rendering in the compact Windows recorder while recording.
 - Kept processing states on a lightweight pulse animation when live microphone input is unavailable.
 
+Floating-recorder controls slice completed on 2026-05-25:
+
+- Added compact Stop and Cancel controls to the Windows floating recorder.
+- Controls are enabled only for the recording state and remain disabled while starting, stopping, canceling, transcribing, inserting, idle, or error.
+- Routed recorder controls through the existing guarded `StopCurrentRecordingAsync` and `CancelCurrentRecordingAsync` commands so tray, shortcut, main-window, and recorder behavior stays consistent.
+- Kept `AppWindow.Show(activateWindow: false)` and added a Win32 `WM_MOUSEACTIVATE` subclass returning `MA_NOACTIVATE`, allowing recorder clicks to process without activating the recorder window or stealing the paste target.
+
 Windows gaps:
 
 - Live partial transcript.
-- Non-activating mouse controls for stop/cancel that preserve the paste target.
 - Prompt and Power Mode controls in recorder.
 
 ### Shortcuts

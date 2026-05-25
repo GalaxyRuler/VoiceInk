@@ -1,8 +1,9 @@
-using Microsoft.UI.Dispatching;
 using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using System.Runtime.InteropServices;
 using VoiceInk.Windows.Core.Recorder;
 using Windows.Graphics;
 using WinRT.Interop;
@@ -11,28 +12,42 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class FloatingRecorderWindow : Window
 {
+    private const uint WindowMessageMouseActivate = 0x0021;
+    private const int MouseActivateNoActivate = 3;
+    private const nuint NoActivateSubclassId = 1;
     private const double MinimumBarHeight = 8;
     private const double MaximumBarHeight = 32;
     private readonly DispatcherQueueTimer pulseTimer;
+    private readonly SubclassProc subclassProc;
     private bool isShown;
+    private bool subclassInstalled;
     private int pulseStep;
     private double inputLevel;
 
     public FloatingRecorderWindow()
     {
         InitializeComponent();
+        subclassProc = RecorderSubclassProc;
         ConfigureWindow();
+        TryInstallNoActivateSubclass();
+        Closed += FloatingRecorderWindow_Closed;
 
         pulseTimer = DispatcherQueue.CreateTimer();
         pulseTimer.Interval = TimeSpan.FromMilliseconds(180);
         pulseTimer.Tick += (_, _) => AdvancePulse();
     }
 
+    public Func<Task>? StopRequested { get; set; }
+
+    public Func<Task>? CancelRequested { get; set; }
+
     public void Apply(FloatingRecorderViewState state)
     {
         TitleTextBlock.Text = state.Title;
         DetailTextBlock.Text = state.Detail;
         ElapsedTextBlock.Text = state.Elapsed;
+        StopRecordingButton.IsEnabled = state.CanStop;
+        CancelRecordingButton.IsEnabled = state.CanCancel;
         inputLevel = double.IsFinite(state.InputLevel) ? Math.Clamp(state.InputLevel, 0, 1) : 0;
         SetPulseVisible(state.ShowPulse);
         ApplyMeter();
@@ -48,7 +63,7 @@ public sealed partial class FloatingRecorderWindow : Window
 
     private void ConfigureWindow()
     {
-        AppWindow.Resize(new SizeInt32(320, 104));
+        AppWindow.Resize(new SizeInt32(384, 104));
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsAlwaysOnTop = true;
@@ -153,4 +168,92 @@ public sealed partial class FloatingRecorderWindow : Window
         bar.Height = height;
         bar.Opacity = opacity;
     }
+
+    private async void StopRecordingButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (StopRequested is null)
+        {
+            return;
+        }
+
+        await StopRequested();
+    }
+
+    private async void CancelRecordingButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (CancelRequested is null)
+        {
+            return;
+        }
+
+        await CancelRequested();
+    }
+
+    private void TryInstallNoActivateSubclass()
+    {
+        var hwnd = WindowNative.GetWindowHandle(this);
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        subclassInstalled = SetWindowSubclass(hwnd, subclassProc, NoActivateSubclassId, IntPtr.Zero);
+    }
+
+    private void FloatingRecorderWindow_Closed(object sender, WindowEventArgs args)
+    {
+        pulseTimer.Stop();
+        StopRequested = null;
+        CancelRequested = null;
+
+        var hwnd = WindowNative.GetWindowHandle(this);
+        if (subclassInstalled && hwnd != IntPtr.Zero)
+        {
+            RemoveWindowSubclass(hwnd, subclassProc, NoActivateSubclassId);
+            subclassInstalled = false;
+        }
+    }
+
+    private static IntPtr RecorderSubclassProc(
+        IntPtr hwnd,
+        uint message,
+        IntPtr wParam,
+        IntPtr lParam,
+        nuint subclassId,
+        IntPtr referenceData)
+    {
+        return message == WindowMessageMouseActivate
+            ? new IntPtr(MouseActivateNoActivate)
+            : DefSubclassProc(hwnd, message, wParam, lParam);
+    }
+
+    private delegate IntPtr SubclassProc(
+        IntPtr hwnd,
+        uint message,
+        IntPtr wParam,
+        IntPtr lParam,
+        nuint subclassId,
+        IntPtr referenceData);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowSubclass(
+        IntPtr hwnd,
+        SubclassProc subclassProc,
+        nuint subclassId,
+        IntPtr referenceData);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool RemoveWindowSubclass(
+        IntPtr hwnd,
+        SubclassProc subclassProc,
+        nuint subclassId);
+
+    [DllImport("comctl32.dll")]
+    private static extern IntPtr DefSubclassProc(
+        IntPtr hwnd,
+        uint message,
+        IntPtr wParam,
+        IntPtr lParam);
 }

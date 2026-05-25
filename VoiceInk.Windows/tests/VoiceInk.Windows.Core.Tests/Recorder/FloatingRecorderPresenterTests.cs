@@ -60,6 +60,23 @@ public sealed class FloatingRecorderPresenterTests
         Assert.Equal(0, state.InputLevel);
     }
 
+    [Theory]
+    [InlineData(DictationState.Idle)]
+    [InlineData(DictationState.Error)]
+    [InlineData(DictationState.Transcribing)]
+    [InlineData(DictationState.Inserting)]
+    public void FromState_NonRecordingStates_DisableRecorderCommands(DictationState dictationState)
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            dictationState,
+            TimeSpan.FromSeconds(5),
+            "Working",
+            isOperationActive: false);
+
+        Assert.False(state.CanStop);
+        Assert.False(state.CanCancel);
+    }
+
     [Fact]
     public void FromState_IdleWithoutOperation_HidesRecorder()
     {

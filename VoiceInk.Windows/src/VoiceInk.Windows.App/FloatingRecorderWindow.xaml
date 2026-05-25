@@ -7,7 +7,7 @@
     <Grid Background="Transparent" Padding="0">
         <Border
             x:Name="RecorderChrome"
-            Width="320"
+            Width="384"
             Height="104"
             Padding="14"
             Background="#111111"
@@ -61,6 +61,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
@@ -79,6 +81,26 @@
                         FontWeight="SemiBold"
                         Text="00:00"
                         VerticalAlignment="Center" />
+
+                    <Button
+                        x:Name="StopRecordingButton"
+                        Grid.Column="2"
+                        AutomationProperties.Name="Stop and insert recording"
+                        Click="StopRecordingButton_Click"
+                        IsEnabled="False"
+                        ToolTipService.ToolTip="Stop and insert">
+                        <SymbolIcon Symbol="Stop" />
+                    </Button>
+
+                    <Button
+                        x:Name="CancelRecordingButton"
+                        Grid.Column="3"
+                        AutomationProperties.Name="Cancel recording"
+                        Click="CancelRecordingButton_Click"
+                        IsEnabled="False"
+                        ToolTipService.ToolTip="Cancel recording">
+                        <SymbolIcon Symbol="Cancel" />
+                    </Button>
                 </Grid>
 
                 <TextBlock
@@ -86,7 +108,7 @@
                     Grid.Row="2"
                     Foreground="#8E8E8E"
                     FontSize="11"
-                    Text="Use the global shortcut or main window controls"
+                    Text="Shortcut, tray, or recorder controls"
                     TextAlignment="Center"
                     TextTrimming="CharacterEllipsis" />
             </Grid>

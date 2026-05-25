@@ -6100,7 +6100,11 @@ public sealed partial class MainWindow : Window
             return floatingRecorderWindow;
         }
 
-        floatingRecorderWindow = new FloatingRecorderWindow();
+        floatingRecorderWindow = new FloatingRecorderWindow
+        {
+            StopRequested = StopCurrentRecordingAsync,
+            CancelRequested = CancelCurrentRecordingAsync
+        };
         floatingRecorderWindow.Closed += (_, _) => floatingRecorderWindow = null;
         return floatingRecorderWindow;
     }
