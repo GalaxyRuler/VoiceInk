@@ -27,6 +27,7 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal("System Default", result.Choices[0].DisplayText);
         Assert.Equal("USB Microphone (2)", result.Choices[result.SelectedIndex].DisplayText);
         Assert.Equal(2, result.Choices[result.SelectedIndex].DeviceNumber);
+        Assert.Equal(2, result.SelectedChoice?.DeviceNumber);
     }
 
     [Fact]
@@ -47,6 +48,7 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal(0, result.SelectedIndex);
         Assert.Equal("Selected audio input is unavailable; using System Default", result.Warning);
         Assert.Null(result.Choices[result.SelectedIndex].DeviceNumber);
+        Assert.Null(result.SelectedChoice?.DeviceNumber);
     }
 
     [Fact]
@@ -67,6 +69,7 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal(0, result.SelectedIndex);
         Assert.Equal("Selected audio input is unavailable; using System Default", result.Warning);
         Assert.Null(result.Choices[result.SelectedIndex].DeviceNumber);
+        Assert.Null(result.SelectedChoice?.DeviceNumber);
     }
 
     [Fact]
@@ -88,6 +91,7 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal(2, result.SelectedIndex);
         Assert.Equal("Selected audio input device number changed; using saved device name", result.Warning);
         Assert.Equal(4, result.Choices[result.SelectedIndex].DeviceNumber);
+        Assert.Equal(4, result.SelectedChoice?.DeviceNumber);
     }
 
     [Fact]
@@ -109,6 +113,7 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal(0, result.SelectedIndex);
         Assert.Equal("Selected audio input is unavailable; using System Default", result.Warning);
         Assert.Null(result.Choices[result.SelectedIndex].DeviceNumber);
+        Assert.Null(result.SelectedChoice?.DeviceNumber);
     }
 
     [Fact]
@@ -124,5 +129,6 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Null(result.Warning);
         Assert.Equal(0, result.SelectedIndex);
         Assert.Equal("System Default", result.Choices[result.SelectedIndex].DisplayText);
+        Assert.Null(result.SelectedChoice?.DeviceNumber);
     }
 }

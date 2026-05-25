@@ -1339,6 +1339,7 @@ public sealed partial class MainWindow : Window
                 settings,
                 forceModelPath: false,
                 cancellationToken: windowLifetime.Token);
+            RecreateControllerIfAudioInputChanged();
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
@@ -4909,6 +4910,7 @@ public sealed partial class MainWindow : Window
         {
             var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
             var warning = await RefreshAudioInputDevicesAsync(settings, windowLifetime.Token);
+            RecreateControllerIfAudioInputChanged();
             RefreshUiFromControllerState(warning ?? "Audio inputs refreshed");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -4931,10 +4933,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await SaveSettingsAsync(windowLifetime.Token);
-            if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
-            {
-                RecreateController();
-            }
+            RecreateControllerIfAudioInputChanged();
 
             RefreshUiFromControllerState("Audio input updated");
         }
@@ -6141,6 +6140,14 @@ public sealed partial class MainWindow : Window
         Interlocked.Exchange(ref latestRecordingInputLevel, 0);
         activeAudioInputDeviceChoice = selectedAudioInputDeviceChoice;
         controller = CreateController(audioCapture);
+    }
+
+    private void RecreateControllerIfAudioInputChanged()
+    {
+        if (!AudioInputDeviceChoicesMatch(activeAudioInputDeviceChoice, SelectedAudioInputDeviceChoice()))
+        {
+            RecreateController();
+        }
     }
 
     private static bool AudioInputDeviceChoicesMatch(

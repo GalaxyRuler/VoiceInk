@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [################----] 81%
+VoiceInk Windows parity  [################----] 82%
 ```
 
 ## Area Bars
@@ -27,22 +27,22 @@ VoiceInk Windows parity  [################----] 81%
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
-| Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
+| Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
 | Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 20% | `[####----------------]` | Source-run docs, runtime workaround, and repeatable self-contained dev ZIP packaging exist. MSIX/installer, signing, shortcut registration, uninstall behavior, and installer smoke tests remain. |
 
 ## Current Slice
 
 ```text
-Windows failed dictation history  [####################] 100%
+Windows audio input fallback  [####################] 100%
 ```
 
 Completed:
 
-- Added best-effort failed History rows after capture stop succeeds but post-capture dictation work fails.
-- Failed rows preserve provider, language, model, audio duration/path, Power Mode metadata, and error message.
-- Failed rows remain out of metrics and do not insert text.
-- Capture-start/stop failures without an audio result still avoid History writes.
+- Exposed the resolved audio input choice from the Core selection helper.
+- Recreated the active capture service after startup settings resolve the selected microphone.
+- Recreated the active capture service after manual audio input refresh when the resolved selection changes.
+- Preserved fallback to System Default when a saved device is unavailable or ambiguous.
 
 ## Near-Term Priority
 
