@@ -21,7 +21,7 @@ VoiceInk Windows parity  [##################--] 88%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 70% | `[##############------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, and visible numeric OCR region controls exist with graceful degradation. Overlay picker polish remains. |
+| Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [##################--] 88%
 ## Current Slice
 
 ```text
-Windows MSIX packaging preflight  [####################] 100%
+Windows OCR region picker  [####################] 100%
 ```
 
 Completed:
 
-- Added `package-msix.ps1 -Preflight` for certificate-free packaging readiness checks.
-- Validated project/manifest paths and artifact-root containment before packaging.
-- Printed the signed package command shape, MSIX publish properties, validator command, and manual install/query/uninstall smoke path.
-- Kept certificate creation, certificate import, install, uninstall, signing, and secret handling out of automation.
+- Added tested OCR drag-to-region geometry with origin and DPI scaling support.
+- Added a transient full-screen WinUI region picker with visible drag rectangle and Escape cancel.
+- Wired `Select Region` from Enhancement settings to fill and persist the existing OCR region fields.
+- Kept numeric OCR fields available as the fallback/edit path.
 
 ## Near-Term Priority
 
 1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
-2. Add overlay-style OCR picker polish so users can select screen regions visually.
-3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
-4. Add deeper onboarding model catalog/download and permission health checks.
+2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
+3. Add deeper onboarding model catalog/download and permission health checks.
+4. Refine OCR region picker behavior across complex multi-monitor/DPI layouts.

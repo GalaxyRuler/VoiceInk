@@ -1,0 +1,41 @@
+<Window
+    x:Class="VoiceInk.Windows.App.OcrRegionPickerWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Select OCR Region">
+
+    <Grid
+        x:Name="PickerRoot"
+        Background="#AA101014"
+        IsTabStop="True"
+        KeyDown="PickerRoot_KeyDown"
+        Loaded="PickerRoot_Loaded"
+        PointerMoved="PickerRoot_PointerMoved"
+        PointerPressed="PickerRoot_PointerPressed"
+        PointerReleased="PickerRoot_PointerReleased">
+        <Canvas x:Name="SelectionCanvas">
+            <Rectangle
+                x:Name="SelectionRectangle"
+                Fill="#33FFFFFF"
+                Stroke="#FFFFFFFF"
+                StrokeThickness="2"
+                Visibility="Collapsed" />
+        </Canvas>
+
+        <Border
+            Margin="24"
+            Padding="16,10"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="#EE202027"
+            BorderBrush="#44FFFFFF"
+            BorderThickness="1"
+            CornerRadius="8">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="16"
+                FontWeight="SemiBold"
+                Text="Select OCR Region" />
+        </Border>
+    </Grid>
+</Window>

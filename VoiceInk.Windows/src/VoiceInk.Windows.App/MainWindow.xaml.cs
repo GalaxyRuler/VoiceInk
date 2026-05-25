@@ -390,6 +390,11 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private async void PickOcrRegionButton_Click(object sender, RoutedEventArgs e)
+    {
+        await PickOcrRegionAsync();
+    }
+
     private void AudioInputDeviceChangeWatcher_DevicesChanged(object? sender, EventArgs e)
     {
         if (windowLifetime.IsCancellationRequested)
@@ -6672,6 +6677,7 @@ public sealed partial class MainWindow : Window
         OcrRegionTopNumberBox.IsEnabled = ocrRegionControlsEnabled;
         OcrRegionWidthNumberBox.IsEnabled = ocrRegionControlsEnabled;
         OcrRegionHeightNumberBox.IsEnabled = ocrRegionControlsEnabled;
+        PickOcrRegionButton.IsEnabled = enhancementControlsEnabled;
         EnhancementProviderPresetComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
@@ -7144,6 +7150,50 @@ public sealed partial class MainWindow : Window
         NumberBoxHasFiniteValue(numberBox)
             ? (int)Math.Round(numberBox.Value, MidpointRounding.AwayFromZero)
             : 0;
+
+    private async Task PickOcrRegionAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            var picker = new OcrRegionPickerWindow();
+            var region = await picker.PickAsync();
+            if (region is null)
+            {
+                RefreshUiFromControllerState("OCR region selection canceled");
+                return;
+            }
+
+            UseOcrContextCheckBox.IsChecked = true;
+            UseOcrCaptureRegionCheckBox.IsChecked = true;
+            OcrRegionLeftNumberBox.Value = region.Left;
+            OcrRegionTopNumberBox.Value = region.Top;
+            OcrRegionWidthNumberBox.Value = region.Width;
+            OcrRegionHeightNumberBox.Value = region.Height;
+
+            var validationError = ValidateOcrRegionSettings();
+            if (validationError is not null)
+            {
+                RefreshUiFromControllerState(validationError);
+                return;
+            }
+
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState("OCR region selected");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"OCR region selection failed: {ex.Message}");
+        }
+    }
 
     private string SelectedPasteMethod() =>
         PasteMethodComboBox.SelectedIndex == 1
