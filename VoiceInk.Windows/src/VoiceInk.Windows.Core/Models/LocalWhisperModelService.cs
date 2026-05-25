@@ -55,4 +55,50 @@ public static class LocalWhisperModelService
 
         return [.. importedModels, currentModel];
     }
+
+    public static WhisperModelCatalogItem[] BuildCatalogItems(
+        IEnumerable<LocalWhisperModel> localModels,
+        string currentModelPath)
+    {
+        var modelsByName = localModels
+            .GroupBy(model => model.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        var recommendedNames = WhisperModelCatalog.Recommended
+            .Select(model => model.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return WhisperModelCatalog.All
+            .Select(model =>
+            {
+                modelsByName.TryGetValue(model.Name, out var localModel);
+                return new WhisperModelCatalogItem(
+                    model,
+                    localModel?.Path,
+                    recommendedNames.Contains(model.Name),
+                    localModel is not null
+                        && string.Equals(
+                            localModel.Path,
+                            currentModelPath.Trim(),
+                            StringComparison.OrdinalIgnoreCase));
+            })
+            .ToArray();
+    }
+
+    public static LocalWhisperModel[] AddOrReplaceCatalogModel(
+        IEnumerable<LocalWhisperModel> existing,
+        LocalWhisperModel downloadedModel)
+    {
+        var models = existing.ToList();
+        var existingIndex = models.FindIndex(model =>
+            string.Equals(model.DisplayName, downloadedModel.DisplayName, StringComparison.OrdinalIgnoreCase));
+
+        if (existingIndex >= 0)
+        {
+            models[existingIndex] = downloadedModel;
+            return [.. models];
+        }
+
+        models.Add(downloadedModel);
+        return [.. models];
+    }
 }

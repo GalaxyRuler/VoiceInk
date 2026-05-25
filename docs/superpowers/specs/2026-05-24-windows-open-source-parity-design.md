@@ -67,6 +67,7 @@ The Windows MVP already has:
 - Metrics navigation section backed by local SQLite `metrics.db`, with session totals, words dictated, words per minute, estimated keystrokes/time saved, transcription model performance, and enhancement model performance.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
+- Local Whisper catalog cards with direct GGML `.bin` downloads into the app data models folder and default model selection.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, and quick add to dictionary.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -199,6 +200,8 @@ Windows gaps:
 
 macOS has local Whisper cards, imported Whisper models, Parakeet/FluidAudio cards, native Apple model, cloud model cards, language selection, custom cloud models, API key management, model download/import, default model selection, and prewarm on wake. The macOS local model flow scans model files, imports Whisper ggml `.bin` models, displays imported model cards, and lets the user set a default transcription model.
 
+The macOS local Whisper catalog includes `ggml-tiny`, `ggml-tiny.en`, `ggml-base`, `ggml-base.en`, `ggml-large-v2`, `ggml-large-v3`, `ggml-large-v3-turbo`, and `ggml-large-v3-turbo-q5_0`. Model cards show display name, language, size, speed, accuracy, description, download progress, and actions for Download, Set as Default, Delete Model, and Show in Finder. Downloads use the open-source whisper.cpp GGML Hugging Face URL shape `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{name}.bin`. macOS also downloads Core ML encoder zips for non-quantized models; Windows skips that macOS-only optimization and downloads only the `.bin` model file for Whisper.net/whisper.cpp.
+
 Local-model-library slice completed on 2026-05-24:
 
 - Persist imported local Whisper `.bin` model references in Windows JSON settings.
@@ -206,12 +209,26 @@ Local-model-library slice completed on 2026-05-24:
 - Add an import picker for `.bin` files and a link to open the open-source whisper.cpp GGML model downloads page.
 - Keep model catalog cards, direct in-app download, language capability UI, warmup/preload, and cloud provider cards as later model-management work.
 
+Model catalog downloads Windows target:
+
+- Add macOS-aligned local Whisper catalog metadata and recommended ordering for `ggml-base.en` and `ggml-large-v3-turbo-q5_0`.
+- Display local Whisper model cards in AI Models with language, size, speed, accuracy, description, downloaded/default state, and download progress.
+- Download `.bin` files directly from the whisper.cpp Hugging Face catalog into `%LocalAppData%\VoiceInk.Windows\Models`.
+- Add downloaded files to the existing imported local model list and set the downloaded model as the default local model path after a successful download.
+- Keep user-imported `.bin` paths supported, and allow showing downloaded or imported files in Explorer.
+- Do not download Core ML encoder archives on Windows; document that they are macOS-only acceleration assets.
+
+Model catalog downloads slice completed on 2026-05-25:
+
+- Added a Core local Whisper catalog with macOS metadata, recommended ordering, whisper.cpp Hugging Face download URLs, and test-covered downloaded/default card state.
+- Added an Infrastructure streaming downloader that writes to a `.download` temp file, reports progress, preserves existing complete model files on failure, and cleans temp files on failure or cancellation.
+- Added WinUI AI Models catalog cards with language, size, speed, accuracy, description, downloaded/default status, download progress, set-default, and Show in Explorer actions.
+- Downloaded catalog models are saved under `%LocalAppData%\VoiceInk.Windows\Models`, replace existing entries with the same GGML name, persist in JSON settings, and become the default local model path after successful download.
+- Core ML encoder downloads remain omitted because they are macOS-only acceleration assets.
+
 Windows gaps:
 
-- Model catalog and cards beyond imported local model references.
-- Direct model download flow.
 - Language picker bound to model capabilities.
-- Rich default model management views beyond the imported-model selector and raw path field.
 - Warmup/preload.
 - Provider cards and secure API key storage.
 

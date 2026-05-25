@@ -36,6 +36,7 @@ using VoiceInk.Windows.Infrastructure.Dictionary;
 using VoiceInk.Windows.Infrastructure.Enhancement;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Metrics;
+using VoiceInk.Windows.Infrastructure.Models;
 using VoiceInk.Windows.Infrastructure.Settings;
 using VoiceInk.Windows.Infrastructure.Transcription;
 using VoiceInk.Windows.Native.Audio;
@@ -74,6 +75,7 @@ public sealed partial class MainWindow : Window
     private static readonly double[] AudioResumptionDelayChoices = [0, 1, 2, 3, 4, 5];
 
     private readonly string appDataDirectory;
+    private readonly string modelsDirectory;
     private readonly string recordingsDirectory;
     private readonly string dictionaryPath;
     private readonly string historyPath;
@@ -84,6 +86,8 @@ public sealed partial class MainWindow : Window
     private readonly SqliteHistoryStore historyStore;
     private readonly ISessionMetricStore sessionMetricStore;
     private readonly JsonSettingsStore settingsStore;
+    private readonly IWhisperModelDownloader modelDownloader;
+    private readonly HttpClient modelDownloadHttpClient = new();
     private readonly string? metricsInitializationWarning;
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
@@ -111,6 +115,8 @@ public sealed partial class MainWindow : Window
     private FloatingRecorderWindow? floatingRecorderWindow;
     private AudioFileTranscriptionService audioFileTranscriptionService;
     private CancellationTokenSource? audioFileQueueCancellation;
+    private CancellationTokenSource? modelDownloadCancellation;
+    private Task? modelDownloadTask;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
@@ -120,6 +126,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<AudioFileQueueItem> audioFileQueueItems = [];
     private IReadOnlyList<LocalWhisperModel> localWhisperModels = [];
     private IReadOnlyList<LocalWhisperModel> modelChoices = [];
+    private IReadOnlyList<WhisperModelCatalogItem> modelCatalogItems = [];
     private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
@@ -130,6 +137,7 @@ public sealed partial class MainWindow : Window
     private bool isRetryingHistory;
     private bool isQuickAdding;
     private bool isImportingModel;
+    private bool isDownloadingModel;
     private bool isTranscribingAudioFiles;
     private bool isSavingEnhancementKey;
     private bool isSavingCloudTranscriptionKey;
@@ -177,6 +185,7 @@ public sealed partial class MainWindow : Window
         appDataDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VoiceInk.Windows");
+        modelsDirectory = Path.Combine(appDataDirectory, "Models");
         recordingsDirectory = Path.Combine(appDataDirectory, "Recordings");
         dictionaryPath = Path.Combine(appDataDirectory, "dictionary.json");
         historyPath = Path.Combine(appDataDirectory, "history.db");
@@ -189,6 +198,7 @@ public sealed partial class MainWindow : Window
         sessionMetricStore = metricsStore.Store;
         metricsInitializationWarning = metricsStore.Warning;
         settingsStore = new JsonSettingsStore(settingsPath);
+        modelDownloader = new HttpWhisperModelDownloader(modelDownloadHttpClient);
         textInjectionService = new ClipboardTextInjectionService(settingsStore);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         secretStore = new WindowsCredentialSecretStore();
@@ -626,6 +636,11 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private void LocalModelCatalogListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshUiFromControllerState();
+    }
+
     private void TranscriptionProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (settingsLoaded)
@@ -709,6 +724,26 @@ public sealed partial class MainWindow : Window
     private void OpenModelDownloadsButton_Click(object sender, RoutedEventArgs e)
     {
         OpenModelDownloads();
+    }
+
+    private async void DownloadCatalogModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await DownloadSelectedCatalogModelAsync();
+    }
+
+    private async void UseCatalogModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await UseSelectedCatalogModelAsync();
+    }
+
+    private void ShowCatalogModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowSelectedCatalogModel();
+    }
+
+    private async void CancelModelDownloadButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CancelModelDownloadAsync();
     }
 
     private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -2006,10 +2041,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            ModelPathTextBox.Text = selectedModel.Path;
-            await SaveSettingsAsync(windowLifetime.Token);
-            RefreshModelChoices(selectedModel.Path);
-            RefreshUiFromControllerState($"Default model: {selectedModel.DisplayName}");
+            await UseLocalModelPathAsync(selectedModel.Path, selectedModel.DisplayName);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -2019,6 +2051,182 @@ public sealed partial class MainWindow : Window
         {
             RefreshUiFromControllerState($"Model selection failed: {ex.Message}");
         }
+    }
+
+    private async Task UseSelectedCatalogModelAsync()
+    {
+        var selectedModel = SelectedCatalogModelItem();
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        if (selectedModel?.LocalPath is not { Length: > 0 } localPath)
+        {
+            RefreshUiFromControllerState("Download the model before setting it as default");
+            return;
+        }
+
+        try
+        {
+            await UseLocalModelPathAsync(localPath, selectedModel.DisplayName);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Model selection failed: {ex.Message}");
+        }
+    }
+
+    private async Task UseLocalModelPathAsync(string modelPath, string displayName)
+    {
+        ModelPathTextBox.Text = modelPath;
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshModelChoices(modelPath);
+        SelectCatalogModelByName(Path.GetFileNameWithoutExtension(modelPath));
+        RefreshUiFromControllerState($"Default model: {displayName}");
+    }
+
+    private async Task DownloadSelectedCatalogModelAsync()
+    {
+        var selectedModel = SelectedCatalogModelItem();
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        if (selectedModel is null)
+        {
+            RefreshUiFromControllerState("Select a model to download");
+            return;
+        }
+
+        if (selectedModel.IsDownloaded)
+        {
+            await UseSelectedCatalogModelAsync();
+            return;
+        }
+
+        var statusOverride = $"Downloading {selectedModel.DisplayName}";
+        isDownloadingModel = true;
+        modelDownloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(windowLifetime.Token);
+        SetModelDownloadProgress(selectedModel.DisplayName, percent: null);
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var selectedName = selectedModel.Name;
+            var progress = new Progress<WhisperModelDownloadProgress>(downloadProgress =>
+            {
+                _ = DispatcherQueue.TryEnqueue(() =>
+                    SetModelDownloadProgress(selectedModel.DisplayName, downloadProgress.FractionComplete));
+            });
+            var downloadTask = modelDownloader.DownloadAsync(
+                selectedModel.Model,
+                modelsDirectory,
+                progress,
+                modelDownloadCancellation.Token);
+            modelDownloadTask = downloadTask;
+            var downloadedModel = await downloadTask;
+
+            localWhisperModels = LocalWhisperModelService.AddOrReplaceCatalogModel(
+                localWhisperModels,
+                downloadedModel);
+            ModelPathTextBox.Text = downloadedModel.Path;
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshModelChoices(downloadedModel.Path);
+            SelectCatalogModelByName(selectedName);
+            statusOverride = $"Downloaded and selected {selectedModel.DisplayName}";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (OperationCanceledException)
+        {
+            statusOverride = "Model download canceled";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Model download failed: {ex.Message}";
+        }
+        finally
+        {
+            modelDownloadCancellation?.Dispose();
+            modelDownloadCancellation = null;
+            modelDownloadTask = null;
+            isDownloadingModel = false;
+            HideModelDownloadProgress();
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task CancelModelDownloadAsync()
+    {
+        if (!isDownloadingModel || modelDownloadCancellation is null)
+        {
+            return;
+        }
+
+        modelDownloadCancellation.Cancel();
+        if (modelDownloadTask is not null)
+        {
+            try
+            {
+                await modelDownloadTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private void ShowSelectedCatalogModel()
+    {
+        var selectedModel = SelectedCatalogModelItem();
+        if (!CanEditModelLibrary() || selectedModel?.LocalPath is not { Length: > 0 } localPath)
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{localPath}\"",
+                UseShellExecute = true
+            });
+            RefreshUiFromControllerState("Model file opened");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Open model failed: {ex.Message}");
+        }
+    }
+
+    private void SetModelDownloadProgress(string displayName, double? percent)
+    {
+        ModelDownloadProgressBar.Visibility = Visibility.Visible;
+        ModelDownloadProgressBar.IsIndeterminate = percent is null;
+        ModelDownloadProgressBar.Value = percent is null ? 0 : Math.Round(percent.Value * 100, 0);
+        ModelDownloadStatusTextBlock.Text = percent is null
+            ? $"Downloading {displayName}"
+            : $"Downloading {displayName}: {ModelDownloadProgressBar.Value:0}%";
+    }
+
+    private void HideModelDownloadProgress()
+    {
+        ModelDownloadProgressBar.Visibility = Visibility.Collapsed;
+        ModelDownloadProgressBar.IsIndeterminate = false;
+        ModelDownloadProgressBar.Value = 0;
+        ModelDownloadStatusTextBlock.Text = string.Empty;
     }
 
     private void OpenModelDownloads()
@@ -4415,6 +4623,14 @@ public sealed partial class MainWindow : Window
             : null;
     }
 
+    private WhisperModelCatalogItem? SelectedCatalogModelItem()
+    {
+        var selectedIndex = LocalModelCatalogListView.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < modelCatalogItems.Count
+            ? modelCatalogItems[selectedIndex]
+            : null;
+    }
+
     private TranscriptionProviderKind SelectedTranscriptionProvider() =>
         TranscriptionProviderComboBox.SelectedIndex == 1
             ? TranscriptionProviderKind.OpenAICompatible
@@ -4456,6 +4672,48 @@ public sealed partial class MainWindow : Window
             ? -1
             : modelChoices.ToList().FindIndex(model =>
                 string.Equals(model.Path, trimmedPath, StringComparison.OrdinalIgnoreCase));
+
+        RefreshModelCatalogItems(modelPath);
+    }
+
+    private void RefreshModelCatalogItems(string? selectedPath = null)
+    {
+        var previouslySelectedName = SelectedCatalogModelItem()?.Name;
+        var modelPath = selectedPath ?? ModelPathTextBox.Text;
+        modelCatalogItems = LocalWhisperModelService.BuildCatalogItems(localWhisperModels, modelPath);
+        LocalModelCatalogListView.ItemsSource = modelCatalogItems;
+
+        if (!string.IsNullOrWhiteSpace(modelPath))
+        {
+            DefaultModelStatusTextBlock.Text = $"Default Model: {Path.GetFileNameWithoutExtension(modelPath)}";
+        }
+        else
+        {
+            DefaultModelStatusTextBlock.Text = "Default Model: No model selected";
+        }
+
+        if (!string.IsNullOrWhiteSpace(previouslySelectedName))
+        {
+            SelectCatalogModelByName(previouslySelectedName);
+        }
+        else if (!string.IsNullOrWhiteSpace(modelPath))
+        {
+            SelectCatalogModelByName(Path.GetFileNameWithoutExtension(modelPath));
+        }
+    }
+
+    private void SelectCatalogModelByName(string? modelName)
+    {
+        if (string.IsNullOrWhiteSpace(modelName))
+        {
+            LocalModelCatalogListView.SelectedIndex = -1;
+            return;
+        }
+
+        var selectedIndex = modelCatalogItems
+            .ToList()
+            .FindIndex(model => string.Equals(model.Name, modelName, StringComparison.OrdinalIgnoreCase));
+        LocalModelCatalogListView.SelectedIndex = selectedIndex;
     }
 
     private void RefreshEnhancementPromptChoices(Guid? selectedPromptId)
@@ -4940,7 +5198,8 @@ public sealed partial class MainWindow : Window
         bool includeCurrentModelImport = true,
         bool includeCurrentEnhancementKeySave = true,
         bool includeCurrentCloudTranscriptionKeySave = true,
-        bool includeCurrentPrivacyCleanup = true) =>
+        bool includeCurrentPrivacyCleanup = true,
+        bool includeCurrentModelDownload = true) =>
         isStarting
         || isStopping
         || isCanceling
@@ -4955,6 +5214,7 @@ public sealed partial class MainWindow : Window
         || (includeCurrentPrivacyCleanup && isRunningPrivacyCleanup)
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
+        || (includeCurrentModelDownload && isDownloadingModel)
         || (includeCurrentModelImport && isImportingModel);
 
     private bool IsControllerBusy() =>
@@ -5303,6 +5563,7 @@ public sealed partial class MainWindow : Window
         var operationActive = IsOperationActive();
         var controllerBusy = IsControllerBusy();
         var modelControlsEnabled = CanEditModelLibrary();
+        var selectedCatalogModel = SelectedCatalogModelItem();
         var cloudTranscriptionControlsEnabled = modelControlsEnabled
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible;
         var cloudPresetHasModelChoices = SelectedCloudTranscriptionPreset()?.ModelIds.Count > 0;
@@ -5380,6 +5641,16 @@ public sealed partial class MainWindow : Window
             && !controllerBusy
             && controller.State != DictationState.Recording;
         ModelPathTextBox.IsEnabled = modelControlsEnabled;
+        LocalModelCatalogListView.IsEnabled = modelControlsEnabled;
+        DownloadCatalogModelButton.IsEnabled = modelControlsEnabled
+            && selectedCatalogModel is not null
+            && !selectedCatalogModel.IsDownloaded;
+        UseCatalogModelButton.IsEnabled = modelControlsEnabled
+            && selectedCatalogModel?.IsDownloaded == true
+            && !selectedCatalogModel.IsDefault;
+        ShowCatalogModelButton.IsEnabled = modelControlsEnabled
+            && selectedCatalogModel?.IsDownloaded == true;
+        CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
@@ -5803,6 +6074,7 @@ public sealed partial class MainWindow : Window
         windowLifetime.Cancel();
         audioFileQueueCancellation?.Cancel();
         audioFileQueueCancellation?.Dispose();
+        CancelModelDownloadAsync().GetAwaiter().GetResult();
         DisposeGlobalHotkeyService();
         DisposeTrayIconService();
         ClearHistoryAudioPlayer();
@@ -5814,6 +6086,7 @@ public sealed partial class MainWindow : Window
 
         audioCapture.Dispose();
         systemAudioFeedback.Dispose();
+        modelDownloadHttpClient.Dispose();
         windowLifetime.Dispose();
     }
 

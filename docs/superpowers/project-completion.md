@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#############-------] 63%
+VoiceInk Windows parity  [#############-------] 65%
 ```
 
 ## Area Bars
@@ -18,7 +18,7 @@ VoiceInk Windows parity  [#############-------] 63%
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 45% | `[#########-----------]` | Compact recorder shows recording/processing state and elapsed time. Live transcript, real waveform, non-activating controls, notch style, prompt picker, and Power Mode popover remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
-| Model management | 42% | `[########------------]` | Local model path/imported `.bin` references and download link exist. Catalog cards, direct download, language capabilities, default model management, and warmup/preload remain. |
+| Model management | 55% | `[###########---------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, and default model selection exist. Language picker and warmup/preload remain. |
 | Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
 | AI enhancement | 70% | `[##############------]` | OpenAI-compatible enhancement, presets, prompts, context, retries/timeouts, and secure keys exist. Trigger-word mode, local/Ollama-style hooks, and richer assistant workflows remain. |
 | Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
@@ -34,19 +34,20 @@ VoiceInk Windows parity  [#############-------] 63%
 ## Current Slice
 
 ```text
-Settings recording feedback  [####################] 100%
+Model catalog downloads  [####################] 100%
 ```
 
 Completed:
 
-- Persist macOS Recording Feedback defaults in Windows settings and backups.
-- Add Settings controls for sound feedback, mute audio, pause media, and resume delay.
-- Wire start/stop sounds, system mute/restore, and opt-in media pause/resume into recording lifecycle.
-- Document Windows-specific graceful degradation for media pause/resume.
+- Added macOS-aligned local Whisper model catalog entries and recommended ordering.
+- Added direct GGML `.bin` downloads from the open-source whisper.cpp Hugging Face catalog.
+- Saved downloaded files under `%LocalAppData%\VoiceInk.Windows\Models`, added them to imported local models, and selected them as the default model path.
+- Added model-card metadata for language, size, speed, accuracy, download/default state, and progress.
+- Documented that Core ML encoder downloads are macOS-only and intentionally skipped on Windows.
 
 ## Near-Term Priority
 
-1. Improve model management: catalog cards, direct download/import flow, language selection, warmup/preload.
+1. Finish model management language selection and warmup/preload.
 2. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
 3. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
 4. Add packaging path: zip/dev package first, then MSIX or installer.

@@ -90,6 +90,81 @@
 
                     <StackPanel x:Name="ModelsSectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="AI Models" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            x:Name="DefaultModelStatusTextBlock"
+                            FontWeight="SemiBold"
+                            Text="Default Model: No model selected"
+                            TextWrapping="Wrap" />
+                        <ListView
+                            x:Name="LocalModelCatalogListView"
+                            Height="330"
+                            SelectionChanged="LocalModelCatalogListView_SelectionChanged"
+                            SelectionMode="Single">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        BorderBrush="Gray"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="0,0,0,8"
+                                        Padding="12">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Spacing="6">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock
+                                                        Text="{Binding DisplayName}"
+                                                        FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Status}" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <TextBlock Text="{Binding LanguageDisplay}" />
+                                                    <TextBlock Text="{Binding Size}" />
+                                                    <TextBlock Text="Speed" />
+                                                    <TextBlock Text="{Binding SpeedScore}" />
+                                                    <TextBlock Text="Accuracy" />
+                                                    <TextBlock Text="{Binding AccuracyScore}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    Text="{Binding Description}"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="DownloadCatalogModelButton"
+                                Content="Download"
+                                Click="DownloadCatalogModelButton_Click" />
+                            <Button
+                                x:Name="UseCatalogModelButton"
+                                Content="Set as Default"
+                                Click="UseCatalogModelButton_Click" />
+                            <Button
+                                x:Name="ShowCatalogModelButton"
+                                Content="Show in Explorer"
+                                Click="ShowCatalogModelButton_Click" />
+                            <Button
+                                x:Name="CancelModelDownloadButton"
+                                Content="Cancel Download"
+                                Click="CancelModelDownloadButton_Click" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <ProgressBar
+                                x:Name="ModelDownloadProgressBar"
+                                Minimum="0"
+                                Maximum="100"
+                                Visibility="Collapsed" />
+                            <TextBlock
+                                x:Name="ModelDownloadStatusTextBlock"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
                         <TextBox
                             x:Name="ModelPathTextBox"
                             Header="Local whisper model path"
