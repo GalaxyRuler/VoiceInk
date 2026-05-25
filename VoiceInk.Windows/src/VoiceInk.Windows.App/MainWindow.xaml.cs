@@ -70,6 +70,7 @@ public sealed partial class MainWindow : Window
     private const string EnhancementSectionTag = "Enhancement";
     private const string PowerModeSectionTag = "Power Mode";
     private const int MaxDiagnosticEvents = 200;
+    private const int HistoryWaveformPeakCount = 64;
     private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
     private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
     private static readonly double[] ClipboardRestoreDelayChoices = [0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
@@ -4497,6 +4498,7 @@ public sealed partial class MainWindow : Window
         }
 
         HistoryAudioPlayer.Source = MediaSource.CreateFromUri(new Uri(audioPath, UriKind.Absolute));
+        RefreshHistoryWaveform(audioPath);
         HistoryPlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
             HistoryPlaybackRatePresenter.DefaultChoice.Value);
         ApplyHistoryPlaybackRate();
@@ -4506,6 +4508,8 @@ public sealed partial class MainWindow : Window
     private void ClearHistoryAudioPlayer()
     {
         HistoryAudioPlayer.Source = null;
+        HistoryWaveformItemsControl.ItemsSource = null;
+        HistoryWaveformItemsControl.Visibility = Visibility.Collapsed;
         HistoryAudioPanel.Visibility = Visibility.Collapsed;
     }
 
@@ -4513,6 +4517,25 @@ public sealed partial class MainWindow : Window
     {
         var rate = HistoryPlaybackRatePresenter.ChoiceAtOrDefault(HistoryPlaybackRateComboBox.SelectedIndex).Value;
         HistoryAudioPlayer.MediaPlayer.PlaybackSession.PlaybackRate = rate;
+    }
+
+    private void RefreshHistoryWaveform(string audioPath)
+    {
+        try
+        {
+            var peaks = HistoryWaveformPeakExtractor.ExtractPeaks(
+                File.ReadAllBytes(audioPath),
+                HistoryWaveformPeakCount);
+            HistoryWaveformItemsControl.ItemsSource = peaks;
+            HistoryWaveformItemsControl.Visibility = peaks.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+        catch
+        {
+            HistoryWaveformItemsControl.ItemsSource = null;
+            HistoryWaveformItemsControl.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void TryDeleteHistoryAudioFile(TranscriptionHistoryItem item)

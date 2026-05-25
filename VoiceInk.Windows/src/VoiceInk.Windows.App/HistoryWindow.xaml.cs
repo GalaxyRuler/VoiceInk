@@ -20,6 +20,7 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class HistoryWindow : Window
 {
+    private const int WaveformPeakCount = 64;
     private readonly IHistoryStore historyStore;
     private readonly HistoryRetryService historyRetryService;
     private readonly HistoryReenhancementService historyReenhancementService;
@@ -629,6 +630,7 @@ public sealed partial class HistoryWindow : Window
         }
 
         AudioPlayer.Source = MediaSource.CreateFromUri(new Uri(audioPath, UriKind.Absolute));
+        RefreshWaveform(audioPath);
         PlaybackRateComboBox.SelectedIndex = HistoryPlaybackRatePresenter.SelectedIndexFor(
             HistoryPlaybackRatePresenter.DefaultChoice.Value);
         ApplyPlaybackRate();
@@ -638,6 +640,8 @@ public sealed partial class HistoryWindow : Window
     private void ClearAudioPlayer()
     {
         AudioPlayer.Source = null;
+        WaveformItemsControl.ItemsSource = null;
+        WaveformItemsControl.Visibility = Visibility.Collapsed;
         AudioPanel.Visibility = Visibility.Collapsed;
     }
 
@@ -645,6 +649,25 @@ public sealed partial class HistoryWindow : Window
     {
         var rate = HistoryPlaybackRatePresenter.ChoiceAtOrDefault(PlaybackRateComboBox.SelectedIndex).Value;
         AudioPlayer.MediaPlayer.PlaybackSession.PlaybackRate = rate;
+    }
+
+    private void RefreshWaveform(string audioPath)
+    {
+        try
+        {
+            var peaks = HistoryWaveformPeakExtractor.ExtractPeaks(
+                File.ReadAllBytes(audioPath),
+                WaveformPeakCount);
+            WaveformItemsControl.ItemsSource = peaks;
+            WaveformItemsControl.Visibility = peaks.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+        catch
+        {
+            WaveformItemsControl.ItemsSource = null;
+            WaveformItemsControl.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void SetBusy(bool busy, string? status = null)
