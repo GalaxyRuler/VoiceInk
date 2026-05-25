@@ -58,6 +58,15 @@ public static class TranscriptionProviderPresetCatalog
             "scribe_v1"
         ]);
 
+    public static TranscriptionProviderPreset Soniox { get; } = new(
+        "soniox",
+        "Soniox",
+        "https://api.soniox.com/v1/transcriptions",
+        "stt-async-v4",
+        [
+            "stt-async-v4"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
@@ -65,7 +74,8 @@ public static class TranscriptionProviderPresetCatalog
         Deepgram,
         AssemblyAI,
         Mistral,
-        ElevenLabs
+        ElevenLabs,
+        Soniox
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

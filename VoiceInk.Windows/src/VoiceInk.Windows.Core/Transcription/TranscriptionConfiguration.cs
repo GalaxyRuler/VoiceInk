@@ -69,6 +69,7 @@ public static class TranscriptionConfiguration
             "assemblyai" => "AssemblyAI",
             "mistral" => "Mistral",
             "elevenlabs" => "ElevenLabs",
+            "soniox" => "Soniox",
             _ => "Custom"
         };
 

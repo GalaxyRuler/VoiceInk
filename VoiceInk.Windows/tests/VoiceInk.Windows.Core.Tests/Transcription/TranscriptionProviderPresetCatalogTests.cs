@@ -7,7 +7,7 @@ namespace VoiceInk.Windows.Core.Tests.Transcription;
 public sealed class TranscriptionProviderPresetCatalogTests
 {
     [Fact]
-    public void All_IncludesCustomGroqDeepgramAssemblyAiMistralAndElevenLabsPresets()
+    public void All_IncludesMacCloudProviderPresets()
     {
         var presets = TranscriptionProviderPresetCatalog.All;
 
@@ -38,6 +38,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.elevenlabs.io/v1/speech-to-text", elevenLabs.Endpoint);
         Assert.Equal("scribe_v2", elevenLabs.DefaultModel);
         Assert.Contains("scribe_v1", elevenLabs.ModelIds);
+        var soniox = Assert.Single(presets, item => item.Id == "soniox");
+        Assert.Equal("Soniox", soniox.DisplayName);
+        Assert.Equal("https://api.soniox.com/v1/transcriptions", soniox.Endpoint);
+        Assert.Equal("stt-async-v4", soniox.DefaultModel);
+        Assert.Contains("stt-async-v4", soniox.ModelIds);
     }
 
     [Theory]
@@ -48,6 +53,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("assemblyai", "assemblyai")]
     [InlineData("mistral", "mistral")]
     [InlineData("elevenlabs", "elevenlabs")]
+    [InlineData("soniox", "soniox")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -60,6 +66,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("assemblyai", "VoiceInk.Windows.Transcription.OpenAICompatible.AssemblyAI.ApiKey")]
     [InlineData("mistral", "VoiceInk.Windows.Transcription.OpenAICompatible.Mistral.ApiKey")]
     [InlineData("elevenlabs", "VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey")]
+    [InlineData("soniox", "VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -89,6 +96,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.ElevenLabs.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("elevenlabs"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.Soniox.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("soniox"));
     }
 
     [Fact]
