@@ -115,6 +115,8 @@ public sealed partial class MainWindow : Window
     private bool suppressCloudTranscriptionModelChanged;
     private bool suppressEnhancementPresetChanged;
     private bool suppressEnhancementModelChanged;
+    private bool suppressEnhancementPromptChanged;
+    private Guid? promptEditorPromptId;
     private bool exitRequested;
     private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
@@ -150,7 +152,7 @@ public sealed partial class MainWindow : Window
         textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
         textEnhancementPipeline = new TextEnhancementPipeline(
             textEnhancementService,
-            enhancementPrompts,
+            () => enhancementPrompts,
             new WindowsEnhancementContextProvider());
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
         transcriptionService = new TranscriptionServiceRouter(
@@ -559,6 +561,16 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState();
     }
 
+    private void EnhancementPromptComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!suppressEnhancementPromptChanged)
+        {
+            RefreshPromptEditorFields();
+        }
+
+        RefreshUiFromControllerState();
+    }
+
     private async void ImportModelButton_Click(object sender, RoutedEventArgs e)
     {
         await ImportLocalModelAsync();
@@ -592,6 +604,22 @@ public sealed partial class MainWindow : Window
     private async void ApplyEnhancementSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyEnhancementSettingsAsync();
+    }
+
+    private void NewPromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        SetPromptEditorForNewPrompt();
+        RefreshUiFromControllerState();
+    }
+
+    private async void SavePromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        await SavePromptAsync();
+    }
+
+    private async void DeletePromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        await DeletePromptAsync();
     }
 
     private async void SaveEnhancementKeyButton_Click(object sender, RoutedEventArgs e)
@@ -831,11 +859,13 @@ public sealed partial class MainWindow : Window
             EnhancementEndpointTextBox.Text = settings.EnhancementEndpoint;
             EnhancementModelTextBox.Text = settings.EnhancementModel;
             RefreshEnhancementModelChoices(settings.EnhancementModel);
+            enhancementPrompts = EnhancementPromptLibrary.BuildPrompts(settings.CustomEnhancementPrompts);
             EnhancementTimeoutTextBox.Text = EnhancementTimeoutSeconds(settings).ToString(CultureInfo.InvariantCulture);
             ShortEnhancementThresholdTextBox.Text = ShortEnhancementThreshold(settings).ToString(CultureInfo.InvariantCulture);
             SkipShortEnhancementCheckBox.IsChecked = settings.SkipShortEnhancement;
             EnhancementRetryOnTimeoutCheckBox.IsChecked = settings.EnhancementRetryOnTimeout;
             RefreshEnhancementPromptChoices(settings.SelectedEnhancementPromptId);
+            RefreshPromptEditorFields();
             powerModeRules = settings.PowerModeRules;
             RefreshPowerModePromptChoices(selectedPromptId: null);
             RefreshPowerModeRulesListView();
@@ -869,6 +899,7 @@ public sealed partial class MainWindow : Window
             suppressCloudTranscriptionModelChanged = false;
             suppressEnhancementPresetChanged = false;
             suppressEnhancementModelChanged = false;
+            suppressEnhancementPromptChanged = false;
         }
     }
 
@@ -2749,6 +2780,124 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task SavePromptAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            var existingPrompt = PromptEditorPrompt();
+            EnhancementPrompt updatedPrompt;
+            if (existingPrompt?.IsPredefined == true)
+            {
+                updatedPrompt = existingPrompt with
+                {
+                    TriggerWords = EnhancementPromptLibrary.TriggerWordsFromText(PromptTriggerWordsTextBox.Text)
+                };
+            }
+            else
+            {
+                updatedPrompt = EnhancementPromptLibrary.CreateCustomPrompt(
+                    existingPrompt?.Id ?? Guid.NewGuid(),
+                    PromptTitleTextBox.Text,
+                    PromptInstructionsTextBox.Text,
+                    existingPrompt?.Icon ?? "doc.text.fill",
+                    existingPrompt?.Description,
+                    PromptTriggerWordsTextBox.Text,
+                    PromptUseSystemInstructionsCheckBox.IsChecked == true);
+            }
+
+            var nextPrompts = EnhancementPromptLibrary.UpdatePrompt(enhancementPrompts, updatedPrompt);
+            await PersistPromptLibraryAsync(nextPrompts, powerModeRules, updatedPrompt.Id);
+            RefreshUiFromControllerState($"{updatedPrompt.Title} prompt saved");
+        }
+        catch (ArgumentException ex)
+        {
+            RefreshUiFromControllerState(ex.Message);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Prompt save failed: {ex.Message}");
+        }
+    }
+
+    private async Task DeletePromptAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var prompt = PromptEditorPrompt();
+        if (prompt is null || prompt.IsPredefined)
+        {
+            RefreshUiFromControllerState("Only custom prompts can be deleted");
+            return;
+        }
+
+        try
+        {
+            var nextPrompts = EnhancementPromptLibrary.DeletePrompt(enhancementPrompts, prompt.Id);
+            var nextPowerModeRules = ClearPowerModePromptOverridesForDeletedPrompt(powerModeRules, prompt.Id);
+            var selectedPromptId = EnhancementPromptLibrary.ResolveSelectedPromptId(null, nextPrompts);
+            await PersistPromptLibraryAsync(nextPrompts, nextPowerModeRules, selectedPromptId);
+            RefreshUiFromControllerState($"{prompt.Title} prompt deleted");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Prompt delete failed: {ex.Message}");
+        }
+    }
+
+    private async Task PersistPromptLibraryAsync(
+        IReadOnlyList<EnhancementPrompt> nextPrompts,
+        IReadOnlyList<PowerModeRule> nextPowerModeRules,
+        Guid selectedPromptId)
+    {
+        var powerModePromptId = SelectedPowerModePromptOverrideId();
+        var previousPrompts = enhancementPrompts;
+        var previousPowerModeRules = powerModeRules;
+
+        enhancementPrompts = nextPrompts;
+        powerModeRules = nextPowerModeRules;
+        RefreshEnhancementPromptChoices(selectedPromptId);
+        RefreshPowerModePromptChoices(powerModePromptId);
+        RefreshPromptEditorFields();
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+        }
+        catch
+        {
+            enhancementPrompts = previousPrompts;
+            powerModeRules = previousPowerModeRules;
+            RefreshEnhancementPromptChoices(selectedPromptId: null);
+            RefreshPowerModePromptChoices(powerModePromptId);
+            RefreshPromptEditorFields();
+            throw;
+        }
+    }
+
+    private static IReadOnlyList<PowerModeRule> ClearPowerModePromptOverridesForDeletedPrompt(
+        IReadOnlyList<PowerModeRule> rules,
+        Guid promptId) =>
+        rules
+            .Select(rule => rule.SelectedEnhancementPromptIdOverride == promptId
+                ? rule with { SelectedEnhancementPromptIdOverride = null }
+                : rule)
+            .ToArray();
+
     private async Task ApplyShortcutsAsync()
     {
         if (!settingsLoaded)
@@ -2937,7 +3086,12 @@ public sealed partial class MainWindow : Window
             EnhancementProviderId = SelectedEnhancementProviderId(),
             EnhancementEndpoint = EnhancementEndpointTextBox.Text.Trim(),
             EnhancementModel = EnhancementModelTextBox.Text.Trim(),
-            SelectedEnhancementPromptId = SelectedEnhancementPromptId(),
+            CustomEnhancementPrompts = EnhancementPromptLibrary
+                .PersistentPrompts(enhancementPrompts)
+                .ToArray(),
+            SelectedEnhancementPromptId = EnhancementPromptLibrary.ResolveSelectedPromptId(
+                SelectedEnhancementPromptId(),
+                enhancementPrompts),
             EnhancementTimeoutSeconds = ParsedPositiveOrDefault(EnhancementTimeoutTextBox.Text, 7),
             EnhancementRetryOnTimeout = EnhancementRetryOnTimeoutCheckBox.IsChecked == true,
             SkipShortEnhancement = SkipShortEnhancementCheckBox.IsChecked == true,
@@ -3031,13 +3185,52 @@ public sealed partial class MainWindow : Window
 
     private void RefreshEnhancementPromptChoices(Guid? selectedPromptId)
     {
+        suppressEnhancementPromptChanged = true;
         EnhancementPromptComboBox.ItemsSource = enhancementPrompts
             .Select(prompt => prompt.Title)
             .ToArray();
 
-        var promptId = selectedPromptId ?? EnhancementPromptCatalog.DefaultPromptId;
+        var promptId = EnhancementPromptLibrary.ResolveSelectedPromptId(selectedPromptId, enhancementPrompts);
         var selectedIndex = enhancementPrompts.ToList().FindIndex(prompt => prompt.Id == promptId);
         EnhancementPromptComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+        suppressEnhancementPromptChanged = false;
+    }
+
+    private EnhancementPrompt? SelectedEnhancementPrompt()
+    {
+        var selectedIndex = EnhancementPromptComboBox.SelectedIndex;
+        return selectedIndex >= 0 && selectedIndex < enhancementPrompts.Count
+            ? enhancementPrompts[selectedIndex]
+            : null;
+    }
+
+    private EnhancementPrompt? PromptEditorPrompt() =>
+        promptEditorPromptId is { } promptId
+            ? enhancementPrompts.FirstOrDefault(prompt => prompt.Id == promptId)
+            : null;
+
+    private void RefreshPromptEditorFields()
+    {
+        var prompt = SelectedEnhancementPrompt();
+        promptEditorPromptId = prompt?.Id;
+        PromptTitleTextBox.Text = prompt?.Title ?? string.Empty;
+        PromptInstructionsTextBox.Text = prompt?.PromptText ?? string.Empty;
+        PromptTriggerWordsTextBox.Text = prompt is null
+            ? string.Empty
+            : EnhancementPromptLibrary.TriggerWordsText(prompt);
+        PromptUseSystemInstructionsCheckBox.IsChecked = prompt?.UseSystemInstructions ?? true;
+    }
+
+    private void SetPromptEditorForNewPrompt()
+    {
+        promptEditorPromptId = null;
+        suppressEnhancementPromptChanged = true;
+        EnhancementPromptComboBox.SelectedIndex = -1;
+        suppressEnhancementPromptChanged = false;
+        PromptTitleTextBox.Text = string.Empty;
+        PromptInstructionsTextBox.Text = string.Empty;
+        PromptTriggerWordsTextBox.Text = string.Empty;
+        PromptUseSystemInstructionsCheckBox.IsChecked = true;
     }
 
     private void RefreshPowerModePromptChoices(Guid? selectedPromptId)
@@ -3707,6 +3900,8 @@ public sealed partial class MainWindow : Window
         var cloudPresetHasModelChoices = SelectedCloudTranscriptionPreset()?.ModelIds.Count > 0;
         var enhancementPreset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
         var enhancementPresetHasModelChoices = enhancementPreset.ModelIds.Count > 0;
+        var promptEditorPrompt = PromptEditorPrompt();
+        var promptEditorIsPredefined = promptEditorPrompt?.IsPredefined == true;
         var enhancementControlsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
@@ -3775,6 +3970,15 @@ public sealed partial class MainWindow : Window
         SaveEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         EnhancementPromptComboBox.IsEnabled = enhancementControlsEnabled;
+        PromptTitleTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
+        PromptInstructionsTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
+        PromptTriggerWordsTextBox.IsEnabled = enhancementControlsEnabled;
+        PromptUseSystemInstructionsCheckBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
+        NewPromptButton.IsEnabled = enhancementControlsEnabled;
+        SavePromptButton.IsEnabled = enhancementControlsEnabled;
+        DeletePromptButton.IsEnabled = enhancementControlsEnabled
+            && promptEditorPrompt is not null
+            && !promptEditorPrompt.IsPredefined;
         EnhancementTimeoutTextBox.IsEnabled = enhancementControlsEnabled;
         ShortEnhancementThresholdTextBox.IsEnabled = enhancementControlsEnabled;
         SkipShortEnhancementCheckBox.IsEnabled = enhancementControlsEnabled;

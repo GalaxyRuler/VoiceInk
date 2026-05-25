@@ -77,6 +77,39 @@ public sealed class TextEnhancementPipelineTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_UsesCurrentPromptSourceAfterPipelineConstruction()
+    {
+        var promptId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+        var prompts = EnhancementPromptCatalog.CreateDefaultPrompts();
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var pipeline = new TextEnhancementPipeline(
+            provider,
+            promptsProvider: () => prompts);
+        prompts =
+        [
+            new EnhancementPrompt(
+                promptId,
+                "Standup",
+                "Format as a terse standup update.",
+                "list.bullet",
+                null,
+                IsPredefined: false,
+                TriggerWords: [],
+                UseSystemInstructions: true)
+        ];
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            SelectedEnhancementPromptId = promptId
+        };
+
+        var result = await pipeline.EnhanceAsync("yesterday shipped prompts", settings, [], CancellationToken.None);
+
+        Assert.Equal("Standup", result.PromptName);
+        Assert.Contains("terse standup update", provider.LastRequest!.SystemMessage);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_IncludesClipboardContextWhenEnabled()
     {
         var provider = new FakeTextEnhancementService("Enhanced note.");

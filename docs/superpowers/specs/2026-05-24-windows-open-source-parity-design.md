@@ -329,6 +329,14 @@ Custom prompt persistence Windows target:
 - Ensure the dictation and Transcribe Audio enhancement pipeline reads the current prompt library after prompt edits without needing to restart the app.
 - Keep prompt persistence local only. No prompt marketplace, account sync, commercial template upsell, telemetry, or bundled paid prompt catalog.
 
+Custom prompt persistence slice completed on 2026-05-25:
+
+- Added a Core prompt library that merges source-controlled predefined prompts with locally persisted custom prompts and predefined trigger-word overrides.
+- Added JSON settings persistence for local custom enhancement prompts.
+- Changed the enhancement pipeline to read the current prompt library dynamically, so prompt edits apply to dictation, Transcribe Audio, and retry without restarting the app.
+- Added WinUI Enhancement controls for new/save/delete prompt actions, prompt title, prompt instructions, trigger words, and system-instruction wrapping.
+- Kept predefined prompt text source-controlled and non-deletable while allowing local trigger-word edits.
+
 ### Context
 
 macOS can use clipboard context, selected text, active window/screen OCR, browser URL, and app-specific context.

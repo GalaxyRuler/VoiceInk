@@ -237,7 +237,48 @@
                             TextWrapping="Wrap" />
                         <ComboBox
                             x:Name="EnhancementPromptComboBox"
-                            Header="Prompt" />
+                            Header="Prompt"
+                            SelectionChanged="EnhancementPromptComboBox_SelectionChanged" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="PromptTitleTextBox"
+                                Grid.Column="0"
+                                Header="Prompt title"
+                                PlaceholderText="Prompt name" />
+                            <TextBox
+                                x:Name="PromptTriggerWordsTextBox"
+                                Grid.Column="1"
+                                Header="Trigger words"
+                                PlaceholderText="chat mode, email mode" />
+                        </Grid>
+                        <TextBox
+                            x:Name="PromptInstructionsTextBox"
+                            Header="Prompt instructions"
+                            AcceptsReturn="True"
+                            Height="140"
+                            TextWrapping="Wrap"
+                            PlaceholderText="Enter custom prompt instructions" />
+                        <CheckBox
+                            x:Name="PromptUseSystemInstructionsCheckBox"
+                            Content="Use transcription enhancement instructions" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="NewPromptButton"
+                                Content="New Prompt"
+                                Click="NewPromptButton_Click" />
+                            <Button
+                                x:Name="SavePromptButton"
+                                Content="Save Prompt"
+                                Click="SavePromptButton_Click" />
+                            <Button
+                                x:Name="DeletePromptButton"
+                                Content="Delete Prompt"
+                                Click="DeletePromptButton_Click" />
+                        </StackPanel>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

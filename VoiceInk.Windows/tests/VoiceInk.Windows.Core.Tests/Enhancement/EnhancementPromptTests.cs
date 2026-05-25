@@ -27,6 +27,142 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void PromptLibrary_BuildPromptsReturnsDefaultsWhenNoPromptsArePersisted()
+    {
+        var prompts = EnhancementPromptLibrary.BuildPrompts([]);
+
+        Assert.Equal(
+            EnhancementPromptCatalog.CreateDefaultPrompts().Select(prompt => prompt.Id),
+            prompts.Select(prompt => prompt.Id));
+    }
+
+    [Fact]
+    public void PromptLibrary_BuildPromptsAppendsPersistedCustomPrompts()
+    {
+        var customPrompt = new EnhancementPrompt(
+            Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            "Standup",
+            "Format as a terse standup update.",
+            "list.bullet",
+            "Daily update",
+            IsPredefined: false,
+            TriggerWords: ["standup mode"],
+            UseSystemInstructions: true);
+
+        var prompts = EnhancementPromptLibrary.BuildPrompts([customPrompt]);
+
+        Assert.Contains(prompts, prompt =>
+            prompt.Id == customPrompt.Id
+            && prompt.Title == "Standup"
+            && !prompt.IsPredefined
+            && prompt.TriggerWords.SequenceEqual(["standup mode"]));
+    }
+
+    [Fact]
+    public void PromptLibrary_BuildPromptsPreservesOnlyPredefinedTriggerOverrides()
+    {
+        var persistedDefault = new EnhancementPrompt(
+            EnhancementPromptCatalog.DefaultPromptId,
+            "User edited title",
+            "User edited prompt text",
+            "terminal.fill",
+            "User edited description",
+            IsPredefined: true,
+            TriggerWords: ["clean mode", "default mode"],
+            UseSystemInstructions: false);
+
+        var prompts = EnhancementPromptLibrary.BuildPrompts([persistedDefault]);
+        var actualDefault = prompts.Single(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId);
+
+        Assert.Equal("Default", actualDefault.Title);
+        Assert.Contains("Clean up the <TRANSCRIPT>", actualDefault.PromptText);
+        Assert.Equal("checkmark.seal.fill", actualDefault.Icon);
+        Assert.True(actualDefault.UseSystemInstructions);
+        Assert.Equal(["clean mode", "default mode"], actualDefault.TriggerWords);
+    }
+
+    [Fact]
+    public void PromptLibrary_CreateCustomPromptTrimsAndNormalizesTriggerWords()
+    {
+        var prompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            "  Standup  ",
+            "  Format as a terse standup update.  ",
+            "",
+            "  Daily update  ",
+            " standup mode, Standup Mode, , sync mode ",
+            useSystemInstructions: true);
+
+        Assert.Equal("Standup", prompt.Title);
+        Assert.Equal("Format as a terse standup update.", prompt.PromptText);
+        Assert.Equal("doc.text.fill", prompt.Icon);
+        Assert.Equal("Daily update", prompt.Description);
+        Assert.False(prompt.IsPredefined);
+        Assert.Equal(["standup mode", "sync mode"], prompt.TriggerWords);
+    }
+
+    [Fact]
+    public void PromptLibrary_DeletePromptRemovesOnlyCustomPrompts()
+    {
+        var customPrompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            "Custom",
+            "Custom instructions",
+            "note",
+            null,
+            "",
+            useSystemInstructions: true);
+        var prompts = EnhancementPromptLibrary.BuildPrompts([customPrompt]);
+
+        var afterDeletingDefault = EnhancementPromptLibrary.DeletePrompt(
+            prompts,
+            EnhancementPromptCatalog.DefaultPromptId);
+        var afterDeletingCustom = EnhancementPromptLibrary.DeletePrompt(
+            prompts,
+            customPrompt.Id);
+
+        Assert.Contains(afterDeletingDefault, prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId);
+        Assert.DoesNotContain(afterDeletingCustom, prompt => prompt.Id == customPrompt.Id);
+    }
+
+    [Fact]
+    public void PromptLibrary_PersistentPromptsKeepsCustomPromptsAndPredefinedTriggerOverrides()
+    {
+        var prompts = EnhancementPromptLibrary.BuildPrompts(
+            [
+                new EnhancementPrompt(
+                    EnhancementPromptCatalog.DefaultPromptId,
+                    "Ignored",
+                    "Ignored",
+                    "ignored",
+                    null,
+                    IsPredefined: true,
+                    TriggerWords: ["clean mode"],
+                    UseSystemInstructions: false),
+                new EnhancementPrompt(
+                    Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                    "Custom",
+                    "Custom instructions",
+                    "note",
+                    null,
+                    IsPredefined: false,
+                    TriggerWords: [],
+                    UseSystemInstructions: true)
+            ]);
+
+        var persistent = EnhancementPromptLibrary.PersistentPrompts(prompts);
+
+        Assert.Contains(persistent, prompt =>
+            prompt.Id == EnhancementPromptCatalog.DefaultPromptId
+            && prompt.IsPredefined
+            && prompt.TriggerWords.SequenceEqual(["clean mode"]));
+        Assert.Contains(persistent, prompt => prompt.Title == "Custom" && !prompt.IsPredefined);
+        Assert.DoesNotContain(persistent, prompt =>
+            prompt.IsPredefined
+            && prompt.Id != EnhancementPromptCatalog.DefaultPromptId);
+    }
+
+    [Fact]
     public void Render_WrapsNormalPromptWithSystemInstructionsAndTranscript()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

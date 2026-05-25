@@ -1,5 +1,6 @@
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.PowerMode;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.Text;
 
 namespace VoiceInk.Windows.Core.Settings;
@@ -30,6 +31,7 @@ public sealed record AppSettings
     public string EnhancementProviderId { get; init; } = "custom";
     public string EnhancementEndpoint { get; init; } = string.Empty;
     public string EnhancementModel { get; init; } = string.Empty;
+    public EnhancementPrompt[] CustomEnhancementPrompts { get; init; } = [];
     public Guid? SelectedEnhancementPromptId { get; init; }
     public int EnhancementTimeoutSeconds { get; init; } = 7;
     public bool EnhancementRetryOnTimeout { get; init; } = true;
@@ -68,6 +70,7 @@ public sealed record AppSettings
             EnhancementProviderId == other.EnhancementProviderId &&
             EnhancementEndpoint == other.EnhancementEndpoint &&
             EnhancementModel == other.EnhancementModel &&
+            EnhancementPromptsEqual(CustomEnhancementPrompts, other.CustomEnhancementPrompts) &&
             SelectedEnhancementPromptId == other.SelectedEnhancementPromptId &&
             EnhancementTimeoutSeconds == other.EnhancementTimeoutSeconds &&
             EnhancementRetryOnTimeout == other.EnhancementRetryOnTimeout &&
@@ -111,6 +114,21 @@ public sealed record AppSettings
         hash.Add(EnhancementProviderId);
         hash.Add(EnhancementEndpoint);
         hash.Add(EnhancementModel);
+        foreach (var prompt in CustomEnhancementPrompts)
+        {
+            hash.Add(prompt.Id);
+            hash.Add(prompt.Title);
+            hash.Add(prompt.PromptText);
+            hash.Add(prompt.Icon);
+            hash.Add(prompt.Description);
+            hash.Add(prompt.IsPredefined);
+            hash.Add(prompt.UseSystemInstructions);
+            foreach (var triggerWord in prompt.TriggerWords)
+            {
+                hash.Add(triggerWord);
+            }
+        }
+
         hash.Add(SelectedEnhancementPromptId);
         hash.Add(EnhancementTimeoutSeconds);
         hash.Add(EnhancementRetryOnTimeout);
@@ -127,4 +145,36 @@ public sealed record AppSettings
 
         return hash.ToHashCode();
     }
+
+    private static bool EnhancementPromptsEqual(
+        IReadOnlyList<EnhancementPrompt> first,
+        IReadOnlyList<EnhancementPrompt> second)
+    {
+        if (first.Count != second.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < first.Count; i++)
+        {
+            if (!EnhancementPromptEquals(first[i], second[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool EnhancementPromptEquals(
+        EnhancementPrompt first,
+        EnhancementPrompt second) =>
+        first.Id == second.Id
+        && first.Title == second.Title
+        && first.PromptText == second.PromptText
+        && first.Icon == second.Icon
+        && first.Description == second.Description
+        && first.IsPredefined == second.IsPredefined
+        && first.UseSystemInstructions == second.UseSystemInstructions
+        && first.TriggerWords.SequenceEqual(second.TriggerWords);
 }

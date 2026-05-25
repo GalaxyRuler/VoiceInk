@@ -11,7 +11,7 @@ public sealed class TextEnhancementPipeline
     private const double DefaultTemperature = 0.3;
 
     private readonly ITextEnhancementService enhancementService;
-    private readonly IReadOnlyList<EnhancementPrompt> prompts;
+    private readonly Func<IReadOnlyList<EnhancementPrompt>> promptsProvider;
     private readonly IEnhancementContextProvider contextProvider;
 
     public TextEnhancementPipeline(
@@ -20,9 +20,24 @@ public sealed class TextEnhancementPipeline
         IEnhancementContextProvider? contextProvider = null)
     {
         this.enhancementService = enhancementService;
-        this.prompts = prompts is { Count: > 0 }
+        var staticPrompts = prompts is { Count: > 0 }
             ? prompts
             : EnhancementPromptCatalog.CreateDefaultPrompts();
+        promptsProvider = () => staticPrompts;
+        this.contextProvider = contextProvider ?? new EmptyEnhancementContextProvider();
+    }
+
+    public TextEnhancementPipeline(
+        ITextEnhancementService enhancementService,
+        Func<IReadOnlyList<EnhancementPrompt>> promptsProvider,
+        IEnhancementContextProvider? contextProvider = null)
+    {
+        this.enhancementService = enhancementService;
+        this.promptsProvider = () =>
+        {
+            var prompts = promptsProvider();
+            return prompts.Count > 0 ? prompts : EnhancementPromptCatalog.CreateDefaultPrompts();
+        };
         this.contextProvider = contextProvider ?? new EmptyEnhancementContextProvider();
     }
 
@@ -38,6 +53,7 @@ public sealed class TextEnhancementPipeline
         }
 
         var selectedPromptId = settings.SelectedEnhancementPromptId ?? EnhancementPromptCatalog.DefaultPromptId;
+        var prompts = promptsProvider();
         var detection = PromptDetectionService.Analyze(
             text,
             prompts,
@@ -108,10 +124,14 @@ public sealed class TextEnhancementPipeline
         }
     }
 
-    private EnhancementPrompt PromptFor(Guid promptId) =>
+    private EnhancementPrompt PromptFor(Guid promptId)
+    {
+        var prompts = promptsProvider();
+        return
         prompts.FirstOrDefault(prompt => prompt.Id == promptId)
         ?? prompts.FirstOrDefault(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId)
         ?? prompts[0];
+    }
 
     private async Task<EnhancementContext> GetContextAsync(
         EnhancementContextRequest request,

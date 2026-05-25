@@ -35,7 +35,7 @@
 
 Record the Windows target: persist custom prompts, preserve predefined prompt source text, allow predefined trigger-word overrides, add local editor controls, and keep the enhancement pipeline dynamic.
 
-- [ ] **Step 2: Commit planning docs**
+- [x] **Step 2: Commit planning docs**
 
 Run:
 
@@ -48,7 +48,7 @@ Expected: docs-only commit.
 
 ## Task 2: Core Prompt Library Red/Green
 
-- [ ] **Step 1: Add failing Core tests**
+- [x] **Step 1: Add failing Core tests**
 
 Extend `EnhancementPromptTests` to assert:
 
@@ -59,7 +59,7 @@ Extend `EnhancementPromptTests` to assert:
 - `DeletePrompt` removes custom prompts but keeps predefined prompts.
 - `PersistentPrompts` returns custom prompts and predefined prompts with trigger words, but omits untouched predefined prompts.
 
-- [ ] **Step 2: Run red Core tests**
+- [x] **Step 2: Run red Core tests**
 
 Run:
 
@@ -69,7 +69,7 @@ Run:
 
 Expected: compile failure because `EnhancementPromptLibrary` does not exist.
 
-- [ ] **Step 3: Implement Core prompt library**
+- [x] **Step 3: Implement Core prompt library**
 
 Add `EnhancementPromptLibrary` with:
 
@@ -80,17 +80,17 @@ Add `EnhancementPromptLibrary` with:
 - `PersistentPrompts(IReadOnlyList<EnhancementPrompt> prompts)`.
 - `ResolveSelectedPromptId(Guid? selectedPromptId, IReadOnlyList<EnhancementPrompt> prompts)`.
 
-- [ ] **Step 4: Verify Core tests pass**
+- [x] **Step 4: Verify Core tests pass**
 
 Run the same focused Core command. Expected: tests pass.
 
 ## Task 3: Dynamic Pipeline Prompt Source Red/Green
 
-- [ ] **Step 1: Add failing pipeline test**
+- [x] **Step 1: Add failing pipeline test**
 
 Add a `TextEnhancementPipelineTests` case where a mutable prompt list is changed after pipeline construction and the next enhancement uses the new prompt title/text.
 
-- [ ] **Step 2: Run red pipeline test**
+- [x] **Step 2: Run red pipeline test**
 
 Run:
 
@@ -100,17 +100,17 @@ Run:
 
 Expected: failing assertion because the pipeline currently captures a static prompt list.
 
-- [ ] **Step 3: Implement dynamic prompt source**
+- [x] **Step 3: Implement dynamic prompt source**
 
 Add a `Func<IReadOnlyList<EnhancementPrompt>>` prompt-source constructor path to `TextEnhancementPipeline`, while preserving the existing static-list constructor for tests and simple callers.
 
-- [ ] **Step 4: Verify pipeline tests pass**
+- [x] **Step 4: Verify pipeline tests pass**
 
 Run the same focused command. Expected: tests pass.
 
 ## Task 4: Settings Persistence Red/Green
 
-- [ ] **Step 1: Add failing settings test**
+- [x] **Step 1: Add failing settings test**
 
 Update `JsonSettingsStoreTests.SaveAsync_PersistsSettings` with:
 
@@ -129,7 +129,7 @@ CustomEnhancementPrompts =
 ]
 ```
 
-- [ ] **Step 2: Run red settings tests**
+- [x] **Step 2: Run red settings tests**
 
 Run:
 
@@ -139,17 +139,17 @@ Run:
 
 Expected: compile failure because `AppSettings.CustomEnhancementPrompts` does not exist.
 
-- [ ] **Step 3: Implement settings property**
+- [x] **Step 3: Implement settings property**
 
 Add `EnhancementPrompt[] CustomEnhancementPrompts { get; init; } = [];` to `AppSettings`, including equality and hash-code participation.
 
-- [ ] **Step 4: Verify settings tests pass**
+- [x] **Step 4: Verify settings tests pass**
 
 Run the same focused Infrastructure command. Expected: tests pass.
 
 ## Task 5: WinUI Prompt Editor
 
-- [ ] **Step 1: Add editor controls**
+- [x] **Step 1: Add editor controls**
 
 In `MainWindow.xaml`, under `EnhancementPromptComboBox`, add:
 
@@ -159,11 +159,11 @@ In `MainWindow.xaml`, under `EnhancementPromptComboBox`, add:
 - `PromptUseSystemInstructionsCheckBox`.
 - `NewPromptButton`, `SavePromptButton`, and `DeletePromptButton`.
 
-- [ ] **Step 2: Load prompt library from settings**
+- [x] **Step 2: Load prompt library from settings**
 
 In `InitializeAsync`, build `enhancementPrompts = EnhancementPromptLibrary.BuildPrompts(settings.CustomEnhancementPrompts)` before `RefreshEnhancementPromptChoices`.
 
-- [ ] **Step 3: Wire prompt selection and editor state**
+- [x] **Step 3: Wire prompt selection and editor state**
 
 Add helpers:
 
@@ -174,15 +174,15 @@ Add helpers:
 
 Predefined prompts keep title/instructions/system-instruction fields disabled and only allow trigger-word edits. Delete is enabled only for custom prompts.
 
-- [ ] **Step 4: Save and delete prompt changes**
+- [x] **Step 4: Save and delete prompt changes**
 
 Add async handlers that update the in-memory prompt list, persist `CustomEnhancementPrompts = EnhancementPromptLibrary.PersistentPrompts(enhancementPrompts)` through settings, refresh combo/editor state, and keep `SelectedEnhancementPromptId` valid.
 
-- [ ] **Step 5: Make the enhancement pipeline use the current prompt library**
+- [x] **Step 5: Make the enhancement pipeline use the current prompt library**
 
 Construct `TextEnhancementPipeline` with a prompt-source lambda so dictation, Transcribe Audio, and retry use prompt edits without app restart.
 
-- [ ] **Step 6: Build for compile coverage**
+- [x] **Step 6: Build for compile coverage**
 
 Run:
 
@@ -194,11 +194,11 @@ Expected: build succeeds.
 
 ## Task 6: Docs, Review, Commit
 
-- [ ] **Step 1: Update README and spec completion notes**
+- [x] **Step 1: Update README and spec completion notes**
 
 Document local custom prompt editor controls, trigger-word persistence, predefined prompt trigger overrides, and local-only storage.
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 Run:
 
@@ -210,7 +210,7 @@ Run:
 
 Expected: focused tests pass, full tests pass, and Debug x64 build succeeds.
 
-- [ ] **Step 3: Request review and fix Critical/Important findings**
+- [x] **Step 3: Request review and fix Critical/Important findings**
 
 Ask a review subagent to inspect prompt persistence, predefined prompt safety, selected prompt validity, dynamic pipeline prompt access, UI state, and docs. Fix all Critical and Important findings before committing.
 

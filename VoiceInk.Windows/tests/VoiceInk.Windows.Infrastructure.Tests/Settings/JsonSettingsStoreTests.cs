@@ -1,6 +1,7 @@
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Models;
+using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Infrastructure.Settings;
 using Xunit;
 
@@ -54,6 +55,18 @@ public sealed class JsonSettingsStoreTests
             EnhancementProviderId = "gemini",
             EnhancementEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
             EnhancementModel = "gemini-2.5-flash-lite",
+            CustomEnhancementPrompts =
+            [
+                new EnhancementPrompt(
+                    Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    "Standup",
+                    "Format as a terse standup update.",
+                    "list.bullet",
+                    "Daily update",
+                    IsPredefined: false,
+                    TriggerWords: ["standup mode"],
+                    UseSystemInstructions: true)
+            ],
             UseClipboardContext = true,
             ImportedWhisperModels =
             [
