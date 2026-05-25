@@ -1631,6 +1631,20 @@ public sealed partial class MainWindow : Window
             Content = "Browse .bin"
         };
         browseModelButton.Click += async (_, _) => await BrowseOnboardingModelAsync(modelPathTextBox);
+        var recommendedModelComboBox = new ComboBox
+        {
+            Header = "Recommended local model",
+            ItemsSource = OnboardingModelCatalogService.BuildRecommendedChoices()
+        };
+        var recommendedModelIndex = OnboardingModelCatalogService
+            .BuildRecommendedChoices()
+            .ToList()
+            .FindIndex(model => model.Name == OnboardingModelCatalogService.DefaultRecommendedModelName);
+        recommendedModelComboBox.SelectedIndex = Math.Max(0, recommendedModelIndex);
+        var downloadRecommendedModelButton = new Button
+        {
+            Content = "Download Recommended Model"
+        };
 
         var audioInputComboBox = new ComboBox
         {
@@ -1671,6 +1685,10 @@ public sealed partial class MainWindow : Window
             modelPathTextBox.Text,
             shortcutTextBox.Text);
 
+        downloadRecommendedModelButton.Click += async (_, _) => await DownloadOnboardingModelAsync(
+            recommendedModelComboBox,
+            modelPathTextBox,
+            statusTextBlock);
         refreshMicrophonesButton.Click += async (_, _) => await RefreshOnboardingAudioInputsAsync(
             audioInputComboBox,
             statusTextBlock,
@@ -1703,6 +1721,8 @@ public sealed partial class MainWindow : Window
         });
         content.Children.Add(modelPathTextBox);
         content.Children.Add(browseModelButton);
+        content.Children.Add(recommendedModelComboBox);
+        content.Children.Add(downloadRecommendedModelButton);
         content.Children.Add(audioInputComboBox);
         content.Children.Add(microphoneStatusTextBlock);
         content.Children.Add(new StackPanel
@@ -1813,6 +1833,79 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Model picker failed: {ex.Message}");
+        }
+    }
+
+    private async Task DownloadOnboardingModelAsync(
+        ComboBox recommendedModelComboBox,
+        TextBox modelPathTextBox,
+        TextBlock statusTextBlock)
+    {
+        if (isDownloadingModel)
+        {
+            return;
+        }
+
+        if (recommendedModelComboBox.SelectedItem is not WhisperModelCatalogEntry model)
+        {
+            statusTextBlock.Text = "Choose a recommended model to download.";
+            return;
+        }
+
+        var statusOverride = $"Downloading {model.DisplayName}";
+        isDownloadingModel = true;
+        modelDownloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(windowLifetime.Token);
+        statusTextBlock.Text = $"{statusOverride} ({model.Size})";
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var progress = new Progress<WhisperModelDownloadProgress>(downloadProgress =>
+            {
+                _ = DispatcherQueue.TryEnqueue(() =>
+                    statusTextBlock.Text = $"Downloading {model.DisplayName}: {downloadProgress.FractionComplete:P0}");
+            });
+            var downloadTask = modelDownloader.DownloadAsync(
+                model,
+                modelsDirectory,
+                progress,
+                modelDownloadCancellation.Token);
+            modelDownloadTask = downloadTask;
+            var downloadedModel = await downloadTask;
+
+            localWhisperModels = LocalWhisperModelService.AddOrReplaceCatalogModel(
+                localWhisperModels,
+                downloadedModel);
+            modelPathTextBox.Text = downloadedModel.Path;
+            ModelPathTextBox.Text = downloadedModel.Path;
+            RefreshLanguageChoices(downloadedModel.Path, selectedLanguage: SelectedLanguageCode());
+            RefreshModelChoices(downloadedModel.Path);
+            SelectCatalogModelByName(model.Name);
+            statusOverride = $"Downloaded {model.DisplayName}. Save setup to use it.";
+            statusTextBlock.Text = statusOverride;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+            statusTextBlock.Text = statusOverride;
+        }
+        catch (OperationCanceledException)
+        {
+            statusOverride = "Model download canceled";
+            statusTextBlock.Text = statusOverride;
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Model download failed: {ex.Message}";
+            statusTextBlock.Text = statusOverride;
+        }
+        finally
+        {
+            modelDownloadCancellation?.Dispose();
+            modelDownloadCancellation = null;
+            modelDownloadTask = null;
+            isDownloadingModel = false;
+            RefreshUiFromControllerState(statusOverride);
         }
     }
 

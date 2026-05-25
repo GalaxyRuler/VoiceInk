@@ -28,25 +28,25 @@ VoiceInk Windows parity  [##################--] 88%
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
-| Onboarding | 58% | `[############--------]` | First-run setup covers model path, microphone health, microphone settings, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Model catalog/download and broader permission health checks remain. |
+| Onboarding | 64% | `[#############-------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Broader permission health checks and richer setup polish remain. |
 | Packaging | 46% | `[#########-----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, and non-installing MSIX artifact validation exist. End-to-end signed MSIX build smoke, shortcut registration, uninstall behavior validation, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows onboarding microphone health  [####################] 100%
+Windows onboarding model catalog download  [####################] 100%
 ```
 
 Completed:
 
-- Added microphone health text to the UI-independent onboarding status model.
-- Added first-run microphone detected/no-device messaging.
-- Added in-dialog `Refresh Microphones` so users can re-check devices without leaving onboarding.
-- Kept Windows microphone privacy settings as a user-initiated action.
+- Added a tested onboarding recommended model catalog helper.
+- Added first-run recommended model selection using the existing free/open-source Whisper catalog.
+- Added `Download Recommended Model` to fetch a selected GGML model into app-local model storage.
+- Filled the onboarding model path after download while leaving completion to the existing `Save Setup` action.
 
 ## Near-Term Priority
 
 1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
 2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
-3. Add onboarding model catalog/download and broader permission health checks.
+3. Add broader onboarding permission health checks and setup polish.
 4. Refine OCR region picker behavior across complex multi-monitor/DPI layouts.
