@@ -559,6 +559,71 @@ public sealed class SqliteHistoryStoreTests
         Assert.Equal(kept, item);
     }
 
+    [Fact]
+    public async Task ListOlderThanAsync_ReturnsOnlyItemsOlderThanCutoff()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var old = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.Parse("2026-05-25T10:00:00Z"),
+            "old",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var newItem = old with
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.Parse("2026-05-25T12:00:00Z"),
+            Text = "new",
+            OriginalText = "new"
+        };
+
+        await store.SaveAsync(old, CancellationToken.None);
+        await store.SaveAsync(newItem, CancellationToken.None);
+
+        var results = await store.ListOlderThanAsync(
+            DateTimeOffset.Parse("2026-05-25T11:00:00Z"),
+            CancellationToken.None);
+
+        var item = Assert.Single(results);
+        Assert.Equal(old, item);
+    }
+
+    [Fact]
+    public async Task ClearAudioFilePathAsync_ClearsOnlySelectedRows()
+    {
+        using var temp = new TempDirectory();
+        var dbPath = Path.Combine(temp.Path, "history.db");
+        var store = new SqliteHistoryStore(dbPath);
+        var cleared = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-2),
+            "clear",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero,
+            audioFilePath: @"C:\Audio\clear.wav");
+        var kept = cleared with
+        {
+            Id = Guid.NewGuid(),
+            Text = "keep",
+            OriginalText = "keep",
+            AudioFilePath = @"C:\Audio\keep.wav"
+        };
+
+        await store.SaveAsync(cleared, CancellationToken.None);
+        await store.SaveAsync(kept, CancellationToken.None);
+
+        var count = await store.ClearAudioFilePathAsync([cleared.Id], CancellationToken.None);
+
+        Assert.Equal(1, count);
+        var rows = await store.ListRecentAsync(10, CancellationToken.None);
+        Assert.Null(rows.Single(row => row.Id == cleared.Id).AudioFilePath);
+        Assert.Equal(@"C:\Audio\keep.wav", rows.Single(row => row.Id == kept.Id).AudioFilePath);
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"voiceink-{Guid.NewGuid():N}");

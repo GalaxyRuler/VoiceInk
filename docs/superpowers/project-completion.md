@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###########---------] 57%
+VoiceInk Windows parity  [############--------] 59%
 ```
 
 ## Area Bars
@@ -24,31 +24,31 @@ VoiceInk Windows parity  [###########---------] 57%
 | Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
 | Power Mode | 55% | `[###########---------]` | Rule model, process/title matching, default fallback, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, shortcuts, and recorder integration remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
-| History | 70% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, and CSV export exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
+| History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
 | Metrics | 68% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, and CSV export exist. Visual parity and reset controls remain. |
-| Settings | 43% | `[#########-----------]` | Shortcut/cleanup/provider/audio controls and local settings backup import/export exist. Launch at login, paste method choices, privacy cleanup depth, reset onboarding, and richer diagnostics remain. |
+| Settings | 50% | `[##########----------]` | Shortcut/cleanup/provider/audio controls, local settings backup import/export, privacy cleanup, and reset onboarding exist. Launch at login, paste method choices, and richer diagnostics remain. |
 | Audio input | 52% | `[##########----------]` | Device refresh and system default/custom device persistence exist. Prioritized fallback, live device-change updates, and richer active/unavailable UI remain. |
-| Onboarding | 48% | `[##########----------]` | First-run setup covers model path, microphone settings, audio input, shortcut, and basic usage. Model catalog/download, permission health checks, and reset onboarding remain. |
+| Onboarding | 55% | `[###########---------]` | First-run setup covers model path, microphone settings, audio input, shortcut, basic usage, and Settings reset. Model catalog/download and deeper permission health checks remain. |
 | Packaging | 8% | `[##------------------]` | Source-run docs and runtime workaround exist. MSIX/installer, zip/dev distribution, native dependency layout, uninstall behavior, and installer smoke tests remain. |
 
 ## Current Slice
 
 ```text
-Settings backup/import  [####################] 100%
+Settings privacy/onboarding  [####################] 100%
 ```
 
 Completed:
 
-- Core backup schema and category merge behavior.
-- WinUI Settings export/import buttons.
-- Secret exclusion and API-key reminder.
-- Unsafe provider endpoint redaction during export.
-- Settings/hotkey rollback for failed combined imports.
-- UI refresh after import so stale controls do not overwrite imported settings.
+- Mac-style transcript cleanup settings and retention choices.
+- Mac-style audio-only cleanup settings and retention choices.
+- Core cleanup service with UTC cutoff logic, app-created recording file guard, and retryable locked-file behavior.
+- SQLite cutoff listing and audio-reference clearing.
+- WinUI Privacy controls with automatic launch/post-recording/daily cleanup, manual cleanup actions, and confirmation for destructive manual cleanup.
+- Confirmed Settings `Reset Onboarding` action for showing first-run setup on the next launch.
 
 ## Near-Term Priority
 
-1. Fill highest-impact Settings gaps: reset onboarding, privacy cleanup controls, paste method, launch-at-login/open-source equivalent.
+1. Fill remaining high-impact Settings gaps: paste method, clipboard restore delay, launch-at-login/open-source equivalent.
 2. Improve model management: catalog cards, direct download/import flow, language selection, warmup/preload.
 3. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
 4. Add packaging path: zip/dev package first, then MSIX or installer.

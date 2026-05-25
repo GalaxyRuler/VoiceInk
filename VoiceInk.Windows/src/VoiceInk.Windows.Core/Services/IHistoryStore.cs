@@ -10,4 +10,8 @@ public interface IHistoryStore
     Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken);
     Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TranscriptionHistoryItem>> ListOlderThanAsync(
+        DateTimeOffset cutoff,
+        CancellationToken cancellationToken);
+    Task<int> ClearAudioFilePathAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 }

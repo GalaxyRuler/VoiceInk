@@ -523,10 +523,29 @@ Settings backup slice completed on 2026-05-25:
 - Backup files include a secret-exclusion notice and do not export Credential Manager API keys, tokens, credentials, or other secret material. Provider endpoint fields with embedded credentials or key/token query parameters are cleared during export.
 - History and metrics remain separate local CSV exports rather than part of the settings backup.
 
+Settings privacy/onboarding Windows target:
+
+- Add `Reset Onboarding` in Settings, matching macOS by setting the local onboarding completion flag back to false after a confirmation. The first-run setup should appear again on the next launch.
+- Add macOS-aligned privacy cleanup settings: `Auto-delete Transcripts`, `Delete After` with immediately/1 hour/1 day/3 days/7 days, `Auto-delete Audio Files`, and `Keep Audio For` with 1/3/7/14/30 days.
+- Persist cleanup settings in JSON with macOS defaults: transcript cleanup off, transcript retention 1440 minutes, audio cleanup off, audio retention 7 days.
+- Run transcript cleanup by deleting history rows older than the configured retention and deleting their associated audio files when present.
+- Run audio cleanup by deleting only old audio files and clearing their history audio-file references while preserving transcript text.
+- Hide or disable standalone audio cleanup while transcript cleanup is enabled, because deleting transcripts also removes their audio files and macOS treats the two modes as mutually exclusive.
+- Keep cleanup local-only and non-commercial. Do not upload audio, transcripts, metrics, or diagnostics.
+
+Settings privacy/onboarding slice completed on 2026-05-25:
+
+- Added JSON settings for macOS-style transcript/audio cleanup defaults and retention choices.
+- Added a Core cleanup service that computes UTC cutoffs, deletes app-owned audio files only under the recordings directory, deletes old transcript rows for transcript cleanup, and clears audio references while preserving transcript text for audio-only cleanup.
+- Hardened cleanup so it only deletes direct app-created recording WAV files, rejects reparse-point paths, and keeps transcript rows when app-owned audio deletion fails so later cleanup can retry.
+- Added SQLite history queries for cutoff-based cleanup and audio-reference clearing.
+- Added WinUI Settings controls for Privacy cleanup and a confirmed `Reset Onboarding` action that shows first-run setup again on the next launch.
+- Automatic cleanup now runs on launch, after completed recordings, and on a daily in-app timer while the relevant setting is enabled.
+
 Windows gaps:
 
-- Most settings beyond model path, cleanup, and the supported global shortcut fields.
-- Windows equivalents for launch at login, tray behavior, deeper privacy cleanup, reset onboarding, richer diagnostics, and paste method.
+- Settings surfaces beyond supported shortcut, cleanup, backup, provider, audio, and onboarding controls.
+- Windows equivalents for launch at login, tray behavior, richer diagnostics, and paste method.
 
 ### Audio Input
 

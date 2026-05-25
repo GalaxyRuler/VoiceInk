@@ -397,6 +397,34 @@ public sealed class HistoryRetryServiceTests
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.RemoveAll(item => item.Id == id) > 0);
+
+        public Task<IReadOnlyList<TranscriptionHistoryItem>> ListOlderThanAsync(
+            DateTimeOffset cutoff,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(
+                Items
+                    .Where(item => item.CreatedAt.UtcDateTime.Ticks < cutoff.UtcDateTime.Ticks)
+                    .ToArray());
+
+        public Task<int> ClearAudioFilePathAsync(
+            IReadOnlyCollection<Guid> ids,
+            CancellationToken cancellationToken)
+        {
+            var idSet = ids.ToHashSet();
+            var count = 0;
+            for (var index = 0; index < Items.Count; index++)
+            {
+                if (!idSet.Contains(Items[index].Id) || Items[index].AudioFilePath is null)
+                {
+                    continue;
+                }
+
+                Items[index] = Items[index] with { AudioFilePath = null };
+                count++;
+            }
+
+            return Task.FromResult(count);
+        }
     }
 
     private sealed class FakeSessionMetricStore : ISessionMetricStore

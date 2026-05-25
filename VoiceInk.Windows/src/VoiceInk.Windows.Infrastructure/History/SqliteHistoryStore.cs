@@ -225,6 +225,66 @@ public sealed class SqliteHistoryStore : IHistoryStore
         return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
     }
 
+    public async Task<IReadOnlyList<TranscriptionHistoryItem>> ListOlderThanAsync(
+        DateTimeOffset cutoff,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
+                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
+                   model_path, prompt_name, power_mode_name, power_mode_emoji, enhancement_duration_ms, error_message, audio_file_path,
+                   enhancement_provider_name, enhancement_model_name, ai_request_system_message, ai_request_user_message
+            FROM transcriptions
+            WHERE created_at_utc_ticks < $cutoff_utc_ticks
+            ORDER BY created_at_utc_ticks DESC;
+            """;
+        command.Parameters.AddWithValue("$cutoff_utc_ticks", cutoff.UtcDateTime.Ticks);
+
+        var items = new List<TranscriptionHistoryItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            items.Add(ReadHistoryItem(reader));
+        }
+
+        return items;
+    }
+
+    public async Task<int> ClearAudioFilePathAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+        {
+            return 0;
+        }
+
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        var parameterNames = ids
+            .Select((id, index) =>
+            {
+                var parameterName = $"$id{index}";
+                command.Parameters.AddWithValue(parameterName, id.ToString());
+                return parameterName;
+            })
+            .ToArray();
+        command.CommandText = $"""
+            UPDATE transcriptions
+            SET audio_file_path = NULL
+            WHERE audio_file_path IS NOT NULL
+              AND id IN ({string.Join(", ", parameterNames)});
+            """;
+
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static TranscriptionHistoryItem ReadHistoryItem(SqliteDataReader reader) =>
         new(
             Guid.Parse(reader.GetString(0)),

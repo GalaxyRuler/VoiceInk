@@ -230,6 +230,17 @@ public sealed class LastTranscriptionActionServiceTests
         {
             return Task.FromResult(false);
         }
+
+        public Task<IReadOnlyList<TranscriptionHistoryItem>> ListOlderThanAsync(
+            DateTimeOffset cutoff,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(
+                items.Where(item => item.CreatedAt.UtcDateTime.Ticks < cutoff.UtcDateTime.Ticks).ToArray());
+
+        public Task<int> ClearAudioFilePathAsync(
+            IReadOnlyCollection<Guid> ids,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(0);
     }
 
     private sealed class FakeTextInjectionService(List<string>? events = null) : ITextInjectionService

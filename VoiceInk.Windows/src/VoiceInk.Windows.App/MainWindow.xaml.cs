@@ -21,6 +21,7 @@ using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.PowerMode;
+using VoiceInk.Windows.Core.Privacy;
 using VoiceInk.Windows.Core.Recorder;
 using VoiceInk.Windows.Core.Services;
 using VoiceInk.Windows.Core.Settings;
@@ -61,6 +62,8 @@ public sealed partial class MainWindow : Window
     private const string AboutSectionTag = "About";
     private const string EnhancementSectionTag = "Enhancement";
     private const string PowerModeSectionTag = "Power Mode";
+    private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
+    private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
 
     private readonly string appDataDirectory;
     private readonly string recordingsDirectory;
@@ -77,6 +80,7 @@ public sealed partial class MainWindow : Window
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
     private readonly HistoryRetryService historyRetryService;
+    private readonly PrivacyCleanupService privacyCleanupService;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
     private readonly WindowsCredentialSecretStore secretStore;
@@ -88,6 +92,7 @@ public sealed partial class MainWindow : Window
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
+    private readonly DispatcherQueueTimer privacyCleanupTimer;
     private GlobalHotkeyService? hotkeyService;
     private TrayIconService? trayIconService;
     private FloatingRecorderWindow? floatingRecorderWindow;
@@ -117,6 +122,7 @@ public sealed partial class MainWindow : Window
     private bool isSavingCloudTranscriptionKey;
     private bool isExportingSettingsBackup;
     private bool isImportingSettingsBackup;
+    private bool isRunningPrivacyCleanup;
     private bool isOnboardingOpen;
     private bool settingsLoaded;
     private bool modelPathEdited;
@@ -142,6 +148,9 @@ public sealed partial class MainWindow : Window
         floatingRecorderRefreshTimer = DispatcherQueue.CreateTimer();
         floatingRecorderRefreshTimer.Interval = TimeSpan.FromSeconds(1);
         floatingRecorderRefreshTimer.Tick += (_, _) => RefreshFloatingRecorderFromTimer();
+        privacyCleanupTimer = DispatcherQueue.CreateTimer();
+        privacyCleanupTimer.Interval = TimeSpan.FromDays(1);
+        privacyCleanupTimer.Tick += async (_, _) => await RunConfiguredPrivacyCleanupFromTimerAsync();
 
         InitializeNavigationItems();
         ShowShellSection(DashboardSectionTag);
@@ -180,6 +189,11 @@ public sealed partial class MainWindow : Window
             settingsStore,
             dictionaryStore,
             sessionMetricStore);
+        privacyCleanupService = new PrivacyCleanupService(
+            settingsStore,
+            historyStore,
+            TimeProvider.System,
+            recordingsDirectory);
         audioFileTranscriptionService = new AudioFileTranscriptionService(
             new MediaFoundationAudioFileImportService(),
             transcriptionService,
@@ -408,8 +422,14 @@ public sealed partial class MainWindow : Window
             await controller.StopAsync(windowLifetime.Token);
             await RefreshHistoryAsync(windowLifetime.Token);
             var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
+            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
+            if (cleanupStatus is not null)
+            {
+                await RefreshHistoryAsync(windowLifetime.Token);
+            }
+
             recordingStartedAt = null;
-            statusOverride = controller.LastWarning is null ? metricsWarning : null;
+            statusOverride = controller.LastWarning is null ? cleanupStatus ?? metricsWarning : null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -826,6 +846,32 @@ public sealed partial class MainWindow : Window
         await ApplyShortcutsAsync();
     }
 
+    private async void ApplyCleanupSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ApplyCleanupSettingsAsync();
+    }
+
+    private async void RunTranscriptCleanupButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunTranscriptCleanupAsync();
+    }
+
+    private async void RunAudioCleanupButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunAudioCleanupAsync();
+    }
+
+    private async void ResetOnboardingButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetOnboardingAsync();
+    }
+
+    private void CleanupSettingCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateCleanupSettingControlState();
+        RefreshUiFromControllerState();
+    }
+
     private async void ExportSettingsBackupButton_Click(object sender, RoutedEventArgs e)
     {
         await ExportSettingsBackupAsync();
@@ -886,7 +932,13 @@ public sealed partial class MainWindow : Window
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
-            RefreshUiFromControllerState(refreshWarning);
+            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
+            if (cleanupStatus is not null)
+            {
+                await RefreshHistoryAsync(windowLifetime.Token);
+            }
+
+            RefreshUiFromControllerState(refreshWarning ?? cleanupStatus);
             await ShowOnboardingIfNeededAsync(settings);
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -959,6 +1011,13 @@ public sealed partial class MainWindow : Window
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
         AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
         PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
+        TranscriptionCleanupCheckBox.IsChecked = settings.IsTranscriptionCleanupEnabled;
+        TranscriptionRetentionComboBox.SelectedIndex = TranscriptionRetentionToSelectedIndex(
+            settings.TranscriptionRetentionMinutes);
+        AudioCleanupCheckBox.IsChecked = settings.IsAudioCleanupEnabled;
+        AudioRetentionComboBox.SelectedIndex = AudioRetentionToSelectedIndex(settings.AudioRetentionPeriod);
+        UpdateCleanupSettingControlState();
+        UpdatePrivacyCleanupTimer(settings);
         await RefreshCloudTranscriptionKeyStatusAsync(cancellationToken);
         await RefreshEnhancementKeyStatusAsync(cancellationToken);
         var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, cancellationToken);
@@ -1233,6 +1292,278 @@ public sealed partial class MainWindow : Window
     {
         var settings = await settingsStore.LoadAsync(windowLifetime.Token);
         await settingsStore.SaveAsync(settings with { HasCompletedOnboarding = true }, windowLifetime.Token);
+    }
+
+    private async Task ResetOnboardingAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Reset Onboarding?",
+            Content = "You'll see the first-run setup again the next time you launch the app.",
+            PrimaryButtonText = "Reset",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            RefreshUiFromControllerState("Onboarding reset canceled");
+            return;
+        }
+
+        try
+        {
+            var settings = await settingsStore.LoadAsync(windowLifetime.Token);
+            await settingsStore.SaveAsync(settings with { HasCompletedOnboarding = false }, windowLifetime.Token);
+            RefreshUiFromControllerState("Onboarding will show on next launch");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Onboarding reset failed: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyCleanupSettingsAsync()
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
+            if (cleanupStatus is not null)
+            {
+                await RefreshHistoryAsync(windowLifetime.Token);
+            }
+
+            RefreshUiFromControllerState(cleanupStatus ?? "Cleanup settings saved");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Cleanup settings save failed: {ex.Message}");
+        }
+    }
+
+    private async Task RunTranscriptCleanupAsync()
+    {
+        if (!CanUsePrivacyCleanup())
+        {
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Delete old transcripts?",
+            Content = $"This deletes transcript history older than {SelectedTranscriptionRetentionLabel()} and removes their stored audio files.",
+            PrimaryButtonText = "Delete",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var confirmation = await dialog.ShowAsync();
+        if (confirmation != ContentDialogResult.Primary)
+        {
+            RefreshUiFromControllerState("Transcript cleanup canceled");
+            return;
+        }
+
+        var statusOverride = "Cleaning up transcripts";
+        isRunningPrivacyCleanup = true;
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            ClearHistoryAudioPlayer();
+            var cleanup = await privacyCleanupService.RunTranscriptCleanupAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            statusOverride = TranscriptCleanupStatus(cleanup);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Transcript cleanup failed: {ex.Message}";
+        }
+        finally
+        {
+            isRunningPrivacyCleanup = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task RunAudioCleanupAsync()
+    {
+        if (!CanUsePrivacyCleanup())
+        {
+            return;
+        }
+
+        var statusOverride = "Analyzing audio cleanup";
+        isRunningPrivacyCleanup = true;
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            var preview = await privacyCleanupService.PreviewAudioCleanupAsync(windowLifetime.Token);
+            if (!preview.IsEnabled)
+            {
+                statusOverride = "Audio cleanup is disabled";
+                return;
+            }
+
+            if (preview.FileCount == 0)
+            {
+                statusOverride = $"No audio files found older than {SelectedAudioRetentionLabel()}";
+                return;
+            }
+
+            isRunningPrivacyCleanup = false;
+            RefreshUiFromControllerState();
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Delete old audio files?",
+                Content = $"This will delete {preview.FileCount:N0} audio file(s) ({FormatFileSize(preview.TotalBytes)}) while keeping transcript text.",
+                PrimaryButtonText = $"Delete {preview.FileCount:N0} File{(preview.FileCount == 1 ? string.Empty : "s")}",
+                SecondaryButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Secondary
+            };
+
+            var confirmation = await dialog.ShowAsync();
+            if (confirmation != ContentDialogResult.Primary)
+            {
+                statusOverride = "Audio cleanup canceled";
+                return;
+            }
+
+            statusOverride = "Cleaning up audio files";
+            isRunningPrivacyCleanup = true;
+            RefreshUiFromControllerState(statusOverride);
+            ClearHistoryAudioPlayer();
+            var cleanup = await privacyCleanupService.RunAudioCleanupAsync(windowLifetime.Token);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            statusOverride = AudioCleanupStatus(cleanup);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Audio cleanup failed: {ex.Message}";
+        }
+        finally
+        {
+            isRunningPrivacyCleanup = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task RunConfiguredPrivacyCleanupFromTimerAsync()
+    {
+        if (!settingsLoaded
+            || windowLifetime.IsCancellationRequested
+            || IsOperationActive()
+            || IsControllerBusy()
+            || controller.State == DictationState.Recording)
+        {
+            return;
+        }
+
+        isRunningPrivacyCleanup = true;
+        RefreshUiFromControllerState("Running privacy cleanup");
+        var statusOverride = "Running privacy cleanup";
+        try
+        {
+            var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
+            if (cleanupStatus is not null)
+            {
+                await RefreshHistoryAsync(windowLifetime.Token);
+                statusOverride = cleanupStatus;
+            }
+            else
+            {
+                statusOverride = null;
+            }
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Privacy cleanup failed: {ex.Message}";
+        }
+        finally
+        {
+            isRunningPrivacyCleanup = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task<string?> RunConfiguredPrivacyCleanupIfNeededAsync(CancellationToken cancellationToken)
+    {
+        var settings = await settingsStore.LoadAsync(cancellationToken);
+        UpdatePrivacyCleanupTimer(settings);
+
+        if (settings.IsTranscriptionCleanupEnabled)
+        {
+            var cleanup = await privacyCleanupService.RunTranscriptCleanupAsync(cancellationToken);
+            return HasPrivacyCleanupWork(cleanup)
+                ? $"Auto transcript cleanup: {TranscriptCleanupStatus(cleanup).ToLowerInvariant()}"
+                : null;
+        }
+
+        if (settings.IsAudioCleanupEnabled)
+        {
+            var cleanup = await privacyCleanupService.RunAudioCleanupAsync(cancellationToken);
+            return HasPrivacyCleanupWork(cleanup)
+                ? $"Auto audio cleanup: {AudioCleanupStatus(cleanup).ToLowerInvariant()}"
+                : null;
+        }
+
+        return null;
+    }
+
+    private void UpdatePrivacyCleanupTimer(AppSettings settings)
+    {
+        var shouldRun = settings.IsTranscriptionCleanupEnabled
+            || (!settings.IsTranscriptionCleanupEnabled && settings.IsAudioCleanupEnabled);
+        if (shouldRun)
+        {
+            if (!privacyCleanupTimer.IsRunning)
+            {
+                privacyCleanupTimer.Start();
+            }
+
+            return;
+        }
+
+        if (privacyCleanupTimer.IsRunning)
+        {
+            privacyCleanupTimer.Stop();
+        }
     }
 
     private void RefreshOnboardingStatus(TextBlock statusTextBlock, string modelPath, string primaryShortcut)
@@ -3628,6 +3959,10 @@ public sealed partial class MainWindow : Window
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
             PunctuationCleanupMode = SelectedPunctuationCleanupMode(),
+            IsTranscriptionCleanupEnabled = TranscriptionCleanupCheckBox.IsChecked == true,
+            TranscriptionRetentionMinutes = SelectedTranscriptionRetentionMinutes(),
+            IsAudioCleanupEnabled = AudioCleanupCheckBox.IsChecked == true,
+            AudioRetentionPeriod = SelectedAudioRetentionDays(),
             PowerModeRules = powerModeRules.ToArray()
         };
     }
@@ -4205,7 +4540,8 @@ public sealed partial class MainWindow : Window
     private bool IsOperationActive(
         bool includeCurrentModelImport = true,
         bool includeCurrentEnhancementKeySave = true,
-        bool includeCurrentCloudTranscriptionKeySave = true) =>
+        bool includeCurrentCloudTranscriptionKeySave = true,
+        bool includeCurrentPrivacyCleanup = true) =>
         isStarting
         || isStopping
         || isCanceling
@@ -4216,6 +4552,7 @@ public sealed partial class MainWindow : Window
         || isTranscribingAudioFiles
         || isExportingSettingsBackup
         || isImportingSettingsBackup
+        || (includeCurrentPrivacyCleanup && isRunningPrivacyCleanup)
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
         || (includeCurrentModelImport && isImportingModel);
@@ -4236,6 +4573,12 @@ public sealed partial class MainWindow : Window
         && controller.State != DictationState.Recording;
 
     private bool CanImportSettingsBackup() => CanUseSettingsBackup();
+
+    private bool CanUsePrivacyCleanup() =>
+        settingsLoaded
+        && !IsOperationActive()
+        && !IsControllerBusy()
+        && controller.State != DictationState.Recording;
 
     private static bool ImportsSettingsCategories(
         IReadOnlyCollection<VoiceInkSettingsBackupCategory> categories) =>
@@ -4540,6 +4883,11 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        ApplyCleanupSettingsButton.IsEnabled = settingsLoaded && !operationActive;
+        ResetOnboardingButton.IsEnabled = settingsLoaded && !operationActive;
+        TranscriptionCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        AudioCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        UpdateCleanupSettingControlState();
         RefreshAudioInputsButton.IsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy
@@ -4764,6 +5112,119 @@ public sealed partial class MainWindow : Window
             _ => PunctuationCleanupMode.Keep
         };
 
+    private int SelectedTranscriptionRetentionMinutes() =>
+        ChoiceAtOrDefault(
+            TranscriptionRetentionMinuteChoices,
+            TranscriptionRetentionComboBox.SelectedIndex,
+            24 * 60);
+
+    private int SelectedAudioRetentionDays() =>
+        ChoiceAtOrDefault(AudioRetentionDayChoices, AudioRetentionComboBox.SelectedIndex, 7);
+
+    private static int TranscriptionRetentionToSelectedIndex(int minutes) =>
+        ChoiceIndexOrDefault(TranscriptionRetentionMinuteChoices, minutes, 2);
+
+    private static int AudioRetentionToSelectedIndex(int days) =>
+        ChoiceIndexOrDefault(AudioRetentionDayChoices, days, 2);
+
+    private string SelectedTranscriptionRetentionLabel() =>
+        SelectedTranscriptionRetentionMinutes() switch
+        {
+            0 => "immediately",
+            60 => "1 hour",
+            24 * 60 => "1 day",
+            3 * 24 * 60 => "3 days",
+            7 * 24 * 60 => "7 days",
+            var minutes => $"{minutes:N0} minutes"
+        };
+
+    private string SelectedAudioRetentionLabel() =>
+        SelectedAudioRetentionDays() == 1 ? "1 day" : $"{SelectedAudioRetentionDays():N0} days";
+
+    private static int ChoiceAtOrDefault(IReadOnlyList<int> choices, int index, int fallback) =>
+        index >= 0 && index < choices.Count ? choices[index] : fallback;
+
+    private static int ChoiceIndexOrDefault(IReadOnlyList<int> choices, int value, int fallbackIndex)
+    {
+        var index = Array.IndexOf(choices.ToArray(), value);
+        return index >= 0 ? index : fallbackIndex;
+    }
+
+    private void UpdateCleanupSettingControlState()
+    {
+        var canUsePrivacyCleanup = CanUsePrivacyCleanup();
+        var transcriptCleanupEnabled = TranscriptionCleanupCheckBox.IsChecked == true;
+        var audioCleanupEnabled = AudioCleanupCheckBox.IsChecked == true && !transcriptCleanupEnabled;
+
+        TranscriptionRetentionComboBox.IsEnabled = settingsLoaded
+            && !isRunningPrivacyCleanup
+            && transcriptCleanupEnabled;
+        RunTranscriptCleanupButton.IsEnabled = canUsePrivacyCleanup && transcriptCleanupEnabled;
+        AudioCleanupSettingsPanel.Visibility = transcriptCleanupEnabled
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        AudioRetentionComboBox.IsEnabled = settingsLoaded
+            && !isRunningPrivacyCleanup
+            && audioCleanupEnabled;
+        RunAudioCleanupButton.IsEnabled = canUsePrivacyCleanup && audioCleanupEnabled;
+    }
+
+    private static string TranscriptCleanupStatus(PrivacyCleanupResult cleanup)
+    {
+        if (!cleanup.IsEnabled)
+        {
+            return "Transcript cleanup is disabled";
+        }
+
+        var status = $"Deleted {cleanup.DeletedTranscriptionCount:N0} transcript(s)"
+            + $" and {cleanup.DeletedAudioFileCount:N0} audio file(s)";
+        if (cleanup.FailedAudioFileCount > 0)
+        {
+            status += $" ({cleanup.FailedAudioFileCount:N0} audio file(s) could not be deleted)";
+        }
+
+        return status;
+    }
+
+    private static string AudioCleanupStatus(PrivacyCleanupResult cleanup)
+    {
+        if (!cleanup.IsEnabled)
+        {
+            return "Audio cleanup is disabled";
+        }
+
+        var status = $"Deleted {cleanup.DeletedAudioFileCount:N0} audio file(s)"
+            + $" and cleared {cleanup.ClearedAudioReferenceCount:N0} history reference(s)";
+        if (cleanup.FailedAudioFileCount > 0)
+        {
+            status += $" ({cleanup.FailedAudioFileCount:N0} audio file(s) could not be deleted)";
+        }
+
+        return status;
+    }
+
+    private static bool HasPrivacyCleanupWork(PrivacyCleanupResult cleanup) =>
+        cleanup.DeletedTranscriptionCount > 0
+        || cleanup.DeletedAudioFileCount > 0
+        || cleanup.FailedAudioFileCount > 0
+        || cleanup.ClearedAudioReferenceCount > 0;
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB"];
+        var value = (double)Math.Max(0, bytes);
+        var unitIndex = 0;
+        while (value >= 1024 && unitIndex < units.Length - 1)
+        {
+            value /= 1024;
+            unitIndex++;
+        }
+
+        return unitIndex == 0
+            ? $"{value:0} {units[unitIndex]}"
+            : $"{value:0.#} {units[unitIndex]}";
+    }
+
     private string SelectedVocabularySortMode() =>
         VocabularySortComboBox.SelectedIndex == 1
             ? DictionarySortModes.VocabularyWordDescending
@@ -4796,6 +5257,7 @@ public sealed partial class MainWindow : Window
         DisposeTrayIconService();
         ClearHistoryAudioPlayer();
         floatingRecorderRefreshTimer.Stop();
+        privacyCleanupTimer.Stop();
         floatingRecorderWindow?.Close();
 
         audioCapture.Dispose();

@@ -12,6 +12,10 @@ public sealed record AppSettings
     public string Language { get; init; } = "auto";
     public bool AppendTrailingSpace { get; init; }
     public bool RestoreClipboard { get; init; } = true;
+    public bool IsTranscriptionCleanupEnabled { get; init; }
+    public int TranscriptionRetentionMinutes { get; init; } = 24 * 60;
+    public bool IsAudioCleanupEnabled { get; init; }
+    public int AudioRetentionPeriod { get; init; } = 7;
     public string Hotkey { get; init; } = "Ctrl+Alt+Space";
     public string SecondaryRecordingHotkey { get; init; } = string.Empty;
     public string PasteLastTranscriptionHotkey { get; init; } = string.Empty;
@@ -51,6 +55,10 @@ public sealed record AppSettings
             Language == other.Language &&
             AppendTrailingSpace == other.AppendTrailingSpace &&
             RestoreClipboard == other.RestoreClipboard &&
+            IsTranscriptionCleanupEnabled == other.IsTranscriptionCleanupEnabled &&
+            TranscriptionRetentionMinutes == other.TranscriptionRetentionMinutes &&
+            IsAudioCleanupEnabled == other.IsAudioCleanupEnabled &&
+            AudioRetentionPeriod == other.AudioRetentionPeriod &&
             Hotkey == other.Hotkey &&
             SecondaryRecordingHotkey == other.SecondaryRecordingHotkey &&
             PasteLastTranscriptionHotkey == other.PasteLastTranscriptionHotkey &&
@@ -91,6 +99,10 @@ public sealed record AppSettings
         hash.Add(Language);
         hash.Add(AppendTrailingSpace);
         hash.Add(RestoreClipboard);
+        hash.Add(IsTranscriptionCleanupEnabled);
+        hash.Add(TranscriptionRetentionMinutes);
+        hash.Add(IsAudioCleanupEnabled);
+        hash.Add(AudioRetentionPeriod);
         hash.Add(Hotkey);
         hash.Add(SecondaryRecordingHotkey);
         hash.Add(PasteLastTranscriptionHotkey);
