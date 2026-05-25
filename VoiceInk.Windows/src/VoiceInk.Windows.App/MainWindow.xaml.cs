@@ -9,6 +9,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.Win32;
 using Windows.ApplicationModel.DataTransfer;
 using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.AudioFiles;
@@ -87,6 +88,7 @@ public sealed partial class MainWindow : Window
     private readonly ISessionMetricStore sessionMetricStore;
     private readonly JsonSettingsStore settingsStore;
     private readonly IWhisperModelDownloader modelDownloader;
+    private readonly WhisperModelWarmupCoordinator modelWarmupCoordinator;
     private readonly HttpClient modelDownloadHttpClient = new();
     private readonly string? metricsInitializationWarning;
     private readonly ClipboardTextInjectionService textInjectionService;
@@ -154,6 +156,7 @@ public sealed partial class MainWindow : Window
     private bool modelPathEdited;
     private bool suppressModelPathChanged;
     private bool suppressLanguageChanged;
+    private bool suppressPrewarmChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
     private bool suppressEnhancementPresetChanged;
@@ -161,6 +164,7 @@ public sealed partial class MainWindow : Window
     private bool suppressEnhancementPromptChanged;
     private Guid? promptEditorPromptId;
     private bool exitRequested;
+    private bool powerModeEventsSubscribed;
     private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
@@ -201,6 +205,8 @@ public sealed partial class MainWindow : Window
         metricsInitializationWarning = metricsStore.Warning;
         settingsStore = new JsonSettingsStore(settingsPath);
         modelDownloader = new HttpWhisperModelDownloader(modelDownloadHttpClient);
+        modelWarmupCoordinator = new WhisperModelWarmupCoordinator(new WhisperNetModelWarmupService());
+        modelWarmupCoordinator.StateChanged += ModelWarmupCoordinator_StateChanged;
         textInjectionService = new ClipboardTextInjectionService(settingsStore);
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         secretStore = new WindowsCredentialSecretStore();
@@ -244,6 +250,7 @@ public sealed partial class MainWindow : Window
         controller = CreateController(audioCapture);
 
         CreateTrayIconService();
+        TrySubscribePowerModeEvents();
         AppWindow.Closing += MainWindow_AppWindowClosing;
         Closed += MainWindow_Closed;
         RefreshUiFromControllerState("Loading settings");
@@ -775,6 +782,36 @@ public sealed partial class MainWindow : Window
         await CancelModelDownloadAsync();
     }
 
+    private async void WarmupSelectedModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ScheduleModelWarmupFromCurrentSettingsAsync("manual", updateMainStatus: true);
+    }
+
+    private async void PrewarmModelOnWakeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (suppressPrewarmChanged || !settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(
+                PrewarmModelOnWakeCheckBox.IsChecked == true
+                    ? "Local model prewarm enabled"
+                    : "Local model prewarm disabled");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Local model prewarm update failed: {ex.Message}");
+        }
+    }
+
     private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyTranscriptionProviderSettingsAsync();
@@ -1158,6 +1195,7 @@ public sealed partial class MainWindow : Window
             }
 
             RefreshUiFromControllerState(refreshWarning ?? cleanupStatus);
+            ScheduleModelWarmup(settings, "startup", updateMainStatus: false);
             if (startHiddenToTray)
             {
                 HideWindowToTray();
@@ -1179,6 +1217,7 @@ public sealed partial class MainWindow : Window
         finally
         {
             suppressModelPathChanged = false;
+            suppressPrewarmChanged = false;
             suppressCloudTranscriptionPresetChanged = false;
             suppressCloudTranscriptionModelChanged = false;
             suppressEnhancementPresetChanged = false;
@@ -1241,6 +1280,9 @@ public sealed partial class MainWindow : Window
             settings.ClipboardRestoreDelaySeconds);
         PasteMethodComboBox.SelectedIndex = PasteMethodToSelectedIndex(settings.PasteMethod);
         UpdateClipboardSettingControlState();
+        suppressPrewarmChanged = true;
+        PrewarmModelOnWakeCheckBox.IsChecked = settings.PrewarmModelOnWake;
+        suppressPrewarmChanged = false;
         SoundFeedbackCheckBox.IsChecked = settings.IsSoundFeedbackEnabled;
         MuteSystemAudioCheckBox.IsChecked = settings.IsSystemMuteEnabled;
         PauseMediaCheckBox.IsChecked = settings.IsPauseMediaEnabled;
@@ -2038,6 +2080,7 @@ public sealed partial class MainWindow : Window
             ModelPathTextBox.Text = file.Path;
             await SaveSettingsAsync(windowLifetime.Token);
             RefreshModelChoices(file.Path);
+            await ScheduleModelWarmupFromCurrentSettingsAsync("model import");
             statusOverride = $"Model imported: {Path.GetFileName(file.Path)}";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -2118,6 +2161,7 @@ public sealed partial class MainWindow : Window
         await SaveSettingsAsync(windowLifetime.Token);
         RefreshModelChoices(modelPath);
         SelectCatalogModelByName(Path.GetFileNameWithoutExtension(modelPath));
+        await ScheduleModelWarmupFromCurrentSettingsAsync("model selection");
         RefreshUiFromControllerState($"Default model: {displayName}");
     }
 
@@ -2171,6 +2215,7 @@ public sealed partial class MainWindow : Window
             await SaveSettingsAsync(windowLifetime.Token);
             RefreshModelChoices(downloadedModel.Path);
             SelectCatalogModelByName(selectedName);
+            await ScheduleModelWarmupFromCurrentSettingsAsync("model download");
             statusOverride = $"Downloaded and selected {selectedModel.DisplayName}";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -2217,6 +2262,76 @@ public sealed partial class MainWindow : Window
             {
             }
         }
+    }
+
+    private async Task ScheduleModelWarmupFromCurrentSettingsAsync(
+        string trigger,
+        bool updateMainStatus = false)
+    {
+        if (!settingsLoaded || windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            ScheduleModelWarmup(settings, trigger, updateMainStatus);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            UpdateModelWarmupStatus(new WhisperModelWarmupState(
+                WhisperModelWarmupStatus.Failed,
+                ModelPathTextBox.Text.Trim(),
+                Path.GetFileNameWithoutExtension(ModelPathTextBox.Text.Trim()),
+                trigger,
+                $"Model warmup failed to start: {ex.Message}",
+                CompletedAt: DateTimeOffset.Now));
+            if (updateMainStatus)
+            {
+                RefreshUiFromControllerState($"Model warmup failed to start: {ex.Message}");
+            }
+        }
+    }
+
+    private void ScheduleModelWarmup(
+        AppSettings settings,
+        string trigger,
+        bool updateMainStatus)
+    {
+        var result = modelWarmupCoordinator.TryStart(settings, trigger, windowLifetime.Token);
+        if (updateMainStatus)
+        {
+            RefreshUiFromControllerState(result.Message);
+        }
+    }
+
+    private void ModelWarmupCoordinator_StateChanged(object? sender, WhisperModelWarmupState state)
+    {
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            UpdateModelWarmupStatus(state);
+            RefreshUiFromControllerState();
+        });
+    }
+
+    private void UpdateModelWarmupStatus(WhisperModelWarmupState state)
+    {
+        ModelWarmupStatusTextBlock.Text = state.Status switch
+        {
+            WhisperModelWarmupStatus.Idle => "Model warmup idle",
+            WhisperModelWarmupStatus.Warming => $"{state.Message}...",
+            WhisperModelWarmupStatus.Succeeded when state.Duration is { } duration =>
+                $"{state.Message} in {duration.TotalSeconds:0.0}s",
+            WhisperModelWarmupStatus.Succeeded => state.Message,
+            WhisperModelWarmupStatus.Skipped => state.Message,
+            WhisperModelWarmupStatus.Canceled => state.Message,
+            WhisperModelWarmupStatus.Failed => state.Message,
+            _ => state.Message
+        };
     }
 
     private void ShowSelectedCatalogModel()
@@ -4014,6 +4129,7 @@ public sealed partial class MainWindow : Window
             }
 
             await settingsStore.SaveAsync(settings, windowLifetime.Token);
+            ScheduleModelWarmup(settings, "provider settings", updateMainStatus: false);
             RefreshUiFromControllerState("Transcription provider settings updated");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -4575,6 +4691,7 @@ public sealed partial class MainWindow : Window
             ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
             PasteMethod = SelectedPasteMethod(),
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
+            PrewarmModelOnWake = PrewarmModelOnWakeCheckBox.IsChecked == true,
             IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
             IsSystemMuteEnabled = MuteSystemAudioCheckBox.IsChecked == true,
             IsPauseMediaEnabled = PauseMediaCheckBox.IsChecked == true,
@@ -5646,6 +5763,7 @@ public sealed partial class MainWindow : Window
         var operationActive = IsOperationActive();
         var controllerBusy = IsControllerBusy();
         var modelControlsEnabled = CanEditModelLibrary();
+        var modelWarmupActive = modelWarmupCoordinator.State.Status == WhisperModelWarmupStatus.Warming;
         var selectedCatalogModel = SelectedCatalogModelItem();
         var cloudTranscriptionControlsEnabled = modelControlsEnabled
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible;
@@ -5735,6 +5853,11 @@ public sealed partial class MainWindow : Window
         ShowCatalogModelButton.IsEnabled = modelControlsEnabled
             && selectedCatalogModel?.IsDownloaded == true;
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
+        PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
+        WarmupSelectedModelButton.IsEnabled = modelControlsEnabled
+            && !modelWarmupActive
+            && SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
+            && !string.IsNullOrWhiteSpace(ModelPathTextBox.Text);
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
@@ -6156,6 +6279,9 @@ public sealed partial class MainWindow : Window
     {
         AppWindow.Closing -= MainWindow_AppWindowClosing;
         windowLifetime.Cancel();
+        UnsubscribePowerModeEvents();
+        modelWarmupCoordinator.StateChanged -= ModelWarmupCoordinator_StateChanged;
+        modelWarmupCoordinator.CancelCurrentAsync().GetAwaiter().GetResult();
         audioFileQueueCancellation?.Cancel();
         audioFileQueueCancellation?.Dispose();
         CancelModelDownloadAsync().GetAwaiter().GetResult();
@@ -6194,6 +6320,48 @@ public sealed partial class MainWindow : Window
         trayIconService.QuickAddDictionaryRequested += TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested += TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested += TrayIconService_ExitRequested;
+    }
+
+    private void TrySubscribePowerModeEvents()
+    {
+        try
+        {
+            SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
+            powerModeEventsSubscribed = true;
+        }
+        catch (Exception ex)
+        {
+            UpdateModelWarmupStatus(new WhisperModelWarmupState(
+                WhisperModelWarmupStatus.Skipped,
+                string.Empty,
+                string.Empty,
+                "resume",
+                $"Resume warmup unavailable: {ex.Message}"));
+        }
+    }
+
+    private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode != PowerModes.Resume || windowLifetime.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            _ = ScheduleModelWarmupFromCurrentSettingsAsync("resume");
+        });
+    }
+
+    private void UnsubscribePowerModeEvents()
+    {
+        if (!powerModeEventsSubscribed)
+        {
+            return;
+        }
+
+        SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
+        powerModeEventsSubscribed = false;
     }
 
     private void DisposeTrayIconService()

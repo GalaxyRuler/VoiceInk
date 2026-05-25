@@ -241,9 +241,16 @@ Model language selection slice completed on 2026-05-25:
 - Added an AI Models `Transcription Language` combo that updates when the selected model path changes, disables selection for English-only models, and persists user selections to JSON settings.
 - Reused the existing `AppSettings.Language` flow, so dictation, Transcribe Audio, cloud transcription, history retry, and Power Mode overlays consume the selected language without platform-specific branching.
 
+Model warmup/preload slice completed on 2026-05-25:
+
+- Added a Core warmup coordinator that schedules nonblocking local Whisper warmups, skips cloud providers or missing model paths, prevents duplicate warmups, normalizes language through the same configuration path as transcription, and reports UI-safe status.
+- Added a native Whisper.net warmup adapter that validates the configured GGML model file, creates a `WhisperFactory` and processor, applies the configured language/prompt settings, and disposes everything after the preload.
+- Added AI Models controls for `Prewarm Local Model`, `Warm Up Selected Model`, and model warmup status.
+- Scheduled warmup after startup, after local model import/default selection, after successful catalog download/default selection, after transcription provider settings save, and after Windows resume through `SystemEvents.PowerModeChanged`.
+- Kept this as a conservative preload rather than a persistent shared model cache; actual transcription still owns its processor lifetime.
+
 Windows gaps:
 
-- Warmup/preload.
 - Provider cards and secure API key storage.
 
 Windows adaptation:

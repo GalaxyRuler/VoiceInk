@@ -15,6 +15,7 @@ public sealed record AppSettings
     public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;
     public bool LaunchAtLogin { get; init; }
+    public bool PrewarmModelOnWake { get; init; } = true;
     public bool IsSoundFeedbackEnabled { get; init; } = true;
     public bool IsSystemMuteEnabled { get; init; } = true;
     public bool IsPauseMediaEnabled { get; init; }
@@ -65,6 +66,7 @@ public sealed record AppSettings
             ClipboardRestoreDelaySeconds.Equals(other.ClipboardRestoreDelaySeconds) &&
             PasteMethod == other.PasteMethod &&
             LaunchAtLogin == other.LaunchAtLogin &&
+            PrewarmModelOnWake == other.PrewarmModelOnWake &&
             IsSoundFeedbackEnabled == other.IsSoundFeedbackEnabled &&
             IsSystemMuteEnabled == other.IsSystemMuteEnabled &&
             IsPauseMediaEnabled == other.IsPauseMediaEnabled &&
@@ -116,6 +118,7 @@ public sealed record AppSettings
         hash.Add(ClipboardRestoreDelaySeconds);
         hash.Add(PasteMethod);
         hash.Add(LaunchAtLogin);
+        hash.Add(PrewarmModelOnWake);
         hash.Add(IsSoundFeedbackEnabled);
         hash.Add(IsSystemMuteEnabled);
         hash.Add(IsPauseMediaEnabled);

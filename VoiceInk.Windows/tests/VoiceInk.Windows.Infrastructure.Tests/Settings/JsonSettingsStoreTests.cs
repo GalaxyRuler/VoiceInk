@@ -23,6 +23,7 @@ public sealed class JsonSettingsStoreTests
 
         var reloaded = await store.LoadAsync(CancellationToken.None);
         Assert.Equal(new AppSettings(), reloaded);
+        Assert.True(reloaded.PrewarmModelOnWake);
     }
 
     [Fact]
@@ -40,6 +41,7 @@ public sealed class JsonSettingsStoreTests
             ClipboardRestoreDelaySeconds = 3.0,
             PasteMethod = "directText",
             LaunchAtLogin = true,
+            PrewarmModelOnWake = false,
             IsSoundFeedbackEnabled = false,
             IsSystemMuteEnabled = true,
             IsPauseMediaEnabled = true,

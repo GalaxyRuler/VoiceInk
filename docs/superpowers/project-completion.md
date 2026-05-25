@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#############-------] 66%
+VoiceInk Windows parity  [#############-------] 67%
 ```
 
 ## Area Bars
@@ -18,7 +18,7 @@ VoiceInk Windows parity  [#############-------] 66%
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
 | Floating recorder | 45% | `[#########-----------]` | Compact recorder shows recording/processing state and elapsed time. Live transcript, real waveform, non-activating controls, notch style, prompt picker, and Power Mode popover remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
-| Model management | 62% | `[############--------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, and model-aware language selection exist. Warmup/preload remains. |
+| Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
 | AI enhancement | 70% | `[##############------]` | OpenAI-compatible enhancement, presets, prompts, context, retries/timeouts, and secure keys exist. Trigger-word mode, local/Ollama-style hooks, and richer assistant workflows remain. |
 | Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
@@ -34,19 +34,20 @@ VoiceInk Windows parity  [#############-------] 66%
 ## Current Slice
 
 ```text
-Model language selection  [####################] 100%
+Model warmup/preload  [####################] 100%
 ```
 
 Completed:
 
-- Added macOS-style `Transcription Language` choices to AI Models.
-- Forced English for English-only `.en` Whisper models.
-- Offered `auto` plus Whisper language codes for multilingual and imported local models.
-- Persisted the selected language in JSON settings and reused it through the existing dictation, Transcribe Audio, cloud transcription, retry, and Power Mode settings flow.
+- Added a test-covered Core warmup coordinator for local Whisper models.
+- Added a native Whisper.net warmup adapter that loads and disposes a factory/processor for the selected GGML model.
+- Added AI Models controls for `Prewarm Local Model`, `Warm Up Selected Model`, and warmup status.
+- Scheduled warmup on startup, Windows resume, local model import/default selection, successful catalog download/default selection, and provider settings save.
+- Kept the preload conservative: transcription still owns processor lifetime and warmup never blocks recording controls.
 
 ## Near-Term Priority
 
-1. Finish model management warmup/preload.
-2. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
-3. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
-4. Add packaging path: zip/dev package first, then MSIX or installer.
+1. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
+2. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
+3. Add packaging path: zip/dev package first, then MSIX or installer.
+4. Continue model-management polish with richer provider cards and lifecycle status.
