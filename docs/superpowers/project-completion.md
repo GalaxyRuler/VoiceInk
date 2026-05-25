@@ -24,7 +24,7 @@ VoiceInk Windows parity  [#################---] 87%
 | Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
-| History | 84% | `[#################---]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Waveform/rate controls and batch actions remain. |
+| History | 87% | `[#################---]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Waveform/rate controls remain. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 60% | `[############--------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, and startup capture rebinding exist. Live device-change updates and richer active/unavailable UI remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [#################---] 87%
 ## Current Slice
 
 ```text
-Windows dedicated History window  [####################] 100%
+Windows History batch actions  [####################] 100%
 ```
 
 Completed:
 
-- Added a separate WinUI `VoiceInk - Transcription History` window.
-- Routed the History shortcut/tray action to create or focus the dedicated window.
-- Added searchable list, transcript detail pane, metadata/AI request pane, audio playback, export, retry, re-enhance, copy, open-audio, and delete actions.
-- Added Core command-state tests for selected History row actions.
+- Added multiple selection to the dedicated History window.
+- Added Select All, Clear Selection, Export Selected, and Delete Selected actions.
+- Preserved first-selected-row details while supporting selected-row batch actions.
+- Added Core batch command-state tests.
 
 ## Near-Term Priority
 
-1. Add History batch selection/export/delete and playback waveform/rate controls.
+1. Add History playback waveform/rate controls.
 2. Expand streaming/live preview beyond Deepgram and continue waveform visual polish.
 3. Continue Settings visual parity and remaining macOS preferences.
 4. Continue packaging from MSIX foundation to signed smoke, uninstall behavior, and release signing flow.

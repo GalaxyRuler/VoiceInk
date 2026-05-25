@@ -27,6 +27,7 @@ public sealed partial class HistoryWindow : Window
     private readonly string recordingsDirectory;
     private readonly CancellationTokenSource lifetime = new();
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
+    private IReadOnlyList<HistoryWindowListRow> historyRows = [];
     private bool isBusy;
 
     public HistoryWindow(
@@ -81,6 +82,28 @@ public sealed partial class HistoryWindow : Window
         await ExportHistoryAsync();
     }
 
+    private void SelectAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        HistoryListView.SelectAll();
+        RefreshSelectedHistoryDetails();
+    }
+
+    private void ClearSelectionButton_Click(object sender, RoutedEventArgs e)
+    {
+        HistoryListView.SelectedItems.Clear();
+        RefreshSelectedHistoryDetails();
+    }
+
+    private async void ExportSelectedButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportSelectedHistoryAsync();
+    }
+
+    private async void DeleteSelectedButton_Click(object sender, RoutedEventArgs e)
+    {
+        await DeleteSelectedHistoryAsync();
+    }
+
     private async void RetryButton_Click(object sender, RoutedEventArgs e)
     {
         await RetrySelectedHistoryAsync();
@@ -98,7 +121,7 @@ public sealed partial class HistoryWindow : Window
 
     private async void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
-        await DeleteSelectedHistoryAsync();
+        await DeleteActiveHistoryAsync();
     }
 
     private async void CopyOriginalButton_Click(object sender, RoutedEventArgs e)
@@ -128,10 +151,9 @@ public sealed partial class HistoryWindow : Window
 
     private async Task RefreshHistoryAsync(Guid? selectId = null)
     {
-        var selectedId = selectId
-            ?? (HistoryListView.SelectedIndex >= 0 && HistoryListView.SelectedIndex < historyItems.Count
-                ? historyItems[HistoryListView.SelectedIndex].Id
-                : (Guid?)null);
+        var selectedIds = selectId is null
+            ? SelectedHistoryIds().ToHashSet()
+            : [selectId.Value];
 
         SetBusy(true, "Refreshing history");
         try
@@ -140,13 +162,18 @@ public sealed partial class HistoryWindow : Window
             historyItems = string.IsNullOrWhiteSpace(query)
                 ? await historyStore.ListRecentAsync(100, lifetime.Token)
                 : await historyStore.SearchAsync(query, 100, lifetime.Token);
-            HistoryListView.ItemsSource = historyItems.Select(HistoryListItem).ToArray();
+            historyRows = historyItems
+                .Select(item => new HistoryWindowListRow(item.Id, HistoryListItem(item)))
+                .ToArray();
+            HistoryListView.ItemsSource = historyRows;
             ListHeaderTextBlock.Text = $"History ({historyItems.Count.ToString("N0", CultureInfo.CurrentCulture)})";
 
-            var selectedIndex = selectedId is null
-                ? -1
-                : historyItems.ToList().FindIndex(item => item.Id == selectedId.Value);
-            HistoryListView.SelectedIndex = selectedIndex;
+            HistoryListView.SelectedItems.Clear();
+            foreach (var row in historyRows.Where(row => selectedIds.Contains(row.Id)))
+            {
+                HistoryListView.SelectedItems.Add(row);
+            }
+
             RefreshSelectedHistoryDetails();
             SetStatus(historyItems.Count == 0 ? "No transcriptions" : "History refreshed");
         }
@@ -204,6 +231,45 @@ public sealed partial class HistoryWindow : Window
         catch (Exception ex)
         {
             SetStatus($"History export failed: {ex.Message}");
+        }
+    }
+
+    private async Task ExportSelectedHistoryAsync()
+    {
+        var selected = SelectedHistoryItems();
+        if (selected.Count == 0)
+        {
+            SetStatus("Select transcriptions to export");
+            return;
+        }
+
+        try
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"VoiceInk-history-selected-{DateTimeOffset.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("CSV file", [".csv"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                SetStatus("Selected history export canceled");
+                return;
+            }
+
+            await FileIO.WriteTextAsync(file, HistoryCsvExporter.Export(selected));
+            SetStatus($"Selected history exported: {file.Name}");
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        {
+            SetStatus("Closing");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Selected history export failed: {ex.Message}");
         }
     }
 
@@ -315,7 +381,7 @@ public sealed partial class HistoryWindow : Window
         }
     }
 
-    private async Task DeleteSelectedHistoryAsync()
+    private async Task DeleteActiveHistoryAsync()
     {
         var item = SelectedHistoryItem();
         if (item is null)
@@ -364,6 +430,64 @@ public sealed partial class HistoryWindow : Window
         }
     }
 
+    private async Task DeleteSelectedHistoryAsync()
+    {
+        var selected = SelectedHistoryItems();
+        if (selected.Count == 0)
+        {
+            SetStatus("Select transcriptions to delete");
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            Title = "Delete selected transcriptions?",
+            Content = $"This deletes {selected.Count.ToString("N0", CultureInfo.CurrentCulture)} history item(s). This action cannot be undone.",
+            PrimaryButtonText = "Delete",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            SetStatus("Delete selected canceled");
+            return;
+        }
+
+        SetBusy(true, "Deleting selected transcriptions");
+        try
+        {
+            ClearAudioPlayer();
+            var deletedCount = 0;
+            foreach (var item in selected)
+            {
+                if (await historyStore.DeleteAsync(item.Id, lifetime.Token))
+                {
+                    deletedCount++;
+                }
+
+                TryDeleteAudioFile(item);
+            }
+
+            await RefreshHistoryAsync();
+            SetStatus($"Deleted {deletedCount.ToString("N0", CultureInfo.CurrentCulture)} transcription(s)");
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        {
+            SetStatus("Closing");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Delete selected failed: {ex.Message}");
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
     private void OpenSelectedHistoryAudio()
     {
         var audioPath = SelectedHistoryAudioPath();
@@ -393,8 +517,15 @@ public sealed partial class HistoryWindow : Window
     {
         var item = SelectedHistoryItem();
         var state = HistoryWindowCommandPresenter.Present(item);
+        var selectedIds = SelectedHistoryIds();
+        var batchState = HistoryWindowBatchCommandPresenter.Present(historyRows.Count, selectedIds.Count);
 
         SelectionTextBlock.Text = state.SelectionStatus;
+        BatchSelectionTextBlock.Text = batchState.SelectionLabel;
+        SelectAllButton.IsEnabled = !isBusy && batchState.CanSelectAll;
+        ClearSelectionButton.IsEnabled = !isBusy && batchState.CanClearSelection;
+        ExportSelectedButton.IsEnabled = !isBusy && batchState.CanExportSelected;
+        DeleteSelectedButton.IsEnabled = !isBusy && batchState.CanDeleteSelected;
         RetryButton.IsEnabled = !isBusy && state.CanRetry;
         ReEnhanceButton.IsEnabled = !isBusy && state.CanReenhance;
         OpenAudioButton.IsEnabled = !isBusy && state.CanOpenAudio;
@@ -446,9 +577,21 @@ public sealed partial class HistoryWindow : Window
     }
 
     private TranscriptionHistoryItem? SelectedHistoryItem() =>
-        HistoryListView.SelectedIndex >= 0 && HistoryListView.SelectedIndex < historyItems.Count
-            ? historyItems[HistoryListView.SelectedIndex]
-            : null;
+        SelectedHistoryItems().FirstOrDefault();
+
+    private IReadOnlyList<TranscriptionHistoryItem> SelectedHistoryItems()
+    {
+        var selectedIds = SelectedHistoryIds().ToHashSet();
+        return selectedIds.Count == 0
+            ? []
+            : historyItems.Where(item => selectedIds.Contains(item.Id)).ToArray();
+    }
+
+    private IReadOnlyList<Guid> SelectedHistoryIds() =>
+        HistoryListView.SelectedItems
+            .OfType<HistoryWindowListRow>()
+            .Select(row => row.Id)
+            .ToArray();
 
     private string? SelectedHistoryAudioPath()
     {
@@ -567,5 +710,10 @@ public sealed partial class HistoryWindow : Window
             (_, { Length: > 0 }) => trimmedName,
             _ => "None"
         };
+    }
+
+    private sealed record HistoryWindowListRow(Guid Id, string DisplayText)
+    {
+        public override string ToString() => DisplayText;
     }
 }
