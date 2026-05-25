@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [################----] 82%
+VoiceInk Windows parity  [#################---] 83%
 ```
 
 ## Area Bars
@@ -21,7 +21,7 @@ VoiceInk Windows parity  [################----] 82%
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
-| Context features | 48% | `[##########----------]` | Clipboard context, selected-text context with clipboard fallback, and active-window process/title context exist with graceful degradation. Browser URL context and OCR remain. |
+| Context features | 56% | `[###########---------]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, and sanitized browser URL context exist with graceful degradation. OCR remains. |
 | Power Mode | 60% | `[############--------]` | Rule model, process/title matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, and shortcuts remain. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 71% | `[##############------]` | SQLite detail metadata, search, retry, paste, audio playback/open, delete, CSV export, and privacy cleanup operations exist. Re-enhance, waveform/rate controls, batch actions, and dedicated window remain. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [################----] 82%
 ## Current Slice
 
 ```text
-Windows audio input fallback  [####################] 100%
+Windows browser URL enhancement context  [####################] 100%
 ```
 
 Completed:
 
-- Exposed the resolved audio input choice from the Core selection helper.
-- Recreated the active capture service after startup settings resolve the selected microphone.
-- Recreated the active capture service after manual audio input refresh when the resolved selection changes.
-- Preserved fallback to System Default when a saved device is unavailable or ambiguous.
+- Added sanitized browser URL context to AI enhancement prompts.
+- Removed query strings, fragments, usernames, passwords, and non-web schemes before prompt rendering.
+- Added a Windows UI Automation browser URL reader for supported foreground browsers.
+- Kept URL reading best-effort and failure-tolerant so enhancement continues without browser context when unavailable.
 
 ## Near-Term Priority
 

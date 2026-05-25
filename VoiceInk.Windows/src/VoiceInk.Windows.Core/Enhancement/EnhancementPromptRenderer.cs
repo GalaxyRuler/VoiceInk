@@ -29,6 +29,7 @@ public static class EnhancementPromptRenderer
             ? string.Format(SystemInstructionsTemplate, prompt.PromptText.Trim())
             : prompt.PromptText.Trim();
         systemMessage += ActiveWindowContextSection(context);
+        systemMessage += BrowserUrlContextSection(context);
         systemMessage += SelectedTextContextSection(context);
         systemMessage += ClipboardContextSection(context);
         systemMessage += VocabularySection(vocabulary);
@@ -69,6 +70,23 @@ public static class EnhancementPromptRenderer
             <ACTIVE_WINDOW_CONTEXT>
             {string.Join(Environment.NewLine, lines)}
             </ACTIVE_WINDOW_CONTEXT>
+            """;
+    }
+
+    private static string BrowserUrlContextSection(EnhancementContext? context)
+    {
+        var browserUrl = BrowserUrlContextSanitizer.Sanitize(context?.BrowserUrl ?? string.Empty);
+        if (string.IsNullOrEmpty(browserUrl))
+        {
+            return string.Empty;
+        }
+
+        return $"""
+
+
+            <BROWSER_URL_CONTEXT>
+            URL: {browserUrl}
+            </BROWSER_URL_CONTEXT>
             """;
     }
 

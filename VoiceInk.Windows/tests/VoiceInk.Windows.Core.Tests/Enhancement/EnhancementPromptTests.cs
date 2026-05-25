@@ -285,6 +285,35 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_AppendsSanitizedBrowserUrlContextAfterActiveWindow()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "fix this",
+            vocabulary: [],
+            new EnhancementContext(
+                SelectedText: "selected note",
+                ActiveWindowProcessName: "msedge",
+                ActiveWindowTitle: "Docs",
+                BrowserUrl: "https://example.com/docs?token=secret#part"));
+
+        Assert.Contains("<BROWSER_URL_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("URL: https://example.com/docs", rendered.SystemMessage);
+        Assert.DoesNotContain("token=secret", rendered.SystemMessage);
+        Assert.DoesNotContain("#part", rendered.SystemMessage);
+        Assert.Contains("</BROWSER_URL_CONTEXT>", rendered.SystemMessage);
+        var activeWindowIndex = rendered.SystemMessage.LastIndexOf("<ACTIVE_WINDOW_CONTEXT>", StringComparison.Ordinal);
+        var browserUrlIndex = rendered.SystemMessage.LastIndexOf("<BROWSER_URL_CONTEXT>", StringComparison.Ordinal);
+        var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+
+        Assert.True(activeWindowIndex < browserUrlIndex, "Browser URL context should render after active window.");
+        Assert.True(browserUrlIndex < selectedTextIndex, "Browser URL context should render before selected text.");
+    }
+
+    [Fact]
     public void Render_AssistantPromptUsesRawAssistantInstructions()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

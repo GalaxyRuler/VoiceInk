@@ -11,13 +11,15 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
     private readonly ISelectedTextReader selectedTextProvider;
     private readonly ISelectedTextClipboardFallbackReader selectedTextFallbackProvider;
     private readonly IPowerModeTargetProvider activeWindowProvider;
+    private readonly IBrowserUrlReader browserUrlProvider;
 
     public WindowsEnhancementContextProvider()
         : this(
             new ClipboardEnhancementContextProvider(),
             new SelectedTextEnhancementContextProvider(),
             new SelectedTextClipboardFallbackReader(),
-            new ActiveWindowPowerModeTargetProvider())
+            new ActiveWindowPowerModeTargetProvider(),
+            new BrowserUrlEnhancementContextProvider())
     {
     }
 
@@ -25,12 +27,14 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         IClipboardTextReader clipboardProvider,
         ISelectedTextReader selectedTextProvider,
         ISelectedTextClipboardFallbackReader selectedTextFallbackProvider,
-        IPowerModeTargetProvider? activeWindowProvider = null)
+        IPowerModeTargetProvider? activeWindowProvider = null,
+        IBrowserUrlReader? browserUrlProvider = null)
     {
         this.clipboardProvider = clipboardProvider;
         this.selectedTextProvider = selectedTextProvider;
         this.selectedTextFallbackProvider = selectedTextFallbackProvider;
         this.activeWindowProvider = activeWindowProvider ?? new EmptyPowerModeTargetProvider();
+        this.browserUrlProvider = browserUrlProvider ?? new EmptyBrowserUrlReader();
     }
 
     public async Task<EnhancementContext> GetContextAsync(
@@ -46,12 +50,16 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         var activeWindow = request.IncludeActiveWindow
             ? await ReadActiveWindowAsync(cancellationToken)
             : null;
+        var browserUrl = request.IncludeBrowserUrl
+            ? await ReadBrowserUrlAsync(cancellationToken)
+            : string.Empty;
 
         return new EnhancementContext(
             clipboardText,
             selectedText,
             activeWindow?.ProcessName ?? string.Empty,
-            activeWindow?.WindowTitle ?? string.Empty);
+            activeWindow?.WindowTitle ?? string.Empty,
+            browserUrl);
     }
 
     private async Task<string> ReadSelectedTextAsync(CancellationToken cancellationToken)
@@ -108,9 +116,32 @@ public sealed class WindowsEnhancementContextProvider : IEnhancementContextProvi
         }
     }
 
+    private async Task<string> ReadBrowserUrlAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var browserUrl = await browserUrlProvider.GetBrowserUrlAsync(cancellationToken);
+            return BrowserUrlContextSanitizer.Sanitize(browserUrl);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     private sealed class EmptyPowerModeTargetProvider : IPowerModeTargetProvider
     {
         public Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken) =>
             Task.FromResult<PowerModeTarget?>(null);
+    }
+
+    private sealed class EmptyBrowserUrlReader : IBrowserUrlReader
+    {
+        public Task<string> GetBrowserUrlAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(string.Empty);
     }
 }

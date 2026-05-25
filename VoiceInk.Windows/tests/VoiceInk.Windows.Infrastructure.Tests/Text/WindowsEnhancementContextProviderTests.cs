@@ -69,7 +69,8 @@ public sealed class WindowsEnhancementContextProviderTests
             new FakeClipboardTextReader(string.Empty),
             new FakeSelectedTextReader(string.Empty),
             new FakeSelectedTextClipboardFallbackReader(string.Empty),
-            new FakePowerModeTargetProvider(new PowerModeTarget("WINWORD", "Quarterly Planning", 10)));
+            new FakePowerModeTargetProvider(new PowerModeTarget("WINWORD", "Quarterly Planning", 10)),
+            new FakeBrowserUrlReader(string.Empty));
 
         var context = await provider.GetContextAsync(
             new EnhancementContextRequest(
@@ -80,6 +81,73 @@ public sealed class WindowsEnhancementContextProviderTests
 
         Assert.Equal("WINWORD", context.ActiveWindowProcessName);
         Assert.Equal("Quarterly Planning", context.ActiveWindowTitle);
+    }
+
+    [Fact]
+    public async Task GetContextAsync_IncludesBrowserUrlWhenRequested()
+    {
+        var browserReader = new FakeBrowserUrlReader("https://example.com/docs?token=secret#part");
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            browserReader);
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeBrowserUrl: true),
+            CancellationToken.None);
+
+        Assert.Equal("https://example.com/docs", context.BrowserUrl);
+        Assert.Equal(1, browserReader.CallCount);
+    }
+
+    [Fact]
+    public async Task GetContextAsync_SkipsBrowserUrlWhenNotRequested()
+    {
+        var browserReader = new FakeBrowserUrlReader("https://example.com/docs");
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            browserReader);
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeBrowserUrl: false),
+            CancellationToken.None);
+
+        Assert.Equal(string.Empty, context.BrowserUrl);
+        Assert.Equal(0, browserReader.CallCount);
+    }
+
+    [Fact]
+    public async Task GetContextAsync_IgnoresBrowserUrlReaderFailures()
+    {
+        var provider = new WindowsEnhancementContextProvider(
+            new FakeClipboardTextReader(string.Empty),
+            new FakeSelectedTextReader(string.Empty),
+            new FakeSelectedTextClipboardFallbackReader(string.Empty),
+            new FakePowerModeTargetProvider(null),
+            new FakeBrowserUrlReader("ignored")
+            {
+                Exception = new InvalidOperationException("UIA unavailable")
+            });
+
+        var context = await provider.GetContextAsync(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: false,
+                IncludeBrowserUrl: true),
+            CancellationToken.None);
+
+        Assert.Equal(string.Empty, context.BrowserUrl);
     }
 
     private sealed class FakeClipboardTextReader(string text, List<string>? calls = null) : IClipboardTextReader
@@ -121,5 +189,22 @@ public sealed class WindowsEnhancementContextProviderTests
     {
         public Task<PowerModeTarget?> GetCurrentTargetAsync(CancellationToken cancellationToken) =>
             Task.FromResult(target);
+    }
+
+    private sealed class FakeBrowserUrlReader(string url) : IBrowserUrlReader
+    {
+        public int CallCount { get; private set; }
+        public Exception? Exception { get; init; }
+
+        public Task<string> GetBrowserUrlAsync(CancellationToken cancellationToken)
+        {
+            CallCount++;
+            if (Exception is not null)
+            {
+                throw Exception;
+            }
+
+            return Task.FromResult(url);
+        }
     }
 }

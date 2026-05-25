@@ -138,7 +138,13 @@ public sealed class TextEnhancementPipelineTests
 
         await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
 
-        Assert.Equal(new EnhancementContextRequest(IncludeClipboard: false, IncludeSelectedText: true), contextProvider.LastRequest);
+        Assert.Equal(
+            new EnhancementContextRequest(
+                IncludeClipboard: false,
+                IncludeSelectedText: true,
+                IncludeActiveWindow: true,
+                IncludeBrowserUrl: true),
+            contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("Selected note", provider.LastRequest.SystemMessage);
     }
@@ -157,7 +163,13 @@ public sealed class TextEnhancementPipelineTests
 
         await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
 
-        Assert.Equal(new EnhancementContextRequest(IncludeClipboard: true, IncludeSelectedText: true), contextProvider.LastRequest);
+        Assert.Equal(
+            new EnhancementContextRequest(
+                IncludeClipboard: true,
+                IncludeSelectedText: true,
+                IncludeActiveWindow: true,
+                IncludeBrowserUrl: true),
+            contextProvider.LastRequest);
         Assert.Contains("<CURRENTLY_SELECTED_TEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("<CLIPBOARD_CONTEXT>", provider.LastRequest.SystemMessage);
     }
