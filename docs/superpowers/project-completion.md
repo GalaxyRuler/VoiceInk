@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###############-----] 73%
+VoiceInk Windows parity  [###############-----] 74%
 ```
 
 ## Area Bars
@@ -16,10 +16,10 @@ VoiceInk Windows parity  [###############-----] 73%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 78% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, and metrics are in place. Prompt-trigger detection, advanced formatting, and canceling in-flight post-recording work remain. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
-| Floating recorder | 80% | `[################----]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel for real partial sources. Real streaming partial providers remain. |
+| Floating recorder | 84% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
-| Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
+| Cloud transcription | 72% | `[##############------]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram presets, direct Deepgram batch requests, and Deepgram live preview streaming exist. More provider-specific adapters, richer cards, and provider test requests remain. |
 | AI enhancement | 70% | `[##############------]` | OpenAI-compatible enhancement, presets, prompts, context, retries/timeouts, and secure keys exist. Trigger-word mode, local/Ollama-style hooks, and richer assistant workflows remain. |
 | Context features | 38% | `[########------------]` | Clipboard and UI Automation selected-text context exist with graceful degradation. Clipboard-copy fallback, active window/browser URL context, and OCR remain. |
 | Power Mode | 60% | `[############--------]` | Rule model, process/title matching, default fallback, explicit recorder chooser selection, settings overlays, history metadata, and editor UI exist. Browser URL matching, auto-send keys, and shortcuts remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [###############-----] 73%
 ## Current Slice
 
 ```text
-Windows recorder style selection and notch adaptation  [####################] 100%
+Windows Deepgram live transcript preview  [####################] 100%
 ```
 
 Completed:
 
-- Added macOS-compatible `RecorderStyle` settings with `mini` default and `notch` option.
-- Persisted recorder style in JSON settings and General Settings backup/import.
-- Added Settings `Recorder Style` selection.
-- Added a Windows top-center notch-style floating recorder adaptation while preserving the mini recorder default.
+- Added Core live preview session contracts and NAudio PCM chunk publishing.
+- Added Deepgram cloud preset, secure provider-specific key name, direct batch transcription, and routing.
+- Added Deepgram websocket interim transcript preview for the floating recorder with serialized audio sends.
+- Kept final insertion/history on the stopped-recording transcription result and live preview text in memory only.
 
 ## Near-Term Priority
 
-1. Finish floating recorder fidelity: real streaming partial transcript sources and waveform visual polish.
+1. Expand streaming/live preview beyond Deepgram and continue waveform visual polish.
 2. Fill remaining Settings polish: custom sound picker/import and visual parity.
 3. Continue packaging from dev ZIP to MSIX or installer with uninstall behavior and smoke tests.
 4. Continue model-management polish with richer provider cards and lifecycle status.

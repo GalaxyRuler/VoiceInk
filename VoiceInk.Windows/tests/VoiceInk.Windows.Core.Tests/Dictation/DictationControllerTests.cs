@@ -296,6 +296,135 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StartAsync_WithLivePreviewService_EnqueuesPublishedAudioChunksAndAcceptsProviderPartials()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var preview = new FakeLiveTranscriptionPreviewService();
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "deepgram")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionProviderId = "deepgram",
+                CloudTranscriptionEndpoint = "https://api.deepgram.com/v1/listen",
+                CloudTranscriptionModel = "nova-3",
+                ShowLiveTranscriptPreview = true
+            }),
+            liveTranscriptionPreviewService: preview);
+
+        await controller.StartAsync(CancellationToken.None);
+
+        var session = Assert.Single(preview.Sessions);
+        Assert.Equal("deepgram", preview.StartedSettings?.CloudTranscriptionProviderId);
+        session.PublishPartial("  live provider text  ");
+        Assert.Equal("live provider text", controller.PartialTranscript);
+
+        capture.PublishAudioChunk([1, 2, 3, 4]);
+
+        var chunk = Assert.Single(session.AudioChunks);
+        Assert.Equal([1, 2, 3, 4], chunk.Pcm16Bytes);
+        Assert.Equal(16000, chunk.SampleRate);
+        Assert.Equal(1, chunk.ChannelCount);
+    }
+
+    [Fact]
+    public async Task StopAsync_CompletesLivePreviewAndIgnoresLatePreviewPartials()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var preview = new FakeLiveTranscriptionPreviewService();
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "deepgram")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionProviderId = "deepgram",
+                CloudTranscriptionEndpoint = "https://api.deepgram.com/v1/listen",
+                CloudTranscriptionModel = "nova-3",
+                ShowLiveTranscriptPreview = true
+            }),
+            liveTranscriptionPreviewService: preview);
+
+        await controller.StartAsync(CancellationToken.None);
+        var session = Assert.Single(preview.Sessions);
+        session.PublishPartial("before stop");
+        Assert.Equal("before stop", controller.PartialTranscript);
+
+        await controller.StopAsync(CancellationToken.None);
+        session.PublishPartial("late partial");
+
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+        Assert.Equal(1, session.CompleteCount);
+        Assert.True(session.IsDisposed);
+    }
+
+    [Fact]
+    public async Task CancelAsync_CompletesLivePreviewAndIgnoresLatePreviewPartials()
+    {
+        var preview = new FakeLiveTranscriptionPreviewService();
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "deepgram")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionProviderId = "deepgram",
+                CloudTranscriptionEndpoint = "https://api.deepgram.com/v1/listen",
+                CloudTranscriptionModel = "nova-3",
+                ShowLiveTranscriptPreview = true
+            }),
+            liveTranscriptionPreviewService: preview);
+
+        await controller.StartAsync(CancellationToken.None);
+        var session = Assert.Single(preview.Sessions);
+        session.PublishPartial("before cancel");
+
+        await controller.CancelAsync(CancellationToken.None);
+        session.PublishPartial("late partial");
+
+        Assert.Equal(string.Empty, controller.PartialTranscript);
+        Assert.Equal(1, session.CompleteCount);
+        Assert.True(session.IsDisposed);
+    }
+
+    [Fact]
+    public async Task StartAsync_LivePreviewStartFailureDoesNotBlockRecording()
+    {
+        var preview = new FakeLiveTranscriptionPreviewService
+        {
+            ExceptionToThrow = new InvalidOperationException("stream unavailable")
+        };
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "deepgram")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                TranscriptionProvider = TranscriptionProviderKind.OpenAICompatible,
+                CloudTranscriptionProviderId = "deepgram",
+                CloudTranscriptionEndpoint = "https://api.deepgram.com/v1/listen",
+                CloudTranscriptionModel = "nova-3",
+                ShowLiveTranscriptPreview = true
+            }),
+            liveTranscriptionPreviewService: preview);
+
+        await controller.StartAsync(CancellationToken.None);
+
+        Assert.Equal(DictationState.Recording, controller.State);
+        Assert.True(capture.Started);
+        Assert.Equal("Live transcript preview unavailable: stream unavailable", controller.LastWarning);
+    }
+
+    [Fact]
     public async Task StopAsync_AppliesCleanupSettingsAndDictionaryReplacementsToInsertedAndHistoryText()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
@@ -1221,7 +1350,7 @@ public sealed class DictationControllerTests
         Assert.Equal(DictationState.Idle, controller.State);
     }
 
-    private sealed class FakeAudioCaptureService(AudioCaptureResult result) : IAudioCaptureService
+    private sealed class FakeAudioCaptureService(AudioCaptureResult result) : IAudioCaptureService, IAudioChunkPublisher
     {
         public bool Started { get; private set; }
         public int StartCount { get; private set; }
@@ -1230,6 +1359,7 @@ public sealed class DictationControllerTests
         public Exception? StopExceptionToThrow { get; init; }
         public TaskCompletionSource? StopEntered { get; init; }
         public Task? StopGate { get; init; }
+        public event EventHandler<AudioChunk>? AudioChunkAvailable;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -1260,6 +1390,11 @@ public sealed class DictationControllerTests
 
             Started = false;
             return result;
+        }
+
+        public void PublishAudioChunk(byte[] bytes)
+        {
+            AudioChunkAvailable?.Invoke(this, new AudioChunk(bytes, 16000, 1));
         }
     }
 
@@ -1507,6 +1642,59 @@ public sealed class DictationControllerTests
             }
 
             return Task.FromResult(target);
+        }
+    }
+
+    private sealed class FakeLiveTranscriptionPreviewService : ILiveTranscriptionPreviewService
+    {
+        public AppSettings? StartedSettings { get; private set; }
+        public List<FakeLiveTranscriptionPreviewSession> Sessions { get; } = [];
+        public Exception? ExceptionToThrow { get; init; }
+
+        public Task<ILiveTranscriptionPreviewSession?> TryStartAsync(
+            AppSettings settings,
+            Action<string> partialTranscriptUpdated,
+            CancellationToken cancellationToken)
+        {
+            if (ExceptionToThrow is not null)
+            {
+                throw ExceptionToThrow;
+            }
+
+            StartedSettings = settings;
+            var session = new FakeLiveTranscriptionPreviewSession(partialTranscriptUpdated);
+            Sessions.Add(session);
+            return Task.FromResult<ILiveTranscriptionPreviewSession?>(session);
+        }
+    }
+
+    private sealed class FakeLiveTranscriptionPreviewSession(
+        Action<string> partialTranscriptUpdated) : ILiveTranscriptionPreviewSession
+    {
+        public List<AudioChunk> AudioChunks { get; } = [];
+        public int CompleteCount { get; private set; }
+        public bool IsDisposed { get; private set; }
+
+        public void EnqueueAudio(AudioChunk chunk)
+        {
+            AudioChunks.Add(chunk);
+        }
+
+        public Task CompleteAsync(CancellationToken cancellationToken)
+        {
+            CompleteCount++;
+            return Task.CompletedTask;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            IsDisposed = true;
+            return ValueTask.CompletedTask;
+        }
+
+        public void PublishPartial(string text)
+        {
+            partialTranscriptUpdated(text);
         }
     }
 }

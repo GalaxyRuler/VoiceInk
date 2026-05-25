@@ -5,7 +5,8 @@ using VoiceInk.Windows.Core.Services;
 
 namespace VoiceInk.Windows.Native.Audio;
 
-public sealed class NAudioCaptureService(string recordingsDirectory, int? deviceNumber = null) : IAudioCaptureService, IDisposable
+public sealed class NAudioCaptureService(string recordingsDirectory, int? deviceNumber = null)
+    : IAudioCaptureService, IAudioChunkPublisher, IDisposable
 {
     private readonly object writerLock = new();
 
@@ -16,6 +17,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory, int? device
     private DateTimeOffset startedAt;
 
     public event EventHandler<AudioInputLevel>? LevelAvailable;
+    public event EventHandler<AudioChunk>? AudioChunkAvailable;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -121,6 +123,7 @@ public sealed class NAudioCaptureService(string recordingsDirectory, int? device
         }
 
         PublishLevel(args.Buffer, args.BytesRecorded);
+        PublishAudioChunk(args.Buffer, args.BytesRecorded);
     }
 
     private void PublishLevel(byte[] buffer, int bytesRecorded)
@@ -133,6 +136,29 @@ public sealed class NAudioCaptureService(string recordingsDirectory, int? device
         catch
         {
             // Meter subscribers must not disrupt recording.
+        }
+    }
+
+    private void PublishAudioChunk(byte[] buffer, int bytesRecorded)
+    {
+        if (bytesRecorded <= 0)
+        {
+            return;
+        }
+
+        var format = waveIn?.WaveFormat;
+        var chunkBytes = buffer.AsSpan(0, bytesRecorded).ToArray();
+        var chunk = new AudioChunk(
+            chunkBytes,
+            format?.SampleRate ?? 16000,
+            format?.Channels ?? 1);
+        try
+        {
+            AudioChunkAvailable?.Invoke(this, chunk);
+        }
+        catch
+        {
+            // Live preview subscribers must not disrupt recording.
         }
     }
 

@@ -63,6 +63,7 @@ The Windows MVP already has:
 - Always-on-top floating recorder with Mini and Notch styles during recording and processing, with status text, elapsed timer, live microphone level bars, non-activating Stop/Cancel controls, no-activate Prompt/Power chooser panels, and pulse animation.
 - Transcribe Audio navigation section with multi-file picker, in-memory queue, Media Foundation import to app-owned WAV recordings, local Whisper transcription, text cleanup, and History save.
 - Default-off AI Enhancement section with prompt catalog, OpenAI-compatible endpoint/model settings, Windows Credential Manager API key storage, output filtering, retry/timeout controls, automatic read-only selected text context, optional read-only clipboard context, original-text fallback, and successful enhancement insertion.
+- Cloud transcription with Custom OpenAI-compatible, Groq, and Deepgram presets, provider-specific Credential Manager keys, direct Deepgram batch transcription, and Deepgram live recorder preview streaming.
 - Power Mode navigation section with ordered enabled/default process/title rules, Win32 active-window quick fill, session-only model/language/enhancement/prompt/cleanup overrides, and History name/emoji metadata.
 - Metrics navigation section backed by local SQLite `metrics.db`, with session totals, words dictated, words per minute, estimated keystrokes/time saved, transcription model performance, and enhancement model performance.
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
@@ -190,7 +191,7 @@ Floating-recorder live transcript preview plumbing slice completed on 2026-05-25
 - Added Core partial transcript state to the dictation controller, with updates accepted only while recording and cleared at start/stop/cancel/error boundaries.
 - Added presenter gating so live transcript text is shown only while recording, the preview setting is enabled, and a real partial transcript source has provided non-empty text.
 - Added a compact live transcript panel above the Windows floating recorder chrome. The panel expands the existing no-activate recorder window upward and collapses when no live text is available.
-- This slice intentionally does not generate fake partial text. Real Windows streaming transcription providers remain a later provider slice.
+- This slice intentionally does not generate fake partial text. Deepgram live preview adds the first real provider source; more Windows streaming transcription providers remain later provider slices.
 
 Floating-recorder recorder-style slice completed on 2026-05-25:
 
@@ -201,9 +202,18 @@ Floating-recorder recorder-style slice completed on 2026-05-25:
 - Added a Windows notch-style adaptation that moves the no-activate always-on-top recorder to the top center of the current work area, uses a black top-edge pill shape, and expands downward for live transcript preview and Prompt/Power chooser panels.
 - Preserved no-activate mouse behavior, Stop/Cancel commands, Prompt/Power controls, live microphone meter, processing pulse, and live transcript gating across both styles.
 
+Deepgram live preview slice completed on 2026-05-25:
+
+- Added Core audio chunk publishing and live preview session contracts so recorder partials are provider-supplied rather than inferred from local state.
+- Extended NAudio capture to publish copied 16 kHz mono PCM chunks while still writing the complete WAV file for final transcription.
+- Added a Deepgram live preview service that starts only when the Deepgram preset, saved Deepgram key, and `Show Live Transcript Preview` are all present.
+- Sends Deepgram streaming websocket audio through a single serialized send loop with `encoding=linear16`, `sample_rate=16000`, `channels=1`, `interim_results=true`, and `smart_format=true`.
+- Parses Deepgram interim/final messages into an in-memory recorder preview, clears preview text at recording boundaries, and keeps stopped-recording transcription as the final insertion/history source.
+- Keeps preview failures best-effort so recording and final transcription continue with sanitized warning text.
+
 Windows gaps:
 
-- Real streaming partial transcript sources for Windows providers.
+- Additional real streaming partial transcript sources beyond Deepgram.
 - Pixel-perfect macOS physical notch geometry is intentionally not implemented because Windows does not expose macOS safe-area notch metrics; the Windows equivalent is a top-center notch-style recorder.
 
 ### Shortcuts
@@ -344,7 +354,7 @@ Cloud Transcription Windows MVP target:
 - Send request-based multipart audio transcription requests with `file`, `model`, `response_format=json`, optional ISO language when not `auto`, and optional vocabulary/prompt context.
 - Parse JSON responses with a `text` property and return clear sanitized errors without logging secrets or provider response bodies.
 - Use the provider in dictation, Transcribe Audio, and history retry through the existing Core transcription interface.
-- Keep named provider cards, streaming providers, and provider-specific payloads for later slices.
+- Keep additional named provider cards, streaming providers beyond Deepgram, and provider-specific payloads for later slices.
 
 Cloud Transcription slice completed on 2026-05-25:
 
@@ -365,11 +375,19 @@ Cloud provider preset slice completed on 2026-05-25:
 - Added WinUI preset and preset-model selectors that prefill compatible endpoint/model defaults while leaving custom configuration editable.
 - Saved Groq cloud transcription rows with provider metadata `groq`.
 
+Deepgram cloud transcription and live preview slice completed on 2026-05-25:
+
+- Added Deepgram to the transcription preset catalog with `https://api.deepgram.com/v1/listen`, `nova-3`, and `nova-3-medical`.
+- Added provider-specific Credential Manager secret name `VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey`.
+- Added a direct Deepgram batch transcription adapter using `Authorization: Token ...`, `smart_format=true`, optional language, raw WAV content, sanitized HTTP/JSON errors, and Deepgram transcript extraction.
+- Routed Deepgram final transcription separately from the generic OpenAI-compatible multipart adapter while preserving the shared Core transcription interface for dictation, Transcribe Audio, and History Retry.
+- Added a Deepgram websocket live preview adapter for recorder partials when live preview is enabled.
+
 Windows gaps:
 
-- Named provider cards beyond Groq.
-- Streaming adapters.
-- Provider-specific payloads.
+- Named provider cards beyond Groq and Deepgram.
+- Streaming adapters beyond Deepgram live preview.
+- Provider-specific payloads for other non-compatible APIs.
 - In-app provider test requests and API-key verification.
 
 ### AI Enhancement

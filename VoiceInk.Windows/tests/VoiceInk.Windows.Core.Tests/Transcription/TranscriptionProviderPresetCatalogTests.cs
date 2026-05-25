@@ -7,7 +7,7 @@ namespace VoiceInk.Windows.Core.Tests.Transcription;
 public sealed class TranscriptionProviderPresetCatalogTests
 {
     [Fact]
-    public void All_IncludesCustomAndGroqPresets()
+    public void All_IncludesCustomGroqAndDeepgramPresets()
     {
         var presets = TranscriptionProviderPresetCatalog.All;
 
@@ -18,12 +18,18 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.groq.com/openai/v1/audio/transcriptions", groq.Endpoint);
         Assert.Equal("whisper-large-v3-turbo", groq.DefaultModel);
         Assert.Contains("whisper-large-v3", groq.ModelIds);
+        var deepgram = Assert.Single(presets, item => item.Id == "deepgram");
+        Assert.Equal("Deepgram", deepgram.DisplayName);
+        Assert.Equal("https://api.deepgram.com/v1/listen", deepgram.Endpoint);
+        Assert.Equal("nova-3", deepgram.DefaultModel);
+        Assert.Contains("nova-3-medical", deepgram.ModelIds);
     }
 
     [Theory]
     [InlineData("", "custom")]
     [InlineData("missing", "custom")]
     [InlineData("groq", "groq")]
+    [InlineData("deepgram", "deepgram")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -32,6 +38,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [Theory]
     [InlineData("custom", "VoiceInk.Windows.Transcription.OpenAICompatible.Custom.ApiKey")]
     [InlineData("groq", "VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey")]
+    [InlineData("deepgram", "VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -49,6 +56,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.Groq.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("groq"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.Deepgram.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("deepgram"));
     }
 
     [Fact]

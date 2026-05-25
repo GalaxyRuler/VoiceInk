@@ -106,6 +106,8 @@ public sealed partial class MainWindow : Window
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
+    private readonly DeepgramCloudTranscriptionService deepgramTranscriptionService;
+    private readonly DeepgramLiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
@@ -222,9 +224,14 @@ public sealed partial class MainWindow : Window
             () => enhancementPrompts,
             new WindowsEnhancementContextProvider());
         cloudTranscriptionService = new OpenAICompatibleCloudTranscriptionService(new HttpClient(), secretStore);
+        deepgramTranscriptionService = new DeepgramCloudTranscriptionService(new HttpClient(), secretStore);
+        liveTranscriptionPreviewService = new DeepgramLiveTranscriptionPreviewService(
+            secretStore,
+            () => new ClientStreamingWebSocket());
         transcriptionService = new TranscriptionServiceRouter(
             new WhisperNetTranscriptionService(),
-            cloudTranscriptionService);
+            cloudTranscriptionService,
+            deepgramTranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,
@@ -4818,7 +4825,8 @@ public sealed partial class MainWindow : Window
             textEnhancementPipeline,
             powerModeTargetProvider,
             sessionMetricStore,
-            recordingFeedback);
+            recordingFeedback,
+            liveTranscriptionPreviewService);
 
     private static (ISessionMetricStore Store, string? Warning) CreateSessionMetricStore(string databasePath)
     {

@@ -65,6 +65,7 @@ public static class TranscriptionConfiguration
         var segment = preset.Id switch
         {
             "groq" => "Groq",
+            "deepgram" => "Deepgram",
             _ => "Custom"
         };
 

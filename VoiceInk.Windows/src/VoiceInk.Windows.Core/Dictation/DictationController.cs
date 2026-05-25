@@ -1,3 +1,4 @@
+using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
@@ -21,11 +22,15 @@ public sealed class DictationController(
     TextEnhancementPipeline? enhancementPipeline = null,
     IPowerModeTargetProvider? powerModeTargetProvider = null,
     ISessionMetricStore? sessionMetricStore = null,
-    IRecordingCaptureStopFeedback? recordingCaptureStopFeedback = null)
+    IRecordingCaptureStopFeedback? recordingCaptureStopFeedback = null,
+    ILiveTranscriptionPreviewService? liveTranscriptionPreviewService = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
+    private readonly IAudioChunkPublisher? audioChunkPublisher = audioCapture as IAudioChunkPublisher;
     private PowerModeResolution? activePowerModeResolution;
+    private ILiveTranscriptionPreviewSession? liveTranscriptionPreviewSession;
+    private bool isLivePreviewSubscribed;
     private bool isAcceptingPartialTranscript;
 
     public DictationState State { get; private set; } = DictationState.Idle;
@@ -80,10 +85,12 @@ public sealed class DictationController(
                 await audioCapture.StartAsync(cancellationToken);
                 isAcceptingPartialTranscript = true;
                 activePowerModeResolution = powerModeResolution;
+                await StartLiveTranscriptionPreviewAsync(powerModeResolution.EffectiveSettings, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 activePowerModeResolution = null;
+                await StopLiveTranscriptionPreviewAsync(CancellationToken.None);
                 State = DictationState.Idle;
                 ResetPartialTranscript();
                 throw;
@@ -91,6 +98,7 @@ public sealed class DictationController(
             catch (Exception ex)
             {
                 activePowerModeResolution = null;
+                await StopLiveTranscriptionPreviewAsync(CancellationToken.None);
                 State = DictationState.Error;
                 LastError = ex.Message;
                 ResetPartialTranscript();
@@ -120,6 +128,7 @@ public sealed class DictationController(
             LastWarning = null;
             LastStopInsertedText = false;
             ResetPartialTranscript();
+            await StopLiveTranscriptionPreviewAsync(CancellationToken.None);
 
             try
             {
@@ -252,6 +261,7 @@ public sealed class DictationController(
             LastWarning = null;
             LastStopInsertedText = false;
             ResetPartialTranscript();
+            await StopLiveTranscriptionPreviewAsync(CancellationToken.None);
 
             try
             {
@@ -359,6 +369,90 @@ public sealed class DictationController(
                 sessionMetricStore,
                 SessionMetricRecorder.DefaultSource,
                 cancellationToken);
+
+    private async Task StartLiveTranscriptionPreviewAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.ShowLiveTranscriptPreview
+            || liveTranscriptionPreviewService is null
+            || audioChunkPublisher is null)
+        {
+            return;
+        }
+
+        try
+        {
+            liveTranscriptionPreviewSession = await liveTranscriptionPreviewService.TryStartAsync(
+                settings,
+                UpdatePartialTranscript,
+                cancellationToken);
+            if (liveTranscriptionPreviewSession is not null)
+            {
+                audioChunkPublisher.AudioChunkAvailable += AudioChunkPublisher_AudioChunkAvailable;
+                isLivePreviewSubscribed = true;
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning = $"Live transcript preview unavailable: {ex.Message}";
+            await StopLiveTranscriptionPreviewAsync(CancellationToken.None);
+        }
+    }
+
+    private async Task StopLiveTranscriptionPreviewAsync(CancellationToken cancellationToken)
+    {
+        if (isLivePreviewSubscribed && audioChunkPublisher is not null)
+        {
+            audioChunkPublisher.AudioChunkAvailable -= AudioChunkPublisher_AudioChunkAvailable;
+            isLivePreviewSubscribed = false;
+        }
+
+        var session = liveTranscriptionPreviewSession;
+        liveTranscriptionPreviewSession = null;
+        if (session is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await session.CompleteAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning ??= $"Live transcript preview cleanup failed: {ex.Message}";
+        }
+
+        try
+        {
+            await session.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            LastWarning ??= $"Live transcript preview cleanup failed: {ex.Message}";
+        }
+    }
+
+    private void AudioChunkPublisher_AudioChunkAvailable(object? sender, AudioChunk chunk)
+    {
+        try
+        {
+            liveTranscriptionPreviewSession?.EnqueueAudio(chunk);
+        }
+        catch
+        {
+            // Streaming preview is best-effort and must not disrupt recording.
+        }
+    }
 
     private async Task NotifyCaptureStoppedAsync(CancellationToken cancellationToken)
     {

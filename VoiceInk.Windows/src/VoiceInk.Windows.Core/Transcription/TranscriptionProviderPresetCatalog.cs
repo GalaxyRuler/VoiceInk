@@ -19,10 +19,21 @@ public static class TranscriptionProviderPresetCatalog
             "whisper-large-v3"
         ]);
 
+    public static TranscriptionProviderPreset Deepgram { get; } = new(
+        "deepgram",
+        "Deepgram",
+        "https://api.deepgram.com/v1/listen",
+        "nova-3",
+        [
+            "nova-3",
+            "nova-3-medical"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
-        Groq
+        Groq,
+        Deepgram
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>
