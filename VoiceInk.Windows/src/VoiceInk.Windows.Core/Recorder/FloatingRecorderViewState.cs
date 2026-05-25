@@ -7,4 +7,5 @@ public sealed record FloatingRecorderViewState(
     string Elapsed,
     bool CanStop,
     bool CanCancel,
-    bool ShowPulse);
+    bool ShowPulse,
+    double InputLevel = 0);

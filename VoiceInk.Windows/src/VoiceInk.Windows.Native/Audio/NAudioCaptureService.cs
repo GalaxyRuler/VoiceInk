@@ -15,6 +15,8 @@ public sealed class NAudioCaptureService(string recordingsDirectory, int? device
     private string? currentFilePath;
     private DateTimeOffset startedAt;
 
+    public event EventHandler<AudioInputLevel>? LevelAvailable;
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         if (waveIn is not null || writer is not null)
@@ -116,6 +118,21 @@ public sealed class NAudioCaptureService(string recordingsDirectory, int? device
         {
             writer?.Write(args.Buffer, 0, args.BytesRecorded);
             writer?.Flush();
+        }
+
+        PublishLevel(args.Buffer, args.BytesRecorded);
+    }
+
+    private void PublishLevel(byte[] buffer, int bytesRecorded)
+    {
+        var level = AudioLevelMeter.CalculatePcm16Peak(buffer, bytesRecorded);
+        try
+        {
+            LevelAvailable?.Invoke(this, level);
+        }
+        catch
+        {
+            // Meter subscribers must not disrupt recording.
         }
     }
 

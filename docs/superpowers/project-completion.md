@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [#############-------] 67%
+VoiceInk Windows parity  [##############------] 68%
 ```
 
 ## Area Bars
@@ -16,7 +16,7 @@ VoiceInk Windows parity  [#############-------] 67%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 78% | `[################----]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, history writes, and metrics are in place. Prompt-trigger detection, advanced formatting, and canceling in-flight post-recording work remain. |
 | Shell and tray | 72% | `[##############------]` | Navigation shell, tray icon, close-to-tray, and open-source About/diagnostics are in place. Rich tray submenus and dedicated History window remain. |
-| Floating recorder | 45% | `[#########-----------]` | Compact recorder shows recording/processing state and elapsed time. Live transcript, real waveform, non-activating controls, notch style, prompt picker, and Power Mode popover remain. |
+| Floating recorder | 52% | `[##########----------]` | Compact recorder shows recording/processing state, elapsed time, and live microphone level bars while recording. Live transcript, non-activating controls, notch style, prompt picker, and Power Mode popover remain. |
 | Shortcuts | 58% | `[############--------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, and quick add are configurable. Press-and-hold modes, toggle enhancement, Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
 | Cloud transcription | 65% | `[#############-------]` | OpenAI-compatible adapter, secure key storage, provider presets, and routing exist. Provider-specific edge behavior, streaming, and richer cards remain. |
@@ -34,20 +34,19 @@ VoiceInk Windows parity  [#############-------] 67%
 ## Current Slice
 
 ```text
-Model warmup/preload  [####################] 100%
+Floating recorder level meter  [####################] 100%
 ```
 
 Completed:
 
-- Added a test-covered Core warmup coordinator for local Whisper models.
-- Added a native Whisper.net warmup adapter that loads and disposes a factory/processor for the selected GGML model.
-- Added AI Models controls for `Prewarm Local Model`, `Warm Up Selected Model`, and warmup status.
-- Scheduled warmup on startup, Windows resume, local model import/default selection, successful catalog download/default selection, and provider settings save.
-- Kept the preload conservative: transcription still owns processor lifetime and warmup never blocks recording controls.
+- Added test-covered PCM16 microphone peak calculation.
+- Added NAudio capture level events from the same buffers written to recorder WAV files.
+- Added five live level bars in the compact floating recorder while recording.
+- Kept processing/transcribing states on the existing pulse animation when no microphone stream is active.
 
 ## Near-Term Priority
 
-1. Finish floating recorder fidelity: waveform, live partial transcript, prompt and Power Mode controls.
+1. Finish floating recorder fidelity: live partial transcript, non-activating controls, prompt and Power Mode controls.
 2. Fill remaining Settings polish: custom sound picker/import and recorder style selection.
 3. Add packaging path: zip/dev package first, then MSIX or installer.
 4. Continue model-management polish with richer provider cards and lifecycle status.

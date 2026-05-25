@@ -8,8 +8,10 @@ public static class FloatingRecorderPresenter
         DictationState state,
         TimeSpan elapsed,
         string? status,
-        bool isOperationActive)
+        bool isOperationActive,
+        double inputLevel = 0)
     {
+        var safeInputLevel = double.IsFinite(inputLevel) ? Math.Clamp(inputLevel, 0, 1) : 0;
         return state switch
         {
             DictationState.Recording => new(
@@ -19,7 +21,8 @@ public static class FloatingRecorderPresenter
                 FormatElapsed(elapsed),
                 CanStop: !isOperationActive,
                 CanCancel: !isOperationActive,
-                ShowPulse: true),
+                ShowPulse: true,
+                InputLevel: safeInputLevel),
             DictationState.Transcribing => new(
                 true,
                 "Transcribing",

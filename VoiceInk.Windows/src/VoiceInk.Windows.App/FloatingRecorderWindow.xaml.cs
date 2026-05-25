@@ -11,9 +11,12 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class FloatingRecorderWindow : Window
 {
+    private const double MinimumBarHeight = 8;
+    private const double MaximumBarHeight = 32;
     private readonly DispatcherQueueTimer pulseTimer;
     private bool isShown;
     private int pulseStep;
+    private double inputLevel;
 
     public FloatingRecorderWindow()
     {
@@ -30,7 +33,9 @@ public sealed partial class FloatingRecorderWindow : Window
         TitleTextBlock.Text = state.Title;
         DetailTextBlock.Text = state.Detail;
         ElapsedTextBlock.Text = state.Elapsed;
+        inputLevel = double.IsFinite(state.InputLevel) ? Math.Clamp(state.InputLevel, 0, 1) : 0;
         SetPulseVisible(state.ShowPulse);
+        ApplyMeter();
 
         if (state.IsVisible)
         {
@@ -93,6 +98,8 @@ public sealed partial class FloatingRecorderWindow : Window
         PulseBar1.Visibility = visibility;
         PulseBar2.Visibility = visibility;
         PulseBar3.Visibility = visibility;
+        PulseBar4.Visibility = visibility;
+        PulseBar5.Visibility = visibility;
 
         if (isVisible && !pulseTimer.IsRunning)
         {
@@ -107,13 +114,42 @@ public sealed partial class FloatingRecorderWindow : Window
     private void AdvancePulse()
     {
         pulseStep = (pulseStep + 1) % 6;
-        ApplyPulse(PulseBar1, 12 + ((pulseStep + 0) % 3) * 8, 0.5 + ((pulseStep + 0) % 3) * 0.2);
-        ApplyPulse(PulseBar2, 12 + ((pulseStep + 1) % 3) * 8, 0.5 + ((pulseStep + 1) % 3) * 0.2);
-        ApplyPulse(PulseBar3, 12 + ((pulseStep + 2) % 3) * 8, 0.5 + ((pulseStep + 2) % 3) * 0.2);
+        ApplyMeter();
+    }
+
+    private void ApplyMeter()
+    {
+        if (inputLevel > 0.01)
+        {
+            ApplyLevelBar(PulseBar1, 0.65);
+            ApplyLevelBar(PulseBar2, 0.9);
+            ApplyLevelBar(PulseBar3, 1.0);
+            ApplyLevelBar(PulseBar4, 0.85);
+            ApplyLevelBar(PulseBar5, 0.6);
+            return;
+        }
+
+        ApplyPulse(PulseBar1, 10 + ((pulseStep + 0) % 3) * 7, 0.45 + ((pulseStep + 0) % 3) * 0.2);
+        ApplyPulse(PulseBar2, 10 + ((pulseStep + 1) % 3) * 7, 0.45 + ((pulseStep + 1) % 3) * 0.2);
+        ApplyPulse(PulseBar3, 10 + ((pulseStep + 2) % 3) * 7, 0.45 + ((pulseStep + 2) % 3) * 0.2);
+        ApplyPulse(PulseBar4, 10 + ((pulseStep + 1) % 3) * 7, 0.45 + ((pulseStep + 1) % 3) * 0.2);
+        ApplyPulse(PulseBar5, 10 + ((pulseStep + 0) % 3) * 7, 0.45 + ((pulseStep + 0) % 3) * 0.2);
+    }
+
+    private void ApplyLevelBar(FrameworkElement bar, double weight)
+    {
+        var normalized = Math.Clamp(inputLevel * weight, 0, 1);
+        var height = MinimumBarHeight + normalized * (MaximumBarHeight - MinimumBarHeight);
+        ApplyPulse(bar, height, 0.55 + normalized * 0.45);
     }
 
     private static void ApplyPulse(FrameworkElement bar, double height, double opacity)
     {
+        if (bar.Visibility != Visibility.Visible)
+        {
+            return;
+        }
+
         bar.Height = height;
         bar.Opacity = opacity;
     }

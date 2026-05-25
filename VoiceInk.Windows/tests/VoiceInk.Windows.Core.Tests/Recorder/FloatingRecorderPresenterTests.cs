@@ -21,6 +21,20 @@ public sealed class FloatingRecorderPresenterTests
         Assert.True(state.CanStop);
         Assert.True(state.CanCancel);
         Assert.True(state.ShowPulse);
+        Assert.Equal(0, state.InputLevel);
+    }
+
+    [Fact]
+    public void FromState_Recording_CarriesInputLevel()
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(12),
+            "Recording",
+            isOperationActive: false,
+            inputLevel: 0.72);
+
+        Assert.Equal(0.72, state.InputLevel);
     }
 
     [Theory]
@@ -43,6 +57,7 @@ public sealed class FloatingRecorderPresenterTests
         Assert.False(state.CanStop);
         Assert.False(state.CanCancel);
         Assert.True(state.ShowPulse);
+        Assert.Equal(0, state.InputLevel);
     }
 
     [Fact]

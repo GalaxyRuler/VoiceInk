@@ -165,6 +165,8 @@ public sealed partial class MainWindow : Window
     private Guid? promptEditorPromptId;
     private bool exitRequested;
     private bool powerModeEventsSubscribed;
+    private double latestRecordingInputLevel;
+    private int meterRefreshQueued;
     private DateTimeOffset? recordingStartedAt;
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
@@ -247,6 +249,7 @@ public sealed partial class MainWindow : Window
         dictionaryQuickAddService = new DictionaryQuickAddService(dictionaryStore);
         audioInputDeviceProvider = new NAudioInputDeviceProvider();
         audioCapture = new NAudioCaptureService(recordingsDirectory);
+        audioCapture.LevelAvailable += AudioCapture_LevelAvailable;
         controller = CreateController(audioCapture);
 
         CreateTrayIconService();
@@ -321,6 +324,12 @@ public sealed partial class MainWindow : Window
     {
         exitRequested = true;
         Close();
+    }
+
+    private void AudioCapture_LevelAvailable(object? sender, AudioInputLevel level)
+    {
+        Interlocked.Exchange(ref latestRecordingInputLevel, level.Peak);
+        QueueMeterRefresh();
     }
 
     private async void RefreshAudioInputsButton_Click(object sender, RoutedEventArgs e)
@@ -423,6 +432,7 @@ public sealed partial class MainWindow : Window
             await SaveSettingsAsync(windowLifetime.Token);
             await recordingFeedback.BeginAsync(currentSettings, windowLifetime.Token);
             recordingFeedbackSessionActive = true;
+            Interlocked.Exchange(ref latestRecordingInputLevel, 0);
             await controller.StartAsync(windowLifetime.Token);
             if (controller.State == DictationState.Recording)
             {
@@ -483,6 +493,7 @@ public sealed partial class MainWindow : Window
             }
 
             recordingStartedAt = null;
+            Interlocked.Exchange(ref latestRecordingInputLevel, 0);
             statusOverride = controller.LastWarning is null ? cleanupStatus ?? metricsWarning : null;
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -541,6 +552,7 @@ public sealed partial class MainWindow : Window
             await RefreshHistoryAsync(windowLifetime.Token);
             var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
             recordingStartedAt = null;
+            Interlocked.Exchange(ref latestRecordingInputLevel, 0);
             statusOverride = controller.LastWarning ?? metricsWarning ?? "Recording canceled";
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
@@ -5746,8 +5758,11 @@ public sealed partial class MainWindow : Window
     private void RecreateController()
     {
         var selectedAudioInputDeviceChoice = SelectedAudioInputDeviceChoice();
+        audioCapture.LevelAvailable -= AudioCapture_LevelAvailable;
         audioCapture.Dispose();
         audioCapture = new NAudioCaptureService(recordingsDirectory, selectedAudioInputDeviceChoice?.DeviceNumber);
+        audioCapture.LevelAvailable += AudioCapture_LevelAvailable;
+        Interlocked.Exchange(ref latestRecordingInputLevel, 0);
         activeAudioInputDeviceChoice = selectedAudioInputDeviceChoice;
         controller = CreateController(audioCapture);
     }
@@ -6000,16 +6015,22 @@ public sealed partial class MainWindow : Window
         if (!recorderActivityActive)
         {
             recordingStartedAt = null;
+            Interlocked.Exchange(ref latestRecordingInputLevel, 0);
+            Interlocked.Exchange(ref meterRefreshQueued, 0);
         }
 
         var elapsed = recordingStartedAt is null
             ? TimeSpan.Zero
             : DateTimeOffset.Now - recordingStartedAt.Value;
+        var inputLevel = controller.State == DictationState.Recording
+            ? Interlocked.CompareExchange(ref latestRecordingInputLevel, 0, 0)
+            : 0;
         var state = FloatingRecorderPresenter.FromState(
             controller.State,
             elapsed,
             displayStatus,
-            recorderActivityActive && operationActive);
+            recorderActivityActive && operationActive,
+            inputLevel);
 
         if (!state.IsVisible && floatingRecorderWindow is null)
         {
@@ -6019,6 +6040,28 @@ public sealed partial class MainWindow : Window
 
         EnsureFloatingRecorderWindow().Apply(state);
         UpdateFloatingRecorderRefreshTimer(state);
+    }
+
+    private void QueueMeterRefresh()
+    {
+        if (controller.State != DictationState.Recording
+            || windowLifetime.IsCancellationRequested
+            || Interlocked.Exchange(ref meterRefreshQueued, 1) == 1)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.TryEnqueue(() =>
+            {
+                Interlocked.Exchange(ref meterRefreshQueued, 0);
+                if (controller.State == DictationState.Recording && !windowLifetime.IsCancellationRequested)
+                {
+                    RefreshUiFromControllerState();
+                }
+            }))
+        {
+            Interlocked.Exchange(ref meterRefreshQueued, 0);
+        }
     }
 
     private void RefreshFloatingRecorderFromTimer()
@@ -6294,6 +6337,7 @@ public sealed partial class MainWindow : Window
         CancelRecordingFeedbackSessionAsync(immediate: true).GetAwaiter().GetResult();
         recordingFeedback.RestorePendingImmediatelyAsync().GetAwaiter().GetResult();
 
+        audioCapture.LevelAvailable -= AudioCapture_LevelAvailable;
         audioCapture.Dispose();
         systemAudioFeedback.Dispose();
         modelDownloadHttpClient.Dispose();

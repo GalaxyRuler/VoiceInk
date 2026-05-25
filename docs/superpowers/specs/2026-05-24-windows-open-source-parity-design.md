@@ -145,9 +145,15 @@ Floating-recorder slice completed on 2026-05-25:
 - Uses a Core `FloatingRecorderPresenter` for state-to-UI mapping.
 - Leaves live partial transcript, real audio meter waveform, notch style, prompt picker behavior, and Power Mode behavior for later slices.
 
+Floating-recorder level-meter slice completed on 2026-05-25:
+
+- Added Core PCM16 peak-level calculation for local microphone buffers.
+- Added NAudio capture level events from the same recording buffers written to disk, with subscriber failures isolated from recording.
+- Added live five-bar microphone level rendering in the compact Windows recorder while recording.
+- Kept processing states on a lightweight pulse animation when live microphone input is unavailable.
+
 Windows gaps:
 
-- Waveform/level visualization.
 - Live partial transcript.
 - Non-activating mouse controls for stop/cancel that preserve the paste target.
 - Prompt and Power Mode controls in recorder.
