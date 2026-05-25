@@ -7,6 +7,7 @@ public sealed class WindowsScreenOcrTextReader : IOcrTextReader
     private readonly IScreenImageCapture capture;
     private readonly IOcrTextRecognizer recognizer;
     private readonly int maxCharacters;
+    private readonly ScreenCaptureRegion? region;
 
     public WindowsScreenOcrTextReader()
         : this(new WindowsDesktopScreenImageCapture(), new WindowsMediaOcrTextRecognizer())
@@ -16,16 +17,23 @@ public sealed class WindowsScreenOcrTextReader : IOcrTextReader
     public WindowsScreenOcrTextReader(
         IScreenImageCapture capture,
         IOcrTextRecognizer recognizer,
-        int maxCharacters = DefaultMaxCharacters)
+        int maxCharacters = DefaultMaxCharacters,
+        ScreenCaptureRegion? region = null)
     {
         this.capture = capture;
         this.recognizer = recognizer;
         this.maxCharacters = Math.Max(0, maxCharacters);
+        this.region = region;
     }
 
     public async Task<string> GetOcrTextAsync(CancellationToken cancellationToken)
     {
-        var imagePngBytes = await capture.CapturePngAsync(cancellationToken);
+        if (region?.IsEmpty == true)
+        {
+            return string.Empty;
+        }
+
+        var imagePngBytes = await capture.CapturePngAsync(region, cancellationToken);
         if (imagePngBytes.Length == 0)
         {
             return string.Empty;

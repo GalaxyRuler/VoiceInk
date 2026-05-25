@@ -6,11 +6,13 @@ namespace VoiceInk.Windows.Native.Text;
 
 public sealed class WindowsDesktopScreenImageCapture : IScreenImageCapture
 {
-    public Task<byte[]> CapturePngAsync(CancellationToken cancellationToken)
+    public Task<byte[]> CapturePngAsync(ScreenCaptureRegion? region, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var bounds = VirtualScreenBounds();
+        var bounds = region is null
+            ? VirtualScreenBounds()
+            : new Rectangle(region.Left, region.Top, region.Width, region.Height);
         if (bounds.Width <= 0 || bounds.Height <= 0)
         {
             return Task.FromResult(Array.Empty<byte>());

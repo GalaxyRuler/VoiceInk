@@ -46,14 +46,47 @@ public sealed class WindowsScreenOcrTextReaderTests
         Assert.Equal("abcd", text);
     }
 
+    [Fact]
+    public async Task GetOcrTextAsync_PassesConfiguredRegionToCapture()
+    {
+        var capture = new FakeScreenImageCapture([1]);
+        var recognizer = new FakeOcrTextRecognizer("Region text");
+        var region = new ScreenCaptureRegion(10, 20, 300, 180);
+        var reader = new WindowsScreenOcrTextReader(capture, recognizer, region: region);
+
+        var text = await reader.GetOcrTextAsync(CancellationToken.None);
+
+        Assert.Equal("Region text", text);
+        Assert.Equal(region, capture.LastRegion);
+    }
+
+    [Fact]
+    public async Task GetOcrTextAsync_WhenConfiguredRegionIsEmpty_SkipsRecognition()
+    {
+        var capture = new FakeScreenImageCapture([1]);
+        var recognizer = new FakeOcrTextRecognizer("ignored");
+        var reader = new WindowsScreenOcrTextReader(
+            capture,
+            recognizer,
+            region: new ScreenCaptureRegion(10, 20, 0, 180));
+
+        var text = await reader.GetOcrTextAsync(CancellationToken.None);
+
+        Assert.Equal(string.Empty, text);
+        Assert.Equal(0, capture.CallCount);
+        Assert.Equal(0, recognizer.CallCount);
+    }
+
     private sealed class FakeScreenImageCapture(byte[] imagePngBytes, List<string>? calls = null) : IScreenImageCapture
     {
         public int CallCount { get; private set; }
+        public ScreenCaptureRegion? LastRegion { get; private set; }
 
-        public Task<byte[]> CapturePngAsync(CancellationToken cancellationToken)
+        public Task<byte[]> CapturePngAsync(ScreenCaptureRegion? region, CancellationToken cancellationToken)
         {
             CallCount++;
             calls?.Add("capture");
+            LastRegion = region;
             return Task.FromResult(imagePngBytes);
         }
     }
