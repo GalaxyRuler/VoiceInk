@@ -924,6 +924,10 @@
                                 x:Name="CopyDiagnosticsSummaryButton"
                                 Content="Copy Diagnostics Summary"
                                 Click="CopyDiagnosticsSummaryButton_Click" />
+                            <Button
+                                x:Name="ExportDiagnosticLogsButton"
+                                Content="Export Diagnostic Logs"
+                                Click="ExportDiagnosticLogsButton_Click" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>

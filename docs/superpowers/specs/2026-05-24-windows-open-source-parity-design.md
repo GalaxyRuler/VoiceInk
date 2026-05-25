@@ -582,6 +582,24 @@ Windows gaps:
 - Settings surfaces beyond supported shortcut, cleanup, backup, provider, audio, onboarding, and clipboard controls.
 - Windows equivalents for tray behavior and richer diagnostics.
 
+Settings diagnostics Windows target:
+
+- Match macOS `Export Logs` intent with an open-source, local-only Windows diagnostic log export.
+- Keep existing `Open Diagnostics Folder` and `Copy Diagnostics Summary` actions, and add `Export Diagnostic Logs` in About / Open Source.
+- Export a plain UTF-8 `.log` file chosen by the user through a Windows save picker.
+- Include safe system and app context: export time, app version, OS/runtime, architecture, app data paths, known local database/settings file existence and sizes, active section, dictation state, selected model path, and recent generic in-app status labels.
+- Never include API keys, Credential Manager values, environment variables, clipboard contents, transcript/history text, rendered AI prompt content, user-authored dictionary/prompt text, or settings JSON contents.
+- Redact key/token/credential/secret-looking query parameters from any diagnostic line that could include a URL-like or leading key-value value.
+- Keep diagnostics useful for open-source issue reporting rather than commercial support or telemetry.
+
+Settings diagnostics slice completed on 2026-05-25:
+
+- Added Core diagnostic report formatting with safe system/app context, file inventory, state, recent generic event-label, and privacy notice sections.
+- Added redaction for key/token/secret/credential query values and leading key-value diagnostic lines.
+- Added an in-memory recent status event list capped at 200 generic labels, with user-authored status payloads stripped before recording.
+- Added About / Open Source `Export Diagnostic Logs` using a user-selected `.log` save picker.
+- Reused the safe diagnostic report for `Copy Diagnostics Summary` so copy/export share privacy boundaries.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

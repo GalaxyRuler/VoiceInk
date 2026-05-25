@@ -15,6 +15,7 @@ using VoiceInk.Windows.Core.AudioFiles;
 using VoiceInk.Windows.Core.Backup;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Dictation;
+using VoiceInk.Windows.Core.Diagnostics;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Metrics;
@@ -64,6 +65,7 @@ public sealed partial class MainWindow : Window
     private const string AboutSectionTag = "About";
     private const string EnhancementSectionTag = "Enhancement";
     private const string PowerModeSectionTag = "Power Mode";
+    private const int MaxDiagnosticEvents = 200;
     private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
     private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
     private static readonly double[] ClipboardRestoreDelayChoices = [0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
@@ -87,6 +89,8 @@ public sealed partial class MainWindow : Window
     private readonly IStartupRegistrationService startupRegistrationService;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
+    private readonly List<string> diagnosticEvents = [];
+    private string? lastDiagnosticStatus;
     private readonly WindowsCredentialSecretStore secretStore;
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
@@ -127,6 +131,7 @@ public sealed partial class MainWindow : Window
     private bool isExportingSettingsBackup;
     private bool isImportingSettingsBackup;
     private bool isRunningPrivacyCleanup;
+    private bool isExportingDiagnosticLogs;
     private bool isOnboardingOpen;
     private bool suppressLaunchAtLoginChanged;
     private readonly bool startHiddenToTray;
@@ -733,6 +738,11 @@ public sealed partial class MainWindow : Window
     private async void CopyDiagnosticsSummaryButton_Click(object sender, RoutedEventArgs e)
     {
         await CopyDiagnosticsSummaryAsync();
+    }
+
+    private async void ExportDiagnosticLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ExportDiagnosticLogsAsync();
     }
 
     private async void AddVocabularyButton_Click(object sender, RoutedEventArgs e)
@@ -4813,6 +4823,7 @@ public sealed partial class MainWindow : Window
         || isTranscribingAudioFiles
         || isExportingSettingsBackup
         || isImportingSettingsBackup
+        || isExportingDiagnosticLogs
         || (includeCurrentPrivacyCleanup && isRunningPrivacyCleanup)
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
@@ -4965,18 +4976,7 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            var summary = string.Join(
-                Environment.NewLine,
-                "VoiceInk for Windows diagnostics",
-                $"Version: {typeof(MainWindow).Assembly.GetName().Version?.ToString() ?? "source build"}",
-                $"App data: {appDataDirectory}",
-                $"Recordings: {recordingsDirectory}",
-                $"Settings: {settingsPath}",
-                $"History: {historyPath}",
-                $"Dictionary: {dictionaryPath}",
-                $"Active section: {activeSectionTag}",
-                $"Dictation state: {controller.State}",
-                $"Model path: {ModelPathTextBox.Text}");
+            var summary = BuildDiagnosticReport();
             var package = new DataPackage();
             package.SetText(summary);
             Clipboard.SetContent(package);
@@ -4988,6 +4988,88 @@ public sealed partial class MainWindow : Window
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task ExportDiagnosticLogsAsync()
+    {
+        if (IsOperationActive())
+        {
+            return;
+        }
+
+        var statusOverride = "Preparing diagnostic logs";
+        isExportingDiagnosticLogs = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"VoiceInk_Diagnostic_Logs_{DateTimeOffset.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("Log file", [".log"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                statusOverride = "Diagnostic log export canceled";
+                return;
+            }
+
+            await FileIO.WriteTextAsync(file, BuildDiagnosticReport());
+            statusOverride = $"Diagnostic logs exported: {file.Name}";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Diagnostic log export failed: {ex.Message}";
+        }
+        finally
+        {
+            isExportingDiagnosticLogs = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private string BuildDiagnosticReport()
+    {
+        var request = new DiagnosticReportRequest
+        {
+            ExportedAtUtc = DateTimeOffset.UtcNow,
+            AppVersion = typeof(MainWindow).Assembly.GetName().Version?.ToString() ?? "source build",
+            OsDescription = RuntimeInformation.OSDescription,
+            RuntimeDescription = RuntimeInformation.FrameworkDescription,
+            ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+            AppBaseDirectory = AppContext.BaseDirectory,
+            AppDataDirectory = appDataDirectory,
+            RecordingsDirectory = recordingsDirectory,
+            ActiveSection = activeSectionTag,
+            DictationState = controller.State.ToString(),
+            SelectedModelPath = ModelPathTextBox.Text,
+            Files = BuildDiagnosticFileEntries(),
+            RecentEvents = diagnosticEvents.ToArray()
+        };
+
+        return DiagnosticReportBuilder.Build(request);
+    }
+
+    private IReadOnlyList<DiagnosticFileEntry> BuildDiagnosticFileEntries() =>
+    [
+        DiagnosticFile("Settings", settingsPath),
+        DiagnosticFile("History", historyPath),
+        DiagnosticFile("Metrics", metricsPath),
+        DiagnosticFile("Dictionary", dictionaryPath)
+    ];
+
+    private static DiagnosticFileEntry DiagnosticFile(string label, string path)
+    {
+        var info = new FileInfo(path);
+        return new DiagnosticFileEntry(
+            label,
+            path,
+            info.Exists,
+            info.Exists ? info.Length : null);
     }
 
     private bool TryReplaceGlobalHotkeys(AppSettings settings, AppSettings? rollbackSettings)
@@ -5144,6 +5226,7 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        ExportDiagnosticLogsButton.IsEnabled = settingsLoaded && !operationActive;
         ApplyClipboardSettingsButton.IsEnabled = settingsLoaded && !operationActive;
         RestoreClipboardCheckBox.IsEnabled = settingsLoaded && !operationActive;
         PasteMethodComboBox.IsEnabled = settingsLoaded && !operationActive;
@@ -5273,9 +5356,27 @@ public sealed partial class MainWindow : Window
             ?? controller.LastWarning
             ?? idleHotkeyWarning
             ?? stateStatus;
+        RecordDiagnosticEvent(displayStatus);
         StatusTextBlock.Text = displayStatus;
         UpdateFloatingRecorder(displayStatus, operationActive);
         UpdateTrayFromControllerState(displayStatus, operationActive);
+    }
+
+    private void RecordDiagnosticEvent(string status)
+    {
+        var diagnosticStatus = DiagnosticEventSanitizer.Normalize(status);
+        if (string.IsNullOrWhiteSpace(diagnosticStatus)
+            || string.Equals(diagnosticStatus, lastDiagnosticStatus, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastDiagnosticStatus = diagnosticStatus;
+        diagnosticEvents.Add($"{DateTimeOffset.UtcNow:O} {diagnosticStatus}");
+        if (diagnosticEvents.Count > MaxDiagnosticEvents)
+        {
+            diagnosticEvents.RemoveRange(0, diagnosticEvents.Count - MaxDiagnosticEvents);
+        }
     }
 
     private void UpdateFloatingRecorder(string displayStatus, bool operationActive)
