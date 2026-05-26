@@ -993,13 +993,17 @@ Dev ZIP packaging slice completed on 2026-05-25:
 - Generated package contents are staged under ignored `VoiceInk.Windows/artifacts/dev-zip` output, with a README next to `VoiceInk.Windows.App.exe`.
 - The dev ZIP is explicitly a source-built testing distribution. It does not register package identity, Start Menu shortcuts, uninstall entries, signing, auto-update behavior, or commercial channels.
 
+Packaging safety and readiness slices completed on 2026-05-26:
+
+- Added signed MSIX manifest/script foundation that requires a maintainer-owned certificate and keeps signing secrets out of the repository.
+- Added certificate-free MSIX preflight, non-installing MSIX artifact validation, optional signed-build validation, and a gated signed install/query/uninstall smoke helper.
+- Added a read-only release readiness report that checks expected packaging assets and prints the ordered dev ZIP/MSIX release commands without publishing, installing, signing, trusting certificates, or reading certificate passwords.
+
 Windows gaps:
 
-- MSIX or installer project.
-- Installer/native dependency layout validation.
-- Uninstall behavior.
-- Shortcut registration.
-- Signing/release smoke tests.
+- Actual signed MSIX build and install smoke with a maintainer-owned trusted certificate.
+- Release signing/trust documentation for the project maintainer's chosen certificate provider.
+- Deeper installer/update-channel polish if a store or winget path is chosen later.
 
 ## Milestone Order
 

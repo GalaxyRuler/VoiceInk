@@ -224,6 +224,31 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void ReleaseReadinessScript_PrintsNonMutatingPackagingChecklist()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-release-readiness.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("Release readiness report", script);
+        Assert.Contains("package-msix.ps1 -Preflight", script);
+        Assert.Contains("package-msix.ps1 -ValidateAfterBuild", script);
+        Assert.Contains("test-msix-package.ps1", script);
+        Assert.Contains("smoke-msix-install.ps1", script);
+        Assert.Contains("package-dev-zip.ps1", script);
+        Assert.Contains("test-dev-zip.ps1", script);
+        Assert.Contains("This script does not create or import certificates", script);
+        Assert.Contains("Release readiness report passed", script);
+
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& dotnet publish", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

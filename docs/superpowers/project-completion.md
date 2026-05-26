@@ -29,23 +29,24 @@ VoiceInk Windows parity  [###################-] 95%
 | Settings | 84% | `[#################---]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, and current-state rows for paste, clipboard restore, recording feedback, and cleanup exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
 | Onboarding | 83% | `[#################---]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, compact readiness summary rows, action rows, progress-aware readiness checklist, guided setup stages, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
-| Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
+| Packaging | 65% | `[#############-------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper, and a read-only release readiness report exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows Metrics action summary  [####################] 100%
+Windows release readiness report  [####################] 100%
 ```
 
 Completed:
 
-- Added Core Metrics action rows for filter scope, CSV export, model performance, and reset scope.
-- Rendered the action rows in the Metrics storage pane.
-- Kept metrics storage, CSV export, model performance queries, reset confirmation, and privacy behavior unchanged.
+- Wrote the release readiness spec and implementation plan.
+- Added a failing packaging asset test for the readiness script.
+- Added the read-only readiness script.
+- Ran focused packaging tests, readiness script help/report modes, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
-1. Continue packaging from per-user Dev ZIP install to actual signed MSIX install/uninstall smoke and release signing flow when a trusted signing setup is available.
+1. Continue packaging toward actual signed MSIX install/uninstall smoke and release signing flow when a trusted maintainer signing setup is available.
 2. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, Enhancement, and onboarding pages.
 3. Continue model lifecycle polish for local model discovery, validation, and repair flows.
 4. Consider a future WASAPI capture backend if endpoint-native recording becomes necessary.
