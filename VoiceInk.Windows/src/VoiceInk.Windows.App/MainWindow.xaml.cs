@@ -2168,6 +2168,7 @@ public sealed partial class MainWindow : Window
         EnhancementContextReadinessTitleTextBlock.Text = presentation.Title;
         EnhancementContextReadinessDescriptionTextBlock.Text = presentation.Description;
         EnhancementContextReadinessListView.ItemsSource = presentation.Rows;
+        EnhancementContextActionsListView.ItemsSource = presentation.ActionRows;
     }
 
     private void RefreshOcrDisplayChoices()

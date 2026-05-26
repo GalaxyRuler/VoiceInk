@@ -45,6 +45,30 @@ public sealed class EnhancementContextReadinessPresenterTests
                 Assert.Equal("Screen text is skipped until OCR context is enabled.", row.Detail);
                 Assert.Equal("Off", row.StatusBadge);
             });
+
+        Assert.Collection(
+            presentation.ActionRows,
+            row =>
+            {
+                Assert.Equal("Enhancement Pipeline", row.Title);
+                Assert.Equal("Off", row.Value);
+                Assert.Equal("Enable Enhancement before context is appended to prompts.", row.Detail);
+                Assert.Equal("Enable", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Clipboard Context", row.Title);
+                Assert.Equal("Off", row.Value);
+                Assert.Equal("Turn on Clipboard Context when clipboard text should guide enhancement.", row.Detail);
+                Assert.Equal("Optional", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Context Source Order", row.Title);
+                Assert.Equal("App, OCR, selection, clipboard", row.Value);
+                Assert.Equal("Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            });
     }
 
     [Fact]
@@ -107,5 +131,46 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Region required"
                 && row.Detail == "Select a screen region before using constrained OCR context."
                 && row.StatusBadge == "Needs setup");
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Screen OCR"
+                && row.Value == "Select Region"
+                && row.Detail == "Choose an OCR region or switch back to full-screen OCR before relying on screen text."
+                && row.StatusBadge == "Setup");
+    }
+
+    [Fact]
+    public void Present_WithEnabledContext_ShowsReadyActions()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                IsEnhancementEnabled = true,
+                UseClipboardContext = true,
+                UseOcrContext = true,
+                UseOcrCaptureRegion = true,
+                OcrCaptureRegionWidth = 800,
+                OcrCaptureRegionHeight = 600
+            });
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Enhancement Pipeline"
+                && row.Value == "Enabled"
+                && row.Detail == "Context sources are appended when enhancement runs."
+                && row.StatusBadge == "Ready");
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Clipboard Context"
+                && row.Value == "Enabled"
+                && row.Detail == "Clipboard text is included only during enhancement prompt construction."
+                && row.StatusBadge == "On");
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Screen OCR"
+                && row.Value == "Region ready"
+                && row.Detail == "OCR uses the configured screen region."
+                && row.StatusBadge == "Ready");
     }
 }
