@@ -469,6 +469,22 @@
                                 Header="Trigger words"
                                 PlaceholderText="chat mode, email mode" />
                         </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="PromptIconTextBox"
+                                Grid.Column="0"
+                                Header="Prompt icon"
+                                PlaceholderText="doc.text.fill" />
+                            <TextBox
+                                x:Name="PromptDescriptionTextBox"
+                                Grid.Column="1"
+                                Header="Prompt description"
+                                PlaceholderText="Short description" />
+                        </Grid>
                         <TextBox
                             x:Name="PromptInstructionsTextBox"
                             Header="Prompt instructions"

@@ -443,10 +443,10 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Added dynamic OpenRouter model refresh through the OpenRouter `/api/v1/models` endpoint, sharing the provider-aware Enhancement refresh action.
 - Added Anthropic as a native Messages API enhancement provider with provider-specific Credential Manager keys and macOS-aligned Claude model choices.
 - Added Local CLI enhancement hooks that execute user-configured Windows commands with VoiceInk prompt environment variables and use stdout as the enhanced text.
+- Added prompt icon and description editing for custom prompts while keeping predefined prompt metadata read-only.
 
 Windows gaps:
 
-- Prompt template persistence.
 - Screen/OCR, browser URL, and deeper app-specific context capture.
 - Recorder prompt picker activation.
 - AI re-enhance from History.

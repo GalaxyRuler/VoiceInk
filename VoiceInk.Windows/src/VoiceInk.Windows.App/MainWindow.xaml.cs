@@ -6020,8 +6020,8 @@ public sealed partial class MainWindow : Window
                     existingPrompt?.Id ?? Guid.NewGuid(),
                     PromptTitleTextBox.Text,
                     PromptInstructionsTextBox.Text,
-                    existingPrompt?.Icon ?? "doc.text.fill",
-                    existingPrompt?.Description,
+                    PromptIconTextBox.Text,
+                    PromptDescriptionTextBox.Text,
                     PromptTriggerWordsTextBox.Text,
                     PromptUseSystemInstructionsCheckBox.IsChecked == true);
             }
@@ -6780,6 +6780,8 @@ public sealed partial class MainWindow : Window
         var prompt = SelectedEnhancementPrompt();
         promptEditorPromptId = prompt?.Id;
         PromptTitleTextBox.Text = prompt?.Title ?? string.Empty;
+        PromptIconTextBox.Text = prompt?.Icon ?? string.Empty;
+        PromptDescriptionTextBox.Text = prompt?.Description ?? string.Empty;
         PromptInstructionsTextBox.Text = prompt?.PromptText ?? string.Empty;
         PromptTriggerWordsTextBox.Text = prompt is null
             ? string.Empty
@@ -6794,6 +6796,8 @@ public sealed partial class MainWindow : Window
         EnhancementPromptComboBox.SelectedIndex = -1;
         suppressEnhancementPromptChanged = false;
         PromptTitleTextBox.Text = string.Empty;
+        PromptIconTextBox.Text = "doc.text.fill";
+        PromptDescriptionTextBox.Text = string.Empty;
         PromptInstructionsTextBox.Text = string.Empty;
         PromptTriggerWordsTextBox.Text = string.Empty;
         PromptUseSystemInstructionsCheckBox.IsChecked = true;
@@ -7897,6 +7901,8 @@ public sealed partial class MainWindow : Window
         ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         EnhancementPromptComboBox.IsEnabled = enhancementControlsEnabled;
         PromptTitleTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
+        PromptIconTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
+        PromptDescriptionTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
         PromptInstructionsTextBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
         PromptTriggerWordsTextBox.IsEnabled = enhancementControlsEnabled;
         PromptUseSystemInstructionsCheckBox.IsEnabled = enhancementControlsEnabled && !promptEditorIsPredefined;
