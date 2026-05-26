@@ -7,6 +7,17 @@ public interface IStreamingWebSocket : IAsyncDisposable
         string authorizationHeader,
         CancellationToken cancellationToken);
 
+    Task ConnectAsync(
+        Uri uri,
+        IReadOnlyDictionary<string, string> headers,
+        CancellationToken cancellationToken) =>
+        ConnectAsync(
+            uri,
+            headers.TryGetValue("Authorization", out var authorizationHeader)
+                ? authorizationHeader
+                : string.Empty,
+            cancellationToken);
+
     Task SendBinaryAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken);
 
     Task SendTextAsync(string text, CancellationToken cancellationToken);

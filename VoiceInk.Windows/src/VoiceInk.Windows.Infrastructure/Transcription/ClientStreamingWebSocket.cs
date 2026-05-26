@@ -21,6 +21,23 @@ public sealed class ClientStreamingWebSocket : IStreamingWebSocket
         await webSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task ConnectAsync(
+        Uri uri,
+        IReadOnlyDictionary<string, string> headers,
+        CancellationToken cancellationToken)
+    {
+        foreach (var header in headers)
+        {
+            if (!string.IsNullOrWhiteSpace(header.Key)
+                && !string.IsNullOrWhiteSpace(header.Value))
+            {
+                webSocket.Options.SetRequestHeader(header.Key, header.Value);
+            }
+        }
+
+        await webSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
+    }
+
     public Task SendBinaryAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
         webSocket.SendAsync(bytes, WebSocketMessageType.Binary, endOfMessage: true, cancellationToken).AsTask();
 

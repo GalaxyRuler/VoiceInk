@@ -266,6 +266,9 @@ public sealed partial class MainWindow : Window
                     () => new ClientStreamingWebSocket()),
                 new AssemblyAILiveTranscriptionPreviewService(
                     secretStore,
+                    () => new ClientStreamingWebSocket()),
+                new CartesiaLiveTranscriptionPreviewService(
+                    secretStore,
                     () => new ClientStreamingWebSocket())
             ]);
         transcriptionService = new TranscriptionServiceRouter(
