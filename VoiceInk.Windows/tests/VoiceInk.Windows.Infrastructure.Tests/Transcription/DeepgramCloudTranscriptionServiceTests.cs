@@ -63,6 +63,30 @@ public sealed class DeepgramCloudTranscriptionServiceTests
             handler.Requests[0].RequestUri?.ToString());
     }
 
+    [Fact]
+    public async Task TranscribeAsync_PreservesAdvancedEndpointQueryOptionsWithoutDuplicateDefaults()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(
+                HttpStatusCode.OK,
+                """{"results":{"channels":[{"alternatives":[{"transcript":"Advanced query"}]}]}}"""));
+        var service = new DeepgramCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "dg-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(
+                endpoint: "https://api.deepgram.com/v1/listen?smart_format=false&language=es&diarize_model=latest&paragraphs=true&utterances=true",
+                language: "en"),
+            CancellationToken.None);
+
+        Assert.Equal(
+            "https://api.deepgram.com/v1/listen?smart_format=false&language=es&diarize_model=latest&paragraphs=true&utterances=true&model=nova-3",
+            handler.Requests[0].RequestUri?.ToString());
+    }
+
     [Theory]
     [InlineData("", "nova-3", "Cloud transcription endpoint is invalid.")]
     [InlineData("https://api.deepgram.com/v1/listen", "", "Cloud transcription model is required.")]

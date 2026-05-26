@@ -86,9 +86,14 @@ public sealed class DeepgramCloudTranscriptionService(
         }
 
         queryParts.Add(QueryParameter("model", options.CloudModel.Trim()));
-        queryParts.Add(QueryParameter("smart_format", "true"));
+        if (!HasQueryParameter(endpoint.Query, "smart_format"))
+        {
+            queryParts.Add(QueryParameter("smart_format", "true"));
+        }
+
         if (!string.IsNullOrWhiteSpace(options.Language)
-            && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase))
+            && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase)
+            && !HasQueryParameter(endpoint.Query, "language"))
         {
             queryParts.Add(QueryParameter("language", options.Language.Trim()));
         }
@@ -146,6 +151,20 @@ public sealed class DeepgramCloudTranscriptionService(
 
     private static string QueryParameter(string name, string value) =>
         $"{Uri.EscapeDataString(name)}={Uri.EscapeDataString(value)}";
+
+    private static bool HasQueryParameter(string query, string name)
+    {
+        var trimmed = query.TrimStart('?');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return false;
+        }
+
+        return trimmed
+            .Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => part.Split('=', 2)[0])
+            .Any(part => string.Equals(Uri.UnescapeDataString(part), name, StringComparison.OrdinalIgnoreCase));
+    }
 
     private static string SanitizedHttpError(HttpStatusCode statusCode) =>
         $"Deepgram transcription provider returned HTTP {(int)statusCode}.";

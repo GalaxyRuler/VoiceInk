@@ -405,6 +405,7 @@ Deepgram cloud transcription and live preview slice completed on 2026-05-25:
 - Added a direct Deepgram batch transcription adapter using `Authorization: Token ...`, `smart_format=true`, optional language, raw WAV content, sanitized HTTP/JSON errors, and Deepgram transcript extraction.
 - Routed Deepgram final transcription separately from the generic OpenAI-compatible multipart adapter while preserving the shared Core transcription interface for dictation, Transcribe Audio, and History Retry.
 - Added a Deepgram websocket live preview adapter for recorder partials when live preview is enabled.
+- Preserved advanced Deepgram endpoint query options such as `smart_format`, `language`, `diarize_model`, `paragraphs`, and `utterances`, while avoiding duplicate default `smart_format` or `language` parameters.
 
 Windows gaps:
 
