@@ -21,6 +21,36 @@ public sealed class ModelLibraryOverviewPresenterTests
         Assert.Equal("No default local model selected.", presentation.DefaultModelLabel);
         Assert.Equal("Import a whisper.cpp .bin file or download a recommended model to start private local transcription.", presentation.CleanupHint);
         Assert.Collection(
+            presentation.StorageGuidanceRows,
+            row =>
+            {
+                Assert.Equal("Downloaded Models", row.Title);
+                Assert.Equal("App-local", row.Value);
+                Assert.Equal("Catalog downloads are stored under this Windows profile's VoiceInk Models folder.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Imported Models", row.Title);
+                Assert.Equal("References", row.Value);
+                Assert.Equal("Imported .bin files stay where you selected them; VoiceInk stores only the local reference.", row.Detail);
+                Assert.Equal("User-owned", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Settings Backup", row.Title);
+                Assert.Equal("No binaries", row.Value);
+                Assert.Equal("Backups include model references but do not copy large GGML model files.", row.Detail);
+                Assert.Equal("Paths only", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Warmup", row.Title);
+                Assert.Equal("After selection", row.Value);
+                Assert.Equal("Prewarm loads the selected local model when available to reduce first-use delay.", row.Detail);
+                Assert.Equal("Optional", row.StatusBadge);
+            });
+        Assert.Collection(
             presentation.ActionRows,
             row =>
             {

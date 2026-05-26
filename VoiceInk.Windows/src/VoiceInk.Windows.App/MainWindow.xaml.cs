@@ -7184,6 +7184,7 @@ public sealed partial class MainWindow : Window
         ModelLibraryDefaultTextBlock.Text = modelLibraryOverview.DefaultModelLabel;
         ModelLibraryCleanupHintTextBlock.Text = modelLibraryOverview.CleanupHint;
         ModelLibraryActionListView.ItemsSource = modelLibraryOverview.ActionRows;
+        ModelLibraryStorageGuidanceListView.ItemsSource = modelLibraryOverview.StorageGuidanceRows;
 
         var health = ModelPathHealth(modelPath);
         var healthPresentation = LocalWhisperModelHealthPresenter.Present(health);

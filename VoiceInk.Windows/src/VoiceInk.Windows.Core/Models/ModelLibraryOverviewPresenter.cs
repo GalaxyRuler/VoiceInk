@@ -5,7 +5,14 @@ public sealed record ModelLibraryOverviewPresentation(
     string Summary,
     string DefaultModelLabel,
     string CleanupHint,
+    IReadOnlyList<ModelLibraryStorageGuidanceRow> StorageGuidanceRows,
     IReadOnlyList<ModelLibraryActionRow> ActionRows);
+
+public sealed record ModelLibraryStorageGuidanceRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
 
 public sealed record ModelLibraryActionRow(
     string Title,
@@ -40,6 +47,7 @@ public static class ModelLibraryOverviewPresenter
             $"{availableCount} of {items.Length} catalog models available on this device. {customModelCount} {ImportedModelText(customModelCount)} ready. {recommendedCount} recommended starter models are highlighted.",
             DefaultModelLabel(defaultModel, customDefaultModel),
             CleanupHint(availableCount + customModelCount, unavailableImportedModelCount),
+            StorageGuidanceRows(),
             ActionRows(
                 availableCount,
                 items.Length,
@@ -47,6 +55,30 @@ public static class ModelLibraryOverviewPresenter
                 defaultDisplayName,
                 unavailableImportedModelCount));
     }
+
+    private static IReadOnlyList<ModelLibraryStorageGuidanceRow> StorageGuidanceRows() =>
+    [
+        new(
+            "Downloaded Models",
+            "App-local",
+            "Catalog downloads are stored under this Windows profile's VoiceInk Models folder.",
+            "Local"),
+        new(
+            "Imported Models",
+            "References",
+            "Imported .bin files stay where you selected them; VoiceInk stores only the local reference.",
+            "User-owned"),
+        new(
+            "Settings Backup",
+            "No binaries",
+            "Backups include model references but do not copy large GGML model files.",
+            "Paths only"),
+        new(
+            "Warmup",
+            "After selection",
+            "Prewarm loads the selected local model when available to reduce first-use delay.",
+            "Optional")
+    ];
 
     private static IReadOnlyList<ModelLibraryActionRow> ActionRows(
         int availableCatalogCount,
