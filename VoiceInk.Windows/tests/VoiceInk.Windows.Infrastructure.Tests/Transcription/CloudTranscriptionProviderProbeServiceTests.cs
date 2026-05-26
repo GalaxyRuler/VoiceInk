@@ -100,6 +100,37 @@ public sealed class CloudTranscriptionProviderProbeServiceTests
     }
 
     [Fact]
+    public async Task ProbeAsync_SpeechmaticsUsesJobsEndpointAndBearerHeader()
+    {
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "speechmatics-secret" });
+
+        var result = await service.ProbeAsync(Settings("speechmatics"), CancellationToken.None);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("https://eu1.asr.api.speechmatics.com/v2/jobs?limit=1", handler.LastRequest?.RequestUri?.ToString());
+        Assert.Equal("Bearer", handler.LastRequest?.Headers.Authorization?.Scheme);
+        Assert.Equal("speechmatics-secret", handler.LastRequest?.Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task ProbeAsync_CartesiaUsesSafeMetadataEndpointAndVersionedBearerHeader()
+    {
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "cartesia-secret" });
+
+        var result = await service.ProbeAsync(Settings("cartesia"), CancellationToken.None);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("https://api.cartesia.ai/datasets/?limit=1", handler.LastRequest?.RequestUri?.ToString());
+        Assert.Equal("Bearer", handler.LastRequest?.Headers.Authorization?.Scheme);
+        Assert.Equal("cartesia-secret", handler.LastRequest?.Headers.Authorization?.Parameter);
+        Assert.NotNull(handler.LastRequest);
+        Assert.True(handler.LastRequest.Headers.TryGetValues("Cartesia-Version", out var values));
+        Assert.Equal("2026-03-01", Assert.Single(values!));
+    }
+
+    [Fact]
     public async Task ProbeAsync_MissingKeyDoesNotSendHttp()
     {
         var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
@@ -134,12 +165,16 @@ public sealed class CloudTranscriptionProviderProbeServiceTests
     }
 
     [Fact]
-    public async Task ProbeAsync_UnsupportedProviderReturnsClearMessageWithoutHttp()
+    public async Task ProbeAsync_CustomProviderWithUnsupportedEndpointReturnsClearMessageWithoutHttp()
     {
         var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "cartesia-secret" });
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "custom-secret" });
 
-        var result = await service.ProbeAsync(Settings("cartesia"), CancellationToken.None);
+        var result = await service.ProbeAsync(
+            Settings(
+                "custom",
+                endpoint: "https://api.example.test/transcribe"),
+            CancellationToken.None);
 
         Assert.False(result.IsSuccessful);
         Assert.Contains("not available", result.Message);

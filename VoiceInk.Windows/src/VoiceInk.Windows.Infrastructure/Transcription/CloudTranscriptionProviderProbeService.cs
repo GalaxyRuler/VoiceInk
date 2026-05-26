@@ -93,6 +93,21 @@ public sealed class CloudTranscriptionProviderProbeService(HttpClient httpClient
             return request;
         }
 
+        if (preset.Id == TranscriptionProviderPresetCatalog.Speechmatics.Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://eu1.asr.api.speechmatics.com/v2/jobs?limit=1");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            return request;
+        }
+
+        if (preset.Id == TranscriptionProviderPresetCatalog.Cartesia.Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.cartesia.ai/datasets/?limit=1");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            request.Headers.TryAddWithoutValidation("Cartesia-Version", "2026-03-01");
+            return request;
+        }
+
         if (OpenAICompatibleProbeProviders.Contains(preset.Id))
         {
             var endpoint = preset.Id == TranscriptionProviderPresetCatalog.Custom.Id
