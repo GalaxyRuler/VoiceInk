@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -11,9 +12,11 @@ namespace VoiceInk.Windows.Infrastructure.Enhancement;
 
 public sealed class OpenAICompatibleTextEnhancementService(
     HttpClient httpClient,
-    ISecretStore secretStore) : ITextEnhancementService
+    ISecretStore secretStore,
+    ILocalCliProcessRunner? localCliProcessRunner = null) : ITextEnhancementService
 {
     public const string SecretName = EnhancementConfiguration.LegacyCustomSecretName;
+    private readonly ILocalCliProcessRunner localCliProcessRunner = localCliProcessRunner ?? new LocalCliProcessRunner();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -24,6 +27,13 @@ public sealed class OpenAICompatibleTextEnhancementService(
         TextEnhancementRequest request,
         CancellationToken cancellationToken)
     {
+        var provider = EnhancementProviderPresetCatalog.Resolve(request.ProviderId);
+        var providerName = EnhancementConfiguration.ProviderNameFor(provider.Id);
+        if (provider.Id == EnhancementProviderPresetCatalog.LocalCli.Id)
+        {
+            return await RunLocalCliAsync(request, providerName, cancellationToken);
+        }
+
         if (!EnhancementConfiguration.TryCreateEndpoint(
             request.Endpoint,
             out var endpoint,
@@ -37,8 +47,6 @@ public sealed class OpenAICompatibleTextEnhancementService(
             throw new InvalidOperationException("AI enhancement model is required.");
         }
 
-        var provider = EnhancementProviderPresetCatalog.Resolve(request.ProviderId);
-        var providerName = EnhancementConfiguration.ProviderNameFor(provider.Id);
         var apiKey = provider.RequiresApiKey
             ? await ReadApiKeyAsync(provider.Id, cancellationToken)
             : null;
@@ -78,6 +86,71 @@ public sealed class OpenAICompatibleTextEnhancementService(
 
         throw new InvalidOperationException("AI enhancement failed after retrying transient provider errors.");
     }
+
+    private async Task<TextEnhancementResult> RunLocalCliAsync(
+        TextEnhancementRequest request,
+        string providerName,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Endpoint))
+        {
+            throw new InvalidOperationException("Local CLI command is not configured.");
+        }
+
+        var fullPrompt = MakeLocalCliFullPrompt(request.SystemMessage, request.UserMessage);
+        var startedAt = Stopwatch.GetTimestamp();
+        var result = await localCliProcessRunner.RunAsync(
+            new LocalCliProcessRequest(
+                request.Endpoint.Trim(),
+                request.SystemMessage,
+                request.UserMessage,
+                fullPrompt,
+                request.Timeout),
+            cancellationToken);
+        if (result.TimedOut)
+        {
+            throw new InvalidOperationException(
+                $"Local CLI command timed out after {Math.Ceiling(request.Timeout.TotalSeconds):0} seconds.");
+        }
+
+        var stdout = result.Stdout.Trim();
+        var stderr = result.Stderr.Trim();
+        if (result.ExitCode != 0)
+        {
+            if (result.ExitCode == 127 || stderr.Contains("not recognized", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Local CLI command was not found. Details: {(stderr.Length == 0 ? request.Endpoint.Trim() : stderr)}");
+            }
+
+            throw new InvalidOperationException(
+                stderr.Length == 0
+                    ? $"Local CLI command failed with exit code {result.ExitCode}."
+                    : $"Local CLI command failed with exit code {result.ExitCode}: {stderr}");
+        }
+
+        if (stdout.Length == 0)
+        {
+            throw new InvalidOperationException("Local CLI command returned empty output.");
+        }
+
+        return new TextEnhancementResult(
+            stdout,
+            providerName,
+            string.IsNullOrWhiteSpace(request.Model) ? "local-cli" : request.Model,
+            Stopwatch.GetElapsedTime(startedAt));
+    }
+
+    private static string MakeLocalCliFullPrompt(string systemPrompt, string userPrompt) =>
+        $"""
+        <SYSTEM_PROMPT>
+        {systemPrompt}
+        </SYSTEM_PROMPT>
+
+        <USER_PROMPT>
+        {userPrompt}
+        </USER_PROMPT>
+        """;
 
     private async Task<TextEnhancementResult> SendOnceAsync(
         Uri endpoint,
@@ -275,4 +348,92 @@ public sealed class OpenAICompatibleTextEnhancementService(
         [property: JsonPropertyName("content")] string Content);
 
     private sealed class TransientEnhancementException(string message) : Exception(message);
+}
+
+public interface ILocalCliProcessRunner
+{
+    Task<LocalCliProcessResult> RunAsync(
+        LocalCliProcessRequest request,
+        CancellationToken cancellationToken);
+}
+
+public sealed record LocalCliProcessRequest(
+    string CommandTemplate,
+    string SystemPrompt,
+    string UserPrompt,
+    string FullPrompt,
+    TimeSpan Timeout);
+
+public sealed record LocalCliProcessResult(
+    int ExitCode,
+    string Stdout,
+    string Stderr,
+    bool TimedOut);
+
+public sealed class LocalCliProcessRunner : ILocalCliProcessRunner
+{
+    public async Task<LocalCliProcessResult> RunAsync(
+        LocalCliProcessRequest request,
+        CancellationToken cancellationToken)
+    {
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo("cmd.exe")
+        {
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        process.StartInfo.ArgumentList.Add("/S");
+        process.StartInfo.ArgumentList.Add("/C");
+        process.StartInfo.ArgumentList.Add(request.CommandTemplate);
+        process.StartInfo.Environment["VOICEINK_SYSTEM_PROMPT"] = request.SystemPrompt;
+        process.StartInfo.Environment["VOICEINK_USER_PROMPT"] = request.UserPrompt;
+        process.StartInfo.Environment["VOICEINK_FULL_PROMPT"] = request.FullPrompt;
+
+        try
+        {
+            process.Start();
+        }
+        catch (Win32Exception ex)
+        {
+            return new LocalCliProcessResult(127, string.Empty, ex.Message, TimedOut: false);
+        }
+
+        await process.StandardInput.WriteAsync(request.FullPrompt.AsMemory(), cancellationToken);
+        process.StandardInput.Close();
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        var waitTask = process.WaitForExitAsync(cancellationToken);
+        var timeoutTask = Task.Delay(request.Timeout, cancellationToken);
+        if (await Task.WhenAny(waitTask, timeoutTask) == timeoutTask)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            TryKill(process);
+            return new LocalCliProcessResult(0, string.Empty, string.Empty, TimedOut: true);
+        }
+
+        await waitTask;
+        return new LocalCliProcessResult(
+            process.ExitCode,
+            await stdoutTask,
+            await stderrTask,
+            TimedOut: false);
+    }
+
+    private static void TryKill(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        }
+        catch
+        {
+        }
+    }
 }

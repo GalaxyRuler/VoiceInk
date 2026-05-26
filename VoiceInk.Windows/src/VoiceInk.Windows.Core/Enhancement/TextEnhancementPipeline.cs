@@ -152,9 +152,17 @@ public sealed class TextEnhancementPipeline
         }
     }
 
-    private static bool IsProviderConfigured(AppSettings settings) =>
-        !string.IsNullOrWhiteSpace(settings.EnhancementEndpoint)
-        && !string.IsNullOrWhiteSpace(settings.EnhancementModel);
+    private static bool IsProviderConfigured(AppSettings settings)
+    {
+        var provider = EnhancementProviderPresetCatalog.Resolve(settings.EnhancementProviderId);
+        if (provider.Id == EnhancementProviderPresetCatalog.LocalCli.Id)
+        {
+            return !string.IsNullOrWhiteSpace(settings.EnhancementEndpoint);
+        }
+
+        return !string.IsNullOrWhiteSpace(settings.EnhancementEndpoint)
+            && !string.IsNullOrWhiteSpace(settings.EnhancementModel);
+    }
 
     private static bool ShouldSkipShortEnhancement(
         AppSettings settings,

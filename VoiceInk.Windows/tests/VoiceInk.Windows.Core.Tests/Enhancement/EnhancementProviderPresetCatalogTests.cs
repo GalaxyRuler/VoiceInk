@@ -57,6 +57,12 @@ public sealed class EnhancementProviderPresetCatalogTests
             && item.Endpoint == "http://localhost:11434/v1/chat/completions"
             && item.DefaultModel == "mistral"
             && !item.RequiresApiKey);
+        Assert.Contains(presets, item =>
+            item.Id == "local-cli"
+            && item.DisplayName == "Local CLI"
+            && item.Endpoint.Length == 0
+            && item.DefaultModel == "local-cli"
+            && !item.RequiresApiKey);
     }
 
     [Theory]
@@ -64,6 +70,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [InlineData("missing", "custom")]
     [InlineData("GROQ", "groq")]
     [InlineData("ollama", "ollama")]
+    [InlineData("local-cli", "local-cli")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, EnhancementProviderPresetCatalog.Resolve(id).Id);
@@ -95,6 +102,7 @@ public sealed class EnhancementProviderPresetCatalogTests
             ["VoiceInk.Windows.Enhancement.OpenAICompatible.Groq.ApiKey"],
             EnhancementConfiguration.SecretNamesForProvider("groq"));
         Assert.Empty(EnhancementConfiguration.SecretNamesForProvider("ollama"));
+        Assert.Empty(EnhancementConfiguration.SecretNamesForProvider("local-cli"));
     }
 
     [Theory]
@@ -102,6 +110,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [InlineData("groq", "groq")]
     [InlineData("gemini", "gemini")]
     [InlineData("anthropic", "anthropic")]
+    [InlineData("local-cli", "local-cli")]
     [InlineData("missing", "openai-compatible")]
     public void ProviderNameFor_ReturnsStableHistoryMetadata(string providerId, string expected)
     {
@@ -145,5 +154,21 @@ public sealed class EnhancementProviderPresetCatalogTests
         Assert.Equal(
             expectedMessage,
             EnhancementConfiguration.ValidateRequiredSettings(isEnabled, endpoint, model));
+    }
+
+    [Theory]
+    [InlineData(false, "", "", null)]
+    [InlineData(true, "", "local-cli", "AI enhancement endpoint and model are required.")]
+    [InlineData(true, "claude -p \"%VOICEINK_FULL_PROMPT%\"", "", null)]
+    [InlineData(true, "claude -p \"%VOICEINK_FULL_PROMPT%\"", "local-cli", null)]
+    public void ValidateRequiredSettings_AllowsLocalCliCommandTemplates(
+        bool isEnabled,
+        string endpoint,
+        string model,
+        string? expectedMessage)
+    {
+        Assert.Equal(
+            expectedMessage,
+            EnhancementConfiguration.ValidateRequiredSettings(isEnabled, endpoint, model, "local-cli"));
     }
 }

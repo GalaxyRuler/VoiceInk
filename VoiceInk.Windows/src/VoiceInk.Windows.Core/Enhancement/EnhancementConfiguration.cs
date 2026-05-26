@@ -18,8 +18,17 @@ public static class EnhancementConfiguration
     public static string? ValidateRequiredSettings(
         bool isEnabled,
         string endpoint,
-        string model)
+        string model,
+        string? providerId = null)
     {
+        var preset = EnhancementProviderPresetCatalog.Resolve(providerId);
+        if (preset.Id == EnhancementProviderPresetCatalog.LocalCli.Id)
+        {
+            return !isEnabled || !string.IsNullOrWhiteSpace(endpoint)
+                ? null
+                : ProviderRequiredMessage;
+        }
+
         if (!string.IsNullOrWhiteSpace(endpoint))
         {
             var endpointError = ValidateEndpoint(endpoint);
@@ -97,6 +106,7 @@ public static class EnhancementConfiguration
             "openrouter" => "OpenRouter",
             "mistral" => "Mistral",
             "ollama" => "Ollama",
+            "local-cli" => "LocalCLI",
             _ => "Custom"
         };
 

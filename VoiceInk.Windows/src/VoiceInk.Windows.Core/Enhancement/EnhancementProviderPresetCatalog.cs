@@ -111,6 +111,14 @@ public static class EnhancementProviderPresetCatalog
         [],
         RequiresApiKey: false);
 
+    public static EnhancementProviderPreset LocalCli { get; } = new(
+        "local-cli",
+        "Local CLI",
+        string.Empty,
+        "local-cli",
+        [],
+        RequiresApiKey: false);
+
     public static IReadOnlyList<EnhancementProviderPreset> All { get; } =
     [
         Custom,
@@ -121,7 +129,8 @@ public static class EnhancementProviderPresetCatalog
         OpenAI,
         OpenRouter,
         Mistral,
-        Ollama
+        Ollama,
+        LocalCli
     ];
 
     public static EnhancementProviderPreset Resolve(string? id) =>

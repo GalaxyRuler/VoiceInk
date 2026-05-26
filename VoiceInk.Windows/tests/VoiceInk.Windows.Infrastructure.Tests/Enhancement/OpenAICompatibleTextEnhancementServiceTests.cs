@@ -176,6 +176,101 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_LocalCliProviderRunsCommandWithPromptEnvironment()
+    {
+        var runner = new FakeLocalCliRunner(new LocalCliProcessResult(0, "Local CLI text", string.Empty, TimedOut: false));
+        var secrets = new FakeSecretStore { Secret = "unused-secret" };
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(new QueueHttpMessageHandler()),
+            secrets,
+            runner);
+
+        var result = await service.EnhanceAsync(
+            Request(
+                endpoint: "claude -p \"%VOICEINK_FULL_PROMPT%\"",
+                model: "local-cli",
+                providerId: "local-cli"),
+            CancellationToken.None);
+
+        Assert.Equal("Local CLI text", result.Text);
+        Assert.Equal("local-cli", result.ProviderName);
+        Assert.Equal("local-cli", result.ModelName);
+        Assert.Empty(secrets.ReadNames);
+        Assert.NotNull(runner.Request);
+        Assert.Equal("claude -p \"%VOICEINK_FULL_PROMPT%\"", runner.Request.CommandTemplate);
+        Assert.Equal("system prompt", runner.Request.SystemPrompt);
+        Assert.Equal("user prompt", runner.Request.UserPrompt);
+        Assert.Contains("<SYSTEM_PROMPT>", runner.Request.FullPrompt);
+        Assert.Contains("system prompt", runner.Request.FullPrompt);
+        Assert.Contains("<USER_PROMPT>", runner.Request.FullPrompt);
+        Assert.Contains("user prompt", runner.Request.FullPrompt);
+        Assert.Equal(TimeSpan.FromSeconds(7), runner.Request.Timeout);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_LocalCliProviderReportsEmptyOutput()
+    {
+        var runner = new FakeLocalCliRunner(new LocalCliProcessResult(0, "", "", TimedOut: false));
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(new QueueHttpMessageHandler()),
+            new FakeSecretStore(),
+            runner);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.EnhanceAsync(
+                Request(
+                    endpoint: "voiceink-local-test",
+                    model: "local-cli",
+                    providerId: "local-cli",
+                    maxRetries: 1),
+                CancellationToken.None));
+
+        Assert.Equal("Local CLI command returned empty output.", ex.Message);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_LocalCliProviderReportsNonzeroExit()
+    {
+        var runner = new FakeLocalCliRunner(new LocalCliProcessResult(2, "ignored", "bad stderr", TimedOut: false));
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(new QueueHttpMessageHandler()),
+            new FakeSecretStore(),
+            runner);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.EnhanceAsync(
+                Request(
+                    endpoint: "voiceink-local-test",
+                    model: "local-cli",
+                    providerId: "local-cli",
+                    maxRetries: 1),
+                CancellationToken.None));
+
+        Assert.Equal("Local CLI command failed with exit code 2: bad stderr", ex.Message);
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_LocalCliProviderReportsTimeout()
+    {
+        var runner = new FakeLocalCliRunner(new LocalCliProcessResult(0, string.Empty, string.Empty, TimedOut: true));
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(new QueueHttpMessageHandler()),
+            new FakeSecretStore(),
+            runner);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.EnhanceAsync(
+                Request(
+                    endpoint: "voiceink-local-test",
+                    model: "local-cli",
+                    providerId: "local-cli",
+                    maxRetries: 1),
+                CancellationToken.None));
+
+        Assert.Equal("Local CLI command timed out after 7 seconds.", ex.Message);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_MissingApiKeyFailsBeforeHttp()
     {
         var handler = new QueueHttpMessageHandler(
@@ -312,5 +407,18 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
 
         public Task<bool> HasSecretAsync(string name, CancellationToken cancellationToken) =>
             Task.FromResult(Secrets.ContainsKey(name) || !string.IsNullOrWhiteSpace(Secret));
+    }
+
+    private sealed class FakeLocalCliRunner(LocalCliProcessResult result) : ILocalCliProcessRunner
+    {
+        public LocalCliProcessRequest? Request { get; private set; }
+
+        public Task<LocalCliProcessResult> RunAsync(
+            LocalCliProcessRequest request,
+            CancellationToken cancellationToken)
+        {
+            Request = request;
+            return Task.FromResult(result);
+        }
     }
 }

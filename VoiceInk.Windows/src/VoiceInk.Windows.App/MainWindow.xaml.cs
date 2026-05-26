@@ -5696,7 +5696,8 @@ public sealed partial class MainWindow : Window
             var configurationError = EnhancementConfiguration.ValidateRequiredSettings(
                 EnhancementEnabledCheckBox.IsChecked == true,
                 EnhancementEndpointTextBox.Text,
-                EnhancementModelTextBox.Text);
+                EnhancementModelTextBox.Text,
+                SelectedEnhancementProviderId());
             if (configurationError is not null)
             {
                 RefreshUiFromControllerState(configurationError);
