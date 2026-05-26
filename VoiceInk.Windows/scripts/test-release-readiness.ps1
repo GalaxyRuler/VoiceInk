@@ -71,6 +71,11 @@ Write-Host "  [ ] Timestamp signed packages with a trusted timestamp authority s
 Write-Host "  [ ] Trust prerequisite: signed MSIX install smoke must run only on a prepared test machine where the signing certificate is already trusted, for example in Trusted People."
 Write-Host "  [ ] Troubleshooting: inspect Microsoft-Windows-AppxDeployment-Server and AppxPackaging operational logs for deployment, signature, and manifest failures."
 Write-Host ""
+Write-Host "WinApp CLI local signing reference:"
+Write-Host "  [ ] Optional local development certificate flow can use winapp cert generate against Package.appxmanifest on a disposable test machine."
+Write-Host "  [ ] Optional local development signing can use winapp sign against a built MSIX after verifying the manifest publisher and certificate subject."
+Write-Host "  [ ] Certificate trust remains an external test-machine prerequisite; this readiness report only prints the reference and never creates or imports certificates."
+Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
 if ($missingCount -gt 0) {

@@ -241,6 +241,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("CN=VoiceInkOpenSource", script);
         Assert.Contains("Timestamp signed packages", script);
         Assert.Contains("Trusted People", script);
+        Assert.Contains("WinApp CLI local signing reference", script);
+        Assert.Contains("winapp cert generate", script);
+        Assert.Contains("winapp sign", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);
         Assert.Contains("This script does not create or import certificates", script);
