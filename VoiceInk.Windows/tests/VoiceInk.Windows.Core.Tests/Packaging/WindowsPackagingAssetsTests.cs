@@ -137,6 +137,34 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void DevZipInstallScripts_ArePerUserAndRequireExplicitExecute()
+    {
+        var installScriptPath = SourcePath("VoiceInk.Windows", "scripts", "install-dev-zip.ps1");
+        var uninstallScriptPath = SourcePath("VoiceInk.Windows", "scripts", "uninstall-dev-zip.ps1");
+        var installScript = File.ReadAllText(installScriptPath);
+        var uninstallScript = File.ReadAllText(uninstallScriptPath);
+
+        Assert.Contains("Execute", installScript);
+        Assert.Contains("Execute", uninstallScript);
+        Assert.Contains("Start Menu", installScript);
+        Assert.Contains("CreateShortcut", installScript);
+        Assert.Contains("LocalAppData", installScript);
+        Assert.Contains("VoiceInk.Windows.App.exe", installScript);
+        Assert.Contains("Dev ZIP install plan", installScript);
+        Assert.Contains("Dev ZIP uninstall plan", uninstallScript);
+        Assert.Contains("Refusing to install from a package outside artifact root", installScript);
+        Assert.Contains("Refusing to uninstall path outside LocalAppData", uninstallScript);
+
+        Assert.DoesNotContain("Add-AppxPackage", installScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Remove-AppxPackage", uninstallScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ProgramData", installScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Program Files", installScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("HKLM", installScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", installScript, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", installScript, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void MsixPackageSmokeScript_ValidatesPackageContentsWithoutInstalling()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-msix-package.ps1");

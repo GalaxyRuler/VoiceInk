@@ -105,6 +105,27 @@ The ZIP is written to `VoiceInk.Windows\artifacts\dev-zip\VoiceInk-Windows-dev-w
 
 This dev ZIP is for source-built testing. It does not create Start Menu shortcuts, register uninstall entries, sign binaries, or install an MSIX/package identity.
 
+For a per-user source-built install from the dev ZIP, print the install plan first:
+
+```powershell
+.\VoiceInk.Windows\scripts\install-dev-zip.ps1 -PackagePath VoiceInk.Windows\artifacts\dev-zip\VoiceInk-Windows-dev-win-x64.zip
+```
+
+Then run the bounded current-user install only when you are ready to extract under `%LocalAppData%` and create a Start Menu shortcut:
+
+```powershell
+.\VoiceInk.Windows\scripts\install-dev-zip.ps1 -PackagePath VoiceInk.Windows\artifacts\dev-zip\VoiceInk-Windows-dev-win-x64.zip -Execute
+```
+
+The matching uninstall helper is also plan-first:
+
+```powershell
+.\VoiceInk.Windows\scripts\uninstall-dev-zip.ps1
+.\VoiceInk.Windows\scripts\uninstall-dev-zip.ps1 -Execute
+```
+
+These dev ZIP install helpers do not create certificates, import certificates, write machine-wide install locations, or install MSIX packages.
+
 ### Package a Signed MSIX
 
 The Windows fork also includes the open-source MSIX packaging foundation: `VoiceInk.Windows\src\VoiceInk.Windows.App\Package.appxmanifest` plus a repo-local packaging script. MSIX packages must be signed. The repo does not create certificates, import certificates, or store signing secrets; provide a maintainer-owned `.pfx` when building a package:

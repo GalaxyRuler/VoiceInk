@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [###################-] 93%
+VoiceInk Windows parity  [###################-] 94%
 ```
 
 ## Area Bars
@@ -29,25 +29,25 @@ VoiceInk Windows parity  [###################-] 93%
 | Settings | 74% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 74% | `[###############-----]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI remains. |
 | Onboarding | 70% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer setup polish remains. |
-| Packaging | 52% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke, shortcut registration, and release signing flow remain. |
+| Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows recording shortcut modes  [####################] 100%
+Windows Dev ZIP per-user install  [####################] 100%
 ```
 
 Completed:
 
-- Added persisted primary and secondary recording shortcut modes.
-- Added Settings selectors for Toggle, Push to Talk, and Hybrid.
-- Added low-level key-down/key-up handling for recording shortcuts.
-- Preserved `RegisterHotKey` behavior for utility shortcuts.
-- Added focused Core tests for shortcut mode normalization and registration metadata.
+- Added a plan-by-default per-user Dev ZIP install helper.
+- Added a matching plan-by-default uninstall helper.
+- Bounded package input to `VoiceInk.Windows\artifacts`.
+- Bounded install/uninstall mutation to `%LocalAppData%` and current-user Start Menu shortcuts.
+- Added focused packaging asset tests.
 
 ## Near-Term Priority
 
-1. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
+1. Continue packaging from per-user Dev ZIP install to actual signed MSIX install/uninstall smoke and release signing flow when a trusted signing setup is available.
 2. Add modifier-only shortcut compatibility and mini-recorder numeric prompt/Power Mode shortcuts where Windows can support them safely.
 3. Add richer cloud-provider live smoke documentation for optional user-owned API keys and models.
 4. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.
