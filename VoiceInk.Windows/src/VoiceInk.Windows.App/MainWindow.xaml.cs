@@ -171,6 +171,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
+    private IReadOnlyList<ScreenCaptureDisplay> ocrDisplays = [];
     private string customStartSoundPath = string.Empty;
     private string customStopSoundPath = string.Empty;
     private bool isStarting;
@@ -2059,6 +2060,7 @@ public sealed partial class MainWindow : Window
         OcrRegionTopNumberBox.Value = settings.OcrCaptureRegionTop;
         OcrRegionWidthNumberBox.Value = settings.OcrCaptureRegionWidth;
         OcrRegionHeightNumberBox.Value = settings.OcrCaptureRegionHeight;
+        RefreshOcrDisplayChoices();
         suppressEnhancementPresetChanged = true;
         SelectEnhancementPreset(settings.EnhancementProviderId);
         suppressEnhancementPresetChanged = false;
@@ -2144,6 +2146,22 @@ public sealed partial class MainWindow : Window
         foreach (var section in presentation.Sections)
         {
             SectionDescriptionTextBlock(section.Key).Text = section.Description;
+        }
+    }
+
+    private void RefreshOcrDisplayChoices()
+    {
+        try
+        {
+            ocrDisplays = ScreenCaptureDisplayCatalog.FromWindowsScreens();
+            OcrDisplayComboBox.ItemsSource = ocrDisplays;
+            OcrDisplayComboBox.SelectedIndex = ocrDisplays.Count > 0 ? 0 : -1;
+        }
+        catch (Exception ex)
+        {
+            ocrDisplays = [];
+            OcrDisplayComboBox.ItemsSource = null;
+            OcrDisplayComboBox.PlaceholderText = $"Displays unavailable: {ex.Message}";
         }
     }
 
@@ -8313,6 +8331,7 @@ public sealed partial class MainWindow : Window
         OcrRegionTopNumberBox.IsEnabled = ocrRegionControlsEnabled;
         OcrRegionWidthNumberBox.IsEnabled = ocrRegionControlsEnabled;
         OcrRegionHeightNumberBox.IsEnabled = ocrRegionControlsEnabled;
+        OcrDisplayComboBox.IsEnabled = enhancementControlsEnabled && ocrDisplays.Count > 0;
         PickOcrRegionButton.IsEnabled = enhancementControlsEnabled;
         EnhancementProviderPresetComboBox.IsEnabled = enhancementControlsEnabled;
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
@@ -8921,7 +8940,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            var picker = new OcrRegionPickerWindow();
+            var picker = new OcrRegionPickerWindow(OcrDisplayComboBox.SelectedItem as ScreenCaptureDisplay);
             var region = await picker.PickAsync();
             if (region is null)
             {

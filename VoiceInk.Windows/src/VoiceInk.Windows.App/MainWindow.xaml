@@ -374,10 +374,24 @@
                             x:Name="UseOcrCaptureRegionCheckBox"
                             Content="Constrain OCR Region"
                             Click="OcrContextControl_Click" />
-                        <Button
-                            x:Name="PickOcrRegionButton"
-                            Content="Select Region"
-                            Click="PickOcrRegionButton_Click" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox
+                                x:Name="OcrDisplayComboBox"
+                                Grid.Column="0"
+                                DisplayMemberPath="DisplayName"
+                                Header="OCR Display" />
+                            <Button
+                                x:Name="PickOcrRegionButton"
+                                Grid.Column="1"
+                                MinWidth="120"
+                                Margin="0,28,0,0"
+                                Content="Select Region"
+                                Click="PickOcrRegionButton_Click" />
+                        </Grid>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

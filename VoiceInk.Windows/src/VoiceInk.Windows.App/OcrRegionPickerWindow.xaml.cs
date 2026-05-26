@@ -4,19 +4,22 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using VoiceInk.Windows.Native.Text;
 using Windows.Foundation;
+using Windows.Graphics;
 using Windows.System;
 
 namespace VoiceInk.Windows.App;
 
 public sealed partial class OcrRegionPickerWindow : Window
 {
+    private readonly ScreenCaptureDisplay? targetDisplay;
     private TaskCompletionSource<ScreenCaptureRegion?>? completion;
     private bool isDragging;
     private bool isCompleted;
     private Point dragStart;
 
-    public OcrRegionPickerWindow()
+    public OcrRegionPickerWindow(ScreenCaptureDisplay? targetDisplay = null)
     {
+        this.targetDisplay = targetDisplay;
         InitializeComponent();
         Closed += OcrRegionPickerWindow_Closed;
     }
@@ -31,6 +34,15 @@ public sealed partial class OcrRegionPickerWindow : Window
 
     private void PickerRoot_Loaded(object sender, RoutedEventArgs e)
     {
+        if (targetDisplay is not null)
+        {
+            AppWindow.MoveAndResize(new RectInt32(
+                targetDisplay.Left,
+                targetDisplay.Top,
+                targetDisplay.Width,
+                targetDisplay.Height));
+        }
+
         AppWindow.SetPresenter(FullScreenPresenter.Create());
         PickerRoot.Focus(FocusState.Programmatic);
     }

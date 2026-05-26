@@ -529,10 +529,20 @@ Active-window enhancement context slice completed on 2026-05-25:
 - Prompt rendering now emits an `<ACTIVE_WINDOW_CONTEXT>` section before selected text, clipboard, and vocabulary sections.
 - Windows context capture reuses the existing foreground-window Power Mode provider and gracefully degrades to no active-window context on failure.
 
+Screen OCR context slices completed on 2026-05-26:
+
+- Added default-off local OCR context capture with region-aware screen capture plumbing and graceful empty/unavailable fallback.
+- Added visible numeric OCR region controls and a visual OCR region picker that writes absolute virtual-screen coordinates.
+- Added display-targeted OCR region selection so multi-monitor users can choose which display receives the fullscreen picker overlay.
+
+Browser URL context slice completed on 2026-05-26:
+
+- Added sanitized active browser URL context where supported by Windows foreground-window inspection.
+- Kept browser context local to the enhancement request and persisted only through the existing local History AI-request diagnostics.
+
 Windows gaps:
 
-- OCR via Windows OCR APIs if available.
-- Browser URL detection.
+- Deeper context visual polish and permission diagnostics for edge-case Windows display/browser configurations.
 
 Windows adaptation:
 
