@@ -69,12 +69,23 @@ function Write-SmokePlan {
         [string]$ResolvedPackageName
     )
 
+    $signature = Get-AuthenticodeSignature -FilePath $ResolvedPackagePath
+
     Write-Host "MSIX install smoke plan:"
     Write-Host "  Package: $ResolvedPackagePath"
     Write-Host "  Package name: $ResolvedPackageName"
+    Write-Host "  Signature status: $($signature.Status)"
+    if ($null -ne $signature.SignerCertificate) {
+        Write-Host "  Signer certificate subject: $($signature.SignerCertificate.Subject)"
+        Write-Host "  Signer certificate thumbprint: $($signature.SignerCertificate.Thumbprint)"
+    }
+
     Write-Host ""
     Write-Host "Prerequisite: the package must already be signed and the signing certificate must already be trusted on this test machine."
     Write-Host "This script does not create or import certificates."
+    Write-Host "Trust troubleshooting: Add-AppxPackage error 0x800B0109 usually means the package signer is not trusted on the test machine."
+    Write-Host "Trust location reference: import or deploy the signer certificate to TrustedPeople outside this script before running -Execute."
+    Write-Host "Deployment log reference: inspect Microsoft-Windows-AppxDeployment-Server operational logs after failed install attempts."
     Write-Host ""
     Write-Host "Commands:"
     Write-Host "  Add-AppxPackage -Path `"$ResolvedPackagePath`""

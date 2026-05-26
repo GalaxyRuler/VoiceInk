@@ -214,6 +214,12 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Refusing to smoke package outside artifact root", script);
         Assert.Contains("Assert-NoReparsePointInPath", script);
         Assert.Contains("This script does not create or import certificates", script);
+        Assert.Contains("Get-AuthenticodeSignature -FilePath", script);
+        Assert.Contains("Signer certificate subject", script);
+        Assert.Contains("Signer certificate thumbprint", script);
+        Assert.Contains("0x800B0109", script);
+        Assert.Contains("TrustedPeople", script);
+        Assert.Contains("Microsoft-Windows-AppxDeployment-Server", script);
         Assert.Contains("Expected one installed package named", script);
         Assert.Contains("Refusing to choose a package to remove", script);
 
