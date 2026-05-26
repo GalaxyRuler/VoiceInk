@@ -1257,9 +1257,14 @@
                     </StackPanel>
 
                     <StackPanel x:Name="SettingsSectionPanel" Spacing="12" Visibility="Collapsed">
-                        <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="SettingsHeroTitleTextBlock" Text="Settings" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            x:Name="SettingsHeroDescriptionTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
                         <StackPanel Spacing="8">
                             <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
+                            <TextBlock x:Name="ShortcutsSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1364,6 +1369,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Recording Feedback" FontWeight="SemiBold" />
+                            <TextBlock x:Name="RecordingFeedbackSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox
                                 x:Name="SoundFeedbackCheckBox"
                                 Content="Sound Feedback"
@@ -1453,6 +1459,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Interface" FontWeight="SemiBold" />
+                            <TextBlock x:Name="InterfaceSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <ComboBox
                                 x:Name="RecorderStyleComboBox"
                                 Header="Recorder Style"
@@ -1465,6 +1472,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Clipboard" FontWeight="SemiBold" />
+                            <TextBlock x:Name="ClipboardSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox
                                 x:Name="RestoreClipboardCheckBox"
                                 Content="Keep Clipboard Content"
@@ -1498,6 +1506,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Cleanup" FontWeight="SemiBold" />
+                            <TextBlock x:Name="CleanupSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
                             <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
                             <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
@@ -1510,6 +1519,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Privacy" FontWeight="SemiBold" />
+                            <TextBlock x:Name="PrivacySectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox
                                 x:Name="TranscriptionCleanupCheckBox"
                                 Content="Auto-delete Transcripts"
@@ -1558,6 +1568,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="General" FontWeight="SemiBold" />
+                            <TextBlock x:Name="GeneralSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox
                                 x:Name="LaunchAtLoginCheckBox"
                                 Content="Launch at Login"
@@ -1575,6 +1586,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Backup" FontWeight="SemiBold" />
+                            <TextBlock x:Name="BackupSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button
                                     x:Name="ExportSettingsBackupButton"
@@ -1592,6 +1604,7 @@
                         <TextBlock Text="About / Open Source" FontSize="24" FontWeight="SemiBold" />
                         <TextBlock x:Name="AboutVersionTextBlock" TextWrapping="Wrap" />
                         <TextBlock Text="GPL-3.0 open-source Windows fork" TextWrapping="Wrap" />
+                        <TextBlock x:Name="DiagnosticsSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                         <TextBox
                             x:Name="RuntimePathTextBox"
                             Header="Runtime path"

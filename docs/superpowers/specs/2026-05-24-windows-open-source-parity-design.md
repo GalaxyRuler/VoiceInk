@@ -784,6 +784,12 @@ Settings diagnostics slice completed on 2026-05-25:
 - Added About / Open Source `Export Diagnostic Logs` using a user-selected `.log` save picker.
 - Reused the safe diagnostic report for `Copy Diagnostics Summary` so copy/export share privacy boundaries.
 
+Settings section copy parity slice completed on 2026-05-26:
+
+- Added a Core `SettingsSectionPresenter` for macOS-style Settings hero text and section descriptions.
+- Added Windows Settings descriptions for Shortcuts, Recording Feedback, Interface, Clipboard, Cleanup, Privacy, General, and Backup.
+- Added diagnostics copy to the About/Open Source diagnostics surface, preserving the open-source local-only replacement for macOS diagnostics.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

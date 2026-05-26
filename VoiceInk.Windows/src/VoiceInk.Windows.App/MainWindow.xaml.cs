@@ -2011,6 +2011,8 @@ public sealed partial class MainWindow : Window
         bool forceModelPath,
         CancellationToken cancellationToken)
     {
+        ApplySettingsSectionPresentation(SettingsSectionPresenter.Present());
+
         if (forceModelPath || !modelPathEdited)
         {
             suppressModelPathChanged = true;
@@ -2123,6 +2125,32 @@ public sealed partial class MainWindow : Window
 
         return startupWarning ?? audioInputWarning ?? metricsWarning;
     }
+
+    private void ApplySettingsSectionPresentation(SettingsSectionPresentation presentation)
+    {
+        SettingsHeroTitleTextBlock.Text = presentation.HeroTitle;
+        SettingsHeroDescriptionTextBlock.Text = presentation.HeroDescription;
+
+        foreach (var section in presentation.Sections)
+        {
+            SectionDescriptionTextBlock(section.Key).Text = section.Description;
+        }
+    }
+
+    private TextBlock SectionDescriptionTextBlock(string key) =>
+        key switch
+        {
+            "shortcuts" => ShortcutsSectionDescriptionTextBlock,
+            "recordingFeedback" => RecordingFeedbackSectionDescriptionTextBlock,
+            "interface" => InterfaceSectionDescriptionTextBlock,
+            "clipboard" => ClipboardSectionDescriptionTextBlock,
+            "cleanup" => CleanupSectionDescriptionTextBlock,
+            "privacy" => PrivacySectionDescriptionTextBlock,
+            "general" => GeneralSectionDescriptionTextBlock,
+            "backup" => BackupSectionDescriptionTextBlock,
+            "diagnostics" => DiagnosticsSectionDescriptionTextBlock,
+            _ => SettingsHeroDescriptionTextBlock
+        };
 
     private async Task<string?> ApplyStartupStateToUiAsync(
         AppSettings settings,
