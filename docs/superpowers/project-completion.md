@@ -26,7 +26,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Dictionary | 87% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 92% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 84% | `[#################---]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local diagnostics summary rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
-| Settings | 82% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, and summary rows for shortcut/data-safety/backup/diagnostic actions exist. Deeper form layout polish remains. |
+| Settings | 84% | `[#################---]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, and current-state rows for paste, clipboard restore, recording feedback, and cleanup exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
 | Onboarding | 81% | `[################----]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, compact readiness summary rows, progress-aware readiness checklist, guided setup stages, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Dictionary usage summary  [####################] 100%
+Windows Settings current-state summary  [####################] 100%
 ```
 
 Completed:
 
-- Added Core Dictionary summary rows for vocabulary, active replacements, disabled replacements, and local JSON backup.
-- Rendered the usage summary under the Dictionary hero.
-- Kept dictionary persistence, replacement cleanup, quick add, import, and export behavior unchanged.
+- Added Core Settings current-state rows for paste method, clipboard restore, recording feedback, and privacy cleanup.
+- Rendered the current-state summary under the Settings hero.
+- Kept settings persistence, backup import/export, cleanup behavior, and diagnostics behavior unchanged.
 
 ## Near-Term Priority
 

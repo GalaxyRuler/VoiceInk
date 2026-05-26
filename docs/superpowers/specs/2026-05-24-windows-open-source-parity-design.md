@@ -875,6 +875,12 @@ Settings action summary slice completed on 2026-05-26:
 - Rendered the Windows Settings summary under the hero so long settings controls are easier to scan.
 - Kept shortcut registration, backup, cleanup, diagnostics, and recording feedback behavior unchanged.
 
+Settings current-state summary slice completed on 2026-05-26:
+
+- Added Core Settings current-state rows derived from `AppSettings` for paste method, clipboard restore, recording feedback, and privacy cleanup.
+- Rendered the current-state summary below the Settings action summary so users can quickly confirm behavior before editing controls.
+- Kept settings persistence, backup import/export, cleanup, sound feedback, and paste behavior unchanged.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

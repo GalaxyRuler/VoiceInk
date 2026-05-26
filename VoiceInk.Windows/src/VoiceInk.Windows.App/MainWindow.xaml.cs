@@ -2031,7 +2031,7 @@ public sealed partial class MainWindow : Window
         bool forceModelPath,
         CancellationToken cancellationToken)
     {
-        ApplySettingsSectionPresentation(SettingsSectionPresenter.Present());
+        ApplySettingsSectionPresentation(SettingsSectionPresenter.Present(settings));
 
         if (forceModelPath || !modelPathEdited)
         {
@@ -2154,6 +2154,7 @@ public sealed partial class MainWindow : Window
         SettingsOverviewSummaryTextBlock.Text = presentation.OverviewSummary;
         SettingsDataSafetyGuidanceTextBlock.Text = presentation.DataSafetyGuidance;
         SettingsActionSummaryListView.ItemsSource = presentation.ActionSummaries;
+        SettingsPreferenceSummaryListView.ItemsSource = presentation.PreferenceSummaries;
 
         foreach (var section in presentation.Sections)
         {
