@@ -841,6 +841,12 @@ Audio endpoint identity slice completed on 2026-05-26:
 - Enriched WaveIn capture device listings with Core Audio endpoint IDs where NAudio `MMDeviceEnumerator` can match active capture endpoints.
 - Preferred endpoint ID rebinding for custom and prioritized microphone selection, falling back to existing number/name and unique-name behavior when endpoint IDs are unavailable.
 
+Audio input device health slice completed on 2026-05-26:
+
+- Added Core `AudioInputDeviceHealthPresenter` rows for System Default, active microphones, available microphones, and unavailable prioritized devices.
+- Added an Audio Input `Device Health` list so Windows users can see `Active`, `Available`, `Unavailable`, and `Default` badges without changing capture behavior.
+- Kept device-health logic local and deterministic; no telemetry, cloud probing, commercial support flow, or audio probing was added.
+
 ### Onboarding
 
 macOS first-run onboarding covers introduction, microphone/device/accessibility/screen/shortcut permissions, model download, and tutorial.

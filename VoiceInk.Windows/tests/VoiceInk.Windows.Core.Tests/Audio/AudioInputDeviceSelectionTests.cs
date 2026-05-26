@@ -7,6 +7,118 @@ namespace VoiceInk.Windows.Core.Tests.Audio;
 public sealed class AudioInputDeviceSelectionTests
 {
     [Fact]
+    public void DeviceHealthRows_ShowActiveBadgeForSelectedCustomDevice()
+    {
+        var choices = new[]
+        {
+            new AudioInputDeviceChoice(null, "System Default", 0),
+            new AudioInputDeviceChoice(0, "Built-in Microphone", 2),
+            new AudioInputDeviceChoice(2, "USB Microphone", 1)
+        };
+
+        var rows = AudioInputDeviceHealthPresenter.BuildRows(
+            choices,
+            choices[2],
+            [],
+            AudioInputModeSettings.Custom);
+
+        Assert.Collection(
+            rows,
+            row =>
+            {
+                Assert.Equal("System Default", row.Name);
+                Assert.Equal("Default", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
+                Assert.False(row.IsSelected);
+                Assert.True(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("Built-in Microphone", row.Name);
+                Assert.Equal("Available", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
+                Assert.Equal("2 channels - Device 0", row.Detail);
+                Assert.False(row.IsSelected);
+                Assert.True(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("USB Microphone", row.Name);
+                Assert.Equal("Active", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Success, row.BadgeKind);
+                Assert.Equal("Selected for recordings - 1 channel - Device 2", row.Detail);
+                Assert.True(row.IsSelected);
+                Assert.True(row.IsAvailable);
+            });
+    }
+
+    [Fact]
+    public void DeviceHealthRows_ShowUnavailablePrioritizedDevices()
+    {
+        var choices = new[]
+        {
+            new AudioInputDeviceChoice(null, "System Default", 0),
+            new AudioInputDeviceChoice(1, "USB Microphone", 1, "endpoint-usb")
+        };
+        var prioritizedDevices = new[]
+        {
+            new PrioritizedAudioInputDevice("Dock Microphone", 0, "endpoint-dock"),
+            new PrioritizedAudioInputDevice("USB Microphone", 1, "endpoint-usb")
+        };
+
+        var rows = AudioInputDeviceHealthPresenter.BuildRows(
+            choices,
+            choices[1],
+            prioritizedDevices,
+            AudioInputModeSettings.Prioritized);
+
+        Assert.Collection(
+            rows,
+            row =>
+            {
+                Assert.Equal("Dock Microphone", row.Name);
+                Assert.Equal("Unavailable", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Warning, row.BadgeKind);
+                Assert.Equal("Priority 1 - Not currently available", row.Detail);
+                Assert.False(row.IsSelected);
+                Assert.False(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("USB Microphone", row.Name);
+                Assert.Equal("Active", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Success, row.BadgeKind);
+                Assert.Equal("Priority 2 - Selected fallback microphone - 1 channel - Device 1", row.Detail);
+                Assert.True(row.IsSelected);
+                Assert.True(row.IsAvailable);
+            });
+    }
+
+    [Fact]
+    public void DeviceHealthRows_DescribeFirstPrioritySelectionWithoutFallbackCopy()
+    {
+        var choices = new[]
+        {
+            new AudioInputDeviceChoice(null, "System Default", 0),
+            new AudioInputDeviceChoice(2, "Dock Microphone", 1, "endpoint-dock")
+        };
+        var prioritizedDevices = new[]
+        {
+            new PrioritizedAudioInputDevice("Dock Microphone", 0, "endpoint-dock")
+        };
+
+        var rows = AudioInputDeviceHealthPresenter.BuildRows(
+            choices,
+            choices[1],
+            prioritizedDevices,
+            AudioInputModeSettings.Prioritized);
+
+        var row = Assert.Single(rows);
+        Assert.Equal("Active", row.BadgeText);
+        Assert.Equal("Priority 1 - Selected microphone - 1 channel - Device 2", row.Detail);
+    }
+
+    [Fact]
     public void BuildChoices_SelectsFirstAvailablePrioritizedDevice()
     {
         var devices = new[]

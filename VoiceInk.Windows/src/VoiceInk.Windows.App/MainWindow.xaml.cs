@@ -154,6 +154,7 @@ public sealed partial class MainWindow : Window
     private DictationController controller;
     private IReadOnlyList<AudioInputDevice> audioInputDevices = [];
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
+    private IReadOnlyList<AudioInputDeviceHealthRow> audioInputHealthRows = [];
     private IReadOnlyList<PrioritizedAudioInputDevice> prioritizedAudioInputDevices = [];
     private AudioInputDeviceSelectionNotice? audioInputSelectionNotice;
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
@@ -604,6 +605,7 @@ public sealed partial class MainWindow : Window
     private void AudioInputModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshAudioInputPriorityControls();
+        RefreshAudioInputHealthRows();
         if (controller is null)
         {
             return;
@@ -614,6 +616,7 @@ public sealed partial class MainWindow : Window
 
     private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        RefreshAudioInputHealthRows();
         if (controller is null)
         {
             return;
@@ -646,6 +649,7 @@ public sealed partial class MainWindow : Window
             selectedChoice.Name,
             selectedChoice.EndpointId);
         RefreshAudioInputPriorityControls(selectedChoice.Name);
+        RefreshAudioInputHealthRows();
         RefreshUiFromControllerState("Audio input priority updated");
     }
 
@@ -662,6 +666,7 @@ public sealed partial class MainWindow : Window
             prioritizedAudioInputDevices,
             selectedPriorityItem.Name);
         RefreshAudioInputPriorityControls();
+        RefreshAudioInputHealthRows();
         RefreshUiFromControllerState("Audio input priority updated");
     }
 
@@ -678,6 +683,7 @@ public sealed partial class MainWindow : Window
             prioritizedAudioInputDevices,
             selectedPriorityItem.Name);
         RefreshAudioInputPriorityControls(selectedPriorityItem.Name);
+        RefreshAudioInputHealthRows();
         RefreshUiFromControllerState("Audio input priority updated");
     }
 
@@ -694,6 +700,7 @@ public sealed partial class MainWindow : Window
             prioritizedAudioInputDevices,
             selectedPriorityItem.Name);
         RefreshAudioInputPriorityControls(selectedPriorityItem.Name);
+        RefreshAudioInputHealthRows();
         RefreshUiFromControllerState("Audio input priority updated");
     }
 
@@ -6529,6 +6536,7 @@ public sealed partial class MainWindow : Window
                 result.SelectedIndex,
                 0,
                 Math.Max(0, audioInputChoices.Count - 1));
+            RefreshAudioInputHealthRows();
             UpdateAudioInputStatusNotice();
             RecreateControllerIfAudioInputChanged();
 
@@ -6625,9 +6633,25 @@ public sealed partial class MainWindow : Window
             result.SelectedIndex,
             0,
             Math.Max(0, audioInputChoices.Count - 1));
+        RefreshAudioInputHealthRows();
         UpdateAudioInputStatusNotice();
 
         return result.Warning;
+    }
+
+    private void RefreshAudioInputHealthRows()
+    {
+        if (AudioInputDeviceHealthListView is null)
+        {
+            return;
+        }
+
+        audioInputHealthRows = AudioInputDeviceHealthPresenter.BuildRows(
+            audioInputChoices,
+            SelectedAudioInputDeviceChoice(),
+            prioritizedAudioInputDevices,
+            SelectedAudioInputMode());
+        AudioInputDeviceHealthListView.ItemsSource = audioInputHealthRows;
     }
 
     private void UpdateAudioInputStatusNotice()
