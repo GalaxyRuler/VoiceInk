@@ -423,8 +423,8 @@ AI Enhancement slice completed on 2026-05-25:
 
 AI enhancement provider preset Windows target:
 
-- Match the macOS provider picker terminology for enhancement providers where the current Windows OpenAI-compatible chat-completions adapter can make a faithful request: Custom OpenAI-compatible, Cerebras, Groq, Gemini, OpenAI, OpenRouter, Mistral, and Ollama.
-- Keep Anthropic, Local CLI, and speech/transcription-only providers as later slices because they need a provider-specific request body, process execution hook, or transcription-oriented adapter rather than the existing OpenAI-compatible chat-completions request.
+- Match the macOS provider picker terminology for enhancement providers where the current Windows adapters can make a faithful request: Custom OpenAI-compatible, Cerebras, Groq, Gemini, Anthropic, OpenAI, OpenRouter, Mistral, and Ollama.
+- Keep Local CLI and speech/transcription-only providers as later slices because they need a process execution hook or transcription-oriented adapter rather than the existing enhancement request paths.
 - Persist a provider ID in JSON settings while continuing to store API keys only in Windows Credential Manager.
 - Store API keys per provider preset so choosing Groq, Gemini, OpenAI, or another provider does not overwrite the custom provider key.
 - Preserve the legacy single enhancement secret name as a custom-provider fallback so existing local settings keep working.
@@ -441,11 +441,12 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Added WinUI Enhancement provider and preset-model pickers, provider-specific API-key save/clear/status text, and disabled API-key controls for keyless providers.
 - Added dynamic Ollama local model refresh through the Ollama `/api/tags` endpoint, surfaced as an Enhancement action only when the Ollama preset is selected.
 - Added dynamic OpenRouter model refresh through the OpenRouter `/api/v1/models` endpoint, sharing the provider-aware Enhancement refresh action.
+- Added Anthropic as a native Messages API enhancement provider with provider-specific Credential Manager keys and macOS-aligned Claude model choices.
 
 Windows gaps:
 
 - Prompt template persistence.
-- Provider-specific Anthropic Messages API and Local CLI hooks.
+- Local CLI hooks.
 - Screen/OCR, browser URL, and deeper app-specific context capture.
 - Recorder prompt picker activation.
 - AI re-enhance from History.

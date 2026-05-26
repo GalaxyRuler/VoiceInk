@@ -90,21 +90,39 @@ public sealed class OpenAICompatibleTextEnhancementService(
         timeout.CancelAfter(request.Timeout);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        if (!string.IsNullOrWhiteSpace(apiKey))
+        var isAnthropic = string.Equals(
+            request.ProviderId,
+            EnhancementProviderPresetCatalog.Anthropic.Id,
+            StringComparison.OrdinalIgnoreCase);
+        if (isAnthropic && !string.IsNullOrWhiteSpace(apiKey))
+        {
+            message.Headers.Add("x-api-key", apiKey);
+            message.Headers.Add("anthropic-version", "2023-06-01");
+        }
+        else if (!string.IsNullOrWhiteSpace(apiKey))
         {
             message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         }
 
         message.Content = new StringContent(
-            JsonSerializer.Serialize(
-                new ChatCompletionsRequest(
-                    request.Model,
-                    [
-                        new ChatMessage("system", request.SystemMessage),
-                        new ChatMessage("user", request.UserMessage)
-                    ],
-                    request.Temperature),
-                JsonOptions),
+            isAnthropic
+                ? JsonSerializer.Serialize(
+                    new AnthropicMessagesRequest(
+                        request.Model,
+                        request.SystemMessage,
+                        [new AnthropicMessage("user", request.UserMessage)],
+                        MaxTokens: 1024,
+                        request.Temperature),
+                    JsonOptions)
+                : JsonSerializer.Serialize(
+                    new ChatCompletionsRequest(
+                        request.Model,
+                        [
+                            new ChatMessage("system", request.SystemMessage),
+                            new ChatMessage("user", request.UserMessage)
+                        ],
+                        request.Temperature),
+                    JsonOptions),
             Encoding.UTF8,
             "application/json");
 
@@ -142,7 +160,9 @@ public sealed class OpenAICompatibleTextEnhancementService(
                 throw new TimeoutException("AI enhancement request timed out.");
             }
 
-            var content = ExtractMessageContent(json);
+            var content = isAnthropic
+                ? ExtractAnthropicMessageContent(json)
+                : ExtractMessageContent(json);
             if (string.IsNullOrWhiteSpace(content))
             {
                 throw new InvalidOperationException("AI enhancement provider returned no text.");
@@ -199,6 +219,32 @@ public sealed class OpenAICompatibleTextEnhancementService(
         }
     }
 
+    private static string ExtractAnthropicMessageContent(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var content = document.RootElement.GetProperty("content");
+            var textBlocks = content.EnumerateArray()
+                .Where(block => block.TryGetProperty("type", out var type)
+                    && string.Equals(type.GetString(), "text", StringComparison.OrdinalIgnoreCase)
+                    && block.TryGetProperty("text", out _))
+                .Select(block => block.GetProperty("text").GetString())
+                .Where(text => !string.IsNullOrWhiteSpace(text))
+                .ToArray();
+
+            return string.Join(Environment.NewLine, textBlocks);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("AI enhancement provider returned invalid JSON.", ex);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new InvalidOperationException("AI enhancement provider returned an unexpected response.", ex);
+        }
+    }
+
     private static string SanitizedHttpError(HttpStatusCode statusCode) =>
         $"AI enhancement provider returned HTTP {(int)statusCode}.";
 
@@ -214,6 +260,17 @@ public sealed class OpenAICompatibleTextEnhancementService(
         [property: JsonPropertyName("temperature")] double Temperature);
 
     private sealed record ChatMessage(
+        [property: JsonPropertyName("role")] string Role,
+        [property: JsonPropertyName("content")] string Content);
+
+    private sealed record AnthropicMessagesRequest(
+        [property: JsonPropertyName("model")] string Model,
+        [property: JsonPropertyName("system")] string System,
+        [property: JsonPropertyName("messages")] IReadOnlyList<AnthropicMessage> Messages,
+        [property: JsonPropertyName("max_tokens")] int MaxTokens,
+        [property: JsonPropertyName("temperature")] double Temperature);
+
+    private sealed record AnthropicMessage(
         [property: JsonPropertyName("role")] string Role,
         [property: JsonPropertyName("content")] string Content);
 

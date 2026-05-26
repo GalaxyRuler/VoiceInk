@@ -32,6 +32,13 @@ public sealed class EnhancementProviderPresetCatalogTests
             && item.DefaultModel == "gemini-2.5-flash-lite"
             && item.ModelIds.Contains("gemini-2.5-pro"));
         Assert.Contains(presets, item =>
+            item.Id == "anthropic"
+            && item.DisplayName == "Anthropic"
+            && item.Endpoint == "https://api.anthropic.com/v1/messages"
+            && item.DefaultModel == "claude-sonnet-4-6"
+            && item.ModelIds.Contains("claude-haiku-4-5")
+            && item.RequiresApiKey);
+        Assert.Contains(presets, item =>
             item.Id == "openai"
             && item.Endpoint == "https://api.openai.com/v1/chat/completions"
             && item.DefaultModel == "gpt-5.4"
@@ -66,6 +73,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [InlineData("custom", "VoiceInk.Windows.Enhancement.OpenAICompatible.Custom.ApiKey")]
     [InlineData("groq", "VoiceInk.Windows.Enhancement.OpenAICompatible.Groq.ApiKey")]
     [InlineData("gemini", "VoiceInk.Windows.Enhancement.OpenAICompatible.Gemini.ApiKey")]
+    [InlineData("anthropic", "VoiceInk.Windows.Enhancement.OpenAICompatible.Anthropic.ApiKey")]
     [InlineData("openai", "VoiceInk.Windows.Enhancement.OpenAICompatible.OpenAI.ApiKey")]
     public void SecretNameForProvider_ReturnsProviderSpecificCredentialName(
         string providerId,
@@ -93,6 +101,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [InlineData("custom", "openai-compatible")]
     [InlineData("groq", "groq")]
     [InlineData("gemini", "gemini")]
+    [InlineData("anthropic", "anthropic")]
     [InlineData("missing", "openai-compatible")]
     public void ProviderNameFor_ReturnsStableHistoryMetadata(string providerId, string expected)
     {

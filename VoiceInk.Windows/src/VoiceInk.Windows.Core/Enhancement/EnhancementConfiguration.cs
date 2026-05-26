@@ -92,6 +92,7 @@ public static class EnhancementConfiguration
             "cerebras" => "Cerebras",
             "groq" => "Groq",
             "gemini" => "Gemini",
+            "anthropic" => "Anthropic",
             "openai" => "OpenAI",
             "openrouter" => "OpenRouter",
             "mistral" => "Mistral",

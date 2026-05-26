@@ -51,6 +51,21 @@ public static class EnhancementProviderPresetCatalog
         ],
         RequiresApiKey: true);
 
+    public static EnhancementProviderPreset Anthropic { get; } = new(
+        "anthropic",
+        "Anthropic",
+        "https://api.anthropic.com/v1/messages",
+        "claude-sonnet-4-6",
+        [
+            "claude-opus-4-7",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6",
+            "claude-opus-4-5",
+            "claude-sonnet-4-5",
+            "claude-haiku-4-5"
+        ],
+        RequiresApiKey: true);
+
     public static EnhancementProviderPreset OpenAI { get; } = new(
         "openai",
         "OpenAI",
@@ -102,6 +117,7 @@ public static class EnhancementProviderPresetCatalog
         Cerebras,
         Groq,
         Gemini,
+        Anthropic,
         OpenAI,
         OpenRouter,
         Mistral,

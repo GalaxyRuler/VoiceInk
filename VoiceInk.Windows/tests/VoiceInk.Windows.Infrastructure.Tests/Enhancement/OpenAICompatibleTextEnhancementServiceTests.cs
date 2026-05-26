@@ -107,6 +107,75 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
     }
 
     [Fact]
+    public async Task EnhanceAsync_AnthropicProviderSendsMessagesRequest()
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"content":[{"type":"text","text":"Claude text"}]}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Enhancement.OpenAICompatible.Anthropic.ApiKey"] = "sk-ant-test"
+            }
+        };
+        var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), secrets);
+
+        var result = await service.EnhanceAsync(
+            Request(
+                endpoint: "https://api.anthropic.com/v1/messages",
+                model: "claude-sonnet-4-6",
+                providerId: "anthropic"),
+            CancellationToken.None);
+
+        Assert.Equal("Claude text", result.Text);
+        Assert.Equal("anthropic", result.ProviderName);
+        Assert.Equal("claude-sonnet-4-6", result.ModelName);
+        Assert.Equal(["VoiceInk.Windows.Enhancement.OpenAICompatible.Anthropic.ApiKey"], secrets.ReadNames);
+        var request = handler.Requests[0];
+        Assert.Equal("https://api.anthropic.com/v1/messages", request.RequestUri?.ToString());
+        Assert.Null(request.Headers.Authorization);
+        Assert.True(request.Headers.TryGetValues("x-api-key", out var apiKeyValues));
+        Assert.Equal("sk-ant-test", Assert.Single(apiKeyValues));
+        Assert.True(request.Headers.TryGetValues("anthropic-version", out var versionValues));
+        Assert.Equal("2023-06-01", Assert.Single(versionValues));
+
+        var body = JsonDocument.Parse(handler.Bodies[0]).RootElement;
+        Assert.Equal("claude-sonnet-4-6", body.GetProperty("model").GetString());
+        Assert.Equal("system prompt", body.GetProperty("system").GetString());
+        Assert.Equal(0.3, body.GetProperty("temperature").GetDouble());
+        Assert.Equal(1024, body.GetProperty("max_tokens").GetInt32());
+        var messages = body.GetProperty("messages");
+        Assert.Equal("user", messages[0].GetProperty("role").GetString());
+        Assert.Equal("user prompt", messages[0].GetProperty("content").GetString());
+    }
+
+    [Fact]
+    public async Task EnhanceAsync_AnthropicHttpErrorDoesNotLeakApiKey()
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.BadRequest, """{"error":{"message":"bad sk-ant-test"}}"""));
+        var secrets = new FakeSecretStore
+        {
+            Secrets =
+            {
+                ["VoiceInk.Windows.Enhancement.OpenAICompatible.Anthropic.ApiKey"] = "sk-ant-test"
+            }
+        };
+        var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), secrets);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.EnhanceAsync(
+                Request(
+                    endpoint: "https://api.anthropic.com/v1/messages",
+                    providerId: "anthropic",
+                    maxRetries: 1),
+                CancellationToken.None));
+
+        Assert.Contains("HTTP 400", ex.Message);
+        Assert.DoesNotContain("sk-ant-test", ex.Message);
+    }
+
+    [Fact]
     public async Task EnhanceAsync_MissingApiKeyFailsBeforeHttp()
     {
         var handler = new QueueHttpMessageHandler(
