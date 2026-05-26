@@ -14,7 +14,7 @@ VoiceInk Windows parity  [###################-] 95%
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 86% | `[#################---]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
+| Core dictation pipeline | 87% | `[#################---]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/restored-queue flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 78% | `[################----]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 96% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, and floating-recorder Ctrl/Alt digit prompt/Power Mode slots are supported. Remaining work is deeper shortcut UI polish and rare Windows-reserved-key edge cases. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Transcribe Audio copy/save actions  [####################] 100%
+Windows Transcribe Audio queue restoration  [####################] 100%
 ```
 
 Completed:
 
-- Added selected completed-item copy through the existing clipboard abstraction.
-- Added selected completed-item TXT/Markdown export through the Windows save picker.
-- Added Core-tested action text, file-name, and Markdown formatting helpers.
+- Added Core-tested queue snapshot creation/restoration rules.
+- Added JSON snapshot persistence under app data with malformed-file fallback.
+- Restored pending, failed, and interrupted processing queue items on startup when source files still exist.
 
 ## Near-Term Priority
 

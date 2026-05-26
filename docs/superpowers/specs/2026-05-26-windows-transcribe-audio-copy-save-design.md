@@ -25,7 +25,7 @@ Let users copy or save the text for a completed Transcribe Audio queue item, mat
 
 - Inline row icon-template polish.
 - Independent original/enhanced tabs for queue details.
-- Persistent queue restoration.
+- Inline row-template polish for restored queue presentation.
 
 ## Verification
 

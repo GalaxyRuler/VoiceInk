@@ -41,7 +41,7 @@ public sealed class AudioFileQueueService(Func<Guid>? idFactory = null)
             var normalizedPath = NormalizePath(filePath);
             if (normalizedPath is null
                 || !File.Exists(normalizedPath)
-                || !IsSupportedFile(normalizedPath)
+                || !IsSupportedFilePath(normalizedPath)
                 || !activePaths.Add(normalizedPath))
             {
                 skipped++;
@@ -84,10 +84,10 @@ public sealed class AudioFileQueueService(Func<Guid>? idFactory = null)
     public AudioFileQueueUpdate Clear(IReadOnlyList<AudioFileQueueItem> currentItems) =>
         new([], RemovedCount: currentItems.Count);
 
-    private static bool IsSupportedFile(string path) =>
+    public static bool IsSupportedFilePath(string path) =>
         SupportedExtensionsSet.Contains(Path.GetExtension(path));
 
-    private static string? NormalizePath(string? path)
+    public static string? NormalizePath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {

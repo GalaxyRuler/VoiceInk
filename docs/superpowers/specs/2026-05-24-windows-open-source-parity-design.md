@@ -351,11 +351,11 @@ Transcribe Audio slice completed on 2026-05-25:
 - Convert/import selected media into app-owned WAV recordings before transcription, then run the existing local Whisper transcription path with dictionary prompt biasing and text cleanup.
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
 - Added selected completed-item copy and save actions, with plain text clipboard copy plus TXT/Markdown file export.
-- Leave persistent queue restoration and richer batch actions for later slices.
+- Added local JSON queue snapshot restoration for pending, failed, and interrupted processing items when their source files still exist.
+- Leave richer batch actions for later slices.
 
 Windows gaps:
 
-- Persistent queue restoration across launches.
 - Per-file enhancement controls independent of the global Enhancement setting.
 
 ### Cloud Transcription

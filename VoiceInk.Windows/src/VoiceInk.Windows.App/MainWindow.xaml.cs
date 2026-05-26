@@ -36,6 +36,7 @@ using VoiceInk.Windows.Core.Startup;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Transcription;
 using VoiceInk.Windows.Infrastructure.Dictionary;
+using VoiceInk.Windows.Infrastructure.AudioFiles;
 using VoiceInk.Windows.Infrastructure.Enhancement;
 using VoiceInk.Windows.Infrastructure.History;
 using VoiceInk.Windows.Infrastructure.Metrics;
@@ -88,6 +89,7 @@ public sealed partial class MainWindow : Window
     private readonly string historyPath;
     private readonly string metricsPath;
     private readonly string settingsPath;
+    private readonly string audioFileQueueSnapshotPath;
     private readonly Dictionary<string, NavigationViewItem> navigationItemsByTag = [];
     private readonly JsonDictionaryStore dictionaryStore;
     private readonly SqliteHistoryStore historyStore;
@@ -110,6 +112,7 @@ public sealed partial class MainWindow : Window
     private readonly NAudioInputDeviceChangeWatcher audioInputDeviceChangeWatcher;
     private readonly DictionaryQuickAddService dictionaryQuickAddService;
     private readonly AudioFileQueueService audioFileQueueService = new();
+    private readonly IAudioFileQueueSnapshotStore audioFileQueueSnapshotStore;
     private readonly List<string> diagnosticEvents = [];
     private string? lastDiagnosticStatus;
     private readonly WindowsCredentialSecretStore secretStore;
@@ -247,6 +250,7 @@ public sealed partial class MainWindow : Window
         historyPath = Path.Combine(appDataDirectory, "history.db");
         metricsPath = Path.Combine(appDataDirectory, "metrics.db");
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
+        audioFileQueueSnapshotPath = Path.Combine(appDataDirectory, "audio-file-queue.json");
 
         dictionaryStore = new JsonDictionaryStore(dictionaryPath);
         historyStore = new SqliteHistoryStore(historyPath);
@@ -254,6 +258,7 @@ public sealed partial class MainWindow : Window
         sessionMetricStore = metricsStore.Store;
         metricsInitializationWarning = metricsStore.Warning;
         settingsStore = new JsonSettingsStore(settingsPath);
+        audioFileQueueSnapshotStore = new JsonAudioFileQueueSnapshotStore(audioFileQueueSnapshotPath);
         modelDownloader = new HttpWhisperModelDownloader(modelDownloadHttpClient);
         modelWarmupCoordinator = new WhisperModelWarmupCoordinator(new WhisperNetModelWarmupService());
         modelWarmupCoordinator.StateChanged += ModelWarmupCoordinator_StateChanged;
@@ -579,7 +584,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var items = await e.DataView.GetStorageItemsAsync();
-            AddAudioFilePaths(
+            await AddAudioFilePathsAsync(
                 items
                     .OfType<StorageFile>()
                     .Select(file => file.Path)
@@ -602,7 +607,7 @@ public sealed partial class MainWindow : Window
         audioFileQueueCancellation?.Cancel();
     }
 
-    private void ClearAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
+    private async void ClearAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
     {
         if (isTranscribingAudioFiles)
         {
@@ -611,10 +616,11 @@ public sealed partial class MainWindow : Window
 
         audioFileQueueItems = audioFileQueueService.Clear(audioFileQueueItems).Items;
         RefreshAudioFileQueueListView();
-        RefreshUiFromControllerState("Audio file queue cleared");
+        var persistWarning = await PersistAudioFileQueueSnapshotAsync();
+        RefreshUiFromControllerState(persistWarning ?? "Audio file queue cleared");
     }
 
-    private void RemoveAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
+    private async void RemoveAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
     {
         if (isTranscribingAudioFiles || SelectedAudioFileQueueItem() is not { } item)
         {
@@ -623,10 +629,11 @@ public sealed partial class MainWindow : Window
 
         audioFileQueueItems = audioFileQueueService.RemovePending(audioFileQueueItems, item.Id).Items;
         RefreshAudioFileQueueListView();
-        RefreshUiFromControllerState("Audio file removed");
+        var persistWarning = await PersistAudioFileQueueSnapshotAsync();
+        RefreshUiFromControllerState(persistWarning ?? "Audio file removed");
     }
 
-    private void RetryAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
+    private async void RetryAudioFileQueueItemButton_Click(object sender, RoutedEventArgs e)
     {
         if (isTranscribingAudioFiles || SelectedAudioFileQueueItem() is not { } item)
         {
@@ -635,7 +642,8 @@ public sealed partial class MainWindow : Window
 
         audioFileQueueItems = audioFileQueueService.RetryFailed(audioFileQueueItems, item.Id).Items;
         RefreshAudioFileQueueListView(item.Id);
-        RefreshUiFromControllerState("Audio file queued for retry");
+        var persistWarning = await PersistAudioFileQueueSnapshotAsync();
+        RefreshUiFromControllerState(persistWarning ?? "Audio file queued for retry");
     }
 
     private async void CopyAudioFileQueueTextButton_Click(object sender, RoutedEventArgs e)
@@ -1754,13 +1762,14 @@ public sealed partial class MainWindow : Window
             TryReplaceGlobalHotkeys(settings, rollbackSettings: null);
 
             settingsLoaded = true;
+            var queueRestoreStatus = await RestoreAudioFileQueueSnapshotAsync(windowLifetime.Token);
             var cleanupStatus = await RunConfiguredPrivacyCleanupIfNeededAsync(windowLifetime.Token);
             if (cleanupStatus is not null)
             {
                 await RefreshHistoryAsync(windowLifetime.Token);
             }
 
-            RefreshUiFromControllerState(refreshWarning ?? cleanupStatus);
+            RefreshUiFromControllerState(refreshWarning ?? cleanupStatus ?? queueRestoreStatus);
             ScheduleModelWarmup(settings, "startup", updateMainStatus: false);
             if (startHiddenToTray)
             {
@@ -4242,7 +4251,7 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            AddAudioFilePaths(files.Select(file => file.Path), "Selected");
+            await AddAudioFilePathsAsync(files.Select(file => file.Path), "Selected");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -4254,11 +4263,12 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void AddAudioFilePaths(IEnumerable<string> filePaths, string statusPrefix)
+    private async Task AddAudioFilePathsAsync(IEnumerable<string> filePaths, string statusPrefix)
     {
         var update = audioFileQueueService.AddFiles(audioFileQueueItems, filePaths);
         audioFileQueueItems = update.Items;
         RefreshAudioFileQueueListView();
+        var persistWarning = await PersistAudioFileQueueSnapshotAsync();
 
         var status = update.AddedCount == 0
             ? "No supported audio files added"
@@ -4268,7 +4278,49 @@ public sealed partial class MainWindow : Window
             status += $" ({update.SkippedCount} skipped)";
         }
 
-        RefreshUiFromControllerState(status);
+        RefreshUiFromControllerState(persistWarning ?? status);
+    }
+
+    private async Task<string?> RestoreAudioFileQueueSnapshotAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var snapshot = await audioFileQueueSnapshotStore.LoadAsync(cancellationToken);
+            audioFileQueueItems = AudioFileQueuePersistence.Restore(snapshot);
+            RefreshAudioFileQueueListView();
+            return audioFileQueueItems.Count == 0
+                ? null
+                : $"Restored {audioFileQueueItems.Count} queued audio file{Plural(audioFileQueueItems.Count)}";
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            audioFileQueueItems = [];
+            RefreshAudioFileQueueListView();
+            return $"Audio file queue restore failed: {ex.Message}";
+        }
+    }
+
+    private async Task<string?> PersistAudioFileQueueSnapshotAsync()
+    {
+        try
+        {
+            await audioFileQueueSnapshotStore.SaveAsync(
+                AudioFileQueuePersistence.CreateSnapshot(audioFileQueueItems),
+                windowLifetime.Token);
+            return null;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            return "Closing";
+        }
+        catch (Exception ex)
+        {
+            return $"Audio file queue save failed: {ex.Message}";
+        }
     }
 
     private async Task StartAudioFileQueueAsync()
@@ -4315,6 +4367,7 @@ public sealed partial class MainWindow : Window
             isTranscribingAudioFiles = false;
             audioFileQueueCancellation?.Dispose();
             audioFileQueueCancellation = null;
+            statusOverride = await PersistAudioFileQueueSnapshotAsync() ?? statusOverride;
             RefreshAudioFileQueueListView();
             RefreshUiFromControllerState(statusOverride);
         }
@@ -4326,6 +4379,7 @@ public sealed partial class MainWindow : Window
     {
         UpdateAudioFileQueueItem(item.Id, current => current.MarkProcessing("Transcribing"));
         RefreshAudioFileQueueListView(item.Id);
+        await PersistAudioFileQueueSnapshotAsync();
 
         var result = await audioFileTranscriptionService.TranscribeAsync(
             item.FilePath,
@@ -4337,6 +4391,7 @@ public sealed partial class MainWindow : Window
                 ? current.MarkCompleted(result.Item)
                 : current.MarkFailed(result.Message));
         RefreshAudioFileQueueListView(item.Id);
+        await PersistAudioFileQueueSnapshotAsync();
     }
 
     private void UpdateAudioFileQueueItem(
