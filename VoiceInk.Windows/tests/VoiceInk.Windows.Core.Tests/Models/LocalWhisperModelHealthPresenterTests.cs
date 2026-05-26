@@ -54,6 +54,13 @@ public sealed class LocalWhisperModelHealthPresenterTests
             },
             row =>
             {
+                Assert.Equal("Filename", row.Title);
+                Assert.Equal("ggml-*.bin", row.Value);
+                Assert.Equal("Whisper.cpp models usually use names like ggml-base.en.bin.", row.Detail);
+                Assert.Equal("Expected", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Warmup", row.Title);
                 Assert.Equal("Available", row.Value);
                 Assert.Equal("Prewarm can load this model before the first recording to reduce startup latency.", row.Detail);
@@ -86,6 +93,13 @@ public sealed class LocalWhisperModelHealthPresenterTests
                 Assert.Equal("Unavailable", row.Value);
                 Assert.Equal("VoiceInk cannot use this model until the path points to a complete .bin file.", row.Detail);
                 Assert.Equal("Repair", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Filename", row.Title);
+                Assert.Equal("ggml-*.bin", row.Value);
+                Assert.Equal("Import a whisper.cpp GGML file such as ggml-base.en.bin.", row.Detail);
+                Assert.Equal("Expected", row.StatusBadge);
             },
             row =>
             {

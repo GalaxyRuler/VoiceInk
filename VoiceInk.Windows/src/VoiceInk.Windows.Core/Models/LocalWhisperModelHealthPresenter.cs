@@ -89,6 +89,11 @@ public static class LocalWhisperModelHealthPresenter
             "The selected whisper.cpp .bin file can be used for local transcription.",
             "Usable"),
         new(
+            "Filename",
+            "ggml-*.bin",
+            "Whisper.cpp models usually use names like ggml-base.en.bin.",
+            "Expected"),
+        new(
             "Warmup",
             "Available",
             "Prewarm can load this model before the first recording to reduce startup latency.",
@@ -107,6 +112,11 @@ public static class LocalWhisperModelHealthPresenter
             "Unavailable",
             "VoiceInk cannot use this model until the path points to a complete .bin file.",
             "Repair"),
+        new(
+            "Filename",
+            "ggml-*.bin",
+            "Import a whisper.cpp GGML file such as ggml-base.en.bin.",
+            "Expected"),
         new(
             "Warmup",
             "Blocked",
