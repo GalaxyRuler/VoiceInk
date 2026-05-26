@@ -582,10 +582,12 @@ Implemented core:
 - Shell add/edit/delete/enable/disable/sort controls for word replacements.
 - Dictionary-only JSON backup export/import using macOS backup field names for vocabulary and word replacements.
 - Quick-add dialog with Vocabulary and Word Replacement modes, opened by shell button or global shortcut.
+- A Core `DictionaryPagePresenter` with macOS-style hero/section labels, count labels, empty-state guidance, and enabled/disabled replacement row display.
+- Windows Dictionary page presentation text for `Dictionary Settings`, `Vocabulary`, `Word Replacements`, list counts, and empty guidance.
 
 Windows gaps:
 
-- Dedicated macOS-style Dictionary navigation page and richer layout/guidance.
+- Richer card/flow layout polish for vocabulary tokens and replacement rows.
 
 ### History
 

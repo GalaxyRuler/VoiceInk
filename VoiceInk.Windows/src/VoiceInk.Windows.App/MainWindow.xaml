@@ -892,7 +892,11 @@
                     </StackPanel>
 
                     <StackPanel x:Name="DictionarySectionPanel" Spacing="12" Visibility="Collapsed">
-                        <TextBlock Text="Dictionary" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="DictionaryHeroTitleTextBlock" Text="Dictionary" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            x:Name="DictionaryHeroDescriptionTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button
                                 x:Name="ExportDictionaryButton"
@@ -909,7 +913,11 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Vocabulary" FontWeight="SemiBold" />
+                            <TextBlock x:Name="VocabularySectionTitleTextBlock" Text="Vocabulary" FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Name="VocabularySectionDescriptionTextBlock"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
                             <ComboBox
                                 x:Name="VocabularySortComboBox"
                                 Header="Sort"
@@ -939,14 +947,27 @@
                                     Content="Remove"
                                     Click="RemoveVocabularyButton_Click" />
                             </Grid>
+                            <TextBlock
+                                x:Name="VocabularyCountTextBlock"
+                                FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Name="VocabularyEmptyTextBlock"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
                             <ListView
                                 x:Name="VocabularyListView"
+                                DisplayMemberPath="DisplayText"
                                 Height="120"
                                 SelectionMode="Single" />
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Word Replacements" FontWeight="SemiBold" />
+                            <TextBlock x:Name="ReplacementSectionTitleTextBlock" Text="Word Replacements" FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Name="ReplacementSectionDescriptionTextBlock"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
                             <ComboBox
                                 x:Name="ReplacementSortComboBox"
                                 Header="Sort"
@@ -997,8 +1018,17 @@
                                     Content="Disable"
                                     Click="ToggleReplacementButton_Click" />
                             </Grid>
+                            <TextBlock
+                                x:Name="ReplacementCountTextBlock"
+                                FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Name="ReplacementEmptyTextBlock"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
                             <ListView
                                 x:Name="ReplacementListView"
+                                DisplayMemberPath="DisplayText"
                                 Height="140"
                                 SelectionChanged="ReplacementListView_SelectionChanged"
                                 SelectionMode="Single" />

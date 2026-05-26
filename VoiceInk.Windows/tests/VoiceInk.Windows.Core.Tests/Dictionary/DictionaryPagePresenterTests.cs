@@ -1,0 +1,65 @@
+using VoiceInk.Windows.Core.Dictionary;
+using Xunit;
+
+namespace VoiceInk.Windows.Core.Tests.Dictionary;
+
+public sealed class DictionaryPagePresenterTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 5, 26, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void Present_BuildsMacStyleSectionLabelsAndRows()
+    {
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", Now),
+            new VocabularyWord(Guid.NewGuid(), "AssemblyAI", Now)
+        };
+        var replacements = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "Voice ink", "VoiceInk", Now, true),
+            new WordReplacement(Guid.NewGuid(), "old name", "New Name", Now, false)
+        };
+
+        var presentation = DictionaryPagePresenter.Present(vocabulary, replacements);
+
+        Assert.Equal("Dictionary Settings", presentation.HeroTitle);
+        Assert.Equal(
+            "Enhance VoiceInk's transcription accuracy by teaching it your vocabulary",
+            presentation.HeroDescription);
+        Assert.Equal("Vocabulary Words (2)", presentation.VocabularyCountLabel);
+        Assert.Equal("Word Replacements (2)", presentation.ReplacementCountLabel);
+        Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
+        Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
+        Assert.Equal(["VoiceInk", "AssemblyAI"], presentation.VocabularyRows.Select(row => row.DisplayText).ToArray());
+        Assert.Collection(
+            presentation.ReplacementRows,
+            row =>
+            {
+                Assert.Equal("Voice ink", row.OriginalText);
+                Assert.Equal("VoiceInk", row.ReplacementText);
+                Assert.Equal("Voice ink -> VoiceInk", row.DisplayText);
+                Assert.True(row.IsEnabled);
+            },
+            row =>
+            {
+                Assert.Equal("old name -> New Name (disabled)", row.DisplayText);
+                Assert.False(row.IsEnabled);
+            });
+    }
+
+    [Fact]
+    public void Present_BuildsMacStyleEmptyStateText()
+    {
+        var presentation = DictionaryPagePresenter.Present([], []);
+
+        Assert.Equal("Vocabulary Words (0)", presentation.VocabularyCountLabel);
+        Assert.Equal("Word Replacements (0)", presentation.ReplacementCountLabel);
+        Assert.Equal("Add words to help VoiceInk recognize them properly.", presentation.VocabularyEmptyText);
+        Assert.Equal(
+            "Define word replacements to automatically replace specific words or phrases.",
+            presentation.ReplacementEmptyText);
+        Assert.Empty(presentation.VocabularyRows);
+        Assert.Empty(presentation.ReplacementRows);
+    }
+}

@@ -3802,19 +3802,37 @@ public sealed partial class MainWindow : Window
         replacementItems = DictionarySortService.SortReplacements(
             await dictionaryStore.ListReplacementsAsync(cancellationToken),
             SelectedReplacementSortMode());
+        var presentation = DictionaryPagePresenter.Present(vocabularyItems, replacementItems);
 
-        VocabularyListView.ItemsSource = vocabularyItems
-            .Select(item => item.Word)
-            .ToArray();
-        ReplacementListView.ItemsSource = replacementItems
-            .Select(ReplacementListItem)
-            .ToArray();
+        ApplyDictionaryPagePresentation(presentation);
         VocabularyListView.SelectedIndex = selectedVocabularyId is null
             ? -1
             : vocabularyItems.ToList().FindIndex(item => item.Id == selectedVocabularyId.Value);
         ReplacementListView.SelectedIndex = selectedReplacementId is null
             ? -1
             : replacementItems.ToList().FindIndex(item => item.Id == selectedReplacementId.Value);
+    }
+
+    private void ApplyDictionaryPagePresentation(DictionaryPagePresentation presentation)
+    {
+        DictionaryHeroTitleTextBlock.Text = presentation.HeroTitle;
+        DictionaryHeroDescriptionTextBlock.Text = presentation.HeroDescription;
+        VocabularySectionTitleTextBlock.Text = presentation.VocabularySectionTitle;
+        VocabularySectionDescriptionTextBlock.Text = presentation.VocabularySectionDescription;
+        VocabularyCountTextBlock.Text = presentation.VocabularyCountLabel;
+        VocabularyEmptyTextBlock.Text = presentation.VocabularyEmptyText;
+        VocabularyEmptyTextBlock.Visibility = string.IsNullOrWhiteSpace(presentation.VocabularyEmptyText)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        VocabularyListView.ItemsSource = presentation.VocabularyRows;
+        ReplacementSectionTitleTextBlock.Text = presentation.ReplacementSectionTitle;
+        ReplacementSectionDescriptionTextBlock.Text = presentation.ReplacementSectionDescription;
+        ReplacementCountTextBlock.Text = presentation.ReplacementCountLabel;
+        ReplacementEmptyTextBlock.Text = presentation.ReplacementEmptyText;
+        ReplacementEmptyTextBlock.Visibility = string.IsNullOrWhiteSpace(presentation.ReplacementEmptyText)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        ReplacementListView.ItemsSource = presentation.ReplacementRows;
     }
 
     private async Task ExportDictionaryAsync()
@@ -5676,12 +5694,6 @@ public sealed partial class MainWindow : Window
         }
 
         return $"{item.CreatedAt.LocalDateTime:g}  [{item.Status}]  {preview}";
-    }
-
-    private static string ReplacementListItem(WordReplacement replacement)
-    {
-        var prefix = replacement.IsEnabled ? string.Empty : "[Disabled] ";
-        return $"{prefix}{replacement.OriginalText} -> {replacement.ReplacementText}";
     }
 
     private void SelectReplacementItem(Guid id)
