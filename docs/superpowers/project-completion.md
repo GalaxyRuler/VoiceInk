@@ -29,24 +29,24 @@ VoiceInk Windows parity  [##################--] 89%
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
 | Onboarding | 64% | `[#############-------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Broader permission health checks and richer setup polish remain. |
-| Packaging | 49% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX build smoke, shortcut registration, and release signing flow remain. |
+| Packaging | 52% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke, shortcut registration, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows Cartesia live preview  [####################] 100%
+Windows signed MSIX build validation  [####################] 100%
 ```
 
 Completed:
 
-- Added a header-capable WebSocket connection path for providers that do not use `Authorization`.
-- Added Cartesia realtime URI construction with model, PCM16 encoding, sample rate, and API version.
-- Added Cartesia transcript message parsing.
-- Added Cartesia live preview session support with binary audio chunks, `finalize`, `close`, and composite recorder wiring.
+- Added `package-msix.ps1 -ValidateAfterBuild`.
+- Located the signed `.msix` under the fresh publish root after `dotnet publish`.
+- Invoked the existing non-installing MSIX artifact validator after signed publish when requested.
+- Documented the signed-build validation path without creating certificates, importing trust, installing, uninstalling, or launching the app.
 
 ## Near-Term Priority
 
-1. Continue packaging from artifact validation to signed MSIX build smoke, uninstall behavior, and release signing flow.
+1. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
 2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
 3. Add broader onboarding permission health checks and setup polish.
 4. Refine OCR region picker behavior across complex multi-monitor/DPI layouts.

@@ -10,6 +10,7 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$PackageCertificatePassword,
     [switch]$Preflight,
+    [switch]$ValidateAfterBuild,
     [switch]$Help
 )
 
@@ -17,7 +18,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Show-Usage {
-    Write-Host "Usage: .\VoiceInk.Windows\scripts\package-msix.ps1 -PackageCertificateKeyFile path [-PackageCertificatePassword value] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
+    Write-Host "Usage: .\VoiceInk.Windows\scripts\package-msix.ps1 -PackageCertificateKeyFile path [-PackageCertificatePassword value] [-ValidateAfterBuild] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
     Write-Host "       .\VoiceInk.Windows\scripts\package-msix.ps1 -Preflight [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
     Write-Host ""
     Write-Host "Creates a signed MSIX package under VoiceInk.Windows\artifacts\msix."
@@ -104,6 +105,24 @@ function Write-MsixPublishProperties {
     }
 }
 
+function Find-BuiltMsixPackage {
+    param(
+        [string]$SearchRoot
+    )
+
+    $packages = @(Get-ChildItem -LiteralPath $SearchRoot -Recurse -File -Filter "*.msix" | Sort-Object LastWriteTimeUtc -Descending)
+    if ($packages.Count -eq 0) {
+        throw "Signed MSIX publish completed, but no .msix package was found under $SearchRoot."
+    }
+
+    if ($packages.Count -gt 1) {
+        $packageList = ($packages | ForEach-Object { $_.FullName }) -join [Environment]::NewLine
+        throw "Expected one signed MSIX package under $SearchRoot, found $($packages.Count):$([Environment]::NewLine)$packageList"
+    }
+
+    return $packages[0].FullName
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -161,6 +180,8 @@ if ($Preflight) {
     Write-Host "  Get-AppxPackage VoiceInk.Windows"
     Write-Host "  Remove-AppxPackage -Package <package-full-name>"
     Write-Host ""
+    Write-Host "To run non-installing artifact validation immediately after a signed build, add -ValidateAfterBuild."
+    Write-Host ""
     Write-Host "Preflight does not run dotnet publish, sign packages, create or import certificates, install packages, uninstall packages, or read certificate passwords."
     exit 0
 }
@@ -206,6 +227,25 @@ Write-MsixPublishProperties -CertificatePath $PackageCertificateKeyFile
 
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed with exit code $LASTEXITCODE."
+}
+
+$builtPackagePath = Find-BuiltMsixPackage -SearchRoot $publishRoot
+
+if ($ValidateAfterBuild) {
+    $msixValidator = Join-Path $scriptRoot "test-msix-package.ps1"
+    if (!(Test-Path -LiteralPath $msixValidator -PathType Leaf)) {
+        throw "MSIX artifact validator was not found: $msixValidator"
+    }
+
+    Write-Host ""
+    Write-Host "Validating signed MSIX artifact..."
+    & $msixValidator -PackagePath $builtPackagePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSIX artifact validation failed with exit code $LASTEXITCODE."
+    }
+
+    Write-Host "Validated signed MSIX artifact:"
+    Write-Host "  $builtPackagePath"
 }
 
 Write-Host "MSIX artifacts written under:"

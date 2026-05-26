@@ -95,6 +95,26 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void MsixPackagingScript_CanRunArtifactValidationAfterSignedBuild()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "package-msix.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("ValidateAfterBuild", script);
+        Assert.Contains("Find-BuiltMsixPackage", script);
+        Assert.Contains("test-msix-package.ps1", script);
+        Assert.Contains("Validating signed MSIX artifact", script);
+        Assert.Contains("& $msixValidator -PackagePath $builtPackagePath", script);
+        Assert.Contains("Validated signed MSIX artifact", script);
+
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void DevZipSmokeScript_ValidatesExpectedPackageContentsWithoutInstalling()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-dev-zip.ps1");
