@@ -975,43 +975,53 @@
                             <TextBox
                                 x:Name="RecordingHotkeyTextBox"
                                 Header="Primary Shortcut"
-                                PlaceholderText="Ctrl+Alt+Space" />
+                                PlaceholderText="Ctrl+Alt+Space"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="SecondaryRecordingHotkeyTextBox"
                                 Header="Secondary Shortcut"
-                                PlaceholderText="Ctrl+Alt+S" />
+                                PlaceholderText="Ctrl+Alt+S"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="PasteLastHotkeyTextBox"
                                 Header="Paste Last Transcription"
-                                PlaceholderText="Ctrl+Alt+V" />
+                                PlaceholderText="Ctrl+Alt+V"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="PasteLastEnhancedHotkeyTextBox"
                                 Header="Paste Last Enhanced Transcription"
-                                PlaceholderText="Ctrl+Alt+E" />
+                                PlaceholderText="Ctrl+Alt+E"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="RetryLastHotkeyTextBox"
                                 Header="Retry Last Transcription"
-                                PlaceholderText="Ctrl+Alt+R" />
+                                PlaceholderText="Ctrl+Alt+R"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="CancelHotkeyTextBox"
                                 Header="Cancel Recording"
-                                PlaceholderText="Ctrl+Alt+C" />
+                                PlaceholderText="Ctrl+Alt+C"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="OpenHistoryHotkeyTextBox"
                                 Header="Open History Window"
-                                PlaceholderText="Ctrl+Alt+H" />
+                                PlaceholderText="Ctrl+Alt+H"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="QuickAddHotkeyTextBox"
                                 Header="Quick Add to Dictionary"
-                                PlaceholderText="Ctrl+Alt+D" />
+                                PlaceholderText="Ctrl+Alt+D"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="ToggleEnhancementHotkeyTextBox"
                                 Header="Toggle Enhancement"
-                                PlaceholderText="Ctrl+Alt+X" />
+                                PlaceholderText="Ctrl+Alt+X"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <TextBox
                                 x:Name="CyclePowerModeHotkeyTextBox"
                                 Header="Cycle Power Mode"
-                                PlaceholderText="Ctrl+Alt+P" />
+                                PlaceholderText="Ctrl+Alt+P"
+                                KeyDown="ShortcutTextBox_KeyDown" />
                             <Button
                                 x:Name="ApplyShortcutsButton"
                                 Content="Apply Shortcuts"

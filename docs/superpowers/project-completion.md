@@ -17,7 +17,7 @@ VoiceInk Windows parity  [##################--] 89%
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 76% | `[###############-----]` | Navigation shell, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 87% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, and Cartesia interim results. Waveform polish and more streaming providers remain. |
-| Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
+| Shortcuts | 72% | `[##############------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable with typed or captured shortcut entry. Press-and-hold modes and per-rule Power Mode shortcuts remain. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 93% | `[###################-]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for Custom/Groq/Mistral/xAI/Deepgram/AssemblyAI/ElevenLabs/Soniox/Gemini, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Gemini inline-audio generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, plus Cartesia live preview streaming exist. Speechmatics/Cartesia safe probe endpoints, Files API upload for long Gemini recordings, and more streaming providers remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
@@ -34,14 +34,15 @@ VoiceInk Windows parity  [##################--] 89%
 ## Current Slice
 
 ```text
-Windows onboarding health checklist  [####################] 100%
+Windows shortcut recorder fields  [####################] 100%
 ```
 
 Completed:
 
-- Added first-run readiness checklist status for model path, shortcut, microphone device, Windows microphone privacy review, and app microphone capability.
-- Surfaced the checklist in the onboarding dialog and refreshed it with model, shortcut, and microphone changes.
-- Kept Windows privacy settings as an explicit user action through the existing microphone settings link.
+- Added `GlobalShortcut.TryCreateFromKeyCapture` with normalized display formatting.
+- Wired shortcut settings text boxes to capture modifier+key combinations through `KeyDown`.
+- Added bare Escape clearing and modifier-only guidance.
+- Preserved typed shortcut entry and existing global registration validation.
 
 ## Near-Term Priority
 

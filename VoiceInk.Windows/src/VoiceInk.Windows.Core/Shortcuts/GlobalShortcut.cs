@@ -9,6 +9,45 @@ public sealed record GlobalShortcut(
 {
     public string DisplayText => string.Join("+", DisplayTokens());
 
+    public static bool TryCreateFromKeyCapture(
+        bool control,
+        bool alt,
+        bool shift,
+        int virtualKey,
+        out GlobalShortcut? shortcut,
+        out string? error)
+    {
+        shortcut = null;
+        error = null;
+
+        if (virtualKey is 0x10 or 0x11 or 0x12)
+        {
+            error = "Press a non-modifier key with your shortcut.";
+            return false;
+        }
+
+        if (virtualKey is 0x5B or 0x5C)
+        {
+            error = "Windows-key shortcuts are reserved by Windows.";
+            return false;
+        }
+
+        if (!control && !alt && !shift)
+        {
+            error = "A global shortcut must include at least one modifier.";
+            return false;
+        }
+
+        if (!TryGetKeyName(virtualKey, out var keyName))
+        {
+            error = $"Unsupported shortcut key: 0x{virtualKey:X2}.";
+            return false;
+        }
+
+        shortcut = new GlobalShortcut(control, alt, shift, virtualKey, keyName);
+        return true;
+    }
+
     public static bool TryParse(string? value, out GlobalShortcut? shortcut, out string? error)
     {
         shortcut = null;
@@ -143,6 +182,37 @@ public sealed record GlobalShortcut(
         {
             virtualKey = 0x70 + functionKey - 1;
             keyName = $"F{functionKey}";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetKeyName(int virtualKey, out string keyName)
+    {
+        keyName = string.Empty;
+
+        if (virtualKey == 0x20)
+        {
+            keyName = "Space";
+            return true;
+        }
+
+        if (virtualKey == 0x1B)
+        {
+            keyName = "Escape";
+            return true;
+        }
+
+        if (virtualKey is >= 'A' and <= 'Z' or >= '0' and <= '9')
+        {
+            keyName = ((char)virtualKey).ToString();
+            return true;
+        }
+
+        if (virtualKey is >= 0x70 and <= 0x87)
+        {
+            keyName = $"F{virtualKey - 0x70 + 1}";
             return true;
         }
 

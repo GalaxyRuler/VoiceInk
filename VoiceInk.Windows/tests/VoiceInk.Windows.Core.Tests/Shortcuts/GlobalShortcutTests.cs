@@ -80,6 +80,44 @@ public sealed class GlobalShortcutTests
     }
 
     [Fact]
+    public void TryCreateFromKeyCapture_FormatsCapturedShortcut()
+    {
+        var created = GlobalShortcut.TryCreateFromKeyCapture(
+            control: true,
+            alt: true,
+            shift: false,
+            virtualKey: 0x20,
+            out var shortcut,
+            out var error);
+
+        Assert.True(created);
+        Assert.Null(error);
+        Assert.NotNull(shortcut);
+        Assert.Equal("Ctrl+Alt+Space", shortcut.DisplayText);
+    }
+
+    [Theory]
+    [InlineData(0x11)]
+    [InlineData(0x12)]
+    [InlineData(0x10)]
+    [InlineData(0x5B)]
+    [InlineData(0x5C)]
+    public void TryCreateFromKeyCapture_RejectsModifierAndWindowsKeys(int virtualKey)
+    {
+        var created = GlobalShortcut.TryCreateFromKeyCapture(
+            control: true,
+            alt: true,
+            shift: false,
+            virtualKey,
+            out var shortcut,
+            out var error);
+
+        Assert.False(created);
+        Assert.Null(shortcut);
+        Assert.False(string.IsNullOrWhiteSpace(error));
+    }
+
+    [Fact]
     public void BuildRegistrations_UsesPrimaryAndOptionalHotkeys()
     {
         var settings = new AppSettings

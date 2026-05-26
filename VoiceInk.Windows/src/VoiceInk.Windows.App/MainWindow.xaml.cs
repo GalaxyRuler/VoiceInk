@@ -9,6 +9,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.Win32;
 using Windows.ApplicationModel.DataTransfer;
 using VoiceInk.Windows.Core.Audio;
@@ -1266,6 +1267,45 @@ public sealed partial class MainWindow : Window
     private async void ApplyShortcutsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyShortcutsAsync();
+    }
+
+    private void ShortcutTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+        {
+            return;
+        }
+
+        var virtualKey = (int)e.Key;
+        if (virtualKey == VirtualKeyEscape
+            && !IsKeyDown(VirtualKeyControl)
+            && !IsKeyDown(VirtualKeyMenu)
+            && !IsKeyDown(VirtualKeyShift))
+        {
+            textBox.Text = string.Empty;
+            e.Handled = true;
+            RefreshUiFromControllerState("Shortcut cleared");
+            return;
+        }
+
+        if (GlobalShortcut.TryCreateFromKeyCapture(
+                IsKeyDown(VirtualKeyControl),
+                IsKeyDown(VirtualKeyMenu),
+                IsKeyDown(VirtualKeyShift),
+                virtualKey,
+                out var shortcut,
+                out var error))
+        {
+            textBox.Text = shortcut!.DisplayText;
+            textBox.Select(textBox.Text.Length, 0);
+            e.Handled = true;
+            RefreshUiFromControllerState("Shortcut captured");
+        }
+        else if (IsShortcutModifierKey(virtualKey))
+        {
+            e.Handled = true;
+            RefreshUiFromControllerState(error ?? "Press a non-modifier key with your shortcut");
+        }
     }
 
     private async void ApplyClipboardSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -7869,6 +7909,16 @@ public sealed partial class MainWindow : Window
     private const int ShowWindowShow = 5;
     private const int ShowWindowRestore = 9;
     private const int ShowWindowMinimize = 6;
+    private const int VirtualKeyShift = 0x10;
+    private const int VirtualKeyControl = 0x11;
+    private const int VirtualKeyMenu = 0x12;
+    private const int VirtualKeyEscape = 0x1B;
+
+    private static bool IsShortcutModifierKey(int virtualKey) =>
+        virtualKey is VirtualKeyShift or VirtualKeyControl or VirtualKeyMenu;
+
+    private static bool IsKeyDown(int virtualKey) =>
+        (GetKeyState(virtualKey) & 0x8000) != 0;
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
@@ -7878,4 +7928,7 @@ public sealed partial class MainWindow : Window
 
     [DllImport("user32.dll")]
     private static extern bool IsIconic(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern short GetKeyState(int nVirtKey);
 }
