@@ -19,5 +19,7 @@ public sealed record OnboardingSetupStatus(
     public string MicrophoneActionText =>
         HasAudioInputChoices ? "Open Windows Microphone Settings" : "Check Windows Microphone Settings";
 
+    public string MicrophoneActionTarget => "ms-settings:privacy-microphone";
+
     public string HealthSummary => string.Join(Environment.NewLine, HealthChecks);
 }

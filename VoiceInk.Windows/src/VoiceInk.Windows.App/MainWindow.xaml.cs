@@ -2296,7 +2296,7 @@ public sealed partial class MainWindow : Window
         {
             Content = "Open Windows Microphone Settings"
         };
-        microphoneSettingsButton.Click += (_, _) => OpenWindowsMicrophoneSettings();
+        microphoneSettingsButton.Click += (_, _) => OpenOnboardingMicrophoneAction(microphoneSettingsButton.Tag as string);
         var refreshMicrophonesButton = new Button
         {
             Content = "Refresh Microphones"
@@ -3360,6 +3360,7 @@ public sealed partial class MainWindow : Window
         if (microphoneSettingsButton is not null)
         {
             microphoneSettingsButton.Content = status.MicrophoneActionText;
+            microphoneSettingsButton.Tag = status.MicrophoneActionTarget;
         }
     }
 
@@ -3379,6 +3380,14 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Microphone settings failed: {ex.Message}");
+        }
+    }
+
+    private void OpenOnboardingMicrophoneAction(string? actionTarget)
+    {
+        if (string.Equals(actionTarget, "ms-settings:privacy-microphone", StringComparison.OrdinalIgnoreCase))
+        {
+            OpenWindowsMicrophoneSettings();
         }
     }
 

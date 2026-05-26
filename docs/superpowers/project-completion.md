@@ -28,21 +28,21 @@ VoiceInk Windows parity  [###################-] 95%
 | Metrics | 88% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows, metric data/formula guidance rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 87% | `[#################---]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows, and diagnostics privacy/export guidance rows exist. Deeper form layout polish remains. |
 | Audio input | 92% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
-| Onboarding | 87% | `[#################---]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
+| Onboarding | 88% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 68% | `[##############------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, and a read-only release readiness report with signing/trust checklist plus WinApp CLI local signing reference exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows MSIX install trust diagnostics  [####################] 100%
+Windows onboarding microphone action target  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the MSIX install trust diagnostics spec and implementation plan.
-- Added a failing packaging asset test for signature/trust diagnostics in the install smoke plan.
-- Added read-only Authenticode signature status, signer subject/thumbprint, trust-failure guidance, and deployment-log references to `smoke-msix-install.ps1`.
-- Ran focused packaging tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the onboarding microphone action target spec and implementation plan.
+- Added failing onboarding status assertions for the Windows microphone privacy action URI.
+- Added `MicrophoneActionTarget` to `OnboardingSetupStatus` and wired the onboarding button to that target.
+- Ran focused onboarding status tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
