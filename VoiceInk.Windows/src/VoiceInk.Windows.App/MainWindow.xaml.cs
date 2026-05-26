@@ -5059,12 +5059,14 @@ public sealed partial class MainWindow : Window
             cancellationToken);
 
         ApplyMetricsDashboardPresentation(SessionMetricsDashboardPresenter.Present(filter.Label, summary));
-        TranscriptionModelPerformanceListView.ItemsSource = transcriptionStats.Count == 0
-            ? ["No transcription model metrics yet"]
-            : transcriptionStats.Select(TranscriptionModelPerformanceListItem).ToArray();
-        EnhancementModelPerformanceListView.ItemsSource = enhancementStats.Count == 0
-            ? ["No enhancement model metrics yet"]
-            : enhancementStats.Select(EnhancementModelPerformanceListItem).ToArray();
+        TranscriptionModelPerformanceListView.ItemsSource = ModelPerformancePresenter
+            .PresentTranscription(transcriptionStats)
+            .Select(row => row.DisplayText)
+            .ToArray();
+        EnhancementModelPerformanceListView.ItemsSource = ModelPerformancePresenter
+            .PresentEnhancement(enhancementStats)
+            .Select(row => row.DisplayText)
+            .ToArray();
     }
 
     private async Task<string?> RefreshMetricsBestEffortAsync(CancellationToken cancellationToken)
@@ -5203,15 +5205,6 @@ public sealed partial class MainWindow : Window
         MetricsDashboardCardsListView.ItemsSource = Array.Empty<SessionMetricsDashboardCard>();
         MetricsAudioDurationTextBlock.Text = string.Empty;
     }
-
-    private static string TranscriptionModelPerformanceListItem(ModelPerformanceStat stat) =>
-        $"{stat.Name} - {stat.SessionCount:N0} sessions, {stat.SpeedFactor:0.0}x, "
-        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing, "
-        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio";
-
-    private static string EnhancementModelPerformanceListItem(ModelPerformanceStat stat) =>
-        $"{stat.Name} - {stat.SessionCount:N0} sessions, "
-        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg enhancement";
 
     private SessionMetricsTimeFilter SelectedMetricsTimeFilter() =>
         MetricsTimeFilterComboBox.SelectedItem as SessionMetricsTimeFilter

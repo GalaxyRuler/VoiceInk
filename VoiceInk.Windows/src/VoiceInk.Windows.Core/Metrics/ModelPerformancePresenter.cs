@@ -1,0 +1,59 @@
+using System.Globalization;
+
+namespace VoiceInk.Windows.Core.Metrics;
+
+public sealed record ModelPerformanceRow(
+    string Title,
+    string Subtitle,
+    string Detail,
+    bool IsEmpty = false)
+{
+    public string DisplayText =>
+        string.IsNullOrWhiteSpace(Subtitle)
+            ? $"{Title} - {Detail}"
+            : $"{Title} - {Subtitle}; {Detail}";
+}
+
+public static class ModelPerformancePresenter
+{
+    public static IReadOnlyList<ModelPerformanceRow> PresentTranscription(
+        IEnumerable<ModelPerformanceStat> stats)
+    {
+        var rows = stats
+            .Select(stat => new ModelPerformanceRow(
+                stat.Name,
+                $"{stat.SessionCount.ToString("N0", CultureInfo.CurrentCulture)} {Pluralize(stat.SessionCount, "session", "sessions")} - {stat.SpeedFactor:0.0}x realtime",
+                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing; {SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio"))
+            .ToArray();
+
+        return rows.Length == 0
+            ? [new ModelPerformanceRow(
+                "No transcription model metrics yet",
+                string.Empty,
+                "Complete a local or cloud transcription to compare model speed.",
+                IsEmpty: true)]
+            : rows;
+    }
+
+    public static IReadOnlyList<ModelPerformanceRow> PresentEnhancement(
+        IEnumerable<ModelPerformanceStat> stats)
+    {
+        var rows = stats
+            .Select(stat => new ModelPerformanceRow(
+                stat.Name,
+                $"{stat.SessionCount.ToString("N0", CultureInfo.CurrentCulture)} {Pluralize(stat.SessionCount, "session", "sessions")}",
+                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg enhancement processing"))
+            .ToArray();
+
+        return rows.Length == 0
+            ? [new ModelPerformanceRow(
+                "No enhancement model metrics yet",
+                string.Empty,
+                "Enable enhancement and complete a session to compare enhancement latency.",
+                IsEmpty: true)]
+            : rows;
+    }
+
+    private static string Pluralize(int count, string singular, string plural) =>
+        count == 1 ? singular : plural;
+}

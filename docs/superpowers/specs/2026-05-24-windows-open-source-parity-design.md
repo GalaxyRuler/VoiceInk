@@ -665,6 +665,12 @@ Metrics Dashboard Visual Parity slice completed on 2026-05-26:
 - Updated the Windows Metrics page to show `No Recorder Sessions Yet` / `Start your first recording to unlock value insights.` for empty metrics.
 - Replaced the plain summary text blob with hero text and cards for Sessions Recorded, Words Dictated, Words Per Minute, and Keystrokes Saved.
 
+Metrics model performance guidance slice completed on 2026-05-26:
+
+- Added a Core `ModelPerformancePresenter` for transcription model speed rows, enhancement latency rows, and empty-state guidance.
+- Replaced ad hoc Metrics page model-performance strings with presenter output while keeping SQLite storage and CSV export unchanged.
+- Kept all Metrics views local-only; no commercial telemetry or remote analytics were added.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.
