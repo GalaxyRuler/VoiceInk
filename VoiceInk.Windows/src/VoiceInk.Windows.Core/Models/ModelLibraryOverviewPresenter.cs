@@ -4,7 +4,14 @@ public sealed record ModelLibraryOverviewPresentation(
     string Title,
     string Summary,
     string DefaultModelLabel,
-    string CleanupHint);
+    string CleanupHint,
+    IReadOnlyList<ModelLibraryActionRow> ActionRows);
+
+public sealed record ModelLibraryActionRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
 
 public static class ModelLibraryOverviewPresenter
 {
@@ -25,12 +32,80 @@ public static class ModelLibraryOverviewPresenter
         var defaultModel = items.FirstOrDefault(item => item.IsDefault);
         var customDefaultModel = localModelList.FirstOrDefault(model =>
             string.Equals(model.Path, selectedModelPath.Trim(), StringComparison.OrdinalIgnoreCase));
+        var customDefaultDisplayName = customDefaultModel?.DisplayName ?? string.Empty;
+        var defaultDisplayName = defaultModel?.DisplayName ?? customDefaultDisplayName;
 
         return new ModelLibraryOverviewPresentation(
             "Local Whisper Library",
             $"{availableCount} of {items.Length} catalog models available on this device. {customModelCount} {ImportedModelText(customModelCount)} ready. {recommendedCount} recommended starter models are highlighted.",
             DefaultModelLabel(defaultModel, customDefaultModel),
-            CleanupHint(availableCount + customModelCount, unavailableImportedModelCount));
+            CleanupHint(availableCount + customModelCount, unavailableImportedModelCount),
+            ActionRows(
+                availableCount,
+                items.Length,
+                customModelCount,
+                defaultDisplayName,
+                unavailableImportedModelCount));
+    }
+
+    private static IReadOnlyList<ModelLibraryActionRow> ActionRows(
+        int availableCatalogCount,
+        int totalCatalogCount,
+        int customModelCount,
+        string defaultDisplayName,
+        int unavailableImportedModelCount) =>
+    [
+        new(
+            "Download Models",
+            $"{availableCatalogCount} of {totalCatalogCount} available",
+            availableCatalogCount > 0
+                ? "Downloaded catalog models are ready for private local transcription."
+                : "Download a recommended GGML model for private local transcription.",
+            availableCatalogCount > 0 ? "Available" : "Needed"),
+        new(
+            "Imported Models",
+            $"{customModelCount} ready",
+            customModelCount > 0
+                ? "Imported whisper.cpp .bin models stay referenced locally."
+                : "Import an existing whisper.cpp .bin model from disk.",
+            customModelCount > 0 ? "Ready" : "Optional"),
+        new(
+            "Default Model",
+            string.IsNullOrWhiteSpace(defaultDisplayName) ? "Not selected" : defaultDisplayName,
+            string.IsNullOrWhiteSpace(defaultDisplayName)
+                ? "Set a downloaded or imported model as the default before recording."
+                : "This model is used for local dictation unless Power Mode overrides it.",
+            string.IsNullOrWhiteSpace(defaultDisplayName) ? "Required" : "Ready"),
+        RepairWarmupRow(defaultDisplayName, unavailableImportedModelCount)
+    ];
+
+    private static ModelLibraryActionRow RepairWarmupRow(
+        string defaultDisplayName,
+        int unavailableImportedModelCount)
+    {
+        if (unavailableImportedModelCount > 0)
+        {
+            return new(
+                "Repair & Warmup",
+                $"{unavailableImportedModelCount} stale references",
+                "Remove unavailable imported references or choose a replacement model path.",
+                "Repair");
+        }
+
+        if (!string.IsNullOrWhiteSpace(defaultDisplayName))
+        {
+            return new(
+                "Repair & Warmup",
+                "Warmup ready",
+                "Warm up the selected model to reduce first-use delay.",
+                "Warmup");
+        }
+
+        return new(
+            "Repair & Warmup",
+            "After model select",
+            "Warmup becomes available once the default model path is usable.",
+            "Waiting");
     }
 
     private static string ImportedModelText(int count) =>

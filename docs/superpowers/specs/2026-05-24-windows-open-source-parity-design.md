@@ -349,6 +349,12 @@ Model repair action slice completed on 2026-05-26:
 - Added an AI Models repair action button that opens the existing `.bin` import flow for unhealthy model states and runs warmup for ready local models.
 - Kept model persistence, catalog downloads, stale imported cleanup, and warmup implementation unchanged.
 
+Model library actions slice completed on 2026-05-26:
+
+- Added Core model library action rows for catalog downloads, imported models, default model selection, and repair/warmup state.
+- Rendered the action rows under the AI Models local library overview so download/import/default/repair/warmup status is visible before using the catalog list.
+- Kept model download, import, default selection, repair, warmup, and settings persistence unchanged.
+
 Windows gaps:
 
 - Deeper model lifecycle polish.
