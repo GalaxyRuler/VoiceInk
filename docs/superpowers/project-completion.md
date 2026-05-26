@@ -20,7 +20,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Shortcuts | 97% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, and read-only recorder fields with explicit Record buttons. Remaining work is rare Windows-reserved-key conflict recovery. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 99% | `[####################]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, Deepgram/AssemblyAI/Soniox/Speechmatics/Cartesia live preview streaming, and a user-owned-key smoke runbook exist. Remaining cloud work is advanced provider-specific options. |
-| AI enhancement | 88% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, presets, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Richer assistant workflows remain. |
+| AI enhancement | 90% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 85% | `[#################---]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, and post-insertion auto-send keys exist. Deeper visual parity polish remains. |
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
@@ -34,18 +34,18 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows native Ollama enhancement  [####################] 100%
+Windows assistant prompt parity  [####################] 100%
 ```
 
 Completed:
 
-- Switched the Ollama AI Enhancement preset to Ollama's native local `/api/chat` endpoint.
-- Sent system/user chat messages with `stream: false` and `options.temperature` while keeping Ollama keyless.
-- Parsed native Ollama responses from `message.content` and preserved retries, timeouts, filtering, and model refresh.
+- Wrapped Assistant context in `<CONTEXT_INFORMATION>` while leaving normal transcription-enhancer prompts unchanged.
+- Aligned Default, Chat, Email, and Rewrite predefined prompt text with the richer macOS Swift templates.
+- Added focused Core tests for assistant context wrapping and prompt template fidelity.
 
 ## Near-Term Priority
 
 1. Continue packaging from per-user Dev ZIP install to actual signed MSIX install/uninstall smoke and release signing flow when a trusted signing setup is available.
-2. Continue AI enhancement parity with richer assistant workflows.
-3. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.
+2. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, Enhancement, and onboarding pages.
+3. Continue model lifecycle polish for local model discovery, validation, and repair flows.
 4. Consider a future WASAPI capture backend if endpoint-native recording becomes necessary.

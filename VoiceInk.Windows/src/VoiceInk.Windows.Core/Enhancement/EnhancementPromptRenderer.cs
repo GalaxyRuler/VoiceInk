@@ -28,12 +28,10 @@ public static class EnhancementPromptRenderer
         var systemMessage = prompt.UseSystemInstructions
             ? string.Format(SystemInstructionsTemplate, prompt.PromptText.Trim())
             : prompt.PromptText.Trim();
-        systemMessage += ActiveWindowContextSection(context);
-        systemMessage += BrowserUrlContextSection(context);
-        systemMessage += OcrContextSection(context);
-        systemMessage += SelectedTextContextSection(context);
-        systemMessage += ClipboardContextSection(context);
-        systemMessage += VocabularySection(vocabulary);
+        var contextSections = ContextSections(context, vocabulary);
+        systemMessage += prompt.Id == EnhancementPromptCatalog.AssistantPromptId
+            ? AssistantContextInformationSection(contextSections)
+            : contextSections;
 
         var userMessage = $"""
 
@@ -43,6 +41,30 @@ public static class EnhancementPromptRenderer
             """;
 
         return new EnhancementPromptRenderResult(prompt.Title, systemMessage, userMessage);
+    }
+
+    private static string ContextSections(EnhancementContext? context, IReadOnlyList<VocabularyWord> vocabulary) =>
+        ActiveWindowContextSection(context)
+        + BrowserUrlContextSection(context)
+        + OcrContextSection(context)
+        + SelectedTextContextSection(context)
+        + ClipboardContextSection(context)
+        + VocabularySection(vocabulary);
+
+    private static string AssistantContextInformationSection(string contextSections)
+    {
+        if (string.IsNullOrWhiteSpace(contextSections))
+        {
+            return string.Empty;
+        }
+
+        return $"""
+
+
+            <CONTEXT_INFORMATION>
+            {contextSections.Trim()}
+            </CONTEXT_INFORMATION>
+            """;
     }
 
     private static string ActiveWindowContextSection(EnhancementContext? context)

@@ -449,10 +449,11 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Added Local CLI enhancement hooks that execute user-configured Windows commands with VoiceInk prompt environment variables and use stdout as the enhanced text.
 - Added prompt icon and description editing for custom prompts while keeping predefined prompt metadata read-only.
 - Added native Ollama chat enhancement through the local `/api/chat` endpoint with `stream: false`, keyless localhost HTTP, native `message.content` parsing, and existing retry/timeout/output-filtering behavior.
+- Added assistant prompt parity: the predefined Assistant prompt now wraps context in `<CONTEXT_INFORMATION>`, while Default, Chat, Email, and Rewrite prompt text is aligned with the richer macOS Swift templates.
 
 Windows gaps:
 
-- Richer assistant workflows and visual polish.
+- Visual polish and advanced assistant niceties.
 
 Custom prompt persistence Windows target:
 

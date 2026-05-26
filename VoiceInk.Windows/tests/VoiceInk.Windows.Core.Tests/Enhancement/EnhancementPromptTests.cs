@@ -27,6 +27,29 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void DefaultCatalog_UsesMacAlignedPromptTemplateRules()
+    {
+        var prompts = EnhancementPromptCatalog.CreateDefaultPrompts();
+
+        Assert.Contains(
+            "scratch that",
+            prompts.Single(prompt => prompt.Title == "Default").PromptText,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "Keep emotive markers and emojis if present",
+            prompts.Single(prompt => prompt.Title == "Chat").PromptText,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "complete email with proper formatting",
+            prompts.Single(prompt => prompt.Title == "Email").PromptText,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "rhythmic flow",
+            prompts.Single(prompt => prompt.Title == "Rewrite").PromptText,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void PromptLibrary_BuildPromptsReturnsDefaultsWhenNoPromptsArePersisted()
     {
         var prompts = EnhancementPromptLibrary.BuildPrompts([]);
@@ -361,6 +384,42 @@ public sealed class EnhancementPromptTests
         Assert.Contains("powerful AI assistant", rendered.SystemMessage);
         Assert.DoesNotContain("TRANSCRIPTION ENHANCER", rendered.SystemMessage);
         Assert.Contains("<TRANSCRIPT>", rendered.UserMessage);
+    }
+
+    [Fact]
+    public void Render_AssistantPromptWrapsContextInformation()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.AssistantPromptId);
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+        };
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "summarize this",
+            vocabulary,
+            new EnhancementContext(
+                ClipboardText: "clipboard note",
+                SelectedText: "selected note"));
+
+        Assert.Contains("<CONTEXT_INFORMATION>", rendered.SystemMessage);
+        Assert.Contains("<CURRENTLY_SELECTED_TEXT>", rendered.SystemMessage);
+        Assert.Contains("<CLIPBOARD_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("<CUSTOM_VOCABULARY>", rendered.SystemMessage);
+        Assert.Contains("</CONTEXT_INFORMATION>", rendered.SystemMessage);
+
+        var contextStart = rendered.SystemMessage.LastIndexOf("<CONTEXT_INFORMATION>", StringComparison.Ordinal);
+        var selectedText = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+        var clipboard = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
+        var vocabularyStart = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
+        var contextEnd = rendered.SystemMessage.LastIndexOf("</CONTEXT_INFORMATION>", StringComparison.Ordinal);
+
+        Assert.True(contextStart < selectedText);
+        Assert.True(selectedText < clipboard);
+        Assert.True(clipboard < vocabularyStart);
+        Assert.True(vocabularyStart < contextEnd);
     }
 
     [Fact]
