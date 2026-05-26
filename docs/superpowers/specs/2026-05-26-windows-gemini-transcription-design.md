@@ -21,11 +21,10 @@ Port the macOS Gemini cloud transcription option into the Windows fork with a pr
 - Send requests to `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`.
 - Authenticate with `x-goog-api-key`, not a bearer header.
 - Send recorded WAV bytes as an inline audio part with `mime_type: "audio/wav"`.
+- Upload recorded WAV bytes through the Gemini Files API when the recording is too large for the inline request path, then reference the returned file URI with a `file_data` part.
 - Request a plain transcript by prompt and parse returned candidate text.
 - Surface sanitized provider errors only.
 
 ## Deliberate Deferrals
 
-- Files API upload for large recordings remains future work; the first Windows slice uses inline audio, matching typical short dictation recordings.
 - Realtime Gemini preview is intentionally omitted because the Gemini audio docs point realtime use cases to other APIs.
-- Provider test-call UI remains part of the richer cloud model card parity work.
