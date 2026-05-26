@@ -17,7 +17,8 @@ public static class GlobalShortcutSettings
             required: true,
             registrations,
             errors,
-            usedShortcuts);
+            usedShortcuts,
+            recordingShortcutMode: RecordingShortcutModeSettings.Normalize(settings.PrimaryRecordingShortcutMode));
         AddRegistration(
             settings.SecondaryRecordingHotkey,
             GlobalShortcutAction.ToggleRecording,
@@ -25,7 +26,8 @@ public static class GlobalShortcutSettings
             required: false,
             registrations,
             errors,
-            usedShortcuts);
+            usedShortcuts,
+            recordingShortcutMode: RecordingShortcutModeSettings.Normalize(settings.SecondaryRecordingShortcutMode));
         AddRegistration(
             settings.PasteLastTranscriptionHotkey,
             GlobalShortcutAction.PasteLastTranscription,
@@ -114,7 +116,8 @@ public static class GlobalShortcutSettings
         ICollection<GlobalShortcutRegistration> registrations,
         ICollection<string> errors,
         IDictionary<string, string> usedShortcuts,
-        Guid? powerModeRuleId = null)
+        Guid? powerModeRuleId = null,
+        string? recordingShortcutMode = null)
     {
         if (string.IsNullOrWhiteSpace(shortcutText))
         {
@@ -139,7 +142,7 @@ public static class GlobalShortcutSettings
         }
 
         usedShortcuts.Add(shortcut.DisplayText, displayName);
-        registrations.Add(new GlobalShortcutRegistration(action, shortcut, powerModeRuleId));
+        registrations.Add(new GlobalShortcutRegistration(action, shortcut, powerModeRuleId, recordingShortcutMode));
     }
 
     private static string PowerModeRuleDisplayName(PowerMode.PowerModeRule rule) =>

@@ -74,6 +74,7 @@ public sealed partial class MainWindow : Window
     private const string PowerModeSectionTag = "Power Mode";
     private const int MaxDiagnosticEvents = 200;
     private const int HistoryWaveformPeakCount = 64;
+    private const double HybridShortcutPressThresholdSeconds = 0.5;
     private static readonly int[] TranscriptionRetentionMinuteChoices = [0, 60, 24 * 60, 3 * 24 * 60, 7 * 24 * 60];
     private static readonly int[] AudioRetentionDayChoices = [1, 3, 7, 14, 30];
     private static readonly double[] ClipboardRestoreDelayChoices = [0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
@@ -203,6 +204,8 @@ public sealed partial class MainWindow : Window
     private double latestRecordingInputLevel;
     private int meterRefreshQueued;
     private DateTimeOffset? recordingStartedAt;
+    private DateTimeOffset? recordingShortcutPressedAt;
+    private bool recordingShortcutHandsFree;
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
 
@@ -780,6 +783,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.SelectPowerModeRule:
                     await SelectPowerModeRuleShortcutAsync(e.PowerModeRuleId);
                     break;
+                case GlobalShortcutAction.ToggleRecording:
+                    await HandleRecordingShortcutAsync(e);
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -789,6 +795,81 @@ public sealed partial class MainWindow : Window
         {
             RefreshUiFromControllerState($"Hotkey failed: {ex.Message}");
         }
+    }
+
+    private async Task HandleRecordingShortcutAsync(GlobalHotkeyPressedEventArgs e)
+    {
+        var mode = RecordingShortcutModeSettings.Normalize(e.RecordingShortcutMode);
+        if (e.Transition == GlobalHotkeyTransition.Released)
+        {
+            await HandleRecordingShortcutReleasedAsync(mode);
+            return;
+        }
+
+        await HandleRecordingShortcutPressedAsync(mode);
+    }
+
+    private async Task HandleRecordingShortcutPressedAsync(string mode)
+    {
+        recordingShortcutPressedAt = DateTimeOffset.Now;
+
+        switch (mode)
+        {
+            case RecordingShortcutModeSettings.PushToTalk:
+                if (controller.State != DictationState.Recording)
+                {
+                    await StartCurrentRecordingAsync();
+                }
+
+                break;
+            case RecordingShortcutModeSettings.Hybrid:
+                if (recordingShortcutHandsFree && controller.State == DictationState.Recording)
+                {
+                    recordingShortcutHandsFree = false;
+                    await StopCurrentRecordingAsync();
+                }
+                else if (controller.State != DictationState.Recording)
+                {
+                    await StartCurrentRecordingAsync();
+                }
+
+                break;
+            default:
+                await ToggleCurrentRecordingAsync();
+                break;
+        }
+    }
+
+    private async Task HandleRecordingShortcutReleasedAsync(string mode)
+    {
+        switch (mode)
+        {
+            case RecordingShortcutModeSettings.PushToTalk:
+                if (controller.State == DictationState.Recording)
+                {
+                    await StopCurrentRecordingAsync();
+                }
+
+                break;
+            case RecordingShortcutModeSettings.Hybrid:
+                var pressDuration = recordingShortcutPressedAt is null
+                    ? TimeSpan.Zero
+                    : DateTimeOffset.Now - recordingShortcutPressedAt.Value;
+                if (pressDuration.TotalSeconds >= HybridShortcutPressThresholdSeconds
+                    && controller.State == DictationState.Recording)
+                {
+                    recordingShortcutHandsFree = false;
+                    await StopCurrentRecordingAsync();
+                }
+                else
+                {
+                    recordingShortcutHandsFree = controller.State == DictationState.Recording;
+                }
+
+                break;
+        }
+
+        recordingShortcutPressedAt = null;
     }
 
     private void ModelPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -1578,7 +1659,11 @@ public sealed partial class MainWindow : Window
         CloudTranscriptionModelTextBox.Text = settings.CloudTranscriptionModel;
         RefreshCloudTranscriptionModelChoices(settings.CloudTranscriptionModel);
         RecordingHotkeyTextBox.Text = settings.Hotkey;
+        PrimaryRecordingShortcutModeComboBox.SelectedIndex = RecordingShortcutModeToSelectedIndex(
+            settings.PrimaryRecordingShortcutMode);
         SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
+        SecondaryRecordingShortcutModeComboBox.SelectedIndex = RecordingShortcutModeToSelectedIndex(
+            settings.SecondaryRecordingShortcutMode);
         PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
         PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
         RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
@@ -5794,9 +5879,15 @@ public sealed partial class MainWindow : Window
             CloudTranscriptionEndpoint = CloudTranscriptionEndpointTextBox.Text.Trim(),
             CloudTranscriptionModel = CloudTranscriptionModelTextBox.Text.Trim(),
             Hotkey = includeShortcutFields ? RecordingHotkeyTextBox.Text.Trim() : settings.Hotkey,
+            PrimaryRecordingShortcutMode = includeShortcutFields
+                ? SelectedPrimaryRecordingShortcutMode()
+                : settings.PrimaryRecordingShortcutMode,
             SecondaryRecordingHotkey = includeShortcutFields
                 ? SecondaryRecordingHotkeyTextBox.Text.Trim()
                 : settings.SecondaryRecordingHotkey,
+            SecondaryRecordingShortcutMode = includeShortcutFields
+                ? SelectedSecondaryRecordingShortcutMode()
+                : settings.SecondaryRecordingShortcutMode,
             PasteLastTranscriptionHotkey = includeShortcutFields
                 ? PasteLastHotkeyTextBox.Text.Trim()
                 : settings.PasteLastTranscriptionHotkey,
@@ -7689,6 +7780,20 @@ public sealed partial class MainWindow : Window
             ? PasteMethodSettings.DirectText
             : PasteMethodSettings.Default;
 
+    private string SelectedPrimaryRecordingShortcutMode() =>
+        RecordingShortcutModeFromSelectedIndex(PrimaryRecordingShortcutModeComboBox.SelectedIndex);
+
+    private string SelectedSecondaryRecordingShortcutMode() =>
+        RecordingShortcutModeFromSelectedIndex(SecondaryRecordingShortcutModeComboBox.SelectedIndex);
+
+    private static string RecordingShortcutModeFromSelectedIndex(int selectedIndex) =>
+        selectedIndex switch
+        {
+            1 => RecordingShortcutModeSettings.PushToTalk,
+            2 => RecordingShortcutModeSettings.Hybrid,
+            _ => RecordingShortcutModeSettings.Toggle
+        };
+
     private string SelectedRecorderStyle() =>
         RecorderStyleComboBox.SelectedIndex == 1
             ? RecorderStyleSettings.Notch
@@ -7753,6 +7858,14 @@ public sealed partial class MainWindow : Window
 
     private static int PasteMethodToSelectedIndex(string method) =>
         PasteMethodSettings.Normalize(method) == PasteMethodSettings.DirectText ? 1 : 0;
+
+    private static int RecordingShortcutModeToSelectedIndex(string? mode) =>
+        RecordingShortcutModeSettings.Normalize(mode) switch
+        {
+            RecordingShortcutModeSettings.PushToTalk => 1,
+            RecordingShortcutModeSettings.Hybrid => 2,
+            _ => 0
+        };
 
     private static int RecorderStyleToSelectedIndex(string? style) =>
         RecorderStyleSettings.Normalize(style) == RecorderStyleSettings.Notch ? 1 : 0;

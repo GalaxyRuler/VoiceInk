@@ -33,7 +33,9 @@ public sealed record AppSettings
     public bool IsAudioCleanupEnabled { get; init; }
     public int AudioRetentionPeriod { get; init; } = 7;
     public string Hotkey { get; init; } = "Ctrl+Alt+Space";
+    public string PrimaryRecordingShortcutMode { get; init; } = Shortcuts.RecordingShortcutModeSettings.Toggle;
     public string SecondaryRecordingHotkey { get; init; } = string.Empty;
+    public string SecondaryRecordingShortcutMode { get; init; } = Shortcuts.RecordingShortcutModeSettings.Toggle;
     public string PasteLastTranscriptionHotkey { get; init; } = string.Empty;
     public string PasteLastEnhancementHotkey { get; init; } = string.Empty;
     public string RetryLastTranscriptionHotkey { get; init; } = string.Empty;
@@ -99,7 +101,9 @@ public sealed record AppSettings
             IsAudioCleanupEnabled == other.IsAudioCleanupEnabled &&
             AudioRetentionPeriod == other.AudioRetentionPeriod &&
             Hotkey == other.Hotkey &&
+            PrimaryRecordingShortcutMode == other.PrimaryRecordingShortcutMode &&
             SecondaryRecordingHotkey == other.SecondaryRecordingHotkey &&
+            SecondaryRecordingShortcutMode == other.SecondaryRecordingShortcutMode &&
             PasteLastTranscriptionHotkey == other.PasteLastTranscriptionHotkey &&
             PasteLastEnhancementHotkey == other.PasteLastEnhancementHotkey &&
             RetryLastTranscriptionHotkey == other.RetryLastTranscriptionHotkey &&
@@ -166,7 +170,9 @@ public sealed record AppSettings
         hash.Add(IsAudioCleanupEnabled);
         hash.Add(AudioRetentionPeriod);
         hash.Add(Hotkey);
+        hash.Add(PrimaryRecordingShortcutMode);
         hash.Add(SecondaryRecordingHotkey);
+        hash.Add(SecondaryRecordingShortcutMode);
         hash.Add(PasteLastTranscriptionHotkey);
         hash.Add(PasteLastEnhancementHotkey);
         hash.Add(RetryLastTranscriptionHotkey);

@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [##################--] 92%
+VoiceInk Windows parity  [###################-] 93%
 ```
 
 ## Area Bars
@@ -17,7 +17,7 @@ VoiceInk Windows parity  [##################--] 92%
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 78% | `[################----]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
-| Shortcuts | 76% | `[###############-----]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, and direct per-rule Power Mode selection are configurable with typed or captured shortcut entry. Press-and-hold/key-up modes remain. |
+| Shortcuts | 86% | `[#################---]` | Primary/secondary recording shortcuts now support Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, and direct per-rule Power Mode selection remain configurable with typed or captured shortcut entry. Modifier-only shortcuts and mini-recorder numeric shortcuts remain. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 98% | `[####################]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, Soniox, Speechmatics, plus Cartesia live preview streaming exist. Remaining cloud work is advanced provider-specific options and live credential smoke documentation. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
@@ -34,20 +34,20 @@ VoiceInk Windows parity  [##################--] 92%
 ## Current Slice
 
 ```text
-Windows Permissions sidebar section  [####################] 100%
+Windows recording shortcut modes  [####################] 100%
 ```
 
 Completed:
 
-- Added the missing macOS-order `Permissions` route to the Windows sidebar.
-- Added a testable Core `PermissionsReadinessPresenter`.
-- Added readiness cards for shortcut, microphone, insertion, and screen context.
-- Linked microphone review to `ms-settings:privacy-microphone` without changing Windows privacy settings automatically.
-- Routed card actions back to Settings or Enhancement where appropriate.
+- Added persisted primary and secondary recording shortcut modes.
+- Added Settings selectors for Toggle, Push to Talk, and Hybrid.
+- Added low-level key-down/key-up handling for recording shortcuts.
+- Preserved `RegisterHotKey` behavior for utility shortcuts.
+- Added focused Core tests for shortcut mode normalization and registration metadata.
 
 ## Near-Term Priority
 
 1. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
-2. Expand streaming/live preview beyond Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia while continuing recorder waveform visual polish.
+2. Add modifier-only shortcut compatibility and mini-recorder numeric prompt/Power Mode shortcuts where Windows can support them safely.
 3. Add richer cloud-provider live smoke documentation for optional user-owned API keys and models.
-4. Continue visual parity polish for Power Mode, Settings, Metrics, and onboarding pages.
+4. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.

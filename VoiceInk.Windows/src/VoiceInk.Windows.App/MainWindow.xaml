@@ -1052,11 +1052,27 @@
                                 Header="Primary Shortcut"
                                 PlaceholderText="Ctrl+Alt+Space"
                                 KeyDown="ShortcutTextBox_KeyDown" />
+                            <ComboBox
+                                x:Name="PrimaryRecordingShortcutModeComboBox"
+                                Header="Primary Shortcut Mode"
+                                SelectedIndex="0">
+                                <ComboBoxItem Content="Toggle" />
+                                <ComboBoxItem Content="Push to Talk" />
+                                <ComboBoxItem Content="Hybrid" />
+                            </ComboBox>
                             <TextBox
                                 x:Name="SecondaryRecordingHotkeyTextBox"
                                 Header="Secondary Shortcut"
                                 PlaceholderText="Ctrl+Alt+S"
                                 KeyDown="ShortcutTextBox_KeyDown" />
+                            <ComboBox
+                                x:Name="SecondaryRecordingShortcutModeComboBox"
+                                Header="Secondary Shortcut Mode"
+                                SelectedIndex="0">
+                                <ComboBoxItem Content="Toggle" />
+                                <ComboBoxItem Content="Push to Talk" />
+                                <ComboBoxItem Content="Hybrid" />
+                            </ComboBox>
                             <TextBox
                                 x:Name="PasteLastHotkeyTextBox"
                                 Header="Paste Last Transcription"
