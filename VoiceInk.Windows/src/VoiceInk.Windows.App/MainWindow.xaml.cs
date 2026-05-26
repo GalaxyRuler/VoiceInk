@@ -559,6 +559,37 @@ public sealed partial class MainWindow : Window
         await ChooseAudioFilesAsync();
     }
 
+    private void TranscribeAudioSectionPanel_DragOver(object sender, DragEventArgs e)
+    {
+        e.AcceptedOperation = CanEditAudioFileQueue()
+            && e.DataView.Contains(StandardDataFormats.StorageItems)
+                ? DataPackageOperation.Copy
+                : DataPackageOperation.None;
+    }
+
+    private async void TranscribeAudioSectionPanel_Drop(object sender, DragEventArgs e)
+    {
+        if (!CanEditAudioFileQueue() || !e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            return;
+        }
+
+        try
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            AddAudioFilePaths(
+                items
+                    .OfType<StorageFile>()
+                    .Select(file => file.Path)
+                    .Where(path => !string.IsNullOrWhiteSpace(path)),
+                "Dropped");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Audio file drop failed: {ex.Message}");
+        }
+    }
+
     private async void StartAudioFileQueueButton_Click(object sender, RoutedEventArgs e)
     {
         await StartAudioFileQueueAsync();
@@ -4199,19 +4230,7 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            var update = audioFileQueueService.AddFiles(audioFileQueueItems, files.Select(file => file.Path));
-            audioFileQueueItems = update.Items;
-            RefreshAudioFileQueueListView();
-
-            var status = update.AddedCount == 0
-                ? "No supported audio files added"
-                : $"Added {update.AddedCount} audio file{Plural(update.AddedCount)}";
-            if (update.SkippedCount > 0)
-            {
-                status += $" ({update.SkippedCount} skipped)";
-            }
-
-            RefreshUiFromControllerState(status);
+            AddAudioFilePaths(files.Select(file => file.Path), "Selected");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -4221,6 +4240,23 @@ public sealed partial class MainWindow : Window
         {
             RefreshUiFromControllerState($"Audio file selection failed: {ex.Message}");
         }
+    }
+
+    private void AddAudioFilePaths(IEnumerable<string> filePaths, string statusPrefix)
+    {
+        var update = audioFileQueueService.AddFiles(audioFileQueueItems, filePaths);
+        audioFileQueueItems = update.Items;
+        RefreshAudioFileQueueListView();
+
+        var status = update.AddedCount == 0
+            ? "No supported audio files added"
+            : $"{statusPrefix} {update.AddedCount} audio file{Plural(update.AddedCount)}";
+        if (update.SkippedCount > 0)
+        {
+            status += $" ({update.SkippedCount} skipped)";
+        }
+
+        RefreshUiFromControllerState(status);
     }
 
     private async Task StartAudioFileQueueAsync()

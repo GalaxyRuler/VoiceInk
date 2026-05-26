@@ -346,15 +346,14 @@ macOS has a dedicated `Transcribe Audio` workflow for queued audio/video files. 
 Transcribe Audio slice completed on 2026-05-25:
 
 - Added a Windows `Transcribe Audio` navigation section after Dashboard.
-- Added multi-file picker import using Windows App SDK picker APIs and supported audio/video extensions backed by Windows Media Foundation where codecs are available.
+- Added multi-file picker import using Windows App SDK picker APIs, plus drag-and-drop import from local dropped files, with supported audio/video extensions backed by Windows Media Foundation where codecs are available.
 - Added a source-runnable in-memory queue with pending, processing, completed, failed, remove, retry, clear, start, and cancel behavior.
 - Convert/import selected media into app-owned WAV recordings before transcription, then run the existing local Whisper transcription path with dictionary prompt biasing and text cleanup.
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
-- Leave drag/drop, per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.
+- Leave per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.
 
 Windows gaps:
 
-- Drag/drop import.
 - Per-file save/copy controls in the queue.
 - Persistent queue restoration across launches.
 - Per-file enhancement controls independent of the global Enhancement setting.

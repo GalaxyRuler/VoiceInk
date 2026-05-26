@@ -31,7 +31,13 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel x:Name="TranscribeAudioSectionPanel" Spacing="12" Visibility="Collapsed">
+                    <StackPanel
+                        x:Name="TranscribeAudioSectionPanel"
+                        AllowDrop="True"
+                        DragOver="TranscribeAudioSectionPanel_DragOver"
+                        Drop="TranscribeAudioSectionPanel_Drop"
+                        Spacing="12"
+                        Visibility="Collapsed">
                         <TextBlock Text="Transcribe Audio" FontSize="24" FontWeight="SemiBold" />
                         <TextBlock
                             Text="Choose audio or video files, then process them sequentially with the current transcription provider and cleanup settings."
