@@ -216,6 +216,36 @@ public sealed class LocalWhisperModelServiceTests
         Assert.Equal("Model is already imported.", error);
     }
 
+    [Theory]
+    [InlineData("", LocalWhisperModelHealthStatus.NotSelected, false, "No local model selected.")]
+    [InlineData("C:\\Models\\model.txt", LocalWhisperModelHealthStatus.InvalidExtension, false, "Choose a whisper.cpp .bin model file.")]
+    [InlineData("C:\\Models\\missing.bin", LocalWhisperModelHealthStatus.Missing, false, "Model file not found: C:\\Models\\missing.bin")]
+    [InlineData("C:\\Models\\empty.bin", LocalWhisperModelHealthStatus.Empty, false, "Model file is empty: C:\\Models\\empty.bin")]
+    [InlineData("C:\\Models\\tiny.bin", LocalWhisperModelHealthStatus.SuspiciouslySmall, false, "Model file looks too small for a whisper.cpp model: C:\\Models\\tiny.bin")]
+    [InlineData("C:\\Models\\ggml-base.en.bin", LocalWhisperModelHealthStatus.Ready, true, "Default Model: ggml-base.en")]
+    public void CheckPathHealth_ClassifiesSelectedModelPath(
+        string path,
+        LocalWhisperModelHealthStatus expectedStatus,
+        bool expectedCanUse,
+        string expectedMessage)
+    {
+        var lengths = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["C:\\Models\\empty.bin"] = 0,
+            ["C:\\Models\\tiny.bin"] = 1024,
+            ["C:\\Models\\ggml-base.en.bin"] = 142L * 1024 * 1024
+        };
+
+        var health = LocalWhisperModelService.CheckPathHealth(
+            path,
+            fileExists: item => lengths.ContainsKey(item),
+            fileLength: item => lengths[item]);
+
+        Assert.Equal(expectedStatus, health.Status);
+        Assert.Equal(expectedCanUse, health.CanUse);
+        Assert.Equal(expectedMessage, health.Message);
+    }
+
     [Fact]
     public void BuildChoices_IncludesCurrentModelPathWhenNotImported()
     {

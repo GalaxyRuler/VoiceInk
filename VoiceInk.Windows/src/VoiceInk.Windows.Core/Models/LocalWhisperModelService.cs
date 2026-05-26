@@ -5,6 +5,7 @@ namespace VoiceInk.Windows.Core.Models;
 public static class LocalWhisperModelService
 {
     private const string ModelExtension = ".bin";
+    private const long MinimumPlausibleModelBytes = 1024 * 1024;
 
     public static LocalWhisperModel[] Import(
         string path,
@@ -54,6 +55,59 @@ public static class LocalWhisperModelService
             DateTimeOffset.MinValue);
 
         return [.. importedModels, currentModel];
+    }
+
+    public static LocalWhisperModelHealth CheckPathHealth(
+        string? modelPath,
+        Func<string, bool> fileExists,
+        Func<string, long> fileLength)
+    {
+        var trimmedPath = modelPath?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(trimmedPath))
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.NotSelected,
+                "No local model selected.",
+                CanUse: false);
+        }
+
+        if (!string.Equals(System.IO.Path.GetExtension(trimmedPath), ModelExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.InvalidExtension,
+                "Choose a whisper.cpp .bin model file.",
+                CanUse: false);
+        }
+
+        if (!fileExists(trimmedPath))
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.Missing,
+                $"Model file not found: {trimmedPath}",
+                CanUse: false);
+        }
+
+        var length = fileLength(trimmedPath);
+        if (length <= 0)
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.Empty,
+                $"Model file is empty: {trimmedPath}",
+                CanUse: false);
+        }
+
+        if (length < MinimumPlausibleModelBytes)
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.SuspiciouslySmall,
+                $"Model file looks too small for a whisper.cpp model: {trimmedPath}",
+                CanUse: false);
+        }
+
+        return new LocalWhisperModelHealth(
+            LocalWhisperModelHealthStatus.Ready,
+            $"Default Model: {System.IO.Path.GetFileNameWithoutExtension(trimmedPath)}",
+            CanUse: true);
     }
 
     public static WhisperModelCatalogItem[] BuildCatalogItems(

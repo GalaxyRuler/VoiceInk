@@ -333,10 +333,11 @@ Model warmup/preload slice completed on 2026-05-25:
 - Added AI Models controls for `Prewarm Local Model`, `Warm Up Selected Model`, and model warmup status.
 - Scheduled warmup after startup, after local model import/default selection, after successful catalog download/default selection, after transcription provider settings save, and after Windows resume through `SystemEvents.PowerModeChanged`.
 - Kept this as a conservative preload rather than a persistent shared model cache; actual transcription still owns its processor lifetime.
+- Added selected local model path health checks for blank paths, non-`.bin` files, missing files, empty files, and suspiciously tiny files, with AI Models status text and action gating before warmup, Set as Default, or Show in Explorer.
 
 Windows gaps:
 
-- Provider cards and secure API key storage.
+- Deeper model lifecycle repair flows.
 
 Windows adaptation:
 

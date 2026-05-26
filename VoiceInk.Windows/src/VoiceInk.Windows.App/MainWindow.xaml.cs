@@ -3283,6 +3283,13 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        var health = ModelPathHealth(selectedModel.Path);
+        if (!health.CanUse)
+        {
+            RefreshUiFromControllerState(health.Message);
+            return;
+        }
+
         try
         {
             await UseLocalModelPathAsync(selectedModel.Path, selectedModel.DisplayName);
@@ -3311,6 +3318,13 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        var health = ModelPathHealth(localPath);
+        if (!health.CanUse)
+        {
+            RefreshUiFromControllerState(health.Message);
+            return;
+        }
+
         try
         {
             await UseLocalModelPathAsync(localPath, selectedModel.DisplayName);
@@ -3327,6 +3341,13 @@ public sealed partial class MainWindow : Window
 
     private async Task UseLocalModelPathAsync(string modelPath, string displayName)
     {
+        var health = ModelPathHealth(modelPath);
+        if (!health.CanUse)
+        {
+            RefreshUiFromControllerState(health.Message);
+            return;
+        }
+
         ModelPathTextBox.Text = modelPath;
         RefreshLanguageChoices(modelPath, selectedLanguage: SelectedLanguageCode());
         await SaveSettingsAsync(windowLifetime.Token);
@@ -3526,6 +3547,13 @@ public sealed partial class MainWindow : Window
         var selectedModel = SelectedCatalogModelItem();
         if (!CanEditModelLibrary() || selectedModel?.LocalPath is not { Length: > 0 } localPath)
         {
+            return;
+        }
+
+        var health = ModelPathHealth(localPath);
+        if (!health.CanUse)
+        {
+            RefreshUiFromControllerState(health.Message);
             return;
         }
 
@@ -6872,14 +6900,7 @@ public sealed partial class MainWindow : Window
         modelCatalogItems = LocalWhisperModelService.BuildCatalogItems(localWhisperModels, modelPath);
         LocalModelCatalogListView.ItemsSource = modelCatalogItems;
 
-        if (!string.IsNullOrWhiteSpace(modelPath))
-        {
-            DefaultModelStatusTextBlock.Text = $"Default Model: {Path.GetFileNameWithoutExtension(modelPath)}";
-        }
-        else
-        {
-            DefaultModelStatusTextBlock.Text = "Default Model: No model selected";
-        }
+        DefaultModelStatusTextBlock.Text = ModelPathHealth(modelPath).Message;
 
         if (!string.IsNullOrWhiteSpace(previouslySelectedName))
         {
@@ -6890,6 +6911,27 @@ public sealed partial class MainWindow : Window
             SelectCatalogModelByName(Path.GetFileNameWithoutExtension(modelPath));
         }
     }
+
+    private static LocalWhisperModelHealth ModelPathHealth(string? modelPath) =>
+        LocalWhisperModelService.CheckPathHealth(
+            modelPath,
+            File.Exists,
+            LocalModelFileLength);
+
+    private static long LocalModelFileLength(string path)
+    {
+        try
+        {
+            return new FileInfo(path).Length;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static bool CanUseModelPath(string? modelPath) =>
+        ModelPathHealth(modelPath).CanUse;
 
     private void SelectCatalogModelByName(string? modelName)
     {
@@ -8053,9 +8095,11 @@ public sealed partial class MainWindow : Window
             && !selectedCatalogModel.IsDownloaded;
         UseCatalogModelButton.IsEnabled = modelControlsEnabled
             && selectedCatalogModel?.IsDownloaded == true
-            && !selectedCatalogModel.IsDefault;
+            && !selectedCatalogModel.IsDefault
+            && CanUseModelPath(selectedCatalogModel.LocalPath);
         ShowCatalogModelButton.IsEnabled = modelControlsEnabled
-            && selectedCatalogModel?.IsDownloaded == true;
+            && selectedCatalogModel?.IsDownloaded == true
+            && CanUseModelPath(selectedCatalogModel.LocalPath);
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
         ShowLiveTranscriptPreviewCheckBox.IsEnabled = modelControlsEnabled;
@@ -8066,10 +8110,11 @@ public sealed partial class MainWindow : Window
         WarmupSelectedModelButton.IsEnabled = modelControlsEnabled
             && !modelWarmupActive
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
-            && !string.IsNullOrWhiteSpace(ModelPathTextBox.Text);
+            && CanUseModelPath(ModelPathTextBox.Text);
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
-        UseSelectedModelButton.IsEnabled = modelControlsEnabled && SelectedLocalWhisperModelChoice() is not null;
+        UseSelectedModelButton.IsEnabled = modelControlsEnabled
+            && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
         TranscriptionProviderComboBox.IsEnabled = modelControlsEnabled;
         CloudTranscriptionPresetComboBox.IsEnabled = cloudTranscriptionControlsEnabled;
