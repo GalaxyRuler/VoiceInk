@@ -174,6 +174,7 @@ public sealed partial class MainWindow : Window
     private bool isReenhancingHistory;
     private bool isCopyingHistory;
     private bool isCopyingAudioFileQueueText;
+    private bool isEnhancingAudioFileQueueItem;
     private bool isQuickAdding;
     private bool isImportingModel;
     private bool isDownloadingModel;
@@ -654,6 +655,11 @@ public sealed partial class MainWindow : Window
     private async void SaveAudioFileQueueTextButton_Click(object sender, RoutedEventArgs e)
     {
         await SaveSelectedAudioFileQueueTextAsync();
+    }
+
+    private async void EnhanceAudioFileQueueTextButton_Click(object sender, RoutedEventArgs e)
+    {
+        await EnhanceSelectedAudioFileQueueItemAsync();
     }
 
     private async Task StartCurrentRecordingAsync()
@@ -4543,6 +4549,55 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task EnhanceSelectedAudioFileQueueItemAsync()
+    {
+        if (isEnhancingAudioFileQueueItem)
+        {
+            return;
+        }
+
+        var item = SelectedAudioFileQueueItem();
+        if (item?.HistoryItem is null || item.Status != AudioFileQueueStatus.Completed)
+        {
+            RefreshUiFromControllerState("Select a completed audio transcription to enhance");
+            return;
+        }
+
+        isEnhancingAudioFileQueueItem = true;
+        var statusOverride = "Enhancing audio transcription";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            var result = await historyReenhancementService.ReenhanceAsync(
+                item.HistoryItem,
+                forceEnhancement: true,
+                windowLifetime.Token);
+            if (!result.Success || result.Item is null)
+            {
+                statusOverride = result.Message;
+                return;
+            }
+
+            UpdateAudioFileQueueItem(item.Id, current => current.MarkCompleted(result.Item));
+            RefreshAudioFileQueueListView(item.Id);
+            await RefreshHistoryAsync(windowLifetime.Token);
+            statusOverride = await PersistAudioFileQueueSnapshotAsync() ?? "Audio transcription enhanced";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Audio transcription enhancement failed: {ex.Message}";
+        }
+        finally
+        {
+            isEnhancingAudioFileQueueItem = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private static string AudioFileQueueListItem(AudioFileQueueItem item)
     {
         var detail = item.ErrorMessage ?? item.StatusDetail;
@@ -7101,6 +7156,7 @@ public sealed partial class MainWindow : Window
         || isReenhancingHistory
         || isCopyingHistory
         || isCopyingAudioFileQueueText
+        || isEnhancingAudioFileQueueItem
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
@@ -7713,6 +7769,7 @@ public sealed partial class MainWindow : Window
             && AudioFileQueueTextActions.TryGetActionText(selectedAudioFileQueueItem, out _, out _);
         CopyAudioFileQueueTextButton.IsEnabled = canUseSelectedAudioFileQueueText;
         SaveAudioFileQueueTextButton.IsEnabled = canUseSelectedAudioFileQueueText;
+        EnhanceAudioFileQueueTextButton.IsEnabled = canUseSelectedAudioFileQueueText;
         ExportDictionaryButton.IsEnabled = settingsLoaded && !operationActive;
         ImportDictionaryButton.IsEnabled = settingsLoaded
             && !operationActive

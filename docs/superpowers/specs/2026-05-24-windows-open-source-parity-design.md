@@ -352,11 +352,12 @@ Transcribe Audio slice completed on 2026-05-25:
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
 - Added selected completed-item copy and save actions, with plain text clipboard copy plus TXT/Markdown file export.
 - Added local JSON queue snapshot restoration for pending, failed, and interrupted processing items when their source files still exist.
+- Added selected completed-item enhancement that forces a one-off enhancement run without changing the global Enhancement toggle.
 - Leave richer batch actions for later slices.
 
 Windows gaps:
 
-- Per-file enhancement controls independent of the global Enhancement setting.
+- Richer batch actions.
 
 ### Cloud Transcription
 

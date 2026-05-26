@@ -100,6 +100,10 @@
                                         x:Name="SaveAudioFileQueueTextButton"
                                         Content="Save"
                                         Click="SaveAudioFileQueueTextButton_Click" />
+                                    <Button
+                                        x:Name="EnhanceAudioFileQueueTextButton"
+                                        Content="Enhance"
+                                        Click="EnhanceAudioFileQueueTextButton_Click" />
                                 </StackPanel>
                             </StackPanel>
                         </Grid>

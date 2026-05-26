@@ -14,6 +14,7 @@ public sealed class HistoryReenhancementService(
 
     public async Task<HistoryReenhancementResult> ReenhanceAsync(
         TranscriptionHistoryItem source,
+        bool forceEnhancement,
         CancellationToken cancellationToken)
     {
         if (source.Status != TranscriptionHistoryStatus.Completed)
@@ -28,7 +29,7 @@ public sealed class HistoryReenhancementService(
         }
 
         var settings = await settingsStore.LoadAsync(cancellationToken);
-        if (!settings.IsEnhancementEnabled)
+        if (!settings.IsEnhancementEnabled && !forceEnhancement)
         {
             return new HistoryReenhancementResult(false, "AI enhancement is disabled");
         }
@@ -36,7 +37,7 @@ public sealed class HistoryReenhancementService(
         var vocabulary = await dictionaryStore.ListVocabularyAsync(cancellationToken);
         var result = await enhancementPipeline.EnhanceAsync(
             text,
-            settings,
+            forceEnhancement ? settings with { IsEnhancementEnabled = true } : settings,
             vocabulary,
             cancellationToken);
 
@@ -77,6 +78,11 @@ public sealed class HistoryReenhancementService(
         await historyStore.SaveAsync(item, cancellationToken);
         return new HistoryReenhancementResult(true, "Re-enhanced transcription saved", item);
     }
+
+    public Task<HistoryReenhancementResult> ReenhanceAsync(
+        TranscriptionHistoryItem source,
+        CancellationToken cancellationToken) =>
+        ReenhanceAsync(source, forceEnhancement: false, cancellationToken);
 
     private static string TextForReenhancement(TranscriptionHistoryItem source)
     {

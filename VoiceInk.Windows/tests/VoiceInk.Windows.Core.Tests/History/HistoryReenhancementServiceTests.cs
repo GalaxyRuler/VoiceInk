@@ -109,6 +109,25 @@ public sealed class HistoryReenhancementServiceTests
     }
 
     [Fact]
+    public async Task ReenhanceAsync_WhenForced_RunsWithoutPersistingGlobalEnhancementToggle()
+    {
+        var enhancement = new FakeTextEnhancementService("forced enhanced text");
+        var history = new FakeHistoryStore();
+        var settingsStore = new FakeSettingsStore(ConfiguredSettings() with { IsEnhancementEnabled = false });
+        var service = new HistoryReenhancementService(
+            history,
+            settingsStore,
+            new TextEnhancementPipeline(enhancement));
+
+        var result = await service.ReenhanceAsync(HistoryItem(), forceEnhancement: true, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("forced enhanced text", result.Item?.EnhancedText);
+        Assert.Equal(1, enhancement.CallCount);
+        Assert.False(settingsStore.Settings.IsEnhancementEnabled);
+    }
+
+    [Fact]
     public async Task ReenhanceAsync_ReturnsFailureWhenProviderConfigurationMissing()
     {
         var enhancement = new FakeTextEnhancementService("unused");
@@ -250,11 +269,16 @@ public sealed class HistoryReenhancementServiceTests
 
     private sealed class FakeSettingsStore(AppSettings settings) : ISettingsStore
     {
-        public Task<AppSettings> LoadAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(settings);
+        public AppSettings Settings { get; private set; } = settings;
 
-        public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public Task<AppSettings> LoadAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(Settings);
+
+        public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken)
+        {
+            Settings = settings;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeDictionaryStore : IDictionaryStore
