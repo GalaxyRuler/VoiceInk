@@ -669,11 +669,26 @@
                                     x:Name="PowerModeAutoSendComboBox"
                                     Header="Auto-send key"
                                     SelectedIndex="0" />
-                                <TextBox
-                                    x:Name="PowerModeShortcutTextBox"
-                                    Header="Shortcut"
-                                    PlaceholderText="Ctrl+Alt+1"
-                                    KeyDown="ShortcutTextBox_KeyDown" />
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        x:Name="PowerModeShortcutTextBox"
+                                        Grid.Column="0"
+                                        Header="Shortcut"
+                                        IsReadOnly="True"
+                                        PlaceholderText="Ctrl+Alt+1"
+                                        KeyDown="ShortcutTextBox_KeyDown" />
+                                    <Button
+                                        Grid.Column="1"
+                                        MinWidth="80"
+                                        Margin="0,28,0,0"
+                                        Content="Record"
+                                        Tag="PowerModeShortcutTextBox"
+                                        Click="ShortcutRecorderButton_Click" />
+                                </Grid>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Button
                                         x:Name="AddPowerModeRuleButton"
@@ -1129,11 +1144,14 @@
                         <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" />
                         <StackPanel Spacing="8">
                             <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
-                            <TextBox
-                                x:Name="RecordingHotkeyTextBox"
-                                Header="Primary Shortcut"
-                                PlaceholderText="Ctrl+Alt+Space"
-                                KeyDown="ShortcutTextBox_KeyDown" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="RecordingHotkeyTextBox" Grid.Column="0" Header="Primary Shortcut" IsReadOnly="True" PlaceholderText="Ctrl+Alt+Space" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="RecordingHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
                             <ComboBox
                                 x:Name="PrimaryRecordingShortcutModeComboBox"
                                 Header="Primary Shortcut Mode"
@@ -1142,11 +1160,14 @@
                                 <ComboBoxItem Content="Push to Talk" />
                                 <ComboBoxItem Content="Hybrid" />
                             </ComboBox>
-                            <TextBox
-                                x:Name="SecondaryRecordingHotkeyTextBox"
-                                Header="Secondary Shortcut"
-                                PlaceholderText="Ctrl+Alt+S"
-                                KeyDown="ShortcutTextBox_KeyDown" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="SecondaryRecordingHotkeyTextBox" Grid.Column="0" Header="Secondary Shortcut" IsReadOnly="True" PlaceholderText="Ctrl+Alt+S" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="SecondaryRecordingHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
                             <ComboBox
                                 x:Name="SecondaryRecordingShortcutModeComboBox"
                                 Header="Secondary Shortcut Mode"
@@ -1155,46 +1176,70 @@
                                 <ComboBoxItem Content="Push to Talk" />
                                 <ComboBoxItem Content="Hybrid" />
                             </ComboBox>
-                            <TextBox
-                                x:Name="PasteLastHotkeyTextBox"
-                                Header="Paste Last Transcription"
-                                PlaceholderText="Ctrl+Alt+V"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="PasteLastEnhancedHotkeyTextBox"
-                                Header="Paste Last Enhanced Transcription"
-                                PlaceholderText="Ctrl+Alt+E"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="RetryLastHotkeyTextBox"
-                                Header="Retry Last Transcription"
-                                PlaceholderText="Ctrl+Alt+R"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="CancelHotkeyTextBox"
-                                Header="Cancel Recording"
-                                PlaceholderText="Ctrl+Alt+C"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="OpenHistoryHotkeyTextBox"
-                                Header="Open History Window"
-                                PlaceholderText="Ctrl+Alt+H"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="QuickAddHotkeyTextBox"
-                                Header="Quick Add to Dictionary"
-                                PlaceholderText="Ctrl+Alt+D"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="ToggleEnhancementHotkeyTextBox"
-                                Header="Toggle Enhancement"
-                                PlaceholderText="Ctrl+Alt+X"
-                                KeyDown="ShortcutTextBox_KeyDown" />
-                            <TextBox
-                                x:Name="CyclePowerModeHotkeyTextBox"
-                                Header="Cycle Power Mode"
-                                PlaceholderText="Ctrl+Alt+P"
-                                KeyDown="ShortcutTextBox_KeyDown" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="PasteLastHotkeyTextBox" Grid.Column="0" Header="Paste Last Transcription" IsReadOnly="True" PlaceholderText="Ctrl+Alt+V" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="PasteLastHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="PasteLastEnhancedHotkeyTextBox" Grid.Column="0" Header="Paste Last Enhanced Transcription" IsReadOnly="True" PlaceholderText="Ctrl+Alt+E" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="PasteLastEnhancedHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="RetryLastHotkeyTextBox" Grid.Column="0" Header="Retry Last Transcription" IsReadOnly="True" PlaceholderText="Ctrl+Alt+R" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="RetryLastHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CancelHotkeyTextBox" Grid.Column="0" Header="Cancel Recording" IsReadOnly="True" PlaceholderText="Ctrl+Alt+C" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="CancelHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="OpenHistoryHotkeyTextBox" Grid.Column="0" Header="Open History Window" IsReadOnly="True" PlaceholderText="Ctrl+Alt+H" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="OpenHistoryHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="QuickAddHotkeyTextBox" Grid.Column="0" Header="Quick Add to Dictionary" IsReadOnly="True" PlaceholderText="Ctrl+Alt+D" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="QuickAddHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="ToggleEnhancementHotkeyTextBox" Grid.Column="0" Header="Toggle Enhancement" IsReadOnly="True" PlaceholderText="Ctrl+Alt+X" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="ToggleEnhancementHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CyclePowerModeHotkeyTextBox" Grid.Column="0" Header="Cycle Power Mode" IsReadOnly="True" PlaceholderText="Ctrl+Alt+P" KeyDown="ShortcutTextBox_KeyDown" />
+                                <Button Grid.Column="1" MinWidth="80" Margin="0,28,0,0" Content="Record" Tag="CyclePowerModeHotkeyTextBox" Click="ShortcutRecorderButton_Click" />
+                            </Grid>
                             <Button
                                 x:Name="ApplyShortcutsButton"
                                 Content="Apply Shortcuts"

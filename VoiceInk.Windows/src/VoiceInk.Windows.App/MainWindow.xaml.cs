@@ -1522,6 +1522,20 @@ public sealed partial class MainWindow : Window
         await ApplyShortcutsAsync();
     }
 
+    private void ShortcutRecorderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string targetName }
+            || ShortcutTextBoxByName(targetName) is not { } textBox)
+        {
+            RefreshUiFromControllerState("Shortcut recorder unavailable");
+            return;
+        }
+
+        textBox.Focus(FocusState.Programmatic);
+        textBox.Select(0, textBox.Text.Length);
+        RefreshUiFromControllerState("Press shortcut keys, or Escape to clear");
+    }
+
     private void ShortcutTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (sender is not TextBox textBox)
@@ -1579,6 +1593,23 @@ public sealed partial class MainWindow : Window
             RefreshUiFromControllerState(modifierOnlyError ?? error ?? "Press a non-modifier key with your shortcut");
         }
     }
+
+    private TextBox? ShortcutTextBoxByName(string name) =>
+        name switch
+        {
+            nameof(RecordingHotkeyTextBox) => RecordingHotkeyTextBox,
+            nameof(SecondaryRecordingHotkeyTextBox) => SecondaryRecordingHotkeyTextBox,
+            nameof(PasteLastHotkeyTextBox) => PasteLastHotkeyTextBox,
+            nameof(PasteLastEnhancedHotkeyTextBox) => PasteLastEnhancedHotkeyTextBox,
+            nameof(RetryLastHotkeyTextBox) => RetryLastHotkeyTextBox,
+            nameof(CancelHotkeyTextBox) => CancelHotkeyTextBox,
+            nameof(OpenHistoryHotkeyTextBox) => OpenHistoryHotkeyTextBox,
+            nameof(QuickAddHotkeyTextBox) => QuickAddHotkeyTextBox,
+            nameof(ToggleEnhancementHotkeyTextBox) => ToggleEnhancementHotkeyTextBox,
+            nameof(CyclePowerModeHotkeyTextBox) => CyclePowerModeHotkeyTextBox,
+            nameof(PowerModeShortcutTextBox) => PowerModeShortcutTextBox,
+            _ => null
+        };
 
     private async void ApplyClipboardSettingsButton_Click(object sender, RoutedEventArgs e)
     {

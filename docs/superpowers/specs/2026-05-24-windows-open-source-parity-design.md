@@ -228,10 +228,10 @@ Implemented:
 - Power Mode cycle and direct per-rule shortcuts.
 - Mini-recorder Ctrl/Alt digit prompt and Power Mode slots.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
+- Read-only shortcut recorder fields with explicit `Record` buttons for Settings and Power Mode rule shortcuts.
 
 Windows gaps:
 
-- Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
 
 ### Transcription Pipeline
