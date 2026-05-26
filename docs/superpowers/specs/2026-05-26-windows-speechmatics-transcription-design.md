@@ -32,6 +32,4 @@ Port the macOS Speechmatics cloud transcription option into the Windows fork as 
 
 ## Deliberate Deferrals
 
-- Realtime Speechmatics preview remains a later streaming slice.
-- Provider test-call UI remains part of richer provider card parity.
 - Advanced Speechmatics features such as diarization, summaries, and expected language lists remain future settings work.

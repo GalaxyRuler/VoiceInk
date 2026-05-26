@@ -71,7 +71,7 @@ public static class TranscriptionProviderPresetCatalog
         "Multilingual",
         "Very fast",
         "Very high",
-        "Batch");
+        "Realtime preview");
 
     public static TranscriptionProviderPreset ElevenLabs { get; } = new(
         "elevenlabs",
@@ -114,7 +114,7 @@ public static class TranscriptionProviderPresetCatalog
         "Multilingual",
         "Very fast",
         "Very high",
-        "Batch");
+        "Realtime preview");
 
     public static TranscriptionProviderPreset Gemini { get; } = new(
         "gemini",
