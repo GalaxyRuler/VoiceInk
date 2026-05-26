@@ -65,6 +65,12 @@ Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotne
 Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -ValidateAfterBuild -PackageCertificateKeyFile <maintainer-owned.pfx>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix> -Execute'
 Write-Host ""
+Write-Host "Release signing checklist:"
+Write-Host "  [ ] Publisher/certificate subject match: Package.appxmanifest Publisher must match the signing certificate subject, currently CN=VoiceInkOpenSource."
+Write-Host "  [ ] Timestamp signed packages with a trusted timestamp authority so the package remains verifiable after certificate expiry."
+Write-Host "  [ ] Trust prerequisite: signed MSIX install smoke must run only on a prepared test machine where the signing certificate is already trusted, for example in Trusted People."
+Write-Host "  [ ] Troubleshooting: inspect Microsoft-Windows-AppxDeployment-Server and AppxPackaging operational logs for deployment, signature, and manifest failures."
+Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
 if ($missingCount -gt 0) {

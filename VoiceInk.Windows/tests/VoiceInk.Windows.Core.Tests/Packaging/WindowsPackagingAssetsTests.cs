@@ -237,6 +237,12 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("smoke-msix-install.ps1", script);
         Assert.Contains("package-dev-zip.ps1", script);
         Assert.Contains("test-dev-zip.ps1", script);
+        Assert.Contains("Publisher/certificate subject match", script);
+        Assert.Contains("CN=VoiceInkOpenSource", script);
+        Assert.Contains("Timestamp signed packages", script);
+        Assert.Contains("Trusted People", script);
+        Assert.Contains("AppxDeployment-Server", script);
+        Assert.Contains("AppxPackaging", script);
         Assert.Contains("This script does not create or import certificates", script);
         Assert.Contains("Release readiness report passed", script);
 
