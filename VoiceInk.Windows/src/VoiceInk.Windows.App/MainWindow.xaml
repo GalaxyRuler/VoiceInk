@@ -1285,6 +1285,29 @@
                                 SelectionMode="Single" />
                             <StackPanel Grid.Column="1" Spacing="8">
                                 <TextBlock x:Name="HistoryMetadataTextBlock" Text="Select a transcription" TextWrapping="Wrap" />
+                                <ListView
+                                    x:Name="HistoryAnalysisListView"
+                                    MaxHeight="150"
+                                    SelectionMode="None">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="12" Padding="0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="120" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{Binding Value}" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        Text="{Binding Detail}"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
                                 <TextBox
                                     x:Name="HistoryOriginalTextBox"
                                     Header="Original"

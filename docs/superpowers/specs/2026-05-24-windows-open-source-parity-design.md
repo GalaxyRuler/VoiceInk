@@ -647,12 +647,17 @@ Implemented core:
 - Shell recent-history list/detail and picker-based CSV export.
 - Paste-last final and enhanced-preferred Core primitives with shell buttons.
 - Search, selected-row audio playback/open, selected-row retry, retry-last-to-clipboard, active-recording cancel history, and confirmed single-item delete in the shell.
+- Selected-row local analysis rows for words, audio duration/speech rate, and enhancement status.
 
 Windows gaps:
 
-- Power Mode name/emoji.
-- Waveform/rate controls and AI re-enhance from the macOS audio player.
-- Batch actions.
+- Deeper visual polish.
+
+History analysis overlay slice completed on 2026-05-26:
+
+- Added a Core selected-history analysis presenter for words, audio duration/speech rate, and enhancement status.
+- Rendered analysis rows in the History detail pane.
+- Kept history persistence, retry, re-enhance, copy, paste, delete, audio playback, and CSV export behavior unchanged.
 
 ### Metrics
 

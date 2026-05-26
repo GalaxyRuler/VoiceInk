@@ -5692,6 +5692,7 @@ public sealed partial class MainWindow : Window
             HistoryOriginalTextBox.Text = string.Empty;
             HistoryFinalTextBox.Text = string.Empty;
             HistoryEnhancedTextBox.Text = string.Empty;
+            HistoryAnalysisListView.ItemsSource = null;
             ClearHistoryAudioPlayer();
             RefreshUiFromControllerState();
             return;
@@ -5720,6 +5721,7 @@ public sealed partial class MainWindow : Window
         HistoryOriginalTextBox.Text = item.OriginalText;
         HistoryFinalTextBox.Text = item.Text;
         HistoryEnhancedTextBox.Text = item.EnhancedText ?? string.Empty;
+        HistoryAnalysisListView.ItemsSource = HistoryAnalysisPresenter.Present(item);
         RefreshHistoryAudioPlayer(audioPath);
         RefreshUiFromControllerState();
     }

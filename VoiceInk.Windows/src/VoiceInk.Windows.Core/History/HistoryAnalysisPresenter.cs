@@ -1,0 +1,96 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+
+namespace VoiceInk.Windows.Core.History;
+
+public sealed record HistoryAnalysisRow(
+    string Title,
+    string Value,
+    string Detail);
+
+public static partial class HistoryAnalysisPresenter
+{
+    public static IReadOnlyList<HistoryAnalysisRow> Present(TranscriptionHistoryItem item)
+    {
+        var displayText = DisplayText(item);
+        var wordCount = WordCount(displayText);
+
+        return
+        [
+            new(
+                "Words",
+                wordCount.ToString(CultureInfo.InvariantCulture),
+                string.IsNullOrWhiteSpace(item.EnhancedText) ? "Original transcript" : "Final transcript"),
+            new(
+                "Audio",
+                FormatDuration(item.AudioDuration),
+                SpeechRateDetail(wordCount, item.AudioDuration)),
+            new(
+                "Enhancement",
+                EnhancementValue(item),
+                EnhancementDetail(item))
+        ];
+    }
+
+    private static string DisplayText(TranscriptionHistoryItem item) =>
+        !string.IsNullOrWhiteSpace(item.EnhancedText)
+            ? item.EnhancedText
+            : !string.IsNullOrWhiteSpace(item.Text)
+                ? item.Text
+                : item.OriginalText;
+
+    private static int WordCount(string text) =>
+        string.IsNullOrWhiteSpace(text)
+            ? 0
+            : WordPattern().Matches(text).Count;
+
+    private static string SpeechRateDetail(int wordCount, TimeSpan audioDuration)
+    {
+        if (audioDuration <= TimeSpan.Zero)
+        {
+            return "Speech rate unavailable";
+        }
+
+        var wordsPerMinute = (int)Math.Round(wordCount / audioDuration.TotalMinutes, MidpointRounding.AwayFromZero);
+        return $"{wordsPerMinute} wpm";
+    }
+
+    private static string EnhancementValue(TranscriptionHistoryItem item) =>
+        item.Status switch
+        {
+            TranscriptionHistoryStatus.Canceled => "Canceled",
+            TranscriptionHistoryStatus.Failed => "Failed",
+            _ when !string.IsNullOrWhiteSpace(item.EnhancedText) => "Enhanced",
+            _ => "Original only"
+        };
+
+    private static string EnhancementDetail(TranscriptionHistoryItem item)
+    {
+        if (item.Status == TranscriptionHistoryStatus.Failed)
+        {
+            return string.IsNullOrWhiteSpace(item.ErrorMessage) ? "Transcription failed" : item.ErrorMessage;
+        }
+
+        if (item.Status == TranscriptionHistoryStatus.Canceled)
+        {
+            return "Recording was canceled before completion";
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.EnhancedText))
+        {
+            return item.EnhancementDuration is { } duration && duration > TimeSpan.Zero
+                ? $"AI cleanup completed in {FormatDuration(duration)}"
+                : "AI cleanup completed";
+        }
+
+        return "No enhanced text saved";
+    }
+
+    private static string FormatDuration(TimeSpan duration) =>
+        duration.TotalMinutes >= 1
+            ? $"{duration.TotalMinutes:0.#}m"
+            : $"{Math.Max(0, duration.TotalSeconds):0.#}s";
+
+    [GeneratedRegex(@"\b[\p{L}\p{N}']+\b")]
+    private static partial Regex WordPattern();
+}

@@ -24,7 +24,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Context features | 75% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, and display-targeted OCR region selection exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 90% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 84% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
-| History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
+| History | 92% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 81% | `[################----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper diagnostics expansion remains. |
 | Settings | 82% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, and summary rows for shortcut/data-safety/backup/diagnostic actions exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Onboarding readiness summary  [####################] 100%
+Windows History analysis overlay  [####################] 100%
 ```
 
 Completed:
 
-- Added Core onboarding summary rows for model, microphone, shortcut, and first dictation.
-- Rendered the summary inside the first-run dialog above the staged checklist.
-- Kept onboarding save, skip, model download, microphone refresh, and shortcut behavior unchanged.
+- Added Core selected-history analysis rows for words, audio duration/speech rate, and enhancement status.
+- Rendered the analysis rows in the History detail pane.
+- Kept history persistence, retry, re-enhance, copy, paste, delete, audio playback, and CSV export behavior unchanged.
 
 ## Near-Term Priority
 
