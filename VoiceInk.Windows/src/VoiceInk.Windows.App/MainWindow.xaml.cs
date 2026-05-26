@@ -1307,6 +1307,11 @@ public sealed partial class MainWindow : Window
         await UseSelectedLocalModelAsync();
     }
 
+    private async void RemoveUnavailableModelsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RemoveUnavailableImportedModelsAsync();
+    }
+
     private void OpenModelDownloadsButton_Click(object sender, RoutedEventArgs e)
     {
         OpenModelDownloads();
@@ -3302,6 +3307,43 @@ public sealed partial class MainWindow : Window
         {
             RefreshUiFromControllerState($"Model selection failed: {ex.Message}");
         }
+    }
+
+    private async Task RemoveUnavailableImportedModelsAsync()
+    {
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        var previousModelPath = ModelPathTextBox.Text.Trim();
+        var selectedPathWasImported = localWhisperModels.Any(model =>
+            string.Equals(model.Path, previousModelPath, StringComparison.OrdinalIgnoreCase));
+        var cleaned = LocalWhisperModelService.RemoveUnavailableImportedModels(
+            localWhisperModels,
+            File.Exists,
+            LocalModelFileLength,
+            out var removedCount);
+        if (removedCount == 0)
+        {
+            RefreshUiFromControllerState("No unavailable imported models to remove");
+            return;
+        }
+
+        localWhisperModels = cleaned;
+        if (selectedPathWasImported
+            && !cleaned.Any(model => string.Equals(model.Path, previousModelPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            ModelPathTextBox.Text = string.Empty;
+        }
+
+        RefreshModelChoices(ModelPathTextBox.Text);
+        RefreshLanguageChoices(ModelPathTextBox.Text, selectedLanguage: SelectedLanguageCode());
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshUiFromControllerState(
+            removedCount == 1
+                ? "Removed 1 unavailable imported model"
+                : $"Removed {removedCount} unavailable imported models");
     }
 
     private async Task UseSelectedCatalogModelAsync()
@@ -6933,6 +6975,9 @@ public sealed partial class MainWindow : Window
     private static bool CanUseModelPath(string? modelPath) =>
         ModelPathHealth(modelPath).CanUse;
 
+    private int UnavailableImportedModelCount() =>
+        localWhisperModels.Count(model => !ModelPathHealth(model.Path).CanUse);
+
     private void SelectCatalogModelByName(string? modelName)
     {
         if (string.IsNullOrWhiteSpace(modelName))
@@ -8115,6 +8160,8 @@ public sealed partial class MainWindow : Window
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled
             && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
+        RemoveUnavailableModelsButton.IsEnabled = modelControlsEnabled
+            && UnavailableImportedModelCount() > 0;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;
         TranscriptionProviderComboBox.IsEnabled = modelControlsEnabled;
         CloudTranscriptionPresetComboBox.IsEnabled = cloudTranscriptionControlsEnabled;

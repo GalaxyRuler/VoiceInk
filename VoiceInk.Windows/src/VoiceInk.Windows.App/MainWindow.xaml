@@ -238,6 +238,10 @@
                                 Content="Use Selected Model"
                                 Click="UseSelectedModelButton_Click" />
                             <Button
+                                x:Name="RemoveUnavailableModelsButton"
+                                Content="Remove Unavailable Models"
+                                Click="RemoveUnavailableModelsButton_Click" />
+                            <Button
                                 x:Name="OpenModelDownloadsButton"
                                 Content="Open GGML Model Downloads"
                                 Click="OpenModelDownloadsButton_Click" />

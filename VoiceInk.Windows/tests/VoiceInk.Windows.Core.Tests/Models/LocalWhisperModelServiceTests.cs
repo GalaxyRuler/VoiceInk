@@ -247,6 +247,30 @@ public sealed class LocalWhisperModelServiceTests
     }
 
     [Fact]
+    public void RemoveUnavailableImportedModels_RemovesOnlyUnusablePaths()
+    {
+        var usable = new LocalWhisperModel("C:\\Models\\ggml-base.en.bin", "ggml-base.en", DateTimeOffset.UnixEpoch);
+        var missing = new LocalWhisperModel("C:\\Models\\missing.bin", "missing", DateTimeOffset.UnixEpoch);
+        var wrongExtension = new LocalWhisperModel("C:\\Models\\notes.txt", "notes", DateTimeOffset.UnixEpoch);
+        var tiny = new LocalWhisperModel("C:\\Models\\tiny.bin", "tiny", DateTimeOffset.UnixEpoch);
+        var lengths = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase)
+        {
+            [usable.Path] = 142L * 1024 * 1024,
+            [tiny.Path] = 1024
+        };
+
+        var cleaned = LocalWhisperModelService.RemoveUnavailableImportedModels(
+            [usable, missing, wrongExtension, tiny],
+            fileExists: item => lengths.ContainsKey(item),
+            fileLength: item => lengths[item],
+            out var removedCount);
+
+        var remaining = Assert.Single(cleaned);
+        Assert.Equal(usable, remaining);
+        Assert.Equal(3, removedCount);
+    }
+
+    [Fact]
     public void BuildChoices_IncludesCurrentModelPathWhenNotImported()
     {
         var settings = new AppSettings

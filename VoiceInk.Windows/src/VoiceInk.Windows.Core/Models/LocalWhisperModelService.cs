@@ -110,6 +110,19 @@ public static class LocalWhisperModelService
             CanUse: true);
     }
 
+    public static LocalWhisperModel[] RemoveUnavailableImportedModels(
+        IEnumerable<LocalWhisperModel> importedModels,
+        Func<string, bool> fileExists,
+        Func<string, long> fileLength,
+        out int removedCount)
+    {
+        var remaining = importedModels
+            .Where(model => CheckPathHealth(model.Path, fileExists, fileLength).CanUse)
+            .ToArray();
+        removedCount = importedModels.Count() - remaining.Length;
+        return remaining;
+    }
+
     public static WhisperModelCatalogItem[] BuildCatalogItems(
         IEnumerable<LocalWhisperModel> localModels,
         string currentModelPath)
