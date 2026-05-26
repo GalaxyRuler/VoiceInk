@@ -123,6 +123,12 @@ public static class OnboardingChecklistPresenter
                     : "Refresh devices or check Windows privacy settings.",
                 status.HasAudioInputChoices ? "Ready" : "Check"),
             new OnboardingSummaryRowPresentation(
+                "Windows Permission",
+                status.HasAudioInputChoices
+                    ? "Keep Windows microphone access and desktop app access enabled for recording."
+                    : "Open Windows microphone privacy settings if no input appears after refresh.",
+                status.HasAudioInputChoices ? "Review" : "Check"),
+            new OnboardingSummaryRowPresentation(
                 "Shortcut",
                 status.HasPrimaryShortcut
                     ? "Ctrl+Alt+Space is ready."

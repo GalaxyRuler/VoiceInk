@@ -101,6 +101,12 @@ public sealed class OnboardingChecklistPresenterTests
             },
             row =>
             {
+                Assert.Equal("Windows Permission", row.Title);
+                Assert.Equal("Keep Windows microphone access and desktop app access enabled for recording.", row.Description);
+                Assert.Equal("Review", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Shortcut", row.Title);
                 Assert.Equal("Ctrl+Alt+Space is ready.", row.Description);
                 Assert.Equal("Ready", row.StatusBadge);
@@ -184,7 +190,7 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.True(presentation.CanSaveSetup);
         Assert.Equal("4 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
-        Assert.Equal(["Ready", "Ready", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal(["Ready", "Ready", "Review", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
         Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
         Assert.Equal("Click Field and Speak", presentation.SetupActions[3].CommandText);
         Assert.Equal(["Ready", "Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
@@ -214,6 +220,11 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("2 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal(OnboardingChecklistItemState.NeedsAttention, microphoneItem.State);
         Assert.Equal("No input is visible yet. Refresh devices or open Windows microphone privacy settings before your first recording.", microphoneItem.Description);
+        Assert.Contains(
+            presentation.SummaryRows,
+            row => row.Title == "Windows Permission"
+                && row.Description == "Open Windows microphone privacy settings if no input appears after refresh."
+                && row.StatusBadge == "Check");
         Assert.Equal("Save setup after checking your microphone, then run the first dictation test.", presentation.NextAction);
     }
 }
