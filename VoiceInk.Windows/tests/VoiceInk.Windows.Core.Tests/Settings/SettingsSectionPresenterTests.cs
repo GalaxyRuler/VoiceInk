@@ -18,6 +18,32 @@ public sealed class SettingsSectionPresenterTests
         Assert.Equal(
             "Backups exclude API keys. Diagnostic exports use sanitized local logs and are never sent automatically.",
             presentation.DataSafetyGuidance);
+        Assert.Collection(
+            presentation.ActionSummaries,
+            row =>
+            {
+                Assert.Equal("Shortcuts", row.Title);
+                Assert.Equal("Record, paste, retry, cancel, history, dictionary, enhancement, and Power Mode actions.", row.Description);
+                Assert.Equal("Configure", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Data Safety", row.Title);
+                Assert.Equal("Local cleanup and diagnostics stay on this Windows profile unless you export a file.", row.Description);
+                Assert.Equal("Local", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Backup", row.Title);
+                Assert.Equal("Export settings, prompts, Power Mode, models, and dictionary data without API keys.", row.Description);
+                Assert.Equal("No secrets", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Diagnostics", row.Title);
+                Assert.Equal("Copy or export sanitized troubleshooting context without telemetry.", row.Description);
+                Assert.Equal("Sanitized", row.StatusBadge);
+            });
         Assert.Equal(
             [
                 "Shortcuts",

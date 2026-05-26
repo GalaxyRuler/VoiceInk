@@ -834,6 +834,12 @@ Settings data-safety overview slice completed on 2026-05-26:
 - Added explicit API-key exclusion and sanitized diagnostics guidance under the Settings hero.
 - Kept commercial updater, account, and support flows omitted; diagnostics remain local open-source troubleshooting artifacts.
 
+Settings action summary slice completed on 2026-05-26:
+
+- Added Core Settings action summary rows for shortcuts, data safety, backups, and diagnostics.
+- Rendered the Windows Settings summary under the hero so long settings controls are easier to scan.
+- Kept shortcut registration, backup, cleanup, diagnostics, and recording feedback behavior unchanged.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

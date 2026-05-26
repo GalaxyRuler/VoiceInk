@@ -26,7 +26,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Dictionary | 84% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 81% | `[################----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper diagnostics expansion remains. |
-| Settings | 79% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, and local data-safety overview guidance exist. Deeper form layout polish remains. |
+| Settings | 82% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, and summary rows for shortcut/data-safety/backup/diagnostic actions exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
 | Onboarding | 78% | `[################----]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, progress-aware readiness checklist, guided setup stages, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Metrics model performance panel  [####################] 100%
+Windows Settings action summary  [####################] 100%
 ```
 
 Completed:
 
-- Added presenter-backed model performance primary values and status badges.
-- Wired Metrics transcription and enhancement model lists to richer WinUI row templates.
-- Added focused Core tests for transcription, enhancement, and empty model-performance rows.
+- Added presenter-backed Settings action summary rows for shortcuts, data safety, backup, and diagnostics.
+- Wired the Settings page to render the summary above detailed controls.
+- Added focused Core tests for action summary copy.
 
 ## Near-Term Priority
 

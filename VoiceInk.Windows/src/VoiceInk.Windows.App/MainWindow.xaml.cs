@@ -2139,6 +2139,7 @@ public sealed partial class MainWindow : Window
         SettingsHeroDescriptionTextBlock.Text = presentation.HeroDescription;
         SettingsOverviewSummaryTextBlock.Text = presentation.OverviewSummary;
         SettingsDataSafetyGuidanceTextBlock.Text = presentation.DataSafetyGuidance;
+        SettingsActionSummaryListView.ItemsSource = presentation.ActionSummaries;
 
         foreach (var section in presentation.Sections)
         {
