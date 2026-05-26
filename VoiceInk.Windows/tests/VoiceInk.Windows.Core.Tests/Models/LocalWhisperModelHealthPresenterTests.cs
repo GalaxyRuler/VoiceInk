@@ -6,7 +6,7 @@ namespace VoiceInk.Windows.Core.Tests.Models;
 public sealed class LocalWhisperModelHealthPresenterTests
 {
     [Theory]
-    [InlineData(LocalWhisperModelHealthStatus.NotSelected, "Choose a local Whisper model", "Download a recommended GGML model or import an existing whisper.cpp .bin file.", "Download or Import")]
+    [InlineData(LocalWhisperModelHealthStatus.NotSelected, "Choose a local Whisper model", "Download a recommended GGML model or import an existing whisper.cpp .bin file.", "Import .bin Model")]
     [InlineData(LocalWhisperModelHealthStatus.InvalidExtension, "Model file type is not supported", "Choose a whisper.cpp GGML .bin model file.", "Import .bin Model")]
     [InlineData(LocalWhisperModelHealthStatus.Missing, "Model file is missing", "Re-import the model from its new location or download a fresh GGML model.", "Repair Model Path")]
     [InlineData(LocalWhisperModelHealthStatus.Empty, "Model file is empty", "Delete this broken file and download or import a complete GGML model.", "Replace Model")]
@@ -26,5 +26,10 @@ public sealed class LocalWhisperModelHealthPresenterTests
         Assert.Equal(expectedGuidance, presentation.Guidance);
         Assert.Equal(expectedAction, presentation.ActionLabel);
         Assert.Equal(status == LocalWhisperModelHealthStatus.Ready, presentation.CanWarmup);
+        Assert.Equal(
+            status == LocalWhisperModelHealthStatus.Ready
+                ? LocalWhisperModelRepairAction.Warmup
+                : LocalWhisperModelRepairAction.ImportReplacement,
+            presentation.RepairAction);
     }
 }

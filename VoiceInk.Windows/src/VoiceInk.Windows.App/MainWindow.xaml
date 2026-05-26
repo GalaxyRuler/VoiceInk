@@ -123,6 +123,11 @@
                             x:Name="ModelRepairHintTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <Button
+                            x:Name="RepairModelPathButton"
+                            HorizontalAlignment="Left"
+                            Content="Repair Model Path"
+                            Click="RepairModelPathButton_Click" />
                         <StackPanel Spacing="4">
                             <TextBlock
                                 x:Name="ModelLibraryTitleTextBlock"

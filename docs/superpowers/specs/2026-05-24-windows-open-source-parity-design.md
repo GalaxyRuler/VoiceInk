@@ -343,9 +343,15 @@ Model library overview slice completed on 2026-05-26:
 - Added an AI Models local library overview above the catalog so users can see the local model library state before choosing Download, Set as Default, Show in Explorer, or Remove Unavailable Models.
 - Kept cleanup scoped to settings references only; model files are not deleted or moved.
 
+Model repair action slice completed on 2026-05-26:
+
+- Added Core model health repair action mapping so each health state has a test-covered UI action.
+- Added an AI Models repair action button that opens the existing `.bin` import flow for unhealthy model states and runs warmup for ready local models.
+- Kept model persistence, catalog downloads, stale imported cleanup, and warmup implementation unchanged.
+
 Windows gaps:
 
-- Deeper model lifecycle repair flows.
+- Deeper model lifecycle polish.
 
 Windows adaptation:
 

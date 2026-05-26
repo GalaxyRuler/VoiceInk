@@ -172,6 +172,7 @@ public sealed partial class MainWindow : Window
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private IReadOnlyList<ScreenCaptureDisplay> ocrDisplays = [];
+    private LocalWhisperModelRepairAction currentModelRepairAction = LocalWhisperModelRepairAction.ImportReplacement;
     private string customStartSoundPath = string.Empty;
     private string customStopSoundPath = string.Empty;
     private bool isStarting;
@@ -1348,6 +1349,17 @@ public sealed partial class MainWindow : Window
     private async void WarmupSelectedModelButton_Click(object sender, RoutedEventArgs e)
     {
         await ScheduleModelWarmupFromCurrentSettingsAsync("manual", updateMainStatus: true);
+    }
+
+    private async void RepairModelPathButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (currentModelRepairAction == LocalWhisperModelRepairAction.Warmup)
+        {
+            await ScheduleModelWarmupFromCurrentSettingsAsync("model repair", updateMainStatus: true);
+            return;
+        }
+
+        await ImportLocalModelAsync();
     }
 
     private async void PrewarmModelOnWakeCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -7098,6 +7110,8 @@ public sealed partial class MainWindow : Window
         var healthPresentation = LocalWhisperModelHealthPresenter.Present(health);
         DefaultModelStatusTextBlock.Text = health.Message;
         ModelRepairHintTextBlock.Text = $"{healthPresentation.Title}: {healthPresentation.Guidance}";
+        RepairModelPathButton.Content = healthPresentation.ActionLabel;
+        currentModelRepairAction = healthPresentation.RepairAction;
 
         if (!string.IsNullOrWhiteSpace(previouslySelectedName))
         {
@@ -8302,6 +8316,11 @@ public sealed partial class MainWindow : Window
             && !modelWarmupActive
             && SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
             && CanUseModelPath(ModelPathTextBox.Text);
+        RepairModelPathButton.IsEnabled = modelControlsEnabled
+            && (currentModelRepairAction != LocalWhisperModelRepairAction.Warmup
+                || (SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper
+                    && !modelWarmupActive
+                    && CanUseModelPath(ModelPathTextBox.Text)));
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled
