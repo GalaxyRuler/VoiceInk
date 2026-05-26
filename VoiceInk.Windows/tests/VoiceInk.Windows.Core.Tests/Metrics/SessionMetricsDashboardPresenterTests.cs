@@ -27,6 +27,32 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Equal("Dictated 1,234 words across 2 sessions.", presentation.HeroSubtitle);
             Assert.Equal("Audio Duration: 10m 0s", presentation.AudioDurationDisplay);
             Assert.Collection(
+                presentation.DiagnosticsRows,
+                row =>
+                {
+                    Assert.Equal("Data Source", row.Title);
+                    Assert.Equal("2 completed sessions in Last 7 days.", row.Detail);
+                    Assert.Equal("SQLite", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Privacy", row.Title);
+                    Assert.Equal("Metrics stay local to this Windows profile unless you export CSV.", row.Detail);
+                    Assert.Equal("Local", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Export", row.Title);
+                    Assert.Equal("CSV export includes dashboard totals and model performance summaries.", row.Detail);
+                    Assert.Equal("CSV", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Reset", row.Title);
+                    Assert.Equal("Reset deletes local metrics only; History and recordings stay unchanged.", row.Detail);
+                    Assert.Equal("Metrics only", row.StatusBadge);
+                });
+            Assert.Collection(
                 presentation.Cards,
                 card =>
                 {
@@ -67,6 +93,7 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Equal("Start your first recording to unlock value insights.", presentation.HeroSubtitle);
             Assert.Empty(presentation.Cards);
             Assert.Equal("Audio Duration: 0s", presentation.AudioDurationDisplay);
+            Assert.Equal("0 completed sessions in All time.", presentation.DiagnosticsRows[0].Detail);
         });
     }
 

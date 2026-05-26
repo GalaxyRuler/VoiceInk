@@ -679,6 +679,7 @@ Session Metrics slice completed on 2026-05-25:
 - Added `ISessionMetricStore` and `SqliteSessionMetricStore` with idempotent `transcription_id` persistence, schema migration, summary queries, and filtered model/enhancement performance aggregation.
 - Completed recorder, Transcribe Audio, and retry flows now record metrics after successful History saves; canceled, failed, and pending rows do not count toward metrics.
 - Added a WinUI `Metrics` sidebar section after History showing dashboard totals, metrics database path, transcription model performance, and enhancement model performance.
+- Added local diagnostics summary rows for metrics data source, privacy, CSV export, and reset behavior.
 
 Metrics Filters and Export slice completed on 2026-05-25:
 
@@ -710,10 +711,16 @@ Metrics model performance panel slice completed on 2026-05-26:
 - Updated Windows Metrics transcription and enhancement model lists to use richer row templates instead of plain text rows.
 - Kept metrics persistence, aggregation, time filtering, reset, CSV export, and diagnostics behavior unchanged.
 
+Metrics diagnostics summary slice completed on 2026-05-26:
+
+- Added Core Metrics diagnostics rows for data source, privacy, export, and reset behavior.
+- Rendered the diagnostics summary in the Metrics storage pane.
+- Kept metrics persistence, aggregation, CSV export, reset, and model-performance queries unchanged.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.
-- Diagnostics copy/export expansion beyond the existing About/Open Source local diagnostics actions.
+- Deeper visual diagnostics polish.
 
 ### Settings
 

@@ -8,7 +8,13 @@ public sealed record SessionMetricsDashboardPresentation(
     string HeroSubtitle,
     bool IsEmpty,
     string AudioDurationDisplay,
+    IReadOnlyList<SessionMetricsDiagnosticsRow> DiagnosticsRows,
     IReadOnlyList<SessionMetricsDashboardCard> Cards);
+
+public sealed record SessionMetricsDiagnosticsRow(
+    string Title,
+    string Detail,
+    string StatusBadge);
 
 public sealed record SessionMetricsDashboardCard(
     string IconGlyph,
@@ -43,6 +49,7 @@ public static class SessionMetricsDashboardPresenter
             heroSubtitle,
             isEmpty,
             $"Audio Duration: {FormatDuration(summary.TotalAudioDuration, culture)}",
+            DiagnosticsRows(normalizedFilterLabel, summary, culture),
             isEmpty
                 ? []
                 :
@@ -73,6 +80,29 @@ public static class SessionMetricsDashboardPresenter
                     "Orange")
             ]);
     }
+
+    private static IReadOnlyList<SessionMetricsDiagnosticsRow> DiagnosticsRows(
+        string filterLabel,
+        SessionMetricsSummary summary,
+        CultureInfo culture) =>
+    [
+        new(
+            "Data Source",
+            $"{Math.Max(0, summary.TotalSessions).ToString("N0", culture)} completed {Pluralize(summary.TotalSessions, "session", "sessions")} in {filterLabel}.",
+            "SQLite"),
+        new(
+            "Privacy",
+            "Metrics stay local to this Windows profile unless you export CSV.",
+            "Local"),
+        new(
+            "Export",
+            "CSV export includes dashboard totals and model performance summaries.",
+            "CSV"),
+        new(
+            "Reset",
+            "Reset deletes local metrics only; History and recordings stay unchanged.",
+            "Metrics only")
+    ];
 
     public static string FormatDuration(TimeSpan duration) =>
         FormatDuration(duration, CultureInfo.CurrentCulture);

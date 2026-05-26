@@ -5280,6 +5280,7 @@ public sealed partial class MainWindow : Window
         MetricsEmptyStateTextBlock.Text = presentation.IsEmpty ? presentation.HeroSubtitle : string.Empty;
         MetricsEmptyStateTextBlock.Visibility = presentation.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
         MetricsDashboardCardsListView.ItemsSource = presentation.Cards;
+        MetricsDiagnosticsListView.ItemsSource = presentation.DiagnosticsRows;
         MetricsAudioDurationTextBlock.Text = $"{presentation.FilterLabel} - {presentation.AudioDurationDisplay}";
     }
 
@@ -5290,6 +5291,7 @@ public sealed partial class MainWindow : Window
         MetricsEmptyStateTextBlock.Text = string.Empty;
         MetricsEmptyStateTextBlock.Visibility = Visibility.Collapsed;
         MetricsDashboardCardsListView.ItemsSource = Array.Empty<SessionMetricsDashboardCard>();
+        MetricsDiagnosticsListView.ItemsSource = Array.Empty<SessionMetricsDiagnosticsRow>();
         MetricsAudioDurationTextBlock.Text = string.Empty;
     }
 
