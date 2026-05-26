@@ -221,6 +221,7 @@ public static class EnhancementContextReadinessPresenter
         if (settings.IsEnhancementEnabled)
         {
             rows.Add(ProviderBoundaryRow(settings));
+            rows.Add(ProviderFallbackRow());
         }
 
         if (settings.UseOcrContext)
@@ -276,6 +277,13 @@ public static class EnhancementContextReadinessPresenter
             $"Enabled context can be included in prompts sent to {provider.DisplayName}. Use a local provider when context must stay on this PC.",
             "Cloud");
     }
+
+    private static EnhancementContextPrivacyRow ProviderFallbackRow() =>
+        new(
+            "Provider Fallback",
+            "None automatic",
+            "VoiceInk returns the original text if the selected enhancement provider fails instead of silently routing prompts to another provider.",
+            "Explicit");
 
     private static bool IsLocalProvider(EnhancementProviderPreset provider) =>
         string.Equals(provider.Id, EnhancementProviderPresetCatalog.Ollama.Id, StringComparison.OrdinalIgnoreCase)

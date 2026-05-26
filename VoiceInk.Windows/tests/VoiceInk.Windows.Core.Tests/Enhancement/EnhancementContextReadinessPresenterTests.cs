@@ -261,5 +261,11 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Local provider"
                 && row.Detail == "Enabled context is sent only to Ollama on this PC."
                 && row.StatusBadge == "Local");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Provider Fallback"
+                && row.Value == "None automatic"
+                && row.Detail == "VoiceInk returns the original text if the selected enhancement provider fails instead of silently routing prompts to another provider."
+                && row.StatusBadge == "Explicit");
     }
 }
