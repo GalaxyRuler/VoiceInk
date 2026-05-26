@@ -18,8 +18,8 @@ VoiceInk Windows parity  [##################--] 89%
 | Shell and tray | 76% | `[###############-----]` | Navigation shell, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 87% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
-| Model management | 70% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, and nonblocking warmup/preload exist. Richer provider cards and deeper model lifecycle polish remain. |
-| Cloud transcription | 90% | `[##################--]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Gemini inline-audio generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, plus Cartesia live preview streaming exist. Richer cards, provider test requests, Files API upload for long Gemini recordings, and more streaming providers remain. |
+| Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
+| Cloud transcription | 91% | `[##################--]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Gemini inline-audio generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, plus Cartesia live preview streaming exist. Provider test requests, Files API upload for long Gemini recordings, and more streaming providers remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
@@ -34,19 +34,19 @@ VoiceInk Windows parity  [##################--] 89%
 ## Current Slice
 
 ```text
-Windows signed MSIX build validation  [####################] 100%
+Windows cloud provider metadata cards  [####################] 100%
 ```
 
 Completed:
 
-- Added `package-msix.ps1 -ValidateAfterBuild`.
-- Located the signed `.msix` under the fresh publish root after `dotnet publish`.
-- Invoked the existing non-installing MSIX artifact validator after signed publish when requested.
-- Documented the signed-build validation path without creating certificates, importing trust, installing, uninstalling, or launching the app.
+- Added provider-card metadata to every cloud transcription preset.
+- Surfaced language, speed, accuracy, streaming/batch capability, and description in the AI Models cloud provider selector.
+- Kept custom OpenAI-compatible endpoint/model/key controls available.
+- Documented the provider metadata cards in README and this tracker.
 
 ## Near-Term Priority
 
-1. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
-2. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
-3. Add broader onboarding permission health checks and setup polish.
-4. Refine OCR region picker behavior across complex multi-monitor/DPI layouts.
+1. Add cloud provider test requests without leaking API keys or storing probe audio.
+2. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
+3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
+4. Add broader onboarding permission health checks and setup polish.

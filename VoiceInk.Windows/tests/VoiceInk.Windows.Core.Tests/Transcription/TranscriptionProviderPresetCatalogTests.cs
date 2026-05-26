@@ -66,6 +66,27 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Contains("ink-whisper", cartesia.ModelIds);
     }
 
+    [Fact]
+    public void All_ExposesCloudProviderCardMetadata()
+    {
+        foreach (var preset in TranscriptionProviderPresetCatalog.All)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(preset.Description));
+            Assert.False(string.IsNullOrWhiteSpace(preset.LanguageDisplay));
+            Assert.False(string.IsNullOrWhiteSpace(preset.SpeedDisplay));
+            Assert.False(string.IsNullOrWhiteSpace(preset.AccuracyDisplay));
+            Assert.False(string.IsNullOrWhiteSpace(preset.StreamingDisplay));
+        }
+
+        Assert.Equal("Fast", TranscriptionProviderPresetCatalog.Groq.SpeedDisplay);
+        Assert.Equal("High", TranscriptionProviderPresetCatalog.Groq.AccuracyDisplay);
+        Assert.Equal("Batch", TranscriptionProviderPresetCatalog.Groq.StreamingDisplay);
+        Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Deepgram.StreamingDisplay);
+        Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.AssemblyAI.StreamingDisplay);
+        Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Cartesia.StreamingDisplay);
+        Assert.Contains("Custom", TranscriptionProviderPresetCatalog.Custom.Description);
+    }
+
     [Theory]
     [InlineData("", "custom")]
     [InlineData("missing", "custom")]

@@ -7,7 +7,12 @@ public static class TranscriptionProviderPresetCatalog
         "Custom OpenAI-compatible",
         string.Empty,
         string.Empty,
-        []);
+        [],
+        "Custom endpoint for any OpenAI-compatible speech-to-text API.",
+        "Depends on provider",
+        "Custom",
+        "Custom",
+        "Provider-defined");
 
     public static TranscriptionProviderPreset Groq { get; } = new(
         "groq",
@@ -17,7 +22,12 @@ public static class TranscriptionProviderPresetCatalog
         [
             "whisper-large-v3-turbo",
             "whisper-large-v3"
-        ]);
+        ],
+        "Whisper Large v3 Turbo with Groq's low-latency inference.",
+        "Multilingual",
+        "Fast",
+        "High",
+        "Batch");
 
     public static TranscriptionProviderPreset Deepgram { get; } = new(
         "deepgram",
@@ -27,7 +37,12 @@ public static class TranscriptionProviderPresetCatalog
         [
             "nova-3",
             "nova-3-medical"
-        ]);
+        ],
+        "Deepgram Nova transcription with fast batch requests and live recorder preview.",
+        "Multilingual",
+        "Very fast",
+        "High",
+        "Realtime preview");
 
     public static TranscriptionProviderPreset AssemblyAI { get; } = new(
         "assemblyai",
@@ -37,7 +52,12 @@ public static class TranscriptionProviderPresetCatalog
         [
             "universal-3-pro",
             "universal-streaming"
-        ]);
+        ],
+        "AssemblyAI Universal models for high-accuracy multilingual transcription.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Realtime preview");
 
     public static TranscriptionProviderPreset Mistral { get; } = new(
         "mistral",
@@ -46,7 +66,12 @@ public static class TranscriptionProviderPresetCatalog
         "voxtral-mini-latest",
         [
             "voxtral-mini-latest"
-        ]);
+        ],
+        "Mistral Voxtral model for fast multilingual audio transcription.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Batch");
 
     public static TranscriptionProviderPreset ElevenLabs { get; } = new(
         "elevenlabs",
@@ -56,7 +81,12 @@ public static class TranscriptionProviderPresetCatalog
         [
             "scribe_v2",
             "scribe_v1"
-        ]);
+        ],
+        "ElevenLabs Scribe transcription with broad language coverage.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Batch");
 
     public static TranscriptionProviderPreset Soniox { get; } = new(
         "soniox",
@@ -65,7 +95,12 @@ public static class TranscriptionProviderPresetCatalog
         "stt-async-v4",
         [
             "stt-async-v4"
-        ]);
+        ],
+        "Soniox V4 async transcription with custom vocabulary support.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Batch");
 
     public static TranscriptionProviderPreset Speechmatics { get; } = new(
         "speechmatics",
@@ -74,7 +109,12 @@ public static class TranscriptionProviderPresetCatalog
         "speechmatics-enhanced",
         [
             "speechmatics-enhanced"
-        ]);
+        ],
+        "Speechmatics enhanced transcription with 50+ language support.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Batch");
 
     public static TranscriptionProviderPreset Gemini { get; } = new(
         "gemini",
@@ -86,7 +126,12 @@ public static class TranscriptionProviderPresetCatalog
             "gemini-2.5-flash",
             "gemini-3.1-pro-preview",
             "gemini-3-flash-preview"
-        ]);
+        ],
+        "Gemini audio understanding through inline audio generateContent requests.",
+        "Multilingual",
+        "Fast",
+        "High",
+        "Batch");
 
     public static TranscriptionProviderPreset Xai { get; } = new(
         "xai",
@@ -95,7 +140,12 @@ public static class TranscriptionProviderPresetCatalog
         "grok-stt",
         [
             "grok-stt"
-        ]);
+        ],
+        "xAI Grok speech-to-text with multilingual batch transcription.",
+        "Multilingual",
+        "Very fast",
+        "Very high",
+        "Batch");
 
     public static TranscriptionProviderPreset Cartesia { get; } = new(
         "cartesia",
@@ -104,7 +154,12 @@ public static class TranscriptionProviderPresetCatalog
         "ink-whisper",
         [
             "ink-whisper"
-        ]);
+        ],
+        "Cartesia Ink Whisper for streaming-first low-latency transcription.",
+        "Multilingual",
+        "Very fast",
+        "High",
+        "Realtime preview");
 
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [

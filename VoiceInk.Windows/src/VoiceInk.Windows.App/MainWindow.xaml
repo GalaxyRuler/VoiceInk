@@ -234,6 +234,31 @@
                             DisplayMemberPath="DisplayName"
                             Header="Cloud provider preset"
                             SelectionChanged="CloudTranscriptionPresetComboBox_SelectionChanged" />
+                        <Border
+                            BorderBrush="Gray"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock
+                                        Text="{Binding SelectedItem.DisplayName, ElementName=CloudTranscriptionPresetComboBox}"
+                                        FontWeight="SemiBold" />
+                                    <TextBlock
+                                        Text="{Binding SelectedItem.StreamingDisplay, ElementName=CloudTranscriptionPresetComboBox}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="{Binding SelectedItem.LanguageDisplay, ElementName=CloudTranscriptionPresetComboBox}" />
+                                    <TextBlock Text="Speed" />
+                                    <TextBlock Text="{Binding SelectedItem.SpeedDisplay, ElementName=CloudTranscriptionPresetComboBox}" />
+                                    <TextBlock Text="Accuracy" />
+                                    <TextBlock Text="{Binding SelectedItem.AccuracyDisplay, ElementName=CloudTranscriptionPresetComboBox}" />
+                                </StackPanel>
+                                <TextBlock
+                                    Text="{Binding SelectedItem.Description, ElementName=CloudTranscriptionPresetComboBox}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

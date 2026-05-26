@@ -5,4 +5,9 @@ public sealed record TranscriptionProviderPreset(
     string DisplayName,
     string Endpoint,
     string DefaultModel,
-    IReadOnlyList<string> ModelIds);
+    IReadOnlyList<string> ModelIds,
+    string Description,
+    string LanguageDisplay,
+    string SpeedDisplay,
+    string AccuracyDisplay,
+    string StreamingDisplay);
