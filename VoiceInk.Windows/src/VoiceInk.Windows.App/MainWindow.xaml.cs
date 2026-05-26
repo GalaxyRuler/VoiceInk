@@ -6136,6 +6136,14 @@ public sealed partial class MainWindow : Window
         }
 
         var rule = PowerModeRuleFromForm(existing: null);
+        var validation = PowerModeRuleValidator.Validate(rule);
+        if (!validation.IsValid)
+        {
+            ShowPowerModeValidationResult(validation, "Fix Power Mode rule");
+            RefreshUiFromControllerState("Power Mode rule needs a match");
+            return;
+        }
+
         powerModeRules = NormalizeDefaultRule(powerModeRules.Concat([rule]).ToArray(), rule);
         await SaveSettingsAsync(windowLifetime.Token);
         RefreshPowerModeRulesListView(rule.Id);
@@ -6150,6 +6158,14 @@ public sealed partial class MainWindow : Window
         }
 
         var updatedRule = PowerModeRuleFromForm(selectedRule);
+        var validation = PowerModeRuleValidator.Validate(updatedRule);
+        if (!validation.IsValid)
+        {
+            ShowPowerModeValidationResult(validation, "Fix Power Mode rule");
+            RefreshUiFromControllerState("Power Mode rule needs a match");
+            return;
+        }
+
         powerModeRules = NormalizeDefaultRule(
             powerModeRules.Select(rule => rule.Id == selectedRule.Id ? updatedRule : rule).ToArray(),
             updatedRule);
@@ -6210,6 +6226,7 @@ public sealed partial class MainWindow : Window
             ? -1
             : powerModeRules.ToList().FindIndex(rule => rule.Id == selectedId.Value);
         FillPowerModeFormFromSelection();
+        RefreshPowerModeValidationStatus();
     }
 
     private void FillPowerModeFormFromSelection()
@@ -6279,6 +6296,40 @@ public sealed partial class MainWindow : Window
         changedRule.IsDefault
             ? rules.Select(rule => rule.Id == changedRule.Id ? rule : rule with { IsDefault = false }).ToArray()
             : rules;
+
+    private void RefreshPowerModeValidationStatus()
+    {
+        if (!settingsLoaded)
+        {
+            PowerModeValidationInfoBar.IsOpen = false;
+            return;
+        }
+
+        var validation = PowerModeRuleValidator.Validate(powerModeRules);
+        if (validation.Errors.Count == 0 && validation.Warnings.Count == 0)
+        {
+            PowerModeValidationInfoBar.IsOpen = false;
+            return;
+        }
+
+        ShowPowerModeValidationResult(
+            validation,
+            validation.Errors.Count > 0 ? "Power Mode rules need attention" : "Power Mode rule warning");
+    }
+
+    private void ShowPowerModeValidationResult(
+        PowerModeRuleValidationResult validation,
+        string title)
+    {
+        PowerModeValidationInfoBar.Title = title;
+        PowerModeValidationInfoBar.Message = string.Join(
+            Environment.NewLine,
+            validation.Errors.Concat(validation.Warnings));
+        PowerModeValidationInfoBar.Severity = validation.Errors.Count > 0
+            ? InfoBarSeverity.Error
+            : InfoBarSeverity.Warning;
+        PowerModeValidationInfoBar.IsOpen = true;
+    }
 
     private PowerModeRule? SelectedPowerModeRule() =>
         PowerModeRulesListView.SelectedIndex >= 0 && PowerModeRulesListView.SelectedIndex < powerModeRules.Count
@@ -7071,6 +7122,7 @@ public sealed partial class MainWindow : Window
         PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeProcessTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeWindowTitleTextBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeBrowserUrlTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeEnabledCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeDefaultCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeModelPathTextBox.IsEnabled = powerModeControlsEnabled;

@@ -506,6 +506,10 @@
                                 Content="Use Active Window"
                                 Click="UsePowerModeTargetButton_Click" />
                         </StackPanel>
+                        <InfoBar
+                            x:Name="PowerModeValidationInfoBar"
+                            IsClosable="False"
+                            IsOpen="False" />
 
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
