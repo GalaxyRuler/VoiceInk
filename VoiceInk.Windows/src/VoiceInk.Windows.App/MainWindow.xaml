@@ -570,6 +570,10 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
                         <TextBlock
+                            x:Name="PowerModeManualSwitchingTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
                             x:Name="PowerModeCountTextBlock"
                             FontWeight="SemiBold"
                             TextWrapping="Wrap" />
@@ -607,7 +611,46 @@
                                     x:Name="PowerModeRulesListView"
                                     Height="260"
                                     SelectionChanged="PowerModeRulesListView_SelectionChanged"
-                                    SelectionMode="Single" />
+                                    SelectionMode="Single">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="12" Margin="0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock
+                                                        Text="{Binding Title}"
+                                                        FontWeight="SemiBold"
+                                                        TextWrapping="WrapWholeWords" />
+                                                    <TextBlock
+                                                        Text="{Binding TargetSummary}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        TextWrapping="WrapWholeWords" />
+                                                    <TextBlock
+                                                        Text="{Binding OverrideSummary}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        TextWrapping="WrapWholeWords" />
+                                                    <TextBlock
+                                                        Text="{Binding ShortcutSummary}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        TextWrapping="WrapWholeWords" />
+                                                </StackPanel>
+                                                <Border
+                                                    Grid.Column="1"
+                                                    Padding="8,3"
+                                                    CornerRadius="4"
+                                                    VerticalAlignment="Top"
+                                                    Background="{ThemeResource ControlFillColorDefaultBrush}">
+                                                    <TextBlock
+                                                        Text="{Binding StatusBadge}"
+                                                        FontWeight="SemiBold" />
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Button
                                         x:Name="MovePowerModeRuleUpButton"

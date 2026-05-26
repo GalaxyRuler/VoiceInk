@@ -7342,10 +7342,9 @@ public sealed partial class MainWindow : Window
     private void RefreshPowerModeRulesListView(Guid? selectedId = null)
     {
         selectedId ??= SelectedPowerModeRule()?.Id;
-        ApplyPowerModePagePresentation(PowerModePagePresenter.Present(powerModeRules));
-        PowerModeRulesListView.ItemsSource = powerModeRules
-            .Select(PowerModeRuleListItem)
-            .ToArray();
+        var presentation = PowerModePagePresenter.Present(powerModeRules);
+        ApplyPowerModePagePresentation(presentation);
+        PowerModeRulesListView.ItemsSource = presentation.RuleRows;
 
         PowerModeRulesListView.SelectedIndex = selectedId is null
             ? -1
@@ -7358,6 +7357,7 @@ public sealed partial class MainWindow : Window
     {
         PowerModeTitleTextBlock.Text = presentation.Title;
         PowerModeDescriptionTextBlock.Text = presentation.Description;
+        PowerModeManualSwitchingTextBlock.Text = presentation.ManualSwitchingSummary;
         PowerModeCountTextBlock.Text = presentation.CountLabel;
         PowerModeEmptyTextBlock.Text = presentation.IsEmpty
             ? $"{presentation.EmptyTitle}. {presentation.EmptyDescription}"
@@ -7507,27 +7507,6 @@ public sealed partial class MainWindow : Window
     {
         var trimmed = value.Trim();
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
-    }
-
-    private static string PowerModeRuleListItem(PowerModeRule rule)
-    {
-        var enabled = rule.IsEnabled ? string.Empty : "Off - ";
-        var target = rule.IsDefault
-            ? "Default"
-            : string.Join(
-                ", ",
-                new[]
-                {
-                    string.IsNullOrWhiteSpace(rule.ProcessNamePattern) ? null : $"Process: {rule.ProcessNamePattern}",
-                    string.IsNullOrWhiteSpace(rule.WindowTitlePattern) ? null : $"Title: {rule.WindowTitlePattern}",
-                    string.IsNullOrWhiteSpace(rule.BrowserUrlPattern) ? null : $"URL: {rule.BrowserUrlPattern}"
-                }.Where(value => value is not null));
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            target = "No target";
-        }
-
-        return $"{enabled}{rule.Emoji} {rule.Name} - {target}";
     }
 
     private static string PowerModeDisplay(string? name, string? emoji)

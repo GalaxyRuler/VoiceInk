@@ -563,6 +563,12 @@ Power Mode slice completed on 2026-05-25:
 - Added floating-recorder Power Mode chooser integration with Auto plus enabled rule selection.
 - Added macOS-style Power Mode page title/description, rule counts, and empty-state guidance.
 
+Power Mode rule list polish slice completed on 2026-05-26:
+
+- Extended Core `PowerModePagePresenter` with manual switching guidance and rich rule rows for target, override, shortcut, and enabled-state summaries.
+- Replaced flat Windows rule-list strings with presenter-backed rows while preserving stored rule order and selection behavior.
+- Kept matching, persistence, recorder selection, tray selection, and shortcut behavior unchanged.
+
 Windows Win32 grounding:
 
 - `GetForegroundWindow` is the active-window primitive for the window the user is working with.
