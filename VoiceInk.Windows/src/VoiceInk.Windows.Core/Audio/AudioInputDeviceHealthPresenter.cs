@@ -34,8 +34,9 @@ public static class AudioInputDeviceHealthPresenter
     private static IReadOnlyList<AudioInputDeviceHealthRow> BuildPrioritizedRows(
         IReadOnlyList<AudioInputDeviceChoice> choices,
         AudioInputDeviceChoice? selectedChoice,
-        IReadOnlyList<PrioritizedAudioInputDevice> prioritizedDevices) =>
-        prioritizedDevices
+        IReadOnlyList<PrioritizedAudioInputDevice> prioritizedDevices)
+    {
+        var rows = prioritizedDevices
             .OrderBy(device => device.Priority)
             .Select((device, index) =>
             {
@@ -47,6 +48,24 @@ public static class AudioInputDeviceHealthPresenter
                     : BuildAvailablePriorityRow(choice, selectedChoice, index + 1);
             })
             .ToArray();
+
+        if (selectedChoice?.DeviceNumber is null && rows.All(row => !row.IsAvailable))
+        {
+            return
+            [
+                .. rows,
+                new AudioInputDeviceHealthRow(
+                    "System Default Fallback",
+                    "Using Windows system default because no prioritized microphones are available",
+                    "Active",
+                    AudioInputDeviceSelectionNoticeKind.Warning,
+                    IsSelected: true,
+                    IsAvailable: true)
+            ];
+        }
+
+        return rows;
+    }
 
     private static AudioInputDeviceHealthRow BuildChoiceRow(
         AudioInputDeviceChoice choice,

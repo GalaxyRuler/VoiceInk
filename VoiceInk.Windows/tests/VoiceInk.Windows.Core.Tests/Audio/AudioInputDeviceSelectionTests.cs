@@ -119,6 +119,44 @@ public sealed class AudioInputDeviceSelectionTests
     }
 
     [Fact]
+    public void DeviceHealthRows_ShowSystemDefaultFallbackWhenPrioritizedDevicesAreUnavailable()
+    {
+        var choices = new[]
+        {
+            new AudioInputDeviceChoice(null, "System Default", 0),
+            new AudioInputDeviceChoice(0, "Built-in Microphone", 2, "endpoint-built-in")
+        };
+        var prioritizedDevices = new[]
+        {
+            new PrioritizedAudioInputDevice("Dock Microphone", 0, "endpoint-dock")
+        };
+
+        var rows = AudioInputDeviceHealthPresenter.BuildRows(
+            choices,
+            choices[0],
+            prioritizedDevices,
+            AudioInputModeSettings.Prioritized);
+
+        Assert.Collection(
+            rows,
+            row =>
+            {
+                Assert.Equal("Dock Microphone", row.Name);
+                Assert.Equal("Unavailable", row.BadgeText);
+                Assert.False(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("System Default Fallback", row.Name);
+                Assert.Equal("Active", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Warning, row.BadgeKind);
+                Assert.Equal("Using Windows system default because no prioritized microphones are available", row.Detail);
+                Assert.True(row.IsSelected);
+                Assert.True(row.IsAvailable);
+            });
+    }
+
+    [Fact]
     public void BuildChoices_SelectsFirstAvailablePrioritizedDevice()
     {
         var devices = new[]
