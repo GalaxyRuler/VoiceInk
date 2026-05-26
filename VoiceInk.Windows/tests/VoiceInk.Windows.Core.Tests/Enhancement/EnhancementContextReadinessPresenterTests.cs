@@ -124,6 +124,12 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Full screen"
                 && row.Detail == "Captures visible screen text locally when enhancement runs."
                 && row.StatusBadge == "On");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Screen Capture Scope"
+                && row.Value == "Full screen"
+                && row.Detail == "Visible screen text can be captured locally before prompt rendering."
+                && row.StatusBadge == "Local OCR");
     }
 
     [Fact]
@@ -144,6 +150,12 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Region 640 x 480"
                 && row.Detail == "Captures only the selected screen region."
                 && row.StatusBadge == "Region");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Screen Capture Scope"
+                && row.Value == "Selected region"
+                && row.Detail == "Only the configured OCR rectangle is captured before local text recognition."
+                && row.StatusBadge == "Constrained");
     }
 
     [Fact]
@@ -168,6 +180,12 @@ public sealed class EnhancementContextReadinessPresenterTests
             row => row.Title == "Screen OCR"
                 && row.Value == "Select Region"
                 && row.Detail == "Choose an OCR region or switch back to full-screen OCR before relying on screen text."
+                && row.StatusBadge == "Setup");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Screen Capture Scope"
+                && row.Value == "Region required"
+                && row.Detail == "Choose a valid OCR rectangle before constrained screen capture can run."
                 && row.StatusBadge == "Setup");
     }
 

@@ -223,7 +223,39 @@ public static class EnhancementContextReadinessPresenter
             rows.Add(ProviderBoundaryRow(settings));
         }
 
+        if (settings.UseOcrContext)
+        {
+            rows.Add(OcrCaptureScopeRow(settings));
+        }
+
         return rows;
+    }
+
+    private static EnhancementContextPrivacyRow OcrCaptureScopeRow(AppSettings settings)
+    {
+        if (!settings.UseOcrCaptureRegion)
+        {
+            return new(
+                "Screen Capture Scope",
+                "Full screen",
+                "Visible screen text can be captured locally before prompt rendering.",
+                "Local OCR");
+        }
+
+        if (settings.OcrCaptureRegionWidth <= 0 || settings.OcrCaptureRegionHeight <= 0)
+        {
+            return new(
+                "Screen Capture Scope",
+                "Region required",
+                "Choose a valid OCR rectangle before constrained screen capture can run.",
+                "Setup");
+        }
+
+        return new(
+            "Screen Capture Scope",
+            "Selected region",
+            "Only the configured OCR rectangle is captured before local text recognition.",
+            "Constrained");
     }
 
     private static EnhancementContextPrivacyRow ProviderBoundaryRow(AppSettings settings)
