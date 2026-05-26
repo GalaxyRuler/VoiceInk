@@ -2259,6 +2259,19 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = TextWrapping.Wrap
         };
+        var onboardingDescriptionTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
+        var onboardingProgressTextBlock = new TextBlock
+        {
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap
+        };
+        var onboardingChecklistTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
         var microphoneStatusTextBlock = new TextBlock
         {
             TextWrapping = TextWrapping.Wrap
@@ -2269,6 +2282,9 @@ public sealed partial class MainWindow : Window
         };
         RefreshOnboardingStatus(
             statusTextBlock,
+            onboardingDescriptionTextBlock,
+            onboardingProgressTextBlock,
+            onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
             onboardingHealthTextBlock,
             microphoneSettingsButton,
@@ -2282,6 +2298,9 @@ public sealed partial class MainWindow : Window
         refreshMicrophonesButton.Click += async (_, _) => await RefreshOnboardingAudioInputsAsync(
             audioInputComboBox,
             statusTextBlock,
+            onboardingDescriptionTextBlock,
+            onboardingProgressTextBlock,
+            onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
             onboardingHealthTextBlock,
             microphoneSettingsButton,
@@ -2290,6 +2309,9 @@ public sealed partial class MainWindow : Window
 
         modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
+            onboardingDescriptionTextBlock,
+            onboardingProgressTextBlock,
+            onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
             onboardingHealthTextBlock,
             microphoneSettingsButton,
@@ -2297,6 +2319,9 @@ public sealed partial class MainWindow : Window
             shortcutTextBox.Text);
         shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
+            onboardingDescriptionTextBlock,
+            onboardingProgressTextBlock,
+            onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
             onboardingHealthTextBlock,
             microphoneSettingsButton,
@@ -2307,11 +2332,9 @@ public sealed partial class MainWindow : Window
         {
             Spacing = 12
         };
-        content.Children.Add(new TextBlock
-        {
-            Text = "Set up the essentials once, then use the tray icon or shortcut from anywhere.",
-            TextWrapping = TextWrapping.Wrap
-        });
+        content.Children.Add(onboardingDescriptionTextBlock);
+        content.Children.Add(onboardingProgressTextBlock);
+        content.Children.Add(onboardingChecklistTextBlock);
         content.Children.Add(modelPathTextBox);
         content.Children.Add(browseModelButton);
         content.Children.Add(recommendedModelComboBox);
@@ -2330,16 +2353,17 @@ public sealed partial class MainWindow : Window
             }
         });
         content.Children.Add(shortcutTextBox);
-        content.Children.Add(new TextBlock
-        {
-            Text = "Try it after setup: click a text field, press your shortcut, speak, then press the shortcut again.",
-            TextWrapping = TextWrapping.Wrap
-        });
         content.Children.Add(statusTextBlock);
 
         var dialog = new ContentDialog
         {
-            Title = "Welcome to VoiceInk",
+            Title = OnboardingChecklistPresenter.Present(OnboardingSetupStatusService.Build(
+                new AppSettings
+                {
+                    ModelPath = modelPathTextBox.Text,
+                    Hotkey = shortcutTextBox.Text
+                },
+                HasPhysicalAudioInputChoices())).Title,
             PrimaryButtonText = "Save Setup",
             SecondaryButtonText = "Skip For Now",
             CloseButtonText = string.Empty,
@@ -3106,6 +3130,9 @@ public sealed partial class MainWindow : Window
     private async Task RefreshOnboardingAudioInputsAsync(
         ComboBox audioInputComboBox,
         TextBlock statusTextBlock,
+        TextBlock onboardingDescriptionTextBlock,
+        TextBlock onboardingProgressTextBlock,
+        TextBlock onboardingChecklistTextBlock,
         TextBlock microphoneStatusTextBlock,
         TextBlock onboardingHealthTextBlock,
         Button microphoneSettingsButton,
@@ -3130,6 +3157,9 @@ public sealed partial class MainWindow : Window
 
             RefreshOnboardingStatus(
                 statusTextBlock,
+                onboardingDescriptionTextBlock,
+                onboardingProgressTextBlock,
+                onboardingChecklistTextBlock,
                 microphoneStatusTextBlock,
                 onboardingHealthTextBlock,
                 microphoneSettingsButton,
@@ -3150,6 +3180,9 @@ public sealed partial class MainWindow : Window
 
     private void RefreshOnboardingStatus(
         TextBlock statusTextBlock,
+        TextBlock? onboardingDescriptionTextBlock,
+        TextBlock? onboardingProgressTextBlock,
+        TextBlock? onboardingChecklistTextBlock,
         TextBlock? microphoneStatusTextBlock,
         TextBlock? onboardingHealthTextBlock,
         Button? microphoneSettingsButton,
@@ -3163,10 +3196,24 @@ public sealed partial class MainWindow : Window
                 Hotkey = primaryShortcut
             },
             HasPhysicalAudioInputChoices());
+        var presentation = OnboardingChecklistPresenter.Present(status);
 
-        statusTextBlock.Text = status.CanCompleteSetup
-            ? "Ready to save setup."
-            : "Model path and primary shortcut are required to save setup.";
+        statusTextBlock.Text = presentation.NextAction;
+        if (onboardingDescriptionTextBlock is not null)
+        {
+            onboardingDescriptionTextBlock.Text = presentation.Description;
+        }
+
+        if (onboardingProgressTextBlock is not null)
+        {
+            onboardingProgressTextBlock.Text = presentation.ProgressLabel;
+        }
+
+        if (onboardingChecklistTextBlock is not null)
+        {
+            onboardingChecklistTextBlock.Text = presentation.ChecklistSummary;
+        }
+
         if (microphoneStatusTextBlock is not null)
         {
             microphoneStatusTextBlock.Text = $"{status.MicrophoneStatusTitle}: {status.MicrophoneStatusMessage}";

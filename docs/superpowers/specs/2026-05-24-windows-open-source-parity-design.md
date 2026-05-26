@@ -826,14 +826,15 @@ Implemented:
 - First-run setup dialog after settings and audio devices load.
 - Local JSON `HasCompletedOnboarding` flag.
 - Local whisper model path selection with `.bin` picker.
+- Recommended local model download entry point.
 - Windows microphone privacy settings link and audio input selection.
-- Primary shortcut setup and basic try-it instructions.
+- Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
+- Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
 Windows gaps:
 
-- Model catalog/download cards and imported-model reuse inside onboarding.
-- Permission health checks beyond opening Windows microphone settings.
-- Reset-onboarding setting.
+- Richer multi-step visual flow matching the macOS animated welcome, permissions, model, and tutorial pages.
+- Permission health checks beyond microphone privacy and device visibility.
 
 Onboarding slice completed on 2026-05-24:
 
@@ -841,6 +842,12 @@ Onboarding slice completed on 2026-05-24:
 - Guided local whisper model path selection, microphone privacy/settings, audio input selection, primary shortcut, and a short try-it path.
 - Persisted onboarding completion locally in JSON settings.
 - Kept direct model download/import cards, deeper permission health checks, and reset-onboarding settings as later model-management/settings work.
+
+Onboarding checklist guidance slice completed on 2026-05-26:
+
+- Added a Core onboarding checklist presenter for macOS-aligned setup progress, readiness rows, and next action copy.
+- Wired the first-run dialog to show setup progress and checklist guidance before the model, microphone, and shortcut controls.
+- Kept microphone device visibility advisory instead of a hard save blocker because Windows privacy settings can hide inputs until runtime.
 
 ### Packaging
 

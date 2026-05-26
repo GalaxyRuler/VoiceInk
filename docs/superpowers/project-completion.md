@@ -28,20 +28,20 @@ VoiceInk Windows parity  [###################-] 95%
 | Metrics | 76% | `[###############-----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, model performance, CSV export, and confirmed reset controls exist. Deeper model-performance panel styling and diagnostics expansion remain. |
 | Settings | 77% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, and macOS-style section descriptions exist. Deeper form layout polish remains. |
 | Audio input | 88% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/priority-fallback/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI remains. |
-| Onboarding | 70% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer setup polish remains. |
+| Onboarding | 74% | `[###############-----]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, progress-aware readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer multi-step visual flow polish remains. |
 | Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows Power Mode page copy  [####################] 100%
+Windows onboarding checklist guidance  [####################] 100%
 ```
 
 Completed:
 
-- Added a Core Power Mode page presenter for macOS-style title, description, rule counts, and empty state.
-- Wired Power Mode page count and empty-state guidance into the Windows rule list refresh path.
-- Added focused Core tests for non-empty and empty Power Mode presentation states.
+- Added a Core onboarding checklist presenter for macOS-style setup progress, required next action, and readiness rows.
+- Wired first-run setup dialog copy to presenter output while keeping Windows microphone privacy and health details available.
+- Added focused Core tests for incomplete, complete, and missing-microphone onboarding states.
 
 ## Near-Term Priority
 
