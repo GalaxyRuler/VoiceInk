@@ -5,6 +5,7 @@ public sealed record DictionaryPagePresentation(
     string HeroDescription,
     string OverviewSummary,
     string LocalBackupGuidance,
+    IReadOnlyList<DictionarySummaryRow> SummaryRows,
     string VocabularySectionTitle,
     string VocabularySectionDescription,
     string VocabularyCountLabel,
@@ -21,6 +22,12 @@ public sealed record DictionaryVocabularyRow(
     string Word,
     string DisplayText,
     string DetailText,
+    string StatusBadge);
+
+public sealed record DictionarySummaryRow(
+    string Title,
+    string Value,
+    string Detail,
     string StatusBadge);
 
 public sealed record DictionaryReplacementRow(
@@ -67,6 +74,10 @@ public static class DictionaryPagePresenter
             "Enhance VoiceInk's transcription accuracy by teaching it your vocabulary",
             OverviewSummary(vocabularyRows.Length, replacementRows.Count(item => item.IsEnabled), replacementRows.Count(item => !item.IsEnabled)),
             "Import and export use local VoiceInk dictionary JSON only.",
+            SummaryRows(
+                vocabularyRows.Length,
+                replacementRows.Count(item => item.IsEnabled),
+                replacementRows.Count(item => !item.IsEnabled)),
             "Vocabulary",
             "Add words to help VoiceInk recognize them properly. (Requires AI enhancement)",
             $"Vocabulary Words ({vocabularyRows.Length})",
@@ -80,6 +91,33 @@ public static class DictionaryPagePresenter
                 : string.Empty,
             replacementRows);
     }
+
+    private static IReadOnlyList<DictionarySummaryRow> SummaryRows(
+        int vocabularyCount,
+        int enabledReplacementCount,
+        int disabledReplacementCount) =>
+    [
+        new(
+            "Vocabulary",
+            $"{vocabularyCount} {Pluralize(vocabularyCount, "word", "words")}",
+            "Helps prompts recognize names, terms, and product words.",
+            vocabularyCount > 0 ? "Active" : "Empty"),
+        new(
+            "Active Replacements",
+            enabledReplacementCount.ToString(),
+            "Runs after transcription before insertion.",
+            enabledReplacementCount > 0 ? "Enabled" : "None"),
+        new(
+            "Disabled Replacements",
+            disabledReplacementCount.ToString(),
+            "Kept locally and skipped until re-enabled.",
+            disabledReplacementCount > 0 ? "Paused" : "None"),
+        new(
+            "Local Backup",
+            "JSON",
+            "Import and export stay on this Windows profile unless you choose a file.",
+            "Local")
+    ];
 
     private static string ReplacementDisplayText(WordReplacement replacement)
     {

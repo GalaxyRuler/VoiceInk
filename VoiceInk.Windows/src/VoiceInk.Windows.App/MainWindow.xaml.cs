@@ -3974,6 +3974,7 @@ public sealed partial class MainWindow : Window
         DictionaryHeroDescriptionTextBlock.Text = presentation.HeroDescription;
         DictionaryOverviewSummaryTextBlock.Text = presentation.OverviewSummary;
         DictionaryLocalBackupGuidanceTextBlock.Text = presentation.LocalBackupGuidance;
+        DictionarySummaryListView.ItemsSource = presentation.SummaryRows;
         VocabularySectionTitleTextBlock.Text = presentation.VocabularySectionTitle;
         VocabularySectionDescriptionTextBlock.Text = presentation.VocabularySectionDescription;
         VocabularyCountTextBlock.Text = presentation.VocabularyCountLabel;

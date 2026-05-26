@@ -35,6 +35,36 @@ public sealed class DictionaryPagePresenterTests
         Assert.Equal(
             "Import and export use local VoiceInk dictionary JSON only.",
             presentation.LocalBackupGuidance);
+        Assert.Collection(
+            presentation.SummaryRows,
+            row =>
+            {
+                Assert.Equal("Vocabulary", row.Title);
+                Assert.Equal("2 words", row.Value);
+                Assert.Equal("Helps prompts recognize names, terms, and product words.", row.Detail);
+                Assert.Equal("Active", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Active Replacements", row.Title);
+                Assert.Equal("1", row.Value);
+                Assert.Equal("Runs after transcription before insertion.", row.Detail);
+                Assert.Equal("Enabled", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Disabled Replacements", row.Title);
+                Assert.Equal("1", row.Value);
+                Assert.Equal("Kept locally and skipped until re-enabled.", row.Detail);
+                Assert.Equal("Paused", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Local Backup", row.Title);
+                Assert.Equal("JSON", row.Value);
+                Assert.Equal("Import and export stay on this Windows profile unless you choose a file.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
         Assert.Equal(["VoiceInk", "AssemblyAI"], presentation.VocabularyRows.Select(row => row.DisplayText).ToArray());
@@ -78,6 +108,8 @@ public sealed class DictionaryPagePresenterTests
         Assert.Equal(
             "Import and export use local VoiceInk dictionary JSON only.",
             presentation.LocalBackupGuidance);
+        Assert.Equal("0 words", presentation.SummaryRows[0].Value);
+        Assert.Equal("0", presentation.SummaryRows[1].Value);
         Assert.Equal("Add words to help VoiceInk recognize them properly.", presentation.VocabularyEmptyText);
         Assert.Equal(
             "Define word replacements to automatically replace specific words or phrases.",

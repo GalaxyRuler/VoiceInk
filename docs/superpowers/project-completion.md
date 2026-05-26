@@ -23,7 +23,7 @@ VoiceInk Windows parity  [###################-] 95%
 | AI enhancement | 90% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
 | Context features | 75% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, and display-targeted OCR region selection exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 90% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
-| Dictionary | 84% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
+| Dictionary | 87% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 92% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 84% | `[#################---]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local diagnostics summary rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 82% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, and summary rows for shortcut/data-safety/backup/diagnostic actions exist. Deeper form layout polish remains. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Metrics diagnostics summary  [####################] 100%
+Windows Dictionary usage summary  [####################] 100%
 ```
 
 Completed:
 
-- Added Core diagnostics rows for Metrics data source, privacy, export, and reset behavior.
-- Rendered the diagnostics summary in the Metrics storage pane.
-- Kept metrics persistence, aggregation, CSV export, reset, and model-performance queries unchanged.
+- Added Core Dictionary summary rows for vocabulary, active replacements, disabled replacements, and local JSON backup.
+- Rendered the usage summary under the Dictionary hero.
+- Kept dictionary persistence, replacement cleanup, quick add, import, and export behavior unchanged.
 
 ## Near-Term Priority
 

@@ -614,6 +614,7 @@ Implemented core:
 - Quick-add dialog with Vocabulary and Word Replacement modes, opened by shell button or global shortcut.
 - A Core `DictionaryPagePresenter` with macOS-style hero/section labels, count labels, empty-state guidance, and enabled/disabled replacement row display.
 - Windows Dictionary page presentation text for `Dictionary Settings`, `Vocabulary`, `Word Replacements`, list counts, overview guidance, local JSON import/export guidance, and empty guidance.
+- Dictionary usage summary rows for vocabulary count, active replacements, disabled replacements, and local JSON backup/import.
 
 Dictionary overview guidance slice completed on 2026-05-26:
 
@@ -626,6 +627,12 @@ Dictionary row polish slice completed on 2026-05-26:
 - Extended Core dictionary rows with detail text and status badges for vocabulary and replacements.
 - Updated Windows vocabulary and replacement lists to show richer row templates while preserving sorted order and selection behavior.
 - Kept dictionary storage, import/export, quick add, replacement application, and prompt rendering unchanged.
+
+Dictionary usage summary slice completed on 2026-05-26:
+
+- Added Core Dictionary summary rows for vocabulary, active replacements, disabled replacements, and local JSON backup.
+- Rendered the usage summary under the Dictionary hero.
+- Kept dictionary persistence, replacement cleanup, quick add, import, and export behavior unchanged.
 
 Windows gaps:
 
