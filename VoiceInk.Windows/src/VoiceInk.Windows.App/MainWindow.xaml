@@ -407,10 +407,23 @@
                                 Header="Model"
                                 PlaceholderText="model-name" />
                         </Grid>
-                        <ComboBox
-                            x:Name="EnhancementModelComboBox"
-                            Header="Preset model"
-                            SelectionChanged="EnhancementModelComboBox_SelectionChanged" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox
+                                x:Name="EnhancementModelComboBox"
+                                Grid.Column="0"
+                                Header="Preset model"
+                                SelectionChanged="EnhancementModelComboBox_SelectionChanged" />
+                            <Button
+                                x:Name="RefreshOllamaEnhancementModelsButton"
+                                Grid.Column="1"
+                                Margin="0,28,0,0"
+                                Content="Refresh Ollama Models"
+                                Click="RefreshOllamaEnhancementModelsButton_Click" />
+                        </Grid>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
