@@ -684,9 +684,71 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="WrapWholeWords" />
                         <ComboBox
+                            x:Name="AudioInputModeComboBox"
+                            Header="Input mode"
+                            SelectionChanged="AudioInputModeComboBox_SelectionChanged"
+                            SelectedIndex="0">
+                            <ComboBoxItem Content="System Default" />
+                            <ComboBoxItem Content="Custom Device" />
+                            <ComboBoxItem Content="Prioritized" />
+                        </ComboBox>
+                        <ComboBox
                             x:Name="AudioInputComboBox"
                             Header="Microphone"
-                            PlaceholderText="System Default" />
+                            PlaceholderText="System Default"
+                            SelectionChanged="AudioInputComboBox_SelectionChanged" />
+                        <StackPanel
+                            x:Name="AudioInputPriorityPanel"
+                            Spacing="8"
+                            Visibility="Collapsed">
+                            <TextBlock Text="Device Priority" FontWeight="SemiBold" />
+                            <TextBlock
+                                Text="Devices are tried in priority order. If none are available, VoiceInk uses the Windows system default microphone."
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="WrapWholeWords" />
+                            <ListView
+                                x:Name="AudioInputPriorityListView"
+                                MaxHeight="180"
+                                SelectionChanged="AudioInputPriorityListView_SelectionChanged"
+                                SelectionMode="Single">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnSpacing="12" Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                Text="{Binding PriorityDisplay}"
+                                                FontWeight="SemiBold" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Text="{Binding Name}"
+                                                TextWrapping="WrapWholeWords" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    x:Name="AddAudioInputPriorityButton"
+                                    Content="Add Selected"
+                                    Click="AddAudioInputPriorityButton_Click" />
+                                <Button
+                                    x:Name="RemoveAudioInputPriorityButton"
+                                    Content="Remove"
+                                    Click="RemoveAudioInputPriorityButton_Click" />
+                                <Button
+                                    x:Name="MoveAudioInputPriorityUpButton"
+                                    Content="Move Up"
+                                    Click="MoveAudioInputPriorityUpButton_Click" />
+                                <Button
+                                    x:Name="MoveAudioInputPriorityDownButton"
+                                    Content="Move Down"
+                                    Click="MoveAudioInputPriorityDownButton_Click" />
+                            </StackPanel>
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button
                                 x:Name="RefreshAudioInputsButton"

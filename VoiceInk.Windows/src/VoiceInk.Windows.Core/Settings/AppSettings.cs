@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Models;
+using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.Recording;
@@ -46,6 +47,8 @@ public sealed record AppSettings
     public string CyclePowerModeHotkey { get; init; } = string.Empty;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
+    public string AudioInputMode { get; init; } = AudioInputModeSettings.SystemDefault;
+    public PrioritizedAudioInputDevice[] PrioritizedAudioInputDevices { get; init; } = [];
     public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];
     public TranscriptionProviderKind TranscriptionProvider { get; init; } = TranscriptionProviderKind.LocalWhisper;
     public string CloudTranscriptionProviderId { get; init; } = "custom";
@@ -114,6 +117,8 @@ public sealed record AppSettings
             CyclePowerModeHotkey == other.CyclePowerModeHotkey &&
             AudioInputDeviceNumber == other.AudioInputDeviceNumber &&
             AudioInputDeviceName == other.AudioInputDeviceName &&
+            AudioInputMode == other.AudioInputMode &&
+            PrioritizedAudioInputDevices.SequenceEqual(other.PrioritizedAudioInputDevices) &&
             ImportedWhisperModels.SequenceEqual(other.ImportedWhisperModels) &&
             TranscriptionProvider == other.TranscriptionProvider &&
             CloudTranscriptionProviderId == other.CloudTranscriptionProviderId &&
@@ -183,6 +188,12 @@ public sealed record AppSettings
         hash.Add(CyclePowerModeHotkey);
         hash.Add(AudioInputDeviceNumber);
         hash.Add(AudioInputDeviceName);
+        hash.Add(AudioInputMode);
+        foreach (var device in PrioritizedAudioInputDevices)
+        {
+            hash.Add(device);
+        }
+
         foreach (var model in ImportedWhisperModels)
         {
             hash.Add(model);

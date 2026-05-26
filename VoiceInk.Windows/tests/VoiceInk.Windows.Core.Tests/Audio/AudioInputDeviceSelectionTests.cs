@@ -7,6 +7,91 @@ namespace VoiceInk.Windows.Core.Tests.Audio;
 public sealed class AudioInputDeviceSelectionTests
 {
     [Fact]
+    public void BuildChoices_SelectsFirstAvailablePrioritizedDevice()
+    {
+        var devices = new[]
+        {
+            new AudioInputDevice(0, "Built-in Microphone", 2),
+            new AudioInputDevice(1, "USB Microphone", 1),
+            new AudioInputDevice(2, "Dock Microphone", 1)
+        };
+        var settings = new AppSettings
+        {
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0),
+                new PrioritizedAudioInputDevice("USB Microphone", 1)
+            ]
+        };
+
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        Assert.Null(result.Warning);
+        Assert.Equal(3, result.SelectedIndex);
+        Assert.Equal(2, result.SelectedChoice?.DeviceNumber);
+        Assert.Equal(AudioInputDeviceSelectionNoticeKind.Success, result.Notice.Kind);
+        Assert.Equal("Dock Microphone", result.Notice.Title);
+        Assert.Equal("VoiceInk selected the highest-priority available microphone.", result.Notice.Message);
+        Assert.Equal("Priority 1", result.Notice.ActionText);
+    }
+
+    [Fact]
+    public void BuildChoices_SkipsUnavailablePrioritizedDevices()
+    {
+        var devices = new[]
+        {
+            new AudioInputDevice(1, "USB Microphone", 1)
+        };
+        var settings = new AppSettings
+        {
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0),
+                new PrioritizedAudioInputDevice("USB Microphone", 1)
+            ]
+        };
+
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        Assert.Equal(1, result.SelectedIndex);
+        Assert.Equal(1, result.SelectedChoice?.DeviceNumber);
+        Assert.Equal("Selected prioritized audio input is unavailable; using next available priority", result.Warning);
+        Assert.Equal(AudioInputDeviceSelectionNoticeKind.Warning, result.Notice.Kind);
+        Assert.Equal("USB Microphone priority fallback", result.Notice.Title);
+        Assert.Equal("VoiceInk skipped unavailable higher-priority microphones and selected this device.", result.Notice.Message);
+        Assert.Equal("Priority 2", result.Notice.ActionText);
+    }
+
+    [Fact]
+    public void BuildChoices_FallsBackToSystemDefaultWhenNoPrioritizedDevicesAreAvailable()
+    {
+        var devices = new[]
+        {
+            new AudioInputDevice(0, "Built-in Microphone", 2)
+        };
+        var settings = new AppSettings
+        {
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0)
+            ]
+        };
+
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        Assert.Equal(0, result.SelectedIndex);
+        Assert.Null(result.SelectedChoice?.DeviceNumber);
+        Assert.Equal("Selected prioritized audio inputs are unavailable; using System Default", result.Warning);
+        Assert.Equal(AudioInputDeviceSelectionNoticeKind.Warning, result.Notice.Kind);
+        Assert.Equal("Prioritized microphones unavailable", result.Notice.Title);
+        Assert.Equal("None of the prioritized microphones are currently available. VoiceInk will use the Windows system default microphone.", result.Notice.Message);
+        Assert.Equal("Refresh or adjust priority list", result.Notice.ActionText);
+    }
+
+    [Fact]
     public void BuildChoices_SelectsSavedCustomDeviceWhenAvailable()
     {
         var devices = new[]

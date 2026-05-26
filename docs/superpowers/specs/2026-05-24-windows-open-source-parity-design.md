@@ -774,13 +774,15 @@ Implemented:
 - Device listing and refresh through NAudio `WaveIn`.
 - System Default mode.
 - Custom device selection persisted in JSON settings and applied before recording.
+- Prioritized mode with ordered microphone names, next-available fallback, and System Default fallback when no priority entries are available.
+- Audio Input page priority list controls for adding, removing, and reordering microphones.
 - Missing saved device fallback to System Default with a status warning.
+- Live Core Audio endpoint-change refresh while idle, with deferred refresh during recording/processing.
 
 Windows gaps:
 
-- Prioritized fallback mode.
-- Live device-change notifications.
-- Rich active/unavailable badges and priority ordering UI.
+- Endpoint-ID backed priority matching if the capture backend moves from WaveIn numbering to MMDevice/WASAPI.
+- Richer active/unavailable device health badges.
 
 ### Onboarding
 
@@ -877,7 +879,7 @@ Status on 2026-05-24:
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dedicated Dictionary navigation page/richer layout, modifier-only shortcuts, prioritized audio input failover, waveform polish, and richer visual parity.
+- Remaining for this slice: dedicated Dictionary navigation page/richer layout, modifier-only shortcuts, endpoint-ID backed audio input identity, waveform polish, and richer visual parity.
 - Add focused tests and docs.
 
 ## Verification

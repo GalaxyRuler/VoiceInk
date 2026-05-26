@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Backup;
+using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Dictionary;
 using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.Models;
@@ -306,6 +307,12 @@ public sealed class VoiceInkSettingsBackupTests
             ToggleEnhancementHotkey = "Ctrl+Alt+X",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0),
+                new PrioritizedAudioInputDevice("USB Microphone", 1)
+            ],
             ImportedWhisperModels =
             [
                 new LocalWhisperModel("C:\\Models\\ggml-base.en.bin", "ggml-base.en", now)

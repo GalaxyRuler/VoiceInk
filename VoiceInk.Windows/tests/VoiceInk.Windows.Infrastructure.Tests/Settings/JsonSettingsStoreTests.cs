@@ -1,4 +1,5 @@
 using VoiceInk.Windows.Core.Settings;
+using VoiceInk.Windows.Core.Audio;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Enhancement;
@@ -65,6 +66,12 @@ public sealed class JsonSettingsStoreTests
             CyclePowerModeHotkey = "Ctrl+Alt+P",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0),
+                new PrioritizedAudioInputDevice("USB Microphone", 1)
+            ],
             HasCompletedOnboarding = true,
             IsTranscriptionCleanupEnabled = true,
             TranscriptionRetentionMinutes = 60,

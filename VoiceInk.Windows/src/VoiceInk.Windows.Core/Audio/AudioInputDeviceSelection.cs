@@ -10,6 +10,12 @@ public static class AudioInputDeviceSelection
     public const string ReboundSelectedDeviceWarning =
         "Selected audio input device number changed; using saved device name";
 
+    public const string UnavailablePrioritizedDeviceWarning =
+        "Selected prioritized audio input is unavailable; using next available priority";
+
+    public const string UnavailableAllPrioritizedDevicesWarning =
+        "Selected prioritized audio inputs are unavailable; using System Default";
+
     public static AudioInputDeviceSelectionResult BuildChoices(
         IReadOnlyList<AudioInputDevice> devices,
         AppSettings settings)
@@ -22,6 +28,11 @@ public static class AudioInputDeviceSelection
             device.DeviceNumber,
             device.Name,
             device.Channels)));
+
+        if (AudioInputModeSettings.Normalize(settings.AudioInputMode) == AudioInputModeSettings.Prioritized)
+        {
+            return BuildPrioritizedChoices(devices, choices, settings);
+        }
 
         if (settings.AudioInputDeviceNumber is null)
         {
@@ -82,6 +93,52 @@ public static class AudioInputDeviceSelection
         return BuildCustomDeviceNotice(selectedChoice);
     }
 
+    private static AudioInputDeviceSelectionResult BuildPrioritizedChoices(
+        IReadOnlyList<AudioInputDevice> devices,
+        IReadOnlyList<AudioInputDeviceChoice> choices,
+        AppSettings settings)
+    {
+        var prioritizedDevices = settings.PrioritizedAudioInputDevices
+            .OrderBy(device => device.Priority)
+            .ToArray();
+        if (prioritizedDevices.Length == 0)
+        {
+            return new AudioInputDeviceSelectionResult(
+                choices,
+                SelectedIndex: 0,
+                Warning: null,
+                Notice: BuildSystemDefaultNotice(devices.Count));
+        }
+
+        for (var priorityIndex = 0; priorityIndex < prioritizedDevices.Length; priorityIndex++)
+        {
+            var prioritizedDevice = prioritizedDevices[priorityIndex];
+            var selectedIndex = choices.ToList().FindIndex(choice =>
+                choice.DeviceNumber is not null
+                && NamesMatch(choice.Name, prioritizedDevice.Name));
+            if (selectedIndex < 0)
+            {
+                continue;
+            }
+
+            var choice = choices[selectedIndex];
+            var priorityNumber = priorityIndex + 1;
+            return new AudioInputDeviceSelectionResult(
+                choices,
+                selectedIndex,
+                Warning: priorityIndex == 0 ? null : UnavailablePrioritizedDeviceWarning,
+                Notice: priorityIndex == 0
+                    ? BuildPrioritizedDeviceNotice(choice, priorityNumber)
+                    : BuildPrioritizedFallbackDeviceNotice(choice, priorityNumber));
+        }
+
+        return new AudioInputDeviceSelectionResult(
+            choices,
+            SelectedIndex: 0,
+            Warning: UnavailableAllPrioritizedDevicesWarning,
+            Notice: BuildUnavailablePrioritizedDevicesNotice());
+    }
+
     private static bool NamesMatch(string currentName, string savedName) =>
         !string.IsNullOrWhiteSpace(savedName)
         && string.Equals(currentName, savedName, StringComparison.Ordinal);
@@ -106,6 +163,24 @@ public static class AudioInputDeviceSelection
             "VoiceInk is set to use this microphone for recordings.",
             $"{choice.Channels} channel{(choice.Channels == 1 ? string.Empty : "s")}");
 
+    private static AudioInputDeviceSelectionNotice BuildPrioritizedDeviceNotice(
+        AudioInputDeviceChoice choice,
+        int priorityNumber) =>
+        new(
+            AudioInputDeviceSelectionNoticeKind.Success,
+            choice.Name,
+            "VoiceInk selected the highest-priority available microphone.",
+            $"Priority {priorityNumber}");
+
+    private static AudioInputDeviceSelectionNotice BuildPrioritizedFallbackDeviceNotice(
+        AudioInputDeviceChoice choice,
+        int priorityNumber) =>
+        new(
+            AudioInputDeviceSelectionNoticeKind.Warning,
+            $"{choice.Name} priority fallback",
+            "VoiceInk skipped unavailable higher-priority microphones and selected this device.",
+            $"Priority {priorityNumber}");
+
     private static AudioInputDeviceSelectionNotice BuildReboundDeviceNotice(AudioInputDeviceChoice choice) =>
         new(
             AudioInputDeviceSelectionNoticeKind.Warning,
@@ -124,4 +199,11 @@ public static class AudioInputDeviceSelection
             $"{microphoneName} is not currently available. VoiceInk will use the Windows system default microphone.",
             "Refresh or choose another input");
     }
+
+    private static AudioInputDeviceSelectionNotice BuildUnavailablePrioritizedDevicesNotice() =>
+        new(
+            AudioInputDeviceSelectionNoticeKind.Warning,
+            "Prioritized microphones unavailable",
+            "None of the prioritized microphones are currently available. VoiceInk will use the Windows system default microphone.",
+            "Refresh or adjust priority list");
 }

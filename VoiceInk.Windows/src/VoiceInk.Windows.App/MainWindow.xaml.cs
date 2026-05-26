@@ -145,7 +145,9 @@ public sealed partial class MainWindow : Window
     private CancellationTokenSource? stopOperationCancellation;
     private NAudioCaptureService audioCapture;
     private DictationController controller;
+    private IReadOnlyList<AudioInputDevice> audioInputDevices = [];
     private IReadOnlyList<AudioInputDeviceChoice> audioInputChoices = [];
+    private IReadOnlyList<PrioritizedAudioInputDevice> prioritizedAudioInputDevices = [];
     private AudioInputDeviceSelectionNotice? audioInputSelectionNotice;
     private IReadOnlyList<VocabularyWord> vocabularyItems = [];
     private IReadOnlyList<WordReplacement> replacementItems = [];
@@ -435,6 +437,101 @@ public sealed partial class MainWindow : Window
     private async void ApplyAudioInputButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyAudioInputAsync();
+    }
+
+    private void AudioInputModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshAudioInputPriorityControls();
+        if (controller is null)
+        {
+            return;
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (controller is null)
+        {
+            return;
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void AudioInputPriorityListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (controller is null)
+        {
+            return;
+        }
+
+        RefreshUiFromControllerState();
+    }
+
+    private void AddAudioInputPriorityButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedChoice = SelectedAudioInputDeviceChoice();
+        if (selectedChoice?.DeviceNumber is null)
+        {
+            RefreshUiFromControllerState("Choose a microphone to add to priority");
+            return;
+        }
+
+        prioritizedAudioInputDevices = AudioInputPriorityList.Add(
+            prioritizedAudioInputDevices,
+            selectedChoice.Name);
+        RefreshAudioInputPriorityControls(selectedChoice.Name);
+        RefreshUiFromControllerState("Audio input priority updated");
+    }
+
+    private void RemoveAudioInputPriorityButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedPriorityItem = SelectedAudioInputPriorityItem();
+        if (selectedPriorityItem is null)
+        {
+            RefreshUiFromControllerState("Select a prioritized microphone");
+            return;
+        }
+
+        prioritizedAudioInputDevices = AudioInputPriorityList.Remove(
+            prioritizedAudioInputDevices,
+            selectedPriorityItem.Name);
+        RefreshAudioInputPriorityControls();
+        RefreshUiFromControllerState("Audio input priority updated");
+    }
+
+    private void MoveAudioInputPriorityUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedPriorityItem = SelectedAudioInputPriorityItem();
+        if (selectedPriorityItem is null)
+        {
+            RefreshUiFromControllerState("Select a prioritized microphone");
+            return;
+        }
+
+        prioritizedAudioInputDevices = AudioInputPriorityList.MoveUp(
+            prioritizedAudioInputDevices,
+            selectedPriorityItem.Name);
+        RefreshAudioInputPriorityControls(selectedPriorityItem.Name);
+        RefreshUiFromControllerState("Audio input priority updated");
+    }
+
+    private void MoveAudioInputPriorityDownButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedPriorityItem = SelectedAudioInputPriorityItem();
+        if (selectedPriorityItem is null)
+        {
+            RefreshUiFromControllerState("Select a prioritized microphone");
+            return;
+        }
+
+        prioritizedAudioInputDevices = AudioInputPriorityList.MoveDown(
+            prioritizedAudioInputDevices,
+            selectedPriorityItem.Name);
+        RefreshAudioInputPriorityControls(selectedPriorityItem.Name);
+        RefreshUiFromControllerState("Audio input priority updated");
     }
 
     private void OcrContextControl_Click(object sender, RoutedEventArgs e)
@@ -1738,6 +1835,12 @@ public sealed partial class MainWindow : Window
         AudioRetentionComboBox.SelectedIndex = AudioRetentionToSelectedIndex(settings.AudioRetentionPeriod);
         UpdateCleanupSettingControlState();
         UpdatePrivacyCleanupTimer(settings);
+        AudioInputModeComboBox.SelectedIndex = AudioInputModeToSelectedIndex(
+            settings.AudioInputDeviceNumber is not null
+                ? AudioInputModeSettings.Custom
+                : settings.AudioInputMode);
+        prioritizedAudioInputDevices = AudioInputPriorityList.Normalize(settings.PrioritizedAudioInputDevices);
+        RefreshAudioInputPriorityControls();
         await RefreshCloudTranscriptionKeyStatusAsync(cancellationToken);
         await RefreshEnhancementKeyStatusAsync(cancellationToken);
         var audioInputWarning = await RefreshAudioInputDevicesAsync(settings, cancellationToken);
@@ -5683,14 +5786,18 @@ public sealed partial class MainWindow : Window
         {
             await SaveSettingsAsync(windowLifetime.Token);
             var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
-            audioInputSelectionNotice = AudioInputDeviceSelection.BuildNotice(
-                audioInputChoices,
-                SelectedAudioInputDeviceChoice(),
-                settings);
+            var result = AudioInputDeviceSelection.BuildChoices(audioInputDevices, settings);
+            audioInputChoices = result.Choices;
+            audioInputSelectionNotice = result.Notice;
+            AudioInputComboBox.ItemsSource = audioInputChoices;
+            AudioInputComboBox.SelectedIndex = Math.Clamp(
+                result.SelectedIndex,
+                0,
+                Math.Max(0, audioInputChoices.Count - 1));
             UpdateAudioInputStatusNotice();
             RecreateControllerIfAudioInputChanged();
 
-            RefreshUiFromControllerState("Audio input updated");
+            RefreshUiFromControllerState(result.Warning ?? "Audio input updated");
         }
         catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
         {
@@ -5775,6 +5882,7 @@ public sealed partial class MainWindow : Window
         var devices = await audioInputDeviceProvider.ListInputDevicesAsync(cancellationToken);
         var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
 
+        audioInputDevices = devices;
         audioInputChoices = result.Choices;
         audioInputSelectionNotice = result.Notice;
         AudioInputComboBox.ItemsSource = audioInputChoices;
@@ -5914,6 +6022,8 @@ public sealed partial class MainWindow : Window
                 : settings.CyclePowerModeHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
+            AudioInputMode = SelectedAudioInputMode(),
+            PrioritizedAudioInputDevices = prioritizedAudioInputDevices.ToArray(),
             RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
             ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
             PasteMethod = SelectedPasteMethod(),
@@ -5991,10 +6101,17 @@ public sealed partial class MainWindow : Window
     }
 
     private int? SelectedAudioInputDeviceNumber() =>
-        SelectedAudioInputDeviceChoice()?.DeviceNumber;
+        SelectedAudioInputMode() == AudioInputModeSettings.Custom
+            ? SelectedAudioInputDeviceChoice()?.DeviceNumber
+            : null;
 
     private string SelectedAudioInputDeviceName()
     {
+        if (SelectedAudioInputMode() != AudioInputModeSettings.Custom)
+        {
+            return string.Empty;
+        }
+
         var choice = SelectedAudioInputDeviceChoice();
         return choice?.DeviceNumber is null ? string.Empty : choice.Name;
     }
@@ -6005,6 +6122,51 @@ public sealed partial class MainWindow : Window
         return selectedIndex >= 0 && selectedIndex < audioInputChoices.Count
             ? audioInputChoices[selectedIndex]
             : null;
+    }
+
+    private string SelectedAudioInputMode() =>
+        AudioInputModeComboBox.SelectedIndex switch
+        {
+            1 => AudioInputModeSettings.Custom,
+            2 => AudioInputModeSettings.Prioritized,
+            _ => AudioInputModeSettings.SystemDefault
+        };
+
+    private static int AudioInputModeToSelectedIndex(string mode) =>
+        AudioInputModeSettings.Normalize(mode) switch
+        {
+            AudioInputModeSettings.Custom => 1,
+            AudioInputModeSettings.Prioritized => 2,
+            _ => 0
+        };
+
+    private void RefreshAudioInputPriorityControls(string? selectedName = null)
+    {
+        var isPrioritized = SelectedAudioInputMode() == AudioInputModeSettings.Prioritized;
+        AudioInputPriorityPanel.Visibility = isPrioritized ? Visibility.Visible : Visibility.Collapsed;
+        var priorityItems = prioritizedAudioInputDevices
+            .OrderBy(device => device.Priority)
+            .Select(device => new AudioInputPriorityItem(
+                device.Name,
+                (device.Priority + 1).ToString(CultureInfo.InvariantCulture)))
+            .ToArray();
+        AudioInputPriorityListView.ItemsSource = priorityItems;
+
+        var selectedIndex = selectedName is null
+            ? Math.Min(AudioInputPriorityListView.SelectedIndex, priorityItems.Length - 1)
+            : Array.FindIndex(priorityItems, item => item.Name == selectedName);
+        AudioInputPriorityListView.SelectedIndex = selectedIndex >= 0 ? selectedIndex : -1;
+    }
+
+    private AudioInputPriorityItem? SelectedAudioInputPriorityItem()
+    {
+        var selectedIndex = AudioInputPriorityListView.SelectedIndex;
+        if (selectedIndex < 0 || selectedIndex >= AudioInputPriorityListView.Items.Count)
+        {
+            return null;
+        }
+
+        return AudioInputPriorityListView.Items[selectedIndex] as AudioInputPriorityItem;
     }
 
     private LocalWhisperModel? SelectedLocalWhisperModelChoice()
@@ -7209,6 +7371,21 @@ public sealed partial class MainWindow : Window
             && !operationActive
             && !controllerBusy
             && controller.State != DictationState.Recording;
+        var audioInputControlsEnabled = ApplyAudioInputButton.IsEnabled;
+        AudioInputModeComboBox.IsEnabled = audioInputControlsEnabled;
+        AudioInputComboBox.IsEnabled = audioInputControlsEnabled;
+        AudioInputPriorityListView.IsEnabled = audioInputControlsEnabled;
+        AddAudioInputPriorityButton.IsEnabled = audioInputControlsEnabled
+            && SelectedAudioInputDeviceChoice()?.DeviceNumber is not null;
+        var selectedPriorityItem = SelectedAudioInputPriorityItem();
+        RemoveAudioInputPriorityButton.IsEnabled = audioInputControlsEnabled && selectedPriorityItem is not null;
+        MoveAudioInputPriorityUpButton.IsEnabled = audioInputControlsEnabled
+            && selectedPriorityItem is not null
+            && AudioInputPriorityListView.SelectedIndex > 0;
+        MoveAudioInputPriorityDownButton.IsEnabled = audioInputControlsEnabled
+            && selectedPriorityItem is not null
+            && AudioInputPriorityListView.SelectedIndex >= 0
+            && AudioInputPriorityListView.SelectedIndex < AudioInputPriorityListView.Items.Count - 1;
         ModelPathTextBox.IsEnabled = modelControlsEnabled;
         LanguageComboBox.IsEnabled = modelControlsEnabled && languageChoices.Count > 1;
         LocalModelCatalogListView.IsEnabled = modelControlsEnabled;
@@ -8240,6 +8417,8 @@ public sealed partial class MainWindow : Window
 
     private static bool IsKeyDown(int virtualKey) =>
         (GetKeyState(virtualKey) & 0x8000) != 0;
+
+    private sealed record AudioInputPriorityItem(string Name, string PriorityDisplay);
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
