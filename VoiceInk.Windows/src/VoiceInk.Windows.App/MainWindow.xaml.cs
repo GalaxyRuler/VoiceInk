@@ -2322,6 +2322,11 @@ public sealed partial class MainWindow : Window
             MaxHeight = 190,
             SelectionMode = ListViewSelectionMode.None
         };
+        var onboardingActionListView = new ListView
+        {
+            MaxHeight = 190,
+            SelectionMode = ListViewSelectionMode.None
+        };
         var onboardingStagesListView = new ListView
         {
             MaxHeight = 180,
@@ -2343,6 +2348,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
@@ -2361,6 +2367,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
@@ -2374,6 +2381,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
@@ -2386,6 +2394,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
@@ -2401,6 +2410,7 @@ public sealed partial class MainWindow : Window
         };
         content.Children.Add(onboardingDescriptionTextBlock);
         content.Children.Add(onboardingProgressTextBlock);
+        content.Children.Add(onboardingActionListView);
         content.Children.Add(onboardingSummaryListView);
         content.Children.Add(onboardingStagesListView);
         content.Children.Add(onboardingChecklistTextBlock);
@@ -3201,6 +3211,7 @@ public sealed partial class MainWindow : Window
         TextBlock statusTextBlock,
         TextBlock onboardingDescriptionTextBlock,
         TextBlock onboardingProgressTextBlock,
+        ListView onboardingActionListView,
         ListView onboardingSummaryListView,
         ListView onboardingStagesListView,
         TextBlock onboardingChecklistTextBlock,
@@ -3230,6 +3241,7 @@ public sealed partial class MainWindow : Window
                 statusTextBlock,
                 onboardingDescriptionTextBlock,
                 onboardingProgressTextBlock,
+                onboardingActionListView,
                 onboardingSummaryListView,
                 onboardingStagesListView,
                 onboardingChecklistTextBlock,
@@ -3255,6 +3267,7 @@ public sealed partial class MainWindow : Window
         TextBlock statusTextBlock,
         TextBlock? onboardingDescriptionTextBlock,
         TextBlock? onboardingProgressTextBlock,
+        ListView? onboardingActionListView,
         ListView? onboardingSummaryListView,
         ListView? onboardingStagesListView,
         TextBlock? onboardingChecklistTextBlock,
@@ -3282,6 +3295,13 @@ public sealed partial class MainWindow : Window
         if (onboardingProgressTextBlock is not null)
         {
             onboardingProgressTextBlock.Text = presentation.ProgressLabel;
+        }
+
+        if (onboardingActionListView is not null)
+        {
+            onboardingActionListView.ItemsSource = presentation.SetupActions
+                .Select(action => $"{action.StatusBadge}: {action.Title} - {action.CommandText}. {action.Description}")
+                .ToArray();
         }
 
         if (onboardingSummaryListView is not null)

@@ -930,6 +930,7 @@ Implemented:
 - Recommended local model download entry point.
 - Windows microphone privacy settings link and audio input selection.
 - Compact readiness summary rows for model, microphone, shortcut, and first dictation.
+- Action rows for model, microphone, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
 - Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
@@ -961,6 +962,12 @@ Onboarding readiness summary slice completed on 2026-05-26:
 
 - Added Core onboarding summary rows for model, microphone, shortcut, and first dictation with Ready, Required, Check, and Try next badges.
 - Rendered the summary inside the first-run dialog above the staged checklist.
+- Kept onboarding save, skip, recommended model download, microphone refresh, and shortcut behavior unchanged.
+
+Onboarding setup actions slice completed on 2026-05-26:
+
+- Added Core onboarding setup action rows for choose/download model, check microphone, set shortcut, and try dictation.
+- Rendered the action rows inside the first-run setup dialog and refreshed them with model, shortcut, and microphone state changes.
 - Kept onboarding save, skip, recommended model download, microphone refresh, and shortcut behavior unchanged.
 
 ### Packaging

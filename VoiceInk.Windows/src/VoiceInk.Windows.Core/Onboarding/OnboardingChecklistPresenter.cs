@@ -34,12 +34,19 @@ public sealed record OnboardingSummaryRowPresentation(
     string Description,
     string StatusBadge);
 
+public sealed record OnboardingSetupActionPresentation(
+    string Title,
+    string Description,
+    string CommandText,
+    string StatusBadge);
+
 public sealed record OnboardingChecklistPresentation(
     string Title,
     string Description,
     string ProgressLabel,
     string NextAction,
     bool CanSaveSetup,
+    IReadOnlyList<OnboardingSetupActionPresentation> SetupActions,
     IReadOnlyList<OnboardingSummaryRowPresentation> SummaryRows,
     IReadOnlyList<OnboardingSetupStagePresentation> Stages,
     IReadOnlyList<OnboardingChecklistItemPresentation> Items)
@@ -121,6 +128,39 @@ public static class OnboardingChecklistPresenter
                     : "Save setup after required items are ready, then try insertion in any text field.",
                 "Try next")
         };
+        var setupActions = new[]
+        {
+            new OnboardingSetupActionPresentation(
+                "Choose Model",
+                status.HasModelPath
+                    ? "Local Whisper model is selected for private offline transcription."
+                    : "Select an existing GGML .bin model or download the recommended starter model.",
+                "Browse or Download",
+                status.HasModelPath ? "Ready" : "Required"),
+            new OnboardingSetupActionPresentation(
+                "Check Microphone",
+                status.HasAudioInputChoices
+                    ? "Recording input is visible."
+                    : "Refresh devices or open Windows microphone privacy settings.",
+                status.HasAudioInputChoices ? "Refresh Devices" : "Open Privacy",
+                status.HasAudioInputChoices ? "Ready" : "Check"),
+            new OnboardingSetupActionPresentation(
+                "Set Shortcut",
+                status.HasPrimaryShortcut
+                    ? "Primary shortcut is configured for system-wide recording."
+                    : "Enter the shortcut you will press from any app.",
+                "Edit Shortcut",
+                status.HasPrimaryShortcut ? "Ready" : "Required"),
+            new OnboardingSetupActionPresentation(
+                "Try Dictation",
+                status.CanCompleteSetup && status.HasAudioInputChoices
+                    ? "Click a text field, press your shortcut, speak, then press it again."
+                    : "Complete required setup, then test insertion in any text field.",
+                status.CanCompleteSetup && status.HasAudioInputChoices
+                    ? "Click Field and Speak"
+                    : "Test after Save",
+                status.CanCompleteSetup && status.HasAudioInputChoices ? "Ready" : "Next")
+        };
         var stages = new[]
         {
             new OnboardingSetupStagePresentation(
@@ -161,6 +201,7 @@ public static class OnboardingChecklistPresenter
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),
             status.CanCompleteSetup,
+            setupActions,
             summaryRows,
             stages,
             items);

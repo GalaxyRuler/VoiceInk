@@ -19,6 +19,36 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
         Assert.False(presentation.CanSaveSetup);
         Assert.Collection(
+            presentation.SetupActions,
+            action =>
+            {
+                Assert.Equal("Choose Model", action.Title);
+                Assert.Equal("Select an existing GGML .bin model or download the recommended starter model.", action.Description);
+                Assert.Equal("Browse or Download", action.CommandText);
+                Assert.Equal("Required", action.StatusBadge);
+            },
+            action =>
+            {
+                Assert.Equal("Check Microphone", action.Title);
+                Assert.Equal("Recording input is visible.", action.Description);
+                Assert.Equal("Refresh Devices", action.CommandText);
+                Assert.Equal("Ready", action.StatusBadge);
+            },
+            action =>
+            {
+                Assert.Equal("Set Shortcut", action.Title);
+                Assert.Equal("Primary shortcut is configured for system-wide recording.", action.Description);
+                Assert.Equal("Edit Shortcut", action.CommandText);
+                Assert.Equal("Ready", action.StatusBadge);
+            },
+            action =>
+            {
+                Assert.Equal("Try Dictation", action.Title);
+                Assert.Equal("Complete required setup, then test insertion in any text field.", action.Description);
+                Assert.Equal("Test after Save", action.CommandText);
+                Assert.Equal("Next", action.StatusBadge);
+            });
+        Assert.Collection(
             presentation.SummaryRows,
             row =>
             {
@@ -118,6 +148,8 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("4 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
         Assert.Equal(["Ready", "Ready", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal("Click Field and Speak", presentation.SetupActions[3].CommandText);
         Assert.All(presentation.Items.Take(3), item => Assert.Equal(OnboardingChecklistItemState.Ready, item.State));
         Assert.All(presentation.Stages.Take(3), stage => Assert.Equal(OnboardingChecklistItemState.Ready, stage.State));
         Assert.Equal(OnboardingChecklistItemState.Ready, presentation.Stages[3].State);
