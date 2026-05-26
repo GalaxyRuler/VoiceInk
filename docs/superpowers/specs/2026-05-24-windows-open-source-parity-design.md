@@ -335,6 +335,7 @@ Model warmup/preload slice completed on 2026-05-25:
 - Kept this as a conservative preload rather than a persistent shared model cache; actual transcription still owns its processor lifetime.
 - Added selected local model path health checks for blank paths, non-`.bin` files, missing files, empty files, and suspiciously tiny files, with AI Models status text and action gating before warmup, Set as Default, or Show in Explorer.
 - Added stale imported model cleanup that removes unavailable imported references without deleting or moving user files, and clears the selected model path only when the removed reference was selected.
+- Added actionable model health guidance under the AI Models default model status for not-selected, invalid-extension, missing, empty, suspiciously small, and ready states.
 
 Windows gaps:
 

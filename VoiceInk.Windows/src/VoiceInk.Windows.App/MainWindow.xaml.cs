@@ -6971,7 +6971,10 @@ public sealed partial class MainWindow : Window
         modelCatalogItems = LocalWhisperModelService.BuildCatalogItems(localWhisperModels, modelPath);
         LocalModelCatalogListView.ItemsSource = modelCatalogItems;
 
-        DefaultModelStatusTextBlock.Text = ModelPathHealth(modelPath).Message;
+        var health = ModelPathHealth(modelPath);
+        var healthPresentation = LocalWhisperModelHealthPresenter.Present(health);
+        DefaultModelStatusTextBlock.Text = health.Message;
+        ModelRepairHintTextBlock.Text = $"{healthPresentation.Title}: {healthPresentation.Guidance}";
 
         if (!string.IsNullOrWhiteSpace(previouslySelectedName))
         {

@@ -119,6 +119,10 @@
                             FontWeight="SemiBold"
                             Text="Default Model: No model selected"
                             TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="ModelRepairHintTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
                         <ListView
                             x:Name="LocalModelCatalogListView"
                             Height="330"
