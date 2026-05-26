@@ -27,25 +27,25 @@ VoiceInk Windows parity  [###################-] 95%
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 74% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
-| Audio input | 82% | `[################----]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/priority-fallback/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI and endpoint-ID backed priority remain. |
+| Audio input | 88% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/priority-fallback/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI remains. |
 | Onboarding | 70% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer setup polish remains. |
 | Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows rich tray menu  [####################] 100%
+Windows audio endpoint identity  [####################] 100%
 ```
 
 Completed:
 
-- Added macOS-style quick-setting submenus to the Windows tray icon.
-- Routed tray selections through existing settings, provider, prompt, audio, language, Power Mode, and warmup paths.
-- Kept commercial updater/support menu items omitted and replaced with local open-source settings routes.
+- Added endpoint ID metadata to Windows audio input devices, choices, and priority entries.
+- Persisted the selected custom microphone endpoint ID through JSON settings and backup/export paths.
+- Kept WaveIn recording unchanged while using Core Audio endpoint IDs for stable rebinding.
 
 ## Near-Term Priority
 
 1. Continue packaging from per-user Dev ZIP install to actual signed MSIX install/uninstall smoke and release signing flow when a trusted signing setup is available.
-2. Add endpoint-ID backed audio input identity if/when the capture backend moves from WaveIn numbering to MMDevice/WASAPI.
-3. Continue AI enhancement parity with richer assistant workflows.
-4. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.
+2. Continue AI enhancement parity with richer assistant workflows.
+3. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.
+4. Consider a future WASAPI capture backend if endpoint-native recording becomes necessary.

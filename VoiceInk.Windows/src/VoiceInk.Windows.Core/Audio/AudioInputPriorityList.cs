@@ -4,15 +4,16 @@ public static class AudioInputPriorityList
 {
     public static PrioritizedAudioInputDevice[] Add(
         IReadOnlyList<PrioritizedAudioInputDevice> devices,
-        string name)
+        string name,
+        string endpointId = "")
     {
         if (string.IsNullOrWhiteSpace(name)
-            || devices.Any(device => NamesMatch(device.Name, name)))
+            || devices.Any(device => DevicesMatch(device, name, endpointId)))
         {
             return Normalize(devices);
         }
 
-        return Normalize(devices.Append(new PrioritizedAudioInputDevice(name.Trim(), devices.Count)));
+        return Normalize(devices.Append(new PrioritizedAudioInputDevice(name.Trim(), devices.Count, endpointId.Trim())));
     }
 
     public static PrioritizedAudioInputDevice[] Remove(
@@ -53,7 +54,10 @@ public static class AudioInputPriorityList
     public static PrioritizedAudioInputDevice[] Normalize(
         IEnumerable<PrioritizedAudioInputDevice> devices) =>
         devices
-            .Select((device, index) => new PrioritizedAudioInputDevice(device.Name.Trim(), index))
+            .Select((device, index) => new PrioritizedAudioInputDevice(
+                device.Name.Trim(),
+                index,
+                device.EndpointId.Trim()))
             .Where(device => !string.IsNullOrWhiteSpace(device.Name))
             .ToArray();
 
@@ -67,4 +71,12 @@ public static class AudioInputPriorityList
 
     private static bool NamesMatch(string first, string second) =>
         string.Equals(first.Trim(), second.Trim(), StringComparison.Ordinal);
+
+    private static bool DevicesMatch(
+        PrioritizedAudioInputDevice device,
+        string name,
+        string endpointId) =>
+        !string.IsNullOrWhiteSpace(endpointId)
+            ? string.Equals(device.EndpointId.Trim(), endpointId.Trim(), StringComparison.Ordinal)
+            : NamesMatch(device.Name, name);
 }

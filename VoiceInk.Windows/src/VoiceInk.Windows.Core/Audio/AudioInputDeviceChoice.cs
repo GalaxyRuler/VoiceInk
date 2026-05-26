@@ -1,6 +1,10 @@
 namespace VoiceInk.Windows.Core.Audio;
 
-public sealed record AudioInputDeviceChoice(int? DeviceNumber, string Name, int Channels)
+public sealed record AudioInputDeviceChoice(
+    int? DeviceNumber,
+    string Name,
+    int Channels,
+    string EndpointId = "")
 {
     public string DisplayText => DeviceNumber is null
         ? "System Default"

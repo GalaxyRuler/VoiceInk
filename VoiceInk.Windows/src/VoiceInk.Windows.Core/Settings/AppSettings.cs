@@ -47,6 +47,7 @@ public sealed record AppSettings
     public string CyclePowerModeHotkey { get; init; } = string.Empty;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
+    public string AudioInputEndpointId { get; init; } = string.Empty;
     public string AudioInputMode { get; init; } = AudioInputModeSettings.SystemDefault;
     public PrioritizedAudioInputDevice[] PrioritizedAudioInputDevices { get; init; } = [];
     public LocalWhisperModel[] ImportedWhisperModels { get; init; } = [];
@@ -117,6 +118,7 @@ public sealed record AppSettings
             CyclePowerModeHotkey == other.CyclePowerModeHotkey &&
             AudioInputDeviceNumber == other.AudioInputDeviceNumber &&
             AudioInputDeviceName == other.AudioInputDeviceName &&
+            AudioInputEndpointId == other.AudioInputEndpointId &&
             AudioInputMode == other.AudioInputMode &&
             PrioritizedAudioInputDevices.SequenceEqual(other.PrioritizedAudioInputDevices) &&
             ImportedWhisperModels.SequenceEqual(other.ImportedWhisperModels) &&
@@ -188,6 +190,7 @@ public sealed record AppSettings
         hash.Add(CyclePowerModeHotkey);
         hash.Add(AudioInputDeviceNumber);
         hash.Add(AudioInputDeviceName);
+        hash.Add(AudioInputEndpointId);
         hash.Add(AudioInputMode);
         foreach (var device in PrioritizedAudioInputDevices)
         {

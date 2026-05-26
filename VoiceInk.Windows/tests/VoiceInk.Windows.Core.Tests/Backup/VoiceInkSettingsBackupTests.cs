@@ -307,11 +307,12 @@ public sealed class VoiceInkSettingsBackupTests
             ToggleEnhancementHotkey = "Ctrl+Alt+X",
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
+            AudioInputEndpointId = "endpoint-usb",
             AudioInputMode = AudioInputModeSettings.Prioritized,
             PrioritizedAudioInputDevices =
             [
-                new PrioritizedAudioInputDevice("Dock Microphone", 0),
-                new PrioritizedAudioInputDevice("USB Microphone", 1)
+                new PrioritizedAudioInputDevice("Dock Microphone", 0, "endpoint-dock"),
+                new PrioritizedAudioInputDevice("USB Microphone", 1, "endpoint-usb")
             ],
             ImportedWhisperModels =
             [

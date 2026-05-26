@@ -780,16 +780,22 @@ Implemented:
 
 - Device listing and refresh through NAudio `WaveIn`.
 - System Default mode.
-- Custom device selection persisted in JSON settings and applied before recording.
-- Prioritized mode with ordered microphone names, next-available fallback, and System Default fallback when no priority entries are available.
+- Custom device selection persisted in JSON settings with endpoint ID/name/number identity and applied before recording.
+- Prioritized mode with ordered microphone endpoint IDs/names, next-available fallback, and System Default fallback when no priority entries are available.
 - Audio Input page priority list controls for adding, removing, and reordering microphones.
 - Missing saved device fallback to System Default with a status warning.
 - Live Core Audio endpoint-change refresh while idle, with deferred refresh during recording/processing.
+- Endpoint-ID backed custom and prioritized matching while retaining WaveIn device numbers for capture.
 
 Windows gaps:
 
-- Endpoint-ID backed priority matching if the capture backend moves from WaveIn numbering to MMDevice/WASAPI.
 - Richer active/unavailable device health badges.
+
+Audio endpoint identity slice completed on 2026-05-26:
+
+- Added endpoint IDs to audio device, choice, priority, and settings records with backwards-compatible empty defaults.
+- Enriched WaveIn capture device listings with Core Audio endpoint IDs where NAudio `MMDeviceEnumerator` can match active capture endpoints.
+- Preferred endpoint ID rebinding for custom and prioritized microphone selection, falling back to existing number/name and unique-name behavior when endpoint IDs are unavailable.
 
 ### Onboarding
 

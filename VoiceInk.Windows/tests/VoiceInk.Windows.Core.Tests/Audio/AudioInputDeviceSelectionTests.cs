@@ -120,6 +120,32 @@ public sealed class AudioInputDeviceSelectionTests
     }
 
     [Fact]
+    public void BuildChoices_RebindsSavedCustomDeviceByEndpointIdWhenDeviceNumberChanges()
+    {
+        var devices = new[]
+        {
+            new AudioInputDevice(0, "Built-in Microphone", 2, "endpoint-built-in"),
+            new AudioInputDevice(4, "Renamed USB Microphone", 1, "endpoint-usb")
+        };
+        var settings = new AppSettings
+        {
+            AudioInputDeviceNumber = 2,
+            AudioInputDeviceName = "USB Microphone",
+            AudioInputEndpointId = "endpoint-usb"
+        };
+
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        Assert.Equal(2, result.SelectedIndex);
+        Assert.Equal("Selected audio input endpoint reconnected; using saved endpoint ID", result.Warning);
+        Assert.Equal(4, result.SelectedChoice?.DeviceNumber);
+        Assert.Equal("endpoint-usb", result.SelectedChoice?.EndpointId);
+        Assert.Equal(AudioInputDeviceSelectionNoticeKind.Warning, result.Notice.Kind);
+        Assert.Equal("Renamed USB Microphone reconnected", result.Notice.Title);
+        Assert.Equal("VoiceInk found the saved microphone by its Windows endpoint ID.", result.Notice.Message);
+    }
+
+    [Fact]
     public void BuildChoices_FallsBackToSystemDefaultWhenSavedCustomDeviceIsUnavailable()
     {
         var devices = new[]
@@ -192,6 +218,32 @@ public sealed class AudioInputDeviceSelectionTests
         Assert.Equal("USB Microphone reconnected", result.Notice.Title);
         Assert.Equal("VoiceInk found the saved microphone by name after its Windows device number changed.", result.Notice.Message);
         Assert.Equal("Using device 4", result.Notice.ActionText);
+    }
+
+    [Fact]
+    public void BuildChoices_SelectsPrioritizedDeviceByEndpointIdBeforeName()
+    {
+        var devices = new[]
+        {
+            new AudioInputDevice(0, "USB Microphone", 2, "endpoint-old"),
+            new AudioInputDevice(2, "Renamed Dock", 1, "endpoint-dock")
+        };
+        var settings = new AppSettings
+        {
+            AudioInputMode = AudioInputModeSettings.Prioritized,
+            PrioritizedAudioInputDevices =
+            [
+                new PrioritizedAudioInputDevice("Dock Microphone", 0, "endpoint-dock"),
+                new PrioritizedAudioInputDevice("USB Microphone", 1, "endpoint-old")
+            ]
+        };
+
+        var result = AudioInputDeviceSelection.BuildChoices(devices, settings);
+
+        Assert.Null(result.Warning);
+        Assert.Equal(2, result.SelectedChoice?.DeviceNumber);
+        Assert.Equal("endpoint-dock", result.SelectedChoice?.EndpointId);
+        Assert.Equal("Renamed Dock", result.Notice.Title);
     }
 
     [Fact]

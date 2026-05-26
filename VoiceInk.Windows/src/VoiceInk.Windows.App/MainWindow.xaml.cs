@@ -643,7 +643,8 @@ public sealed partial class MainWindow : Window
 
         prioritizedAudioInputDevices = AudioInputPriorityList.Add(
             prioritizedAudioInputDevices,
-            selectedChoice.Name);
+            selectedChoice.Name,
+            selectedChoice.EndpointId);
         RefreshAudioInputPriorityControls(selectedChoice.Name);
         RefreshUiFromControllerState("Audio input priority updated");
     }
@@ -6635,6 +6636,7 @@ public sealed partial class MainWindow : Window
                 : settings.CyclePowerModeHotkey,
             AudioInputDeviceNumber = SelectedAudioInputDeviceNumber(),
             AudioInputDeviceName = SelectedAudioInputDeviceName(),
+            AudioInputEndpointId = SelectedAudioInputEndpointId(),
             AudioInputMode = SelectedAudioInputMode(),
             PrioritizedAudioInputDevices = prioritizedAudioInputDevices.ToArray(),
             RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true,
@@ -6727,6 +6729,17 @@ public sealed partial class MainWindow : Window
 
         var choice = SelectedAudioInputDeviceChoice();
         return choice?.DeviceNumber is null ? string.Empty : choice.Name;
+    }
+
+    private string SelectedAudioInputEndpointId()
+    {
+        if (SelectedAudioInputMode() != AudioInputModeSettings.Custom)
+        {
+            return string.Empty;
+        }
+
+        var choice = SelectedAudioInputDeviceChoice();
+        return choice?.DeviceNumber is null ? string.Empty : choice.EndpointId;
     }
 
     private AudioInputDeviceChoice? SelectedAudioInputDeviceChoice()
@@ -7929,7 +7942,8 @@ public sealed partial class MainWindow : Window
         AudioInputDeviceChoice? first,
         AudioInputDeviceChoice? second) =>
         first?.DeviceNumber == second?.DeviceNumber
-        && string.Equals(first?.Name, second?.Name, StringComparison.Ordinal);
+        && string.Equals(first?.Name, second?.Name, StringComparison.Ordinal)
+        && string.Equals(first?.EndpointId, second?.EndpointId, StringComparison.Ordinal);
 
     private void RefreshUiFromControllerState(string? statusOverride = null)
     {

@@ -10,6 +10,9 @@ public static class AudioInputDeviceSelection
     public const string ReboundSelectedDeviceWarning =
         "Selected audio input device number changed; using saved device name";
 
+    public const string ReboundSelectedEndpointWarning =
+        "Selected audio input endpoint reconnected; using saved endpoint ID";
+
     public const string UnavailablePrioritizedDeviceWarning =
         "Selected prioritized audio input is unavailable; using next available priority";
 
@@ -27,7 +30,8 @@ public static class AudioInputDeviceSelection
         choices.AddRange(devices.Select(device => new AudioInputDeviceChoice(
             device.DeviceNumber,
             device.Name,
-            device.Channels)));
+            device.Channels,
+            device.EndpointId)));
 
         if (AudioInputModeSettings.Normalize(settings.AudioInputMode) == AudioInputModeSettings.Prioritized)
         {
@@ -44,6 +48,24 @@ public static class AudioInputDeviceSelection
         }
 
         var selectedIndex = choices.FindIndex(choice =>
+            !string.IsNullOrWhiteSpace(settings.AudioInputEndpointId)
+            && EndpointIdsMatch(choice.EndpointId, settings.AudioInputEndpointId));
+        if (selectedIndex >= 0)
+        {
+            return new AudioInputDeviceSelectionResult(
+                choices,
+                selectedIndex,
+                Warning: choices[selectedIndex].DeviceNumber == settings.AudioInputDeviceNumber
+                    && NamesMatch(choices[selectedIndex].Name, settings.AudioInputDeviceName)
+                        ? null
+                        : ReboundSelectedEndpointWarning,
+                Notice: choices[selectedIndex].DeviceNumber == settings.AudioInputDeviceNumber
+                    && NamesMatch(choices[selectedIndex].Name, settings.AudioInputDeviceName)
+                        ? BuildCustomDeviceNotice(choices[selectedIndex])
+                        : BuildReboundEndpointNotice(choices[selectedIndex]));
+        }
+
+        selectedIndex = choices.FindIndex(choice =>
             choice.DeviceNumber == settings.AudioInputDeviceNumber
             && NamesMatch(choice.Name, settings.AudioInputDeviceName));
         if (selectedIndex >= 0)
@@ -115,7 +137,7 @@ public static class AudioInputDeviceSelection
             var prioritizedDevice = prioritizedDevices[priorityIndex];
             var selectedIndex = choices.ToList().FindIndex(choice =>
                 choice.DeviceNumber is not null
-                && NamesMatch(choice.Name, prioritizedDevice.Name));
+                && PrioritizedDeviceMatches(choice, prioritizedDevice));
             if (selectedIndex < 0)
             {
                 continue;
@@ -142,6 +164,16 @@ public static class AudioInputDeviceSelection
     private static bool NamesMatch(string currentName, string savedName) =>
         !string.IsNullOrWhiteSpace(savedName)
         && string.Equals(currentName, savedName, StringComparison.Ordinal);
+
+    private static bool EndpointIdsMatch(string currentEndpointId, string savedEndpointId) =>
+        !string.IsNullOrWhiteSpace(savedEndpointId)
+        && string.Equals(currentEndpointId, savedEndpointId, StringComparison.Ordinal);
+
+    private static bool PrioritizedDeviceMatches(
+        AudioInputDeviceChoice choice,
+        PrioritizedAudioInputDevice prioritizedDevice) =>
+        EndpointIdsMatch(choice.EndpointId, prioritizedDevice.EndpointId)
+        || NamesMatch(choice.Name, prioritizedDevice.Name);
 
     private static AudioInputDeviceSelectionNotice BuildSystemDefaultNotice(int physicalDeviceCount) =>
         physicalDeviceCount <= 0
@@ -186,6 +218,13 @@ public static class AudioInputDeviceSelection
             AudioInputDeviceSelectionNoticeKind.Warning,
             $"{choice.Name} reconnected",
             "VoiceInk found the saved microphone by name after its Windows device number changed.",
+            $"Using device {choice.DeviceNumber}");
+
+    private static AudioInputDeviceSelectionNotice BuildReboundEndpointNotice(AudioInputDeviceChoice choice) =>
+        new(
+            AudioInputDeviceSelectionNoticeKind.Warning,
+            $"{choice.Name} reconnected",
+            "VoiceInk found the saved microphone by its Windows endpoint ID.",
             $"Using device {choice.DeviceNumber}");
 
     private static AudioInputDeviceSelectionNotice BuildUnavailableDeviceNotice(string savedName)
