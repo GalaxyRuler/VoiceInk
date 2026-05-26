@@ -25,6 +25,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private readonly HotkeyWindow hotkeyWindow;
     private readonly Dictionary<int, GlobalShortcutRegistration> registeredActions = [];
     private readonly Dictionary<string, GlobalShortcutRegistration> pressedRecordingShortcuts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> pressedMiniRecorderShortcuts = new(StringComparer.OrdinalIgnoreCase);
     private readonly LowLevelKeyboardProc keyboardProc;
     private IReadOnlyList<GlobalShortcutRegistration> recordingRegistrations = [];
     private IntPtr keyboardHook;
@@ -43,6 +44,7 @@ public sealed class GlobalHotkeyService : IDisposable
     }
 
     public event EventHandler<GlobalHotkeyPressedEventArgs>? HotkeyPressed;
+    public event EventHandler<MiniRecorderShortcutPressedEventArgs>? MiniRecorderShortcutPressed;
 
     public void RegisterHotkeys(IEnumerable<GlobalShortcutRegistration> registrations)
     {
@@ -119,6 +121,7 @@ public sealed class GlobalHotkeyService : IDisposable
         UninstallKeyboardHook();
         recordingRegistrations = [];
         pressedRecordingShortcuts.Clear();
+        pressedMiniRecorderShortcuts.Clear();
 
         foreach (var id in registeredActions.Keys)
         {
@@ -188,10 +191,12 @@ public sealed class GlobalHotkeyService : IDisposable
             if (message is WmKeydown or WmSyskeydown)
             {
                 HandleRecordingKeyDown((int)hookInfo.VirtualKeyCode);
+                HandleMiniRecorderKeyDown((int)hookInfo.VirtualKeyCode);
             }
             else if (message is WmKeyup or WmSyskeyup)
             {
                 HandleRecordingKeyUp((int)hookInfo.VirtualKeyCode);
+                HandleMiniRecorderKeyUp((int)hookInfo.VirtualKeyCode);
             }
         }
 
@@ -237,6 +242,46 @@ public sealed class GlobalHotkeyService : IDisposable
         IsKeyPressed(VkControl) == shortcut.Control
         && IsKeyPressed(VkMenu) == shortcut.Alt
         && IsKeyPressed(VkShift) == shortcut.Shift;
+
+    private void HandleMiniRecorderKeyDown(int virtualKey)
+    {
+        if (!MiniRecorderShortcutPresenter.TryCreate(
+                IsKeyPressed(VkControl),
+                IsKeyPressed(VkMenu),
+                IsKeyPressed(VkShift),
+                virtualKey,
+                out var shortcut))
+        {
+            return;
+        }
+
+        var key = $"{shortcut!.Kind}:{shortcut.SlotIndex}";
+        if (!pressedMiniRecorderShortcuts.Add(key))
+        {
+            return;
+        }
+
+        MiniRecorderShortcutPressed?.Invoke(
+            this,
+            new MiniRecorderShortcutPressedEventArgs(shortcut.Kind, shortcut.SlotIndex));
+    }
+
+    private void HandleMiniRecorderKeyUp(int virtualKey)
+    {
+        int? slot = virtualKey switch
+        {
+            >= 0x31 and <= 0x39 => virtualKey - 0x31,
+            0x30 => 9,
+            _ => null
+        };
+        if (slot is null)
+        {
+            return;
+        }
+
+        pressedMiniRecorderShortcuts.Remove($"{MiniRecorderShortcutKind.Prompt}:{slot.Value}");
+        pressedMiniRecorderShortcuts.Remove($"{MiniRecorderShortcutKind.PowerMode}:{slot.Value}");
+    }
 
     private static bool IsKeyPressed(int virtualKey) =>
         (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
@@ -310,4 +355,12 @@ public enum GlobalHotkeyTransition
 {
     Pressed,
     Released
+}
+
+public sealed class MiniRecorderShortcutPressedEventArgs(
+    MiniRecorderShortcutKind kind,
+    int slotIndex) : EventArgs
+{
+    public MiniRecorderShortcutKind Kind { get; } = kind;
+    public int SlotIndex { get; } = slotIndex;
 }

@@ -228,7 +228,7 @@ Implemented:
 
 Windows gaps:
 
-- Modifier-only shortcut compatibility and mini-recorder numeric shortcuts.
+- Modifier-only shortcut compatibility.
 - Power Mode shortcuts.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
@@ -877,7 +877,7 @@ Status on 2026-05-24:
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dedicated Dictionary navigation page/richer layout, modifier-only shortcuts, mini-recorder numeric shortcuts, prioritized audio input failover, waveform polish, and richer visual parity.
+- Remaining for this slice: dedicated Dictionary navigation page/richer layout, modifier-only shortcuts, prioritized audio input failover, waveform polish, and richer visual parity.
 - Add focused tests and docs.
 
 ## Verification

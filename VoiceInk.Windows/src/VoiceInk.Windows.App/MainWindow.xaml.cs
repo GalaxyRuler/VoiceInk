@@ -7072,12 +7072,14 @@ public sealed partial class MainWindow : Window
         try
         {
             newHotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
+            newHotkeyService.MiniRecorderShortcutPressed += HotkeyService_MiniRecorderShortcutPressed;
             newHotkeyService.RegisterHotkeys(registrations);
             hotkeyService = newHotkeyService;
         }
         catch
         {
             newHotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
+            newHotkeyService.MiniRecorderShortcutPressed -= HotkeyService_MiniRecorderShortcutPressed;
             newHotkeyService.Dispose();
             throw;
         }
@@ -7091,6 +7093,7 @@ public sealed partial class MainWindow : Window
         }
 
         hotkeyService.HotkeyPressed -= HotkeyService_HotkeyPressed;
+        hotkeyService.MiniRecorderShortcutPressed -= HotkeyService_MiniRecorderShortcutPressed;
         hotkeyService.Dispose();
         hotkeyService = null;
     }
@@ -7611,6 +7614,43 @@ public sealed partial class MainWindow : Window
             ruleId is null
                 ? "Power Mode: Auto"
                 : $"Power Mode: {selectedChoice.Title}");
+    }
+
+    private async void HotkeyService_MiniRecorderShortcutPressed(object? sender, MiniRecorderShortcutPressedEventArgs e)
+    {
+        try
+        {
+            if (!CanUseFloatingRecorderControls())
+            {
+                return;
+            }
+
+            var state = BuildFloatingRecorderControlState();
+            if (e.Kind == MiniRecorderShortcutKind.Prompt)
+            {
+                if (e.SlotIndex >= state.PromptChoices.Count)
+                {
+                    return;
+                }
+
+                await SelectFloatingRecorderPromptAsync(state.PromptChoices[e.SlotIndex].Id);
+                return;
+            }
+
+            var powerModeChoices = state.PowerModeChoices
+                .Where(choice => choice.Id is not null)
+                .ToArray();
+            if (e.SlotIndex >= powerModeChoices.Length)
+            {
+                return;
+            }
+
+            await SelectFloatingRecorderPowerModeAsync(powerModeChoices[e.SlotIndex].Id);
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Mini recorder shortcut failed: {ex.Message}");
+        }
     }
 
     private async Task SaveFloatingRecorderControlSettingsAsync(string status)
