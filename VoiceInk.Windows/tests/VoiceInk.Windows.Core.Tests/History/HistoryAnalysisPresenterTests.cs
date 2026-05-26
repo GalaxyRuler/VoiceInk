@@ -41,6 +41,18 @@ public sealed class HistoryAnalysisPresenterTests
                 Assert.Equal("Enhancement", row.Title);
                 Assert.Equal("Enhanced", row.Value);
                 Assert.Equal("AI cleanup completed in 2s", row.Detail);
+            },
+            row =>
+            {
+                Assert.Equal("Provider", row.Title);
+                Assert.Equal("Local Whisper", row.Value);
+                Assert.Equal("Transcription completed in 5s.", row.Detail);
+            },
+            row =>
+            {
+                Assert.Equal("Audio Storage", row.Title);
+                Assert.Equal("Text only", row.Value);
+                Assert.Equal("No audio file is attached to this history item.", row.Detail);
             });
     }
 
@@ -64,5 +76,30 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Speech rate unavailable", rows[1].Detail);
         Assert.Equal("Failed", rows[2].Value);
         Assert.Equal("Provider failed", rows[2].Detail);
+        Assert.Equal("Local Whisper", rows[3].Value);
+        Assert.Equal("Transcription duration unavailable.", rows[3].Detail);
+        Assert.Equal("Text only", rows[4].Value);
+    }
+
+    [Fact]
+    public void Present_ItemWithAudioFile_ShowsReplayStorageAvailability()
+    {
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.Parse("2026-05-26T12:00:00Z"),
+            "saved audio text",
+            "Deepgram",
+            TimeSpan.FromSeconds(10),
+            TimeSpan.FromSeconds(2),
+            audioFilePath: @"C:\Recordings\sample.wav");
+
+        var rows = HistoryAnalysisPresenter.Present(item);
+
+        Assert.Equal("Provider", rows[3].Title);
+        Assert.Equal("Deepgram", rows[3].Value);
+        Assert.Equal("Transcription completed in 2s.", rows[3].Detail);
+        Assert.Equal("Audio Storage", rows[4].Title);
+        Assert.Equal("Audio saved", rows[4].Value);
+        Assert.Equal("Audio can be opened or replayed while the file remains on disk.", rows[4].Detail);
     }
 }

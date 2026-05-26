@@ -28,7 +28,17 @@ public static partial class HistoryAnalysisPresenter
             new(
                 "Enhancement",
                 EnhancementValue(item),
-                EnhancementDetail(item))
+                EnhancementDetail(item)),
+            new(
+                "Provider",
+                string.IsNullOrWhiteSpace(item.ProviderName) ? "Unknown" : item.ProviderName,
+                ProviderDetail(item)),
+            new(
+                "Audio Storage",
+                string.IsNullOrWhiteSpace(item.AudioFilePath) ? "Text only" : "Audio saved",
+                string.IsNullOrWhiteSpace(item.AudioFilePath)
+                    ? "No audio file is attached to this history item."
+                    : "Audio can be opened or replayed while the file remains on disk.")
         ];
     }
 
@@ -85,6 +95,11 @@ public static partial class HistoryAnalysisPresenter
 
         return "No enhanced text saved";
     }
+
+    private static string ProviderDetail(TranscriptionHistoryItem item) =>
+        item.TranscriptionDuration > TimeSpan.Zero
+            ? $"Transcription completed in {FormatDuration(item.TranscriptionDuration)}."
+            : "Transcription duration unavailable.";
 
     private static string FormatDuration(TimeSpan duration) =>
         duration.TotalMinutes >= 1
