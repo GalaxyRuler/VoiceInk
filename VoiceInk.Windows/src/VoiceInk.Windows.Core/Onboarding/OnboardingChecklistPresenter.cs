@@ -244,6 +244,11 @@ public static class OnboardingChecklistPresenter
                 "4",
                 $"Press {shortcut} again",
                 "Stop recording and let VoiceInk insert the transcription.",
+                stepStatus),
+            new OnboardingTutorialStepPresentation(
+                "5",
+                "Check insertion and History",
+                "Confirm text appears in the target field, then use History to review, paste, retry, or recover the dictation.",
                 stepStatus)
         ];
     }

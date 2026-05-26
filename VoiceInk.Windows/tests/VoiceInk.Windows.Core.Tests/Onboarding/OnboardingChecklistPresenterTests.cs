@@ -47,6 +47,13 @@ public sealed class OnboardingChecklistPresenterTests
                 Assert.Equal("Press Ctrl+Alt+Space again", step.Title);
                 Assert.Equal("Stop recording and let VoiceInk insert the transcription.", step.Description);
                 Assert.Equal("Waiting", step.StatusBadge);
+            },
+            step =>
+            {
+                Assert.Equal("5", step.StepNumber);
+                Assert.Equal("Check insertion and History", step.Title);
+                Assert.Equal("Confirm text appears in the target field, then use History to review, paste, retry, or recover the dictation.", step.Description);
+                Assert.Equal("Waiting", step.StatusBadge);
             });
         Assert.Collection(
             presentation.SetupActions,
@@ -180,9 +187,10 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal(["Ready", "Ready", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
         Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
         Assert.Equal("Click Field and Speak", presentation.SetupActions[3].CommandText);
-        Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
+        Assert.Equal(["Ready", "Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
         Assert.Equal("Press Ctrl+Alt+Space", presentation.TutorialSteps[1].Title);
         Assert.Equal("Press Ctrl+Alt+Space again", presentation.TutorialSteps[3].Title);
+        Assert.Equal("Check insertion and History", presentation.TutorialSteps[4].Title);
         Assert.All(presentation.Items.Take(3), item => Assert.Equal(OnboardingChecklistItemState.Ready, item.State));
         Assert.All(presentation.Stages.Take(3), stage => Assert.Equal(OnboardingChecklistItemState.Ready, stage.State));
         Assert.Equal(OnboardingChecklistItemState.Ready, presentation.Stages[3].State);
