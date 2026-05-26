@@ -28,25 +28,24 @@ VoiceInk Windows parity  [##################--] 89%
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
 | Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
 | Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
-| Onboarding | 64% | `[#############-------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Broader permission health checks and richer setup polish remain. |
+| Onboarding | 68% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Richer setup polish remains. |
 | Packaging | 52% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke, shortcut registration, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows cloud provider test requests  [####################] 100%
+Windows onboarding health checklist  [####################] 100%
 ```
 
 Completed:
 
-- Added a metadata-only cloud transcription provider probe service.
-- Added safe key probes for Custom OpenAI-compatible, Groq, Mistral, xAI, Deepgram, AssemblyAI, ElevenLabs, Soniox, and Gemini.
-- Added `Test Provider` in AI Models with sanitized success/failure status.
-- Kept unsupported-provider probes explicit rather than inventing undocumented request shapes.
+- Added first-run readiness checklist status for model path, shortcut, microphone device, Windows microphone privacy review, and app microphone capability.
+- Surfaced the checklist in the onboarding dialog and refreshed it with model, shortcut, and microphone changes.
+- Kept Windows privacy settings as an explicit user action through the existing microphone settings link.
 
 ## Near-Term Priority
 
 1. Add remaining grounded Speechmatics and Cartesia provider test probes if official safe metadata endpoints are available.
 2. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
 3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
-4. Add broader onboarding permission health checks and setup polish.
+4. Continue richer onboarding setup polish and any deeper microphone permission probes that can be implemented without mutating Windows settings.

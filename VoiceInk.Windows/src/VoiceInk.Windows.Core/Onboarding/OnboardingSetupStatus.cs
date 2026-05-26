@@ -4,7 +4,8 @@ public sealed record OnboardingSetupStatus(
     bool HasModelPath,
     bool HasPrimaryShortcut,
     bool HasAudioInputChoices,
-    bool CanCompleteSetup)
+    bool CanCompleteSetup,
+    IReadOnlyList<string> HealthChecks)
 {
     public string MicrophoneStatusTitle =>
         HasAudioInputChoices ? "Microphone detected" : "No microphone detected";
@@ -16,4 +17,6 @@ public sealed record OnboardingSetupStatus(
 
     public string MicrophoneActionText =>
         HasAudioInputChoices ? "Open Windows Microphone Settings" : "Check Windows Microphone Settings";
+
+    public string HealthSummary => string.Join(Environment.NewLine, HealthChecks);
 }

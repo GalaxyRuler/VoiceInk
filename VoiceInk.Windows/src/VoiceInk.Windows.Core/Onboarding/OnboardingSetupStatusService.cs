@@ -15,6 +15,17 @@ public static class OnboardingSetupStatusService
             hasModelPath,
             hasPrimaryShortcut,
             hasAudioInputChoices,
-            CanCompleteSetup: hasModelPath && hasPrimaryShortcut);
+            CanCompleteSetup: hasModelPath && hasPrimaryShortcut,
+            HealthChecks:
+            [
+                $"Model path: {ReadyText(hasModelPath)}",
+                $"Primary shortcut: {ReadyText(hasPrimaryShortcut)}",
+                $"Microphone device: {ReadyText(hasAudioInputChoices)}",
+                "Windows microphone privacy: review if recording fails",
+                "App microphone capability: declared"
+            ]);
     }
+
+    private static string ReadyText(bool isReady) =>
+        isReady ? "ready" : "needs attention";
 }

@@ -1716,9 +1716,14 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = TextWrapping.Wrap
         };
+        var onboardingHealthTextBlock = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap
+        };
         RefreshOnboardingStatus(
             statusTextBlock,
             microphoneStatusTextBlock,
+            onboardingHealthTextBlock,
             microphoneSettingsButton,
             modelPathTextBox.Text,
             shortcutTextBox.Text);
@@ -1731,6 +1736,7 @@ public sealed partial class MainWindow : Window
             audioInputComboBox,
             statusTextBlock,
             microphoneStatusTextBlock,
+            onboardingHealthTextBlock,
             microphoneSettingsButton,
             modelPathTextBox,
             shortcutTextBox);
@@ -1738,12 +1744,14 @@ public sealed partial class MainWindow : Window
         modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
             microphoneStatusTextBlock,
+            onboardingHealthTextBlock,
             microphoneSettingsButton,
             modelPathTextBox.Text,
             shortcutTextBox.Text);
         shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
             microphoneStatusTextBlock,
+            onboardingHealthTextBlock,
             microphoneSettingsButton,
             modelPathTextBox.Text,
             shortcutTextBox.Text);
@@ -1763,6 +1771,7 @@ public sealed partial class MainWindow : Window
         content.Children.Add(downloadRecommendedModelButton);
         content.Children.Add(audioInputComboBox);
         content.Children.Add(microphoneStatusTextBlock);
+        content.Children.Add(onboardingHealthTextBlock);
         content.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -2551,6 +2560,7 @@ public sealed partial class MainWindow : Window
         ComboBox audioInputComboBox,
         TextBlock statusTextBlock,
         TextBlock microphoneStatusTextBlock,
+        TextBlock onboardingHealthTextBlock,
         Button microphoneSettingsButton,
         TextBox modelPathTextBox,
         TextBox shortcutTextBox)
@@ -2574,6 +2584,7 @@ public sealed partial class MainWindow : Window
             RefreshOnboardingStatus(
                 statusTextBlock,
                 microphoneStatusTextBlock,
+                onboardingHealthTextBlock,
                 microphoneSettingsButton,
                 modelPathTextBox.Text,
                 shortcutTextBox.Text);
@@ -2593,6 +2604,7 @@ public sealed partial class MainWindow : Window
     private void RefreshOnboardingStatus(
         TextBlock statusTextBlock,
         TextBlock? microphoneStatusTextBlock,
+        TextBlock? onboardingHealthTextBlock,
         Button? microphoneSettingsButton,
         string modelPath,
         string primaryShortcut)
@@ -2611,6 +2623,11 @@ public sealed partial class MainWindow : Window
         if (microphoneStatusTextBlock is not null)
         {
             microphoneStatusTextBlock.Text = $"{status.MicrophoneStatusTitle}: {status.MicrophoneStatusMessage}";
+        }
+
+        if (onboardingHealthTextBlock is not null)
+        {
+            onboardingHealthTextBlock.Text = status.HealthSummary;
         }
 
         if (microphoneSettingsButton is not null)

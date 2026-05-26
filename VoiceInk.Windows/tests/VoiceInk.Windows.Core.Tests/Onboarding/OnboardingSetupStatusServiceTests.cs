@@ -18,6 +18,11 @@ public sealed class OnboardingSetupStatusServiceTests
         Assert.Equal("Microphone detected", status.MicrophoneStatusTitle);
         Assert.Equal("VoiceInk found at least one recording input.", status.MicrophoneStatusMessage);
         Assert.Equal("Open Windows Microphone Settings", status.MicrophoneActionText);
+        Assert.Contains("Model path: needs attention", status.HealthSummary);
+        Assert.Contains("Primary shortcut: ready", status.HealthSummary);
+        Assert.Contains("Microphone device: ready", status.HealthSummary);
+        Assert.Contains("Windows microphone privacy: review if recording fails", status.HealthSummary);
+        Assert.Contains("App microphone capability: declared", status.HealthSummary);
     }
 
     [Fact]
@@ -40,6 +45,7 @@ public sealed class OnboardingSetupStatusServiceTests
             "Connect or enable a microphone, refresh the device list, or check Windows microphone privacy settings.",
             status.MicrophoneStatusMessage);
         Assert.Equal("Check Windows Microphone Settings", status.MicrophoneActionText);
+        Assert.Contains("Microphone device: needs attention", status.HealthSummary);
     }
 
     [Fact]
@@ -57,5 +63,6 @@ public sealed class OnboardingSetupStatusServiceTests
         Assert.False(status.HasPrimaryShortcut);
         Assert.True(status.HasAudioInputChoices);
         Assert.False(status.CanCompleteSetup);
+        Assert.Contains("Primary shortcut: needs attention", status.HealthSummary);
     }
 }
