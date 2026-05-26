@@ -73,6 +73,7 @@ public static class TranscriptionConfiguration
             "speechmatics" => "Speechmatics",
             "gemini" => "Gemini",
             "xai" => "xAI",
+            "cartesia" => "Cartesia",
             _ => "Custom"
         };
 

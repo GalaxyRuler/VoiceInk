@@ -59,6 +59,11 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("https://api.x.ai/v1/stt", xai.Endpoint);
         Assert.Equal("grok-stt", xai.DefaultModel);
         Assert.Contains("grok-stt", xai.ModelIds);
+        var cartesia = Assert.Single(presets, item => item.Id == "cartesia");
+        Assert.Equal("Cartesia", cartesia.DisplayName);
+        Assert.Equal("https://api.cartesia.ai/stt", cartesia.Endpoint);
+        Assert.Equal("ink-whisper", cartesia.DefaultModel);
+        Assert.Contains("ink-whisper", cartesia.ModelIds);
     }
 
     [Theory]
@@ -73,6 +78,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("speechmatics", "speechmatics")]
     [InlineData("gemini", "gemini")]
     [InlineData("xai", "xai")]
+    [InlineData("cartesia", "cartesia")]
     public void Resolve_ReturnsRequestedPresetOrCustomFallback(string id, string expectedId)
     {
         Assert.Equal(expectedId, TranscriptionProviderPresetCatalog.Resolve(id).Id);
@@ -89,6 +95,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
     [InlineData("speechmatics", "VoiceInk.Windows.Transcription.OpenAICompatible.Speechmatics.ApiKey")]
     [InlineData("gemini", "VoiceInk.Windows.Transcription.OpenAICompatible.Gemini.ApiKey")]
     [InlineData("xai", "VoiceInk.Windows.Transcription.OpenAICompatible.xAI.ApiKey")]
+    [InlineData("cartesia", "VoiceInk.Windows.Transcription.OpenAICompatible.Cartesia.ApiKey")]
     public void SecretNameFor_ReturnsProviderSpecificCredentialName(string providerId, string expected)
     {
         Assert.Equal(expected, TranscriptionConfiguration.SecretNameForCloudProvider(providerId));
@@ -130,6 +137,9 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal(
             ["VoiceInk.Windows.Transcription.OpenAICompatible.xAI.ApiKey"],
             TranscriptionConfiguration.SecretNamesForCloudProvider("xai"));
+        Assert.Equal(
+            ["VoiceInk.Windows.Transcription.OpenAICompatible.Cartesia.ApiKey"],
+            TranscriptionConfiguration.SecretNamesForCloudProvider("cartesia"));
     }
 
     [Fact]

@@ -119,6 +119,7 @@ public sealed partial class MainWindow : Window
     private readonly SpeechmaticsCloudTranscriptionService speechmaticsTranscriptionService;
     private readonly GeminiCloudTranscriptionService geminiTranscriptionService;
     private readonly XaiCloudTranscriptionService xaiTranscriptionService;
+    private readonly CartesiaCloudTranscriptionService cartesiaTranscriptionService;
     private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
@@ -257,6 +258,7 @@ public sealed partial class MainWindow : Window
         speechmaticsTranscriptionService = new SpeechmaticsCloudTranscriptionService(new HttpClient(), secretStore);
         geminiTranscriptionService = new GeminiCloudTranscriptionService(new HttpClient(), secretStore);
         xaiTranscriptionService = new XaiCloudTranscriptionService(new HttpClient(), secretStore);
+        cartesiaTranscriptionService = new CartesiaCloudTranscriptionService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
             [
                 new DeepgramLiveTranscriptionPreviewService(
@@ -275,7 +277,8 @@ public sealed partial class MainWindow : Window
             sonioxTranscriptionService,
             speechmaticsTranscriptionService,
             geminiTranscriptionService,
-            xaiTranscriptionService);
+            xaiTranscriptionService,
+            cartesiaTranscriptionService);
         historyRetryService = new HistoryRetryService(
             transcriptionService,
             historyStore,

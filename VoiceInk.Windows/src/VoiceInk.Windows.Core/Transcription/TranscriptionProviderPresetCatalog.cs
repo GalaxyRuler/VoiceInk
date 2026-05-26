@@ -97,6 +97,15 @@ public static class TranscriptionProviderPresetCatalog
             "grok-stt"
         ]);
 
+    public static TranscriptionProviderPreset Cartesia { get; } = new(
+        "cartesia",
+        "Cartesia",
+        "https://api.cartesia.ai/stt",
+        "ink-whisper",
+        [
+            "ink-whisper"
+        ]);
+
     public static IReadOnlyList<TranscriptionProviderPreset> All { get; } =
     [
         Custom,
@@ -108,7 +117,8 @@ public static class TranscriptionProviderPresetCatalog
         Soniox,
         Speechmatics,
         Gemini,
-        Xai
+        Xai,
+        Cartesia
     ];
 
     public static TranscriptionProviderPreset Resolve(string? id) =>

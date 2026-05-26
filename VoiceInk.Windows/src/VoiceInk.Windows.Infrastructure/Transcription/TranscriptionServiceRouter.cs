@@ -13,7 +13,8 @@ public sealed class TranscriptionServiceRouter(
     ITranscriptionService? sonioxService = null,
     ITranscriptionService? speechmaticsService = null,
     ITranscriptionService? geminiService = null,
-    ITranscriptionService? xaiService = null) : ITranscriptionService
+    ITranscriptionService? xaiService = null,
+    ITranscriptionService? cartesiaService = null) : ITranscriptionService
 {
     public Task<TranscriptionResult> TranscribeAsync(
         AudioCaptureResult audio,
@@ -37,6 +38,8 @@ public sealed class TranscriptionServiceRouter(
                 geminiService,
             TranscriptionProviderKind.OpenAICompatible when IsXai(options) && xaiService is not null =>
                 xaiService,
+            TranscriptionProviderKind.OpenAICompatible when IsCartesia(options) && cartesiaService is not null =>
+                cartesiaService,
             TranscriptionProviderKind.OpenAICompatible => openAICompatibleService,
             _ => throw new InvalidOperationException($"Unsupported transcription provider: {options.Provider}.")
         };
@@ -64,4 +67,7 @@ public sealed class TranscriptionServiceRouter(
 
     private static bool IsXai(TranscriptionOptions options) =>
         string.Equals(options.CloudProviderId, "xai", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsCartesia(TranscriptionOptions options) =>
+        string.Equals(options.CloudProviderId, "cartesia", StringComparison.OrdinalIgnoreCase);
 }
