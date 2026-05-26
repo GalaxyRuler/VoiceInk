@@ -120,6 +120,7 @@ public sealed partial class MainWindow : Window
     private readonly GeminiCloudTranscriptionService geminiTranscriptionService;
     private readonly XaiCloudTranscriptionService xaiTranscriptionService;
     private readonly CartesiaCloudTranscriptionService cartesiaTranscriptionService;
+    private readonly CloudTranscriptionProviderProbeService cloudTranscriptionProviderProbeService;
     private readonly ILiveTranscriptionPreviewService liveTranscriptionPreviewService;
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
@@ -168,6 +169,7 @@ public sealed partial class MainWindow : Window
     private bool isTranscribingAudioFiles;
     private bool isSavingEnhancementKey;
     private bool isSavingCloudTranscriptionKey;
+    private bool isTestingCloudTranscriptionProvider;
     private bool isExportingSettingsBackup;
     private bool isImportingSettingsBackup;
     private bool isRunningPrivacyCleanup;
@@ -259,6 +261,7 @@ public sealed partial class MainWindow : Window
         geminiTranscriptionService = new GeminiCloudTranscriptionService(new HttpClient(), secretStore);
         xaiTranscriptionService = new XaiCloudTranscriptionService(new HttpClient(), secretStore);
         cartesiaTranscriptionService = new CartesiaCloudTranscriptionService(new HttpClient(), secretStore);
+        cloudTranscriptionProviderProbeService = new CloudTranscriptionProviderProbeService(new HttpClient(), secretStore);
         liveTranscriptionPreviewService = new CompositeLiveTranscriptionPreviewService(
             [
                 new DeepgramLiveTranscriptionPreviewService(
@@ -1007,6 +1010,11 @@ public sealed partial class MainWindow : Window
     private async void ApplyTranscriptionProviderSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ApplyTranscriptionProviderSettingsAsync();
+    }
+
+    private async void TestCloudTranscriptionProviderButton_Click(object sender, RoutedEventArgs e)
+    {
+        await TestCloudTranscriptionProviderAsync();
     }
 
     private async void SaveCloudTranscriptionKeyButton_Click(object sender, RoutedEventArgs e)
@@ -5012,6 +5020,38 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task TestCloudTranscriptionProviderAsync()
+    {
+        if (!settingsLoaded || IsOperationActive(includeCurrentCloudTranscriptionProviderTest: false))
+        {
+            return;
+        }
+
+        isTestingCloudTranscriptionProvider = true;
+        var statusOverride = "Testing cloud transcription provider";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            var settings = await CurrentSettingsAsync(windowLifetime.Token, includeShortcutFields: false);
+            var result = await cloudTranscriptionProviderProbeService.ProbeAsync(settings, windowLifetime.Token);
+            statusOverride = result.Message;
+            await RefreshCloudTranscriptionKeyStatusAsync(windowLifetime.Token);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Cloud transcription provider test failed: {ex.Message}";
+        }
+        finally
+        {
+            isTestingCloudTranscriptionProvider = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private async Task ApplyEnhancementSettingsAsync()
     {
         if (!settingsLoaded || IsOperationActive())
@@ -6386,6 +6426,7 @@ public sealed partial class MainWindow : Window
         bool includeCurrentModelImport = true,
         bool includeCurrentEnhancementKeySave = true,
         bool includeCurrentCloudTranscriptionKeySave = true,
+        bool includeCurrentCloudTranscriptionProviderTest = true,
         bool includeCurrentPrivacyCleanup = true,
         bool includeCurrentModelDownload = true) =>
         isStarting
@@ -6404,6 +6445,7 @@ public sealed partial class MainWindow : Window
         || (includeCurrentPrivacyCleanup && isRunningPrivacyCleanup)
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
+        || (includeCurrentCloudTranscriptionProviderTest && isTestingCloudTranscriptionProvider)
         || (includeCurrentModelDownload && isDownloadingModel)
         || (includeCurrentModelImport && isImportingModel);
 
@@ -6886,6 +6928,7 @@ public sealed partial class MainWindow : Window
         SaveCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
         ClearCloudTranscriptionKeyButton.IsEnabled = cloudTranscriptionControlsEnabled;
         ApplyTranscriptionProviderSettingsButton.IsEnabled = modelControlsEnabled;
+        TestCloudTranscriptionProviderButton.IsEnabled = cloudTranscriptionControlsEnabled;
         EnhancementEnabledCheckBox.IsEnabled = enhancementControlsEnabled;
         UseClipboardContextCheckBox.IsEnabled = enhancementControlsEnabled;
         UseOcrContextCheckBox.IsEnabled = enhancementControlsEnabled;

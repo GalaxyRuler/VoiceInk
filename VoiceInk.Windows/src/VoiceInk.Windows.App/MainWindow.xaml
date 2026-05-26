@@ -308,6 +308,10 @@
                             x:Name="ApplyTranscriptionProviderSettingsButton"
                             Content="Apply Transcription Provider Settings"
                             Click="ApplyTranscriptionProviderSettingsButton_Click" />
+                        <Button
+                            x:Name="TestCloudTranscriptionProviderButton"
+                            Content="Test Provider"
+                            Click="TestCloudTranscriptionProviderButton_Click" />
                     </StackPanel>
 
                     <StackPanel x:Name="EnhancementSectionPanel" Spacing="12" Visibility="Collapsed">
