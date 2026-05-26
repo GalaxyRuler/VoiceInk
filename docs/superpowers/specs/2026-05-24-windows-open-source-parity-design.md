@@ -440,13 +440,13 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Hardened enhancement endpoint validation to reject plain HTTP remote endpoints, embedded credentials, and common key/token query parameters while allowing loopback HTTP for local development.
 - Added WinUI Enhancement provider and preset-model pickers, provider-specific API-key save/clear/status text, and disabled API-key controls for keyless providers.
 - Added dynamic Ollama local model refresh through the Ollama `/api/tags` endpoint, surfaced as an Enhancement action only when the Ollama preset is selected.
+- Added dynamic OpenRouter model refresh through the OpenRouter `/api/v1/models` endpoint, sharing the provider-aware Enhancement refresh action.
 
 Windows gaps:
 
 - Prompt template persistence.
 - Provider-specific Anthropic Messages API and Local CLI hooks.
 - Screen/OCR, browser URL, and deeper app-specific context capture.
-- Dynamic provider model loading for OpenRouter.
 - Recorder prompt picker activation.
 - AI re-enhance from History.
 

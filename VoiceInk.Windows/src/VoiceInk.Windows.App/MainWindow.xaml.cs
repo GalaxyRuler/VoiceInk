@@ -99,6 +99,7 @@ public sealed partial class MainWindow : Window
     private readonly WhisperModelWarmupCoordinator modelWarmupCoordinator;
     private readonly HttpClient modelDownloadHttpClient = new();
     private readonly HttpClient ollamaModelHttpClient = new();
+    private readonly HttpClient openRouterModelHttpClient = new();
     private readonly string? metricsInitializationWarning;
     private readonly ClipboardTextInjectionService textInjectionService;
     private readonly LastTranscriptionActionService lastTranscriptionActionService;
@@ -120,6 +121,7 @@ public sealed partial class MainWindow : Window
     private readonly PowerModeAutoSendService powerModeAutoSendService = new();
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly OllamaModelCatalogClient ollamaModelCatalogClient;
+    private readonly OpenRouterModelCatalogClient openRouterModelCatalogClient;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
     private readonly DeepgramCloudTranscriptionService deepgramTranscriptionService;
@@ -164,6 +166,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<TranscriptionLanguageChoice> languageChoices = [];
     private IReadOnlyList<EnhancementPrompt> enhancementPrompts = EnhancementPromptCatalog.CreateDefaultPrompts();
     private IReadOnlyList<string> ollamaEnhancementModelChoices = [];
+    private IReadOnlyList<string> openRouterEnhancementModelChoices = [];
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
@@ -185,7 +188,7 @@ public sealed partial class MainWindow : Window
     private bool isSavingEnhancementKey;
     private bool isSavingCloudTranscriptionKey;
     private bool isTestingCloudTranscriptionProvider;
-    private bool isRefreshingOllamaEnhancementModels;
+    private bool isRefreshingEnhancementModels;
     private bool isSavingAudioFileQueueText;
     private bool isExportingSettingsBackup;
     private bool isImportingSettingsBackup;
@@ -271,6 +274,7 @@ public sealed partial class MainWindow : Window
         lastTranscriptionActionService = new LastTranscriptionActionService(historyStore, textInjectionService);
         secretStore = new WindowsCredentialSecretStore();
         ollamaModelCatalogClient = new OllamaModelCatalogClient(ollamaModelHttpClient);
+        openRouterModelCatalogClient = new OpenRouterModelCatalogClient(openRouterModelHttpClient);
         textEnhancementService = new OpenAICompatibleTextEnhancementService(new HttpClient(), secretStore);
         textEnhancementPipeline = new TextEnhancementPipeline(
             textEnhancementService,
@@ -1317,9 +1321,9 @@ public sealed partial class MainWindow : Window
         await ClearEnhancementKeyAsync();
     }
 
-    private async void RefreshOllamaEnhancementModelsButton_Click(object sender, RoutedEventArgs e)
+    private async void RefreshEnhancementModelsButton_Click(object sender, RoutedEventArgs e)
     {
-        await RefreshOllamaEnhancementModelsAsync();
+        await RefreshEnhancementModelsAsync();
     }
 
     private async void RefreshPowerModeTargetButton_Click(object sender, RoutedEventArgs e)
@@ -5884,7 +5888,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task RefreshOllamaEnhancementModelsAsync()
+    private async Task RefreshEnhancementModelsAsync()
     {
         if (!settingsLoaded || IsOperationActive())
         {
@@ -5892,36 +5896,36 @@ public sealed partial class MainWindow : Window
         }
 
         var preset = EnhancementProviderPresetCatalog.Resolve(SelectedEnhancementProviderId());
-        if (preset.Id != EnhancementProviderPresetCatalog.Ollama.Id)
+        if (!SupportsDynamicEnhancementModels(preset))
         {
-            RefreshUiFromControllerState("Select Ollama to refresh local models");
+            RefreshUiFromControllerState("Select OpenRouter or Ollama to refresh models");
             return;
         }
 
-        isRefreshingOllamaEnhancementModels = true;
-        var statusOverride = "Refreshing Ollama models";
+        isRefreshingEnhancementModels = true;
+        var statusOverride = $"Refreshing {preset.DisplayName} models";
         RefreshUiFromControllerState(statusOverride);
         try
         {
             var endpoint = string.IsNullOrWhiteSpace(EnhancementEndpointTextBox.Text)
                 ? preset.Endpoint
                 : EnhancementEndpointTextBox.Text.Trim();
-            var result = await ollamaModelCatalogClient.ListModelsAsync(endpoint, windowLifetime.Token);
+            var result = await RefreshEnhancementModelsForPresetAsync(preset, endpoint, windowLifetime.Token);
             if (!result.Success)
             {
                 statusOverride = result.Message;
                 return;
             }
 
-            ollamaEnhancementModelChoices = result.Models;
+            StoreDynamicEnhancementModelChoices(preset, result.Models);
             var selectedModel = EnhancementModelTextBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(selectedModel)
-                || !ollamaEnhancementModelChoices.Any(model => string.Equals(
+                || !result.Models.Any(model => string.Equals(
                     model,
                     selectedModel,
                     StringComparison.OrdinalIgnoreCase)))
             {
-                selectedModel = ollamaEnhancementModelChoices[0];
+                selectedModel = PreferredEnhancementModel(preset, result.Models);
                 EnhancementModelTextBox.Text = selectedModel;
             }
 
@@ -5938,10 +5942,58 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
-            isRefreshingOllamaEnhancementModels = false;
+            isRefreshingEnhancementModels = false;
             RefreshUiFromControllerState(statusOverride);
         }
     }
+
+    private async Task<DynamicEnhancementModelRefreshResult> RefreshEnhancementModelsForPresetAsync(
+        EnhancementProviderPreset preset,
+        string endpoint,
+        CancellationToken cancellationToken)
+    {
+        if (preset.Id == EnhancementProviderPresetCatalog.OpenRouter.Id)
+        {
+            var result = await openRouterModelCatalogClient.ListModelsAsync(endpoint, cancellationToken);
+            return new DynamicEnhancementModelRefreshResult(result.Success, result.Models, result.Message);
+        }
+
+        var ollamaResult = await ollamaModelCatalogClient.ListModelsAsync(endpoint, cancellationToken);
+        return new DynamicEnhancementModelRefreshResult(
+            ollamaResult.Success,
+            ollamaResult.Models,
+            ollamaResult.Message);
+    }
+
+    private void StoreDynamicEnhancementModelChoices(
+        EnhancementProviderPreset preset,
+        IReadOnlyList<string> models)
+    {
+        if (preset.Id == EnhancementProviderPresetCatalog.OpenRouter.Id)
+        {
+            openRouterEnhancementModelChoices = models;
+            return;
+        }
+
+        if (preset.Id == EnhancementProviderPresetCatalog.Ollama.Id)
+        {
+            ollamaEnhancementModelChoices = models;
+        }
+    }
+
+    private static string PreferredEnhancementModel(
+        EnhancementProviderPreset preset,
+        IReadOnlyList<string> models) =>
+        models.FirstOrDefault(model => string.Equals(
+            model,
+            preset.DefaultModel,
+            StringComparison.OrdinalIgnoreCase))
+        ?? models[0];
+
+    private sealed record DynamicEnhancementModelRefreshResult(
+        bool Success,
+        IReadOnlyList<string> Models,
+        string Message);
 
     private async Task SavePromptAsync()
     {
@@ -7207,6 +7259,11 @@ public sealed partial class MainWindow : Window
             ollamaEnhancementModelChoices = [];
         }
 
+        if (preset.Id != EnhancementProviderPresetCatalog.OpenRouter.Id)
+        {
+            openRouterEnhancementModelChoices = [];
+        }
+
         if (fillConfiguration && preset.Id != EnhancementProviderPresetCatalog.Custom.Id)
         {
             EnhancementEndpointTextBox.Text = preset.Endpoint;
@@ -7248,10 +7305,17 @@ public sealed partial class MainWindow : Window
     }
 
     private IReadOnlyList<string> EnhancementModelChoicesForPreset(EnhancementProviderPreset preset) =>
-        preset.Id == EnhancementProviderPresetCatalog.Ollama.Id
+        preset.Id == EnhancementProviderPresetCatalog.OpenRouter.Id
+            && openRouterEnhancementModelChoices.Count > 0
+                ? openRouterEnhancementModelChoices
+            : preset.Id == EnhancementProviderPresetCatalog.Ollama.Id
             && ollamaEnhancementModelChoices.Count > 0
                 ? ollamaEnhancementModelChoices
                 : preset.ModelIds;
+
+    private static bool SupportsDynamicEnhancementModels(EnhancementProviderPreset preset) =>
+        preset.Id == EnhancementProviderPresetCatalog.OpenRouter.Id
+        || preset.Id == EnhancementProviderPresetCatalog.Ollama.Id;
 
     private bool IsOperationActive(
         bool includeCurrentModelImport = true,
@@ -7276,7 +7340,7 @@ public sealed partial class MainWindow : Window
         || isExportingSettingsBackup
         || isImportingSettingsBackup
         || isExportingDiagnosticLogs
-        || isRefreshingOllamaEnhancementModels
+        || isRefreshingEnhancementModels
         || (includeCurrentPrivacyCleanup && isRunningPrivacyCleanup)
         || (includeCurrentEnhancementKeySave && isSavingEnhancementKey)
         || (includeCurrentCloudTranscriptionKeySave && isSavingCloudTranscriptionKey)
@@ -7825,8 +7889,8 @@ public sealed partial class MainWindow : Window
         EnhancementEndpointTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelTextBox.IsEnabled = enhancementControlsEnabled;
         EnhancementModelComboBox.IsEnabled = enhancementControlsEnabled && enhancementPresetHasModelChoices;
-        RefreshOllamaEnhancementModelsButton.IsEnabled = enhancementControlsEnabled
-            && enhancementPreset.Id == EnhancementProviderPresetCatalog.Ollama.Id;
+        RefreshEnhancementModelsButton.IsEnabled = enhancementControlsEnabled
+            && SupportsDynamicEnhancementModels(enhancementPreset);
         EnhancementApiKeyPasswordBox.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         SaveEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;
         ClearEnhancementKeyButton.IsEnabled = enhancementControlsEnabled && enhancementPreset.RequiresApiKey;

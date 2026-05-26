@@ -418,11 +418,11 @@
                                 Header="Preset model"
                                 SelectionChanged="EnhancementModelComboBox_SelectionChanged" />
                             <Button
-                                x:Name="RefreshOllamaEnhancementModelsButton"
+                                x:Name="RefreshEnhancementModelsButton"
                                 Grid.Column="1"
                                 Margin="0,28,0,0"
-                                Content="Refresh Ollama Models"
-                                Click="RefreshOllamaEnhancementModelsButton_Click" />
+                                Content="Refresh Models"
+                                Click="RefreshEnhancementModelsButton_Click" />
                         </Grid>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
