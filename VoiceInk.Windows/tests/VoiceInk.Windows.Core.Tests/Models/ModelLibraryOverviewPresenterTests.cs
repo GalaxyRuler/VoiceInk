@@ -1,0 +1,82 @@
+using VoiceInk.Windows.Core.Models;
+using Xunit;
+
+namespace VoiceInk.Windows.Core.Tests.Models;
+
+public sealed class ModelLibraryOverviewPresenterTests
+{
+    [Fact]
+    public void Present_EmptyLibrary_ExplainsLocalModelStartingPoint()
+    {
+        var items = LocalWhisperModelService.BuildCatalogItems([], currentModelPath: string.Empty);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [],
+            selectedModelPath: string.Empty,
+            unavailableImportedModelCount: 0);
+
+        Assert.Equal("Local Whisper Library", presentation.Title);
+        Assert.Equal("0 of 8 catalog models available on this device. 0 imported custom models ready. 2 recommended starter models are highlighted.", presentation.Summary);
+        Assert.Equal("No default local model selected.", presentation.DefaultModelLabel);
+        Assert.Equal("Import a whisper.cpp .bin file or download a recommended model to start private local transcription.", presentation.CleanupHint);
+    }
+
+    [Fact]
+    public void Present_PopulatedLibrary_ShowsDefaultAndReadyState()
+    {
+        var model = new LocalWhisperModel(
+            "C:\\Models\\ggml-base.en.bin",
+            "ggml-base.en",
+            DateTimeOffset.UnixEpoch);
+        var items = LocalWhisperModelService.BuildCatalogItems([model], model.Path);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [model],
+            selectedModelPath: model.Path,
+            unavailableImportedModelCount: 0);
+
+        Assert.Equal("1 of 8 catalog models available on this device. 0 imported custom models ready. 2 recommended starter models are highlighted.", presentation.Summary);
+        Assert.Equal("Default local model: Base (English).", presentation.DefaultModelLabel);
+        Assert.Equal("Model library is ready. Downloaded and imported model references stay local to this Windows profile.", presentation.CleanupHint);
+    }
+
+    [Fact]
+    public void Present_UnavailableImports_ShowsCleanupHint()
+    {
+        var model = new LocalWhisperModel(
+            "C:\\Models\\ggml-base.en.bin",
+            "ggml-base.en",
+            DateTimeOffset.UnixEpoch);
+        var items = LocalWhisperModelService.BuildCatalogItems([model], model.Path);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [],
+            selectedModelPath: model.Path,
+            unavailableImportedModelCount: 3);
+
+        Assert.Equal("0 of 8 catalog models available on this device. 0 imported custom models ready. 2 recommended starter models are highlighted.", presentation.Summary);
+        Assert.Equal("3 unavailable imported model references can be removed from settings without deleting model files.", presentation.CleanupHint);
+    }
+
+    [Fact]
+    public void Present_CustomImportedDefault_ShowsCustomModelCountAndDefault()
+    {
+        var custom = new LocalWhisperModel(
+            "D:\\Models\\custom-medical.bin",
+            "custom-medical",
+            DateTimeOffset.UnixEpoch);
+        var items = LocalWhisperModelService.BuildCatalogItems([custom], custom.Path);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [custom],
+            selectedModelPath: custom.Path,
+            unavailableImportedModelCount: 0);
+
+        Assert.Equal("0 of 8 catalog models available on this device. 1 imported custom model ready. 2 recommended starter models are highlighted.", presentation.Summary);
+        Assert.Equal("Default local model: custom-medical.", presentation.DefaultModelLabel);
+    }
+}

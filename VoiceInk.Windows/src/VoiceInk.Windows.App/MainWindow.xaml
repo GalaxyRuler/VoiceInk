@@ -123,6 +123,22 @@
                             x:Name="ModelRepairHintTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                x:Name="ModelLibraryTitleTextBlock"
+                                FontWeight="SemiBold"
+                                Text="Local Whisper Library" />
+                            <TextBlock
+                                x:Name="ModelLibrarySummaryTextBlock"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="ModelLibraryDefaultTextBlock"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="ModelLibraryCleanupHintTextBlock"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
                         <ListView
                             x:Name="LocalModelCatalogListView"
                             Height="330"

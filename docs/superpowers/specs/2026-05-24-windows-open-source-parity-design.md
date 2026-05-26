@@ -337,6 +337,12 @@ Model warmup/preload slice completed on 2026-05-25:
 - Added stale imported model cleanup that removes unavailable imported references without deleting or moving user files, and clears the selected model path only when the removed reference was selected.
 - Added actionable model health guidance under the AI Models default model status for not-selected, invalid-extension, missing, empty, suspiciously small, and ready states.
 
+Model library overview slice completed on 2026-05-26:
+
+- Added a Core model library overview presenter for local catalog availability, recommended model count, default local model label, and stale imported reference cleanup guidance.
+- Added an AI Models local library overview above the catalog so users can see the local model library state before choosing Download, Set as Default, Show in Explorer, or Remove Unavailable Models.
+- Kept cleanup scoped to settings references only; model files are not deleted or moved.
+
 Windows gaps:
 
 - Deeper model lifecycle repair flows.

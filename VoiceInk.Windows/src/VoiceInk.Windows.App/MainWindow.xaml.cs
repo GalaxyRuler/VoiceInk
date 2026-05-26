@@ -7017,6 +7017,15 @@ public sealed partial class MainWindow : Window
         var modelPath = selectedPath ?? ModelPathTextBox.Text;
         modelCatalogItems = LocalWhisperModelService.BuildCatalogItems(localWhisperModels, modelPath);
         LocalModelCatalogListView.ItemsSource = modelCatalogItems;
+        var modelLibraryOverview = ModelLibraryOverviewPresenter.Present(
+            modelCatalogItems,
+            localWhisperModels.Where(model => ModelPathHealth(model.Path).CanUse),
+            modelPath,
+            UnavailableImportedModelCount());
+        ModelLibraryTitleTextBlock.Text = modelLibraryOverview.Title;
+        ModelLibrarySummaryTextBlock.Text = modelLibraryOverview.Summary;
+        ModelLibraryDefaultTextBlock.Text = modelLibraryOverview.DefaultModelLabel;
+        ModelLibraryCleanupHintTextBlock.Text = modelLibraryOverview.CleanupHint;
 
         var health = ModelPathHealth(modelPath);
         var healthPresentation = LocalWhisperModelHealthPresenter.Present(health);
