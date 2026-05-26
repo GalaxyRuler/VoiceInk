@@ -1302,6 +1302,13 @@
                             x:Name="SettingsHeroDescriptionTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="SettingsOverviewSummaryTextBlock"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="SettingsDataSafetyGuidanceTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
                         <StackPanel Spacing="8">
                             <TextBlock Text="Shortcuts" FontWeight="SemiBold" />
                             <TextBlock x:Name="ShortcutsSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />

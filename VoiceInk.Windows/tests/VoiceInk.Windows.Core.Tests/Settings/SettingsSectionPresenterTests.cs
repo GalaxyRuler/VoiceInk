@@ -13,6 +13,12 @@ public sealed class SettingsSectionPresenterTests
         Assert.Equal("Settings", presentation.HeroTitle);
         Assert.Equal("Tune the everyday behavior of VoiceInk.", presentation.HeroDescription);
         Assert.Equal(
+            "Settings, backups, cleanup, and diagnostics stay local to this Windows profile.",
+            presentation.OverviewSummary);
+        Assert.Equal(
+            "Backups exclude API keys. Diagnostic exports use sanitized local logs and are never sent automatically.",
+            presentation.DataSafetyGuidance);
+        Assert.Equal(
             [
                 "Shortcuts",
                 "Recording Feedback",

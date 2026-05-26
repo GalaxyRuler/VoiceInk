@@ -2130,6 +2130,8 @@ public sealed partial class MainWindow : Window
     {
         SettingsHeroTitleTextBlock.Text = presentation.HeroTitle;
         SettingsHeroDescriptionTextBlock.Text = presentation.HeroDescription;
+        SettingsOverviewSummaryTextBlock.Text = presentation.OverviewSummary;
+        SettingsDataSafetyGuidanceTextBlock.Text = presentation.DataSafetyGuidance;
 
         foreach (var section in presentation.Sections)
         {

@@ -810,6 +810,12 @@ Settings section copy parity slice completed on 2026-05-26:
 - Added Windows Settings descriptions for Shortcuts, Recording Feedback, Interface, Clipboard, Cleanup, Privacy, General, and Backup.
 - Added diagnostics copy to the About/Open Source diagnostics surface, preserving the open-source local-only replacement for macOS diagnostics.
 
+Settings data-safety overview slice completed on 2026-05-26:
+
+- Added presenter-backed Settings overview copy explaining that settings, backups, cleanup, and diagnostics stay local to the Windows profile.
+- Added explicit API-key exclusion and sanitized diagnostics guidance under the Settings hero.
+- Kept commercial updater, account, and support flows omitted; diagnostics remain local open-source troubleshooting artifacts.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

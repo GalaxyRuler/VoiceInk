@@ -26,7 +26,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Dictionary | 81% | `[################----]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, and disabled replacement row presentation exist. Remaining work is richer card/flow layout polish. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 78% | `[################----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, presenter-backed model performance guidance, CSV export, and confirmed reset controls exist. Deeper model-performance panel styling and diagnostics expansion remain. |
-| Settings | 77% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, and macOS-style section descriptions exist. Deeper form layout polish remains. |
+| Settings | 79% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, and local data-safety overview guidance exist. Deeper form layout polish remains. |
 | Audio input | 88% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/priority-fallback/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI remains. |
 | Onboarding | 74% | `[###############-----]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, progress-aware readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer multi-step visual flow polish remains. |
 | Packaging | 62% | `[############--------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows metrics model performance guidance  [####################] 100%
+Windows settings data-safety overview  [####################] 100%
 ```
 
 Completed:
 
-- Added a Core model performance presenter for transcription and enhancement metrics rows.
-- Wired Metrics model performance lists to presenter output with empty-state guidance.
-- Added focused Core tests for transcription rows, enhancement rows, and empty states.
+- Added Settings overview copy for local settings, backups, cleanup, and diagnostics.
+- Wired Settings hero area to show local data-safety guidance above controls.
+- Added focused Core tests for overview and Settings section copy.
 
 ## Near-Term Priority
 

@@ -3,6 +3,8 @@ namespace VoiceInk.Windows.Core.Settings;
 public sealed record SettingsSectionPresentation(
     string HeroTitle,
     string HeroDescription,
+    string OverviewSummary,
+    string DataSafetyGuidance,
     IReadOnlyList<SettingsSectionCopy> Sections);
 
 public sealed record SettingsSectionCopy(
@@ -16,6 +18,8 @@ public static class SettingsSectionPresenter
         new(
             "Settings",
             "Tune the everyday behavior of VoiceInk.",
+            "Settings, backups, cleanup, and diagnostics stay local to this Windows profile.",
+            "Backups exclude API keys. Diagnostic exports use sanitized local logs and are never sent automatically.",
             [
                 new("shortcuts", "Shortcuts", "Configure recording, paste, retry, cancel, history, dictionary, enhancement, and Power Mode shortcuts."),
                 new("recordingFeedback", "Recording Feedback", "Control sound feedback, audio muting, media pause, and resume timing while recording."),
