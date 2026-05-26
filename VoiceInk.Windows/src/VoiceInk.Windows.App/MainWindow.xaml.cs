@@ -2156,6 +2156,7 @@ public sealed partial class MainWindow : Window
         SettingsDataSafetyGuidanceTextBlock.Text = presentation.DataSafetyGuidance;
         SettingsActionSummaryListView.ItemsSource = presentation.ActionSummaries;
         SettingsPreferenceSummaryListView.ItemsSource = presentation.PreferenceSummaries;
+        SettingsBackupGuidanceListView.ItemsSource = presentation.BackupGuidanceRows;
 
         foreach (var section in presentation.Sections)
         {

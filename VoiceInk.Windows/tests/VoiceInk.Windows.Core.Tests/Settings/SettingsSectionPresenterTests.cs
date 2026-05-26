@@ -76,6 +76,36 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Transcript and audio retention are kept until you enable local cleanup.", row.Detail);
                 Assert.Equal("Manual", row.StatusBadge);
             });
+        Assert.Collection(
+            presentation.BackupGuidanceRows,
+            row =>
+            {
+                Assert.Equal("Settings and Prompts", row.Title);
+                Assert.Equal("Included", row.Value);
+                Assert.Equal("General settings, custom prompts, and Power Mode rules travel in the local backup.", row.Detail);
+                Assert.Equal("Portable", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Provider API Keys", row.Title);
+                Assert.Equal("Excluded", row.Value);
+                Assert.Equal("Keys stay in Windows Credential Manager and must be re-entered after import.", row.Detail);
+                Assert.Equal("Local only", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Model References", row.Title);
+                Assert.Equal("References only", row.Value);
+                Assert.Equal("Imported model paths are restored, but large model files are not copied into the backup.", row.Detail);
+                Assert.Equal("Paths", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Dictionary", row.Title);
+                Assert.Equal("Included", row.Value);
+                Assert.Equal("Vocabulary words and replacements can be restored through settings backup or dictionary import/export.", row.Detail);
+                Assert.Equal("Portable", row.StatusBadge);
+            });
         Assert.Equal(
             [
                 "Shortcuts",

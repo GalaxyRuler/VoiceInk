@@ -10,6 +10,7 @@ public sealed record SettingsSectionPresentation(
     string DataSafetyGuidance,
     IReadOnlyList<SettingsActionSummary> ActionSummaries,
     IReadOnlyList<SettingsPreferenceSummary> PreferenceSummaries,
+    IReadOnlyList<SettingsBackupGuidanceRow> BackupGuidanceRows,
     IReadOnlyList<SettingsSectionCopy> Sections);
 
 public sealed record SettingsActionSummary(
@@ -18,6 +19,12 @@ public sealed record SettingsActionSummary(
     string StatusBadge);
 
 public sealed record SettingsPreferenceSummary(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
+
+public sealed record SettingsBackupGuidanceRow(
     string Title,
     string Value,
     string Detail,
@@ -62,6 +69,7 @@ public static class SettingsSectionPresenter
                     "Sanitized")
             ],
             PreferenceSummaries(settings),
+            BackupGuidanceRows(),
             [
                 new("shortcuts", "Shortcuts", "Configure recording, paste, retry, cancel, history, dictionary, enhancement, and Power Mode shortcuts."),
                 new("recordingFeedback", "Recording Feedback", "Control sound feedback, audio muting, media pause, and resume timing while recording."),
@@ -81,6 +89,30 @@ public static class SettingsSectionPresenter
         ClipboardSummary(settings),
         RecordingFeedbackSummary(settings),
         PrivacyCleanupSummary(settings)
+    ];
+
+    private static IReadOnlyList<SettingsBackupGuidanceRow> BackupGuidanceRows() =>
+    [
+        new(
+            "Settings and Prompts",
+            "Included",
+            "General settings, custom prompts, and Power Mode rules travel in the local backup.",
+            "Portable"),
+        new(
+            "Provider API Keys",
+            "Excluded",
+            "Keys stay in Windows Credential Manager and must be re-entered after import.",
+            "Local only"),
+        new(
+            "Model References",
+            "References only",
+            "Imported model paths are restored, but large model files are not copied into the backup.",
+            "Paths"),
+        new(
+            "Dictionary",
+            "Included",
+            "Vocabulary words and replacements can be restored through settings backup or dictionary import/export.",
+            "Portable")
     ];
 
     private static SettingsPreferenceSummary PasteSummary(AppSettings settings) =>
