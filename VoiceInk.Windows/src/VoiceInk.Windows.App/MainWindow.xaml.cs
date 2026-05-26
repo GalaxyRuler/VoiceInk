@@ -7265,6 +7265,7 @@ public sealed partial class MainWindow : Window
     private void RefreshPowerModeRulesListView(Guid? selectedId = null)
     {
         selectedId ??= SelectedPowerModeRule()?.Id;
+        ApplyPowerModePagePresentation(PowerModePagePresenter.Present(powerModeRules));
         PowerModeRulesListView.ItemsSource = powerModeRules
             .Select(PowerModeRuleListItem)
             .ToArray();
@@ -7274,6 +7275,17 @@ public sealed partial class MainWindow : Window
             : powerModeRules.ToList().FindIndex(rule => rule.Id == selectedId.Value);
         FillPowerModeFormFromSelection();
         RefreshPowerModeValidationStatus();
+    }
+
+    private void ApplyPowerModePagePresentation(PowerModePagePresentation presentation)
+    {
+        PowerModeTitleTextBlock.Text = presentation.Title;
+        PowerModeDescriptionTextBlock.Text = presentation.Description;
+        PowerModeCountTextBlock.Text = presentation.CountLabel;
+        PowerModeEmptyTextBlock.Text = presentation.IsEmpty
+            ? $"{presentation.EmptyTitle}. {presentation.EmptyDescription}"
+            : string.Empty;
+        PowerModeEmptyTextBlock.Visibility = presentation.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FillPowerModeFormFromSelection()

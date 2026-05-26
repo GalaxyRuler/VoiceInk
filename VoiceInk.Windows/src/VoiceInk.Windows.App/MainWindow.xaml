@@ -548,7 +548,20 @@
                     </StackPanel>
 
                     <StackPanel x:Name="PowerModeSectionPanel" Spacing="12" Visibility="Collapsed">
-                        <TextBlock Text="Power Mode" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="PowerModeTitleTextBlock" Text="Power Mode" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            x:Name="PowerModeDescriptionTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="PowerModeCountTextBlock"
+                            FontWeight="SemiBold"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="PowerModeEmptyTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
                         <TextBlock
                             x:Name="PowerModeActiveWindowTextBlock"
                             Text="Active window not checked"

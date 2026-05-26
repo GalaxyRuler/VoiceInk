@@ -555,6 +555,7 @@ Power Mode slice completed on 2026-05-25:
 - Added Power Mode name/emoji to SQLite history, CSV export, and the History detail view.
 - Added a WinUI Power Mode section for ordered rules, active-window quick fill, enabled/default toggles, and model/language/enhancement/prompt/cleanup overrides.
 - Added floating-recorder Power Mode chooser integration with Auto plus enabled rule selection.
+- Added macOS-style Power Mode page title/description, rule counts, and empty-state guidance.
 
 Windows Win32 grounding:
 
