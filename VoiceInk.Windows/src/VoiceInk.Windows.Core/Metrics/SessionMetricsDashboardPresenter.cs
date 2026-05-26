@@ -161,6 +161,10 @@ public static class SessionMetricsDashboardPresenter
             "Metrics stay local to this Windows profile unless you export CSV.",
             "Local"),
         new(
+            "Audio Duration",
+            $"Recorded audio in this filter totals {FormatDuration(summary.TotalAudioDuration, culture)}.",
+            "Local"),
+        new(
             "Export",
             "CSV export includes dashboard totals and model performance summaries.",
             "CSV"),

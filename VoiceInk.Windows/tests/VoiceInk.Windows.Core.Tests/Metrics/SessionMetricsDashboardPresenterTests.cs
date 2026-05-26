@@ -102,6 +102,12 @@ public sealed class SessionMetricsDashboardPresenterTests
                 },
                 row =>
                 {
+                    Assert.Equal("Audio Duration", row.Title);
+                    Assert.Equal("Recorded audio in this filter totals 10m 0s.", row.Detail);
+                    Assert.Equal("Local", row.StatusBadge);
+                },
+                row =>
+                {
                     Assert.Equal("Export", row.Title);
                     Assert.Equal("CSV export includes dashboard totals and model performance summaries.", row.Detail);
                     Assert.Equal("CSV", row.StatusBadge);

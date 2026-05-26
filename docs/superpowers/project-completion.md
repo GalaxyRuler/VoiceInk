@@ -25,7 +25,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Power Mode | 90% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 89% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 93% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing and audio storage state, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
-| Metrics | 88% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows, metric data/formula guidance rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
+| Metrics | 89% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics, metric data/formula guidance rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 87% | `[#################---]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows, and diagnostics privacy/export guidance rows exist. Deeper form layout polish remains. |
 | Audio input | 93% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
 | Onboarding | 88% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows local model filename guidance  [####################] 100%
+Windows metrics audio duration diagnostic row  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the local model filename guidance spec and implementation plan.
-- Added failing model health presenter assertions for `ggml-*.bin` guidance in ready and repair states.
-- Added filename convention rows to `LocalWhisperModelHealthPresenter`.
-- Ran focused model health presenter tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the metrics audio duration diagnostic row spec and implementation plan.
+- Added a failing dashboard presenter assertion for the selected-filter audio-duration diagnostics row.
+- Added the `Audio Duration` diagnostics row to `SessionMetricsDashboardPresenter`.
+- Ran focused dashboard presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
