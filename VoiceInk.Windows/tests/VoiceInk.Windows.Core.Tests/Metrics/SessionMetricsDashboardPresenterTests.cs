@@ -27,6 +27,36 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Equal("Dictated 1,234 words across 2 sessions.", presentation.HeroSubtitle);
             Assert.Equal("Audio Duration: 10m 0s", presentation.AudioDurationDisplay);
             Assert.Collection(
+                presentation.ActionRows,
+                row =>
+                {
+                    Assert.Equal("Filter", row.Title);
+                    Assert.Equal("Last 7 days", row.Value);
+                    Assert.Equal("Dashboard totals and model performance use this time window.", row.Detail);
+                    Assert.Equal("Active", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Export CSV", row.Title);
+                    Assert.Equal("Ready", row.Value);
+                    Assert.Equal("Exports dashboard totals and model performance summaries to a local file.", row.Detail);
+                    Assert.Equal("Local file", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Model Performance", row.Title);
+                    Assert.Equal("Available", row.Value);
+                    Assert.Equal("Transcription and enhancement model rows update from local metrics.", row.Detail);
+                    Assert.Equal("Local", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Reset Metrics", row.Title);
+                    Assert.Equal("Local metrics only", row.Value);
+                    Assert.Equal("Reset keeps History, recordings, settings, and diagnostics intact.", row.Detail);
+                    Assert.Equal("Confirmed", row.StatusBadge);
+                });
+            Assert.Collection(
                 presentation.DiagnosticsRows,
                 row =>
                 {
@@ -94,6 +124,8 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Empty(presentation.Cards);
             Assert.Equal("Audio Duration: 0s", presentation.AudioDurationDisplay);
             Assert.Equal("0 completed sessions in All time.", presentation.DiagnosticsRows[0].Detail);
+            Assert.Equal("Empty", presentation.ActionRows[1].Value);
+            Assert.Equal("Waiting", presentation.ActionRows[2].Value);
         });
     }
 

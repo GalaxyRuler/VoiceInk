@@ -734,6 +734,12 @@ Metrics diagnostics summary slice completed on 2026-05-26:
 
 - Added Core Metrics diagnostics rows for data source, privacy, export, and reset behavior.
 - Rendered the diagnostics summary in the Metrics storage pane.
+
+Metrics action summary slice completed on 2026-05-26:
+
+- Added Core Metrics action rows for filter scope, CSV export readiness, model performance availability, and reset scope.
+- Rendered the action summary in the Metrics storage pane alongside local diagnostics.
+- Kept metrics storage, CSV export, model performance queries, reset confirmation, and privacy behavior unchanged.
 - Kept metrics persistence, aggregation, CSV export, reset, and model-performance queries unchanged.
 
 Windows gaps:

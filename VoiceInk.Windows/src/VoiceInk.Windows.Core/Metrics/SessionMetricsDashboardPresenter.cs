@@ -8,8 +8,15 @@ public sealed record SessionMetricsDashboardPresentation(
     string HeroSubtitle,
     bool IsEmpty,
     string AudioDurationDisplay,
+    IReadOnlyList<SessionMetricsActionRow> ActionRows,
     IReadOnlyList<SessionMetricsDiagnosticsRow> DiagnosticsRows,
     IReadOnlyList<SessionMetricsDashboardCard> Cards);
+
+public sealed record SessionMetricsActionRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
 
 public sealed record SessionMetricsDiagnosticsRow(
     string Title,
@@ -49,6 +56,7 @@ public static class SessionMetricsDashboardPresenter
             heroSubtitle,
             isEmpty,
             $"Audio Duration: {FormatDuration(summary.TotalAudioDuration, culture)}",
+            ActionRows(normalizedFilterLabel, summary),
             DiagnosticsRows(normalizedFilterLabel, summary, culture),
             isEmpty
                 ? []
@@ -80,6 +88,32 @@ public static class SessionMetricsDashboardPresenter
                     "Orange")
             ]);
     }
+
+    private static IReadOnlyList<SessionMetricsActionRow> ActionRows(
+        string filterLabel,
+        SessionMetricsSummary summary) =>
+    [
+        new(
+            "Filter",
+            filterLabel,
+            "Dashboard totals and model performance use this time window.",
+            "Active"),
+        new(
+            "Export CSV",
+            summary.TotalSessions > 0 ? "Ready" : "Empty",
+            "Exports dashboard totals and model performance summaries to a local file.",
+            "Local file"),
+        new(
+            "Model Performance",
+            summary.TotalSessions > 0 ? "Available" : "Waiting",
+            "Transcription and enhancement model rows update from local metrics.",
+            "Local"),
+        new(
+            "Reset Metrics",
+            "Local metrics only",
+            "Reset keeps History, recordings, settings, and diagnostics intact.",
+            "Confirmed")
+    ];
 
     private static IReadOnlyList<SessionMetricsDiagnosticsRow> DiagnosticsRows(
         string filterLabel,
