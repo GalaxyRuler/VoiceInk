@@ -170,6 +170,7 @@ public sealed partial class MainWindow : Window
     private bool isRetryingHistory;
     private bool isReenhancingHistory;
     private bool isCopyingHistory;
+    private bool isCopyingAudioFileQueueText;
     private bool isQuickAdding;
     private bool isImportingModel;
     private bool isDownloadingModel;
@@ -177,6 +178,7 @@ public sealed partial class MainWindow : Window
     private bool isSavingEnhancementKey;
     private bool isSavingCloudTranscriptionKey;
     private bool isTestingCloudTranscriptionProvider;
+    private bool isSavingAudioFileQueueText;
     private bool isExportingSettingsBackup;
     private bool isImportingSettingsBackup;
     private bool isRunningPrivacyCleanup;
@@ -634,6 +636,16 @@ public sealed partial class MainWindow : Window
         audioFileQueueItems = audioFileQueueService.RetryFailed(audioFileQueueItems, item.Id).Items;
         RefreshAudioFileQueueListView(item.Id);
         RefreshUiFromControllerState("Audio file queued for retry");
+    }
+
+    private async void CopyAudioFileQueueTextButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CopySelectedAudioFileQueueTextAsync();
+    }
+
+    private async void SaveAudioFileQueueTextButton_Click(object sender, RoutedEventArgs e)
+    {
+        await SaveSelectedAudioFileQueueTextAsync();
     }
 
     private async Task StartCurrentRecordingAsync()
@@ -4383,6 +4395,99 @@ public sealed partial class MainWindow : Window
             ? audioFileQueueItems[AudioFileQueueListView.SelectedIndex]
             : null;
 
+    private async Task CopySelectedAudioFileQueueTextAsync()
+    {
+        if (isCopyingAudioFileQueueText)
+        {
+            return;
+        }
+
+        var item = SelectedAudioFileQueueItem();
+        if (!AudioFileQueueTextActions.TryGetActionText(item, out var text, out var message))
+        {
+            RefreshUiFromControllerState(message);
+            return;
+        }
+
+        isCopyingAudioFileQueueText = true;
+        var statusOverride = "Copying audio transcription";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            await textInjectionService.CopyAsync(text, windowLifetime.Token);
+            statusOverride = "Audio transcription copied";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Audio transcription copy failed: {ex.Message}";
+        }
+        finally
+        {
+            isCopyingAudioFileQueueText = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private async Task SaveSelectedAudioFileQueueTextAsync()
+    {
+        if (isSavingAudioFileQueueText)
+        {
+            return;
+        }
+
+        var item = SelectedAudioFileQueueItem();
+        if (!AudioFileQueueTextActions.TryGetActionText(item, out var text, out var message))
+        {
+            RefreshUiFromControllerState(message);
+            return;
+        }
+
+        isSavingAudioFileQueueText = true;
+        var statusOverride = "Saving audio transcription";
+        RefreshUiFromControllerState(statusOverride);
+        try
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = AudioFileQueueTextActions.SuggestFileName(text)
+            };
+            picker.FileTypeChoices.Add("Text file", [".txt"]);
+            picker.FileTypeChoices.Add("Markdown file", [".md"]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+            {
+                statusOverride = "Audio transcription save canceled";
+                return;
+            }
+
+            var content = string.Equals(file.FileType, ".md", StringComparison.OrdinalIgnoreCase)
+                ? AudioFileQueueTextActions.FormatMarkdown(text, item?.HistoryItem?.CreatedAt ?? DateTimeOffset.Now)
+                : text;
+            await FileIO.WriteTextAsync(file, content);
+            statusOverride = $"Audio transcription saved: {file.Name}";
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Audio transcription save failed: {ex.Message}";
+        }
+        finally
+        {
+            isSavingAudioFileQueueText = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
     private static string AudioFileQueueListItem(AudioFileQueueItem item)
     {
         var detail = item.ErrorMessage ?? item.StatusDetail;
@@ -6940,9 +7045,11 @@ public sealed partial class MainWindow : Window
         || isRetryingHistory
         || isReenhancingHistory
         || isCopyingHistory
+        || isCopyingAudioFileQueueText
         || isQuickAdding
         || isOnboardingOpen
         || isTranscribingAudioFiles
+        || isSavingAudioFileQueueText
         || isExportingSettingsBackup
         || isImportingSettingsBackup
         || isExportingDiagnosticLogs
@@ -7547,6 +7654,10 @@ public sealed partial class MainWindow : Window
             && selectedAudioFileQueueItem?.Status == AudioFileQueueStatus.Pending;
         RetryAudioFileQueueItemButton.IsEnabled = audioFileQueueEditable
             && selectedAudioFileQueueItem?.Status == AudioFileQueueStatus.Failed;
+        var canUseSelectedAudioFileQueueText = !operationActive
+            && AudioFileQueueTextActions.TryGetActionText(selectedAudioFileQueueItem, out _, out _);
+        CopyAudioFileQueueTextButton.IsEnabled = canUseSelectedAudioFileQueueText;
+        SaveAudioFileQueueTextButton.IsEnabled = canUseSelectedAudioFileQueueText;
         ExportDictionaryButton.IsEnabled = settingsLoaded && !operationActive;
         ImportDictionaryButton.IsEnabled = settingsLoaded
             && !operationActive

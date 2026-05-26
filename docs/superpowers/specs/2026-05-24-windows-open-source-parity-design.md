@@ -350,11 +350,11 @@ Transcribe Audio slice completed on 2026-05-25:
 - Added a source-runnable in-memory queue with pending, processing, completed, failed, remove, retry, clear, start, and cancel behavior.
 - Convert/import selected media into app-owned WAV recordings before transcription, then run the existing local Whisper transcription path with dictionary prompt biasing and text cleanup.
 - Save completed file transcriptions into the existing SQLite history with original/final text, provider/model/language metadata, transcription duration, audio duration, and app-owned audio file path.
-- Leave per-file save/copy buttons, persistent queue restoration, and richer batch actions for later slices.
+- Added selected completed-item copy and save actions, with plain text clipboard copy plus TXT/Markdown file export.
+- Leave persistent queue restoration and richer batch actions for later slices.
 
 Windows gaps:
 
-- Per-file save/copy controls in the queue.
 - Persistent queue restoration across launches.
 - Per-file enhancement controls independent of the global Enhancement setting.
 
