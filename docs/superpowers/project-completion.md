@@ -16,10 +16,10 @@ VoiceInk Windows parity  [##################--] 91%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 76% | `[###############-----]` | Navigation shell, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
-| Floating recorder | 89% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
+| Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 76% | `[###############-----]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, and direct per-rule Power Mode selection are configurable with typed or captured shortcut entry. Press-and-hold/key-up modes remain. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
-| Cloud transcription | 97% | `[###################-]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, Speechmatics, plus Cartesia live preview streaming exist. More streaming providers remain. |
+| Cloud transcription | 98% | `[####################]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, Soniox, Speechmatics, plus Cartesia live preview streaming exist. Remaining cloud work is advanced provider-specific options and live credential smoke documentation. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 85% | `[#################---]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, and post-insertion auto-send keys exist. Deeper visual parity polish remains. |
@@ -34,20 +34,20 @@ VoiceInk Windows parity  [##################--] 91%
 ## Current Slice
 
 ```text
-Windows Speechmatics live preview  [####################] 100%
+Windows Soniox live preview  [####################] 100%
 ```
 
 Completed:
 
-- Added Speechmatics realtime WebSocket live preview startup.
-- Sent `StartRecognition` for 16 kHz raw PCM with selected language and operating point.
+- Added Soniox realtime WebSocket live preview startup.
+- Sent the Soniox realtime config with API key, model, 16 kHz mono `s16le`, and language hints.
 - Streamed recorder audio chunks as binary WebSocket frames.
-- Parsed Speechmatics partial/final transcript messages into recorder preview text.
-- Sent `EndOfStream` during preview completion without replacing final batch transcription.
+- Parsed Soniox token responses into recorder preview text.
+- Sent an empty binary frame during preview completion without replacing final async transcription.
 
 ## Near-Term Priority
 
 1. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
-2. Expand streaming/live preview beyond Deepgram, AssemblyAI, Speechmatics, and Cartesia while continuing recorder waveform visual polish.
+2. Expand streaming/live preview beyond Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia while continuing recorder waveform visual polish.
 3. Add richer cloud-provider live smoke documentation for optional user-owned API keys and models.
 4. Continue visual parity polish for Power Mode, Settings, Metrics, and onboarding pages.

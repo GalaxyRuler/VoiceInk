@@ -100,7 +100,7 @@ public static class TranscriptionProviderPresetCatalog
         "Multilingual",
         "Very fast",
         "Very high",
-        "Batch");
+        "Realtime preview");
 
     public static TranscriptionProviderPreset Speechmatics { get; } = new(
         "speechmatics",
