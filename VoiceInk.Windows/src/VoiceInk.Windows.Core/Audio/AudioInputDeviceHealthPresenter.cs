@@ -60,6 +60,13 @@ public static class AudioInputDeviceHealthPresenter
                     "Active",
                     AudioInputDeviceSelectionNoticeKind.Warning,
                     IsSelected: true,
+                    IsAvailable: true),
+                new AudioInputDeviceHealthRow(
+                    "Windows Sound Settings",
+                    "Open ms-settings:sound to choose or test the Windows default input device.",
+                    "Open Settings",
+                    AudioInputDeviceSelectionNoticeKind.Info,
+                    IsSelected: false,
                     IsAvailable: true)
             ];
         }

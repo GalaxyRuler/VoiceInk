@@ -153,6 +153,15 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("Using Windows system default because no prioritized microphones are available", row.Detail);
                 Assert.True(row.IsSelected);
                 Assert.True(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("Windows Sound Settings", row.Name);
+                Assert.Equal("Open Settings", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
+                Assert.Equal("Open ms-settings:sound to choose or test the Windows default input device.", row.Detail);
+                Assert.False(row.IsSelected);
+                Assert.True(row.IsAvailable);
             });
     }
 
