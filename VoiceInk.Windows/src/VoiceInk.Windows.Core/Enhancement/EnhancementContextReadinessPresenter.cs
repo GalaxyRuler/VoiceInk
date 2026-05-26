@@ -42,7 +42,7 @@ public static class EnhancementContextReadinessPresenter
                 ActiveAppRow(),
                 OcrRow(settings)
             ],
-            PrivacyRows(),
+            PrivacyRows(settings),
             ActionRows(settings));
     }
 
@@ -192,27 +192,60 @@ public static class EnhancementContextReadinessPresenter
             "Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.",
             "Local");
 
-    private static IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows() =>
-    [
-        new(
-            "Capture Timing",
-            "During enhancement",
-            "Context is requested only while building an enhancement prompt, not while idle.",
-            "Local first"),
-        new(
-            "Selection and Clipboard",
-            "Transient",
-            "Selected text and clipboard context are read best-effort and are not stored as separate context records.",
-            "Ephemeral"),
-        new(
-            "Screen OCR Boundary",
-            "Local capture",
-            "OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.",
-            "Prompt scope"),
-        new(
-            "Context Toggles",
-            "User controlled",
-            "Disabled context sources are not requested from the Windows integration layer.",
-            "Opt in")
-    ];
+    private static IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows(AppSettings settings)
+    {
+        var rows = new List<EnhancementContextPrivacyRow>
+        {
+            new(
+                "Capture Timing",
+                "During enhancement",
+                "Context is requested only while building an enhancement prompt, not while idle.",
+                "Local first"),
+            new(
+                "Selection and Clipboard",
+                "Transient",
+                "Selected text and clipboard context are read best-effort and are not stored as separate context records.",
+                "Ephemeral"),
+            new(
+                "Screen OCR Boundary",
+                "Local capture",
+                "OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.",
+                "Prompt scope"),
+            new(
+                "Context Toggles",
+                "User controlled",
+                "Disabled context sources are not requested from the Windows integration layer.",
+                "Opt in")
+        };
+
+        if (settings.IsEnhancementEnabled)
+        {
+            rows.Add(ProviderBoundaryRow(settings));
+        }
+
+        return rows;
+    }
+
+    private static EnhancementContextPrivacyRow ProviderBoundaryRow(AppSettings settings)
+    {
+        var provider = EnhancementProviderPresetCatalog.Resolve(settings.EnhancementProviderId);
+        if (IsLocalProvider(provider))
+        {
+            return new(
+                "Enhancement Provider Boundary",
+                "Local provider",
+                $"Enabled context is sent only to {provider.DisplayName} on this PC.",
+                "Local");
+        }
+
+        return new(
+            "Enhancement Provider Boundary",
+            "Cloud provider",
+            $"Enabled context can be included in prompts sent to {provider.DisplayName}. Use a local provider when context must stay on this PC.",
+            "Cloud");
+    }
+
+    private static bool IsLocalProvider(EnhancementProviderPreset provider) =>
+        string.Equals(provider.Id, EnhancementProviderPresetCatalog.Ollama.Id, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(provider.Id, EnhancementProviderPresetCatalog.LocalCli.Id, StringComparison.OrdinalIgnoreCase);
 }

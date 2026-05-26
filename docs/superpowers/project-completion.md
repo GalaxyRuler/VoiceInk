@@ -21,7 +21,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Model management | 86% | `[#################---]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows, model path health checks with actionable repair guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 99% | `[####################]` | OpenAI-compatible adapter with endpoint-query `response_format` support, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests with advanced endpoint query option preservation, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, Deepgram/AssemblyAI/Soniox/Speechmatics/Cartesia live preview streaming, and a user-owned-key smoke runbook exist. Remaining cloud work is advanced provider-specific options. |
 | AI enhancement | 90% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
-| Context features | 82% | `[################----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, display-targeted OCR region selection, Enhancement context readiness summary rows, context privacy boundary rows, and context action guidance rows exist with graceful degradation. Deeper context visual polish remains. |
+| Context features | 83% | `[#################---]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, display-targeted OCR region selection, Enhancement context readiness summary rows, provider-aware context privacy boundary rows, and context action guidance rows exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 90% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 89% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 92% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows onboarding finish step  [####################] 100%
+Windows context provider boundary  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the onboarding finish step spec and implementation plan.
-- Added failing onboarding presenter tests for the final insertion/History tutorial step.
-- Added the final tutorial row to the Core onboarding presenter.
-- Ran focused onboarding tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the context provider boundary spec and implementation plan.
+- Added failing provider-boundary presenter tests for cloud and local enhancement providers.
+- Added provider-aware privacy rows to the Core context readiness presenter.
+- Ran focused context presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

@@ -204,4 +204,44 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Detail == "OCR uses the configured screen region."
                 && row.StatusBadge == "Ready");
     }
+
+    [Fact]
+    public void Present_WithCloudEnhancementProvider_ShowsProviderBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                IsEnhancementEnabled = true,
+                EnhancementProviderId = "anthropic",
+                UseClipboardContext = true,
+                UseOcrContext = true
+            });
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Enhancement Provider Boundary"
+                && row.Value == "Cloud provider"
+                && row.Detail == "Enabled context can be included in prompts sent to Anthropic. Use a local provider when context must stay on this PC."
+                && row.StatusBadge == "Cloud");
+    }
+
+    [Fact]
+    public void Present_WithLocalEnhancementProvider_ShowsLocalProviderBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                IsEnhancementEnabled = true,
+                EnhancementProviderId = "ollama",
+                UseClipboardContext = true,
+                UseOcrContext = true
+            });
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Enhancement Provider Boundary"
+                && row.Value == "Local provider"
+                && row.Detail == "Enabled context is sent only to Ollama on this PC."
+                && row.StatusBadge == "Local");
+    }
 }
