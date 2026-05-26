@@ -605,6 +605,12 @@ Dictionary overview guidance slice completed on 2026-05-26:
 - Added disabled replacement count guidance so saved-but-disabled rules are visible without implying they affect output.
 - Added local dictionary JSON import/export guidance to keep the open-source Windows flow explicit and local-only.
 
+Dictionary row polish slice completed on 2026-05-26:
+
+- Extended Core dictionary rows with detail text and status badges for vocabulary and replacements.
+- Updated Windows vocabulary and replacement lists to show richer row templates while preserving sorted order and selection behavior.
+- Kept dictionary storage, import/export, quick add, replacement application, and prompt rendering unchanged.
+
 Windows gaps:
 
 - Richer card/flow layout polish for vocabulary tokens and replacement rows.

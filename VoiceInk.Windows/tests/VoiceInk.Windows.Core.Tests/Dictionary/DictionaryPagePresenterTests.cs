@@ -38,6 +38,13 @@ public sealed class DictionaryPagePresenterTests
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
         Assert.Equal(["VoiceInk", "AssemblyAI"], presentation.VocabularyRows.Select(row => row.DisplayText).ToArray());
+        Assert.All(
+            presentation.VocabularyRows,
+            row =>
+            {
+                Assert.Equal("Vocabulary", row.StatusBadge);
+                Assert.Equal("Used to help AI enhancement and supported transcription prompts recognize this term.", row.DetailText);
+            });
         Assert.Collection(
             presentation.ReplacementRows,
             row =>
@@ -45,11 +52,15 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Voice ink", row.OriginalText);
                 Assert.Equal("VoiceInk", row.ReplacementText);
                 Assert.Equal("Voice ink -> VoiceInk", row.DisplayText);
+                Assert.Equal("Enabled", row.StatusBadge);
+                Assert.Equal("Runs after transcription and before insertion.", row.DetailText);
                 Assert.True(row.IsEnabled);
             },
             row =>
             {
                 Assert.Equal("old name -> New Name (disabled)", row.DisplayText);
+                Assert.Equal("Disabled", row.StatusBadge);
+                Assert.Equal("Kept locally but skipped during replacement cleanup.", row.DetailText);
                 Assert.False(row.IsEnabled);
             });
     }

@@ -19,14 +19,18 @@ public sealed record DictionaryPagePresentation(
 public sealed record DictionaryVocabularyRow(
     Guid Id,
     string Word,
-    string DisplayText);
+    string DisplayText,
+    string DetailText,
+    string StatusBadge);
 
 public sealed record DictionaryReplacementRow(
     Guid Id,
     string OriginalText,
     string ReplacementText,
     bool IsEnabled,
-    string DisplayText);
+    string DisplayText,
+    string DetailText,
+    string StatusBadge);
 
 public static class DictionaryPagePresenter
 {
@@ -38,7 +42,12 @@ public static class DictionaryPagePresenter
         ArgumentNullException.ThrowIfNull(replacements);
 
         var vocabularyRows = vocabulary
-            .Select(item => new DictionaryVocabularyRow(item.Id, item.Word, item.Word))
+            .Select(item => new DictionaryVocabularyRow(
+                item.Id,
+                item.Word,
+                item.Word,
+                "Used to help AI enhancement and supported transcription prompts recognize this term.",
+                "Vocabulary"))
             .ToArray();
         var replacementRows = replacements
             .Select(item => new DictionaryReplacementRow(
@@ -46,7 +55,11 @@ public static class DictionaryPagePresenter
                 item.OriginalText,
                 item.ReplacementText,
                 item.IsEnabled,
-                ReplacementDisplayText(item)))
+                ReplacementDisplayText(item),
+                item.IsEnabled
+                    ? "Runs after transcription and before insertion."
+                    : "Kept locally but skipped during replacement cleanup.",
+                item.IsEnabled ? "Enabled" : "Disabled"))
             .ToArray();
 
         return new DictionaryPagePresentation(
