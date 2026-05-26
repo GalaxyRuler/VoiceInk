@@ -47,6 +47,37 @@ public sealed class EnhancementContextReadinessPresenterTests
             });
 
         Assert.Collection(
+            presentation.PrivacyRows,
+            row =>
+            {
+                Assert.Equal("Capture Timing", row.Title);
+                Assert.Equal("During enhancement", row.Value);
+                Assert.Equal("Context is requested only while building an enhancement prompt, not while idle.", row.Detail);
+                Assert.Equal("Local first", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Selection and Clipboard", row.Title);
+                Assert.Equal("Transient", row.Value);
+                Assert.Equal("Selected text and clipboard context are read best-effort and are not stored as separate context records.", row.Detail);
+                Assert.Equal("Ephemeral", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Screen OCR Boundary", row.Title);
+                Assert.Equal("Local capture", row.Value);
+                Assert.Equal("OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.", row.Detail);
+                Assert.Equal("Prompt scope", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Context Toggles", row.Title);
+                Assert.Equal("User controlled", row.Value);
+                Assert.Equal("Disabled context sources are not requested from the Windows integration layer.", row.Detail);
+                Assert.Equal("Opt in", row.StatusBadge);
+            });
+
+        Assert.Collection(
             presentation.ActionRows,
             row =>
             {

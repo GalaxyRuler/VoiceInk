@@ -6,6 +6,7 @@ public sealed record EnhancementContextReadinessPresentation(
     string Title,
     string Description,
     IReadOnlyList<EnhancementContextReadinessRow> Rows,
+    IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows,
     IReadOnlyList<EnhancementContextActionRow> ActionRows);
 
 public sealed record EnhancementContextReadinessRow(
@@ -15,6 +16,12 @@ public sealed record EnhancementContextReadinessRow(
     string StatusBadge);
 
 public sealed record EnhancementContextActionRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
+
+public sealed record EnhancementContextPrivacyRow(
     string Title,
     string Value,
     string Detail,
@@ -35,6 +42,7 @@ public static class EnhancementContextReadinessPresenter
                 ActiveAppRow(),
                 OcrRow(settings)
             ],
+            PrivacyRows(),
             ActionRows(settings));
     }
 
@@ -183,4 +191,28 @@ public static class EnhancementContextReadinessPresenter
             "App, OCR, selection, clipboard",
             "Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.",
             "Local");
+
+    private static IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows() =>
+    [
+        new(
+            "Capture Timing",
+            "During enhancement",
+            "Context is requested only while building an enhancement prompt, not while idle.",
+            "Local first"),
+        new(
+            "Selection and Clipboard",
+            "Transient",
+            "Selected text and clipboard context are read best-effort and are not stored as separate context records.",
+            "Ephemeral"),
+        new(
+            "Screen OCR Boundary",
+            "Local capture",
+            "OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.",
+            "Prompt scope"),
+        new(
+            "Context Toggles",
+            "User controlled",
+            "Disabled context sources are not requested from the Windows integration layer.",
+            "Opt in")
+    ];
 }
