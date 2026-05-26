@@ -23,7 +23,8 @@ public sealed class DictationController(
     IPowerModeTargetProvider? powerModeTargetProvider = null,
     ISessionMetricStore? sessionMetricStore = null,
     IRecordingCaptureStopFeedback? recordingCaptureStopFeedback = null,
-    ILiveTranscriptionPreviewService? liveTranscriptionPreviewService = null)
+    ILiveTranscriptionPreviewService? liveTranscriptionPreviewService = null,
+    IPowerModeAutoSendService? powerModeAutoSendService = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
@@ -182,6 +183,7 @@ public sealed class DictationController(
                     await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
                     LastStopInsertedText = true;
                     hasInsertedText = true;
+                    await AutoSendPowerModeKeyAsync(powerModeResolution, cancellationToken);
 
                     try
                     {
@@ -391,6 +393,25 @@ public sealed class DictationController(
     {
         var settings = await settingsStore.LoadAsync(cancellationToken);
         return PowerModeMatcher.Resolve(settings, activePowerModeResolution?.Target);
+    }
+
+    private async Task AutoSendPowerModeKeyAsync(
+        PowerModeResolution powerModeResolution,
+        CancellationToken cancellationToken)
+    {
+        if (powerModeAutoSendService is null || powerModeResolution.AutoSendKey == PowerModeAutoSendKey.None)
+        {
+            return;
+        }
+
+        try
+        {
+            await powerModeAutoSendService.SendAsync(powerModeResolution.AutoSendKey, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LastWarning = $"Power Mode auto-send failed: {ex.Message}";
+        }
     }
 
     private async Task SaveCanceledHistoryBestEffortAsync(

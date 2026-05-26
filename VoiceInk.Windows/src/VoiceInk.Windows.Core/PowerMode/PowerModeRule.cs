@@ -21,4 +21,5 @@ public sealed record PowerModeRule
     public bool? RemoveFillerWordsOverride { get; init; }
     public PunctuationCleanupMode? PunctuationCleanupModeOverride { get; init; }
     public bool? LowercaseTranscriptionOverride { get; init; }
+    public PowerModeAutoSendKey AutoSendKey { get; init; } = PowerModeAutoSendKey.None;
 }

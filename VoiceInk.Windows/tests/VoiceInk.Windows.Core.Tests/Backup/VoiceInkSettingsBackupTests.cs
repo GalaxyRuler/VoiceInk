@@ -61,6 +61,7 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal("Standup", prompt.Title);
         Assert.Equal(["standup mode"], prompt.TriggerWords);
         Assert.Equal(settings.PowerModeRules, backup.PowerModeConfigs);
+        Assert.Contains("\"AutoSendKey\": \"shiftEnter\"", json);
         Assert.Equal(settings.ImportedWhisperModels, backup.ImportedWhisperModels);
         Assert.Equal(["VoiceInk", "WinUI"], backup.VocabularyWords.Select(word => word.Word).ToArray());
         Assert.Equal("VoiceInk", backup.WordReplacements["voice ink"]);
@@ -354,7 +355,8 @@ public sealed class VoiceInkSettingsBackupTests
                     AppendTrailingSpaceOverride = false,
                     RemoveFillerWordsOverride = true,
                     PunctuationCleanupModeOverride = PunctuationCleanupMode.Keep,
-                    LowercaseTranscriptionOverride = false
+                    LowercaseTranscriptionOverride = false,
+                    AutoSendKey = PowerModeAutoSendKey.ShiftEnter
                 }
             ]
         };

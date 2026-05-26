@@ -2,6 +2,7 @@ using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Text;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Enhancement;
+using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Infrastructure.Settings;
 using Xunit;
 
@@ -127,6 +128,33 @@ public sealed class JsonSettingsStoreTests
 
         var content = await File.ReadAllTextAsync(path);
         Assert.Contains("\"PunctuationCleanupMode\": \"removeAll\"", content);
+        var actual = await store.LoadAsync(CancellationToken.None);
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async Task SaveAsync_PersistsPowerModeAutoSendKeyAsMacStyleString()
+    {
+        using var temp = new TempDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var store = new JsonSettingsStore(path);
+        var expected = new AppSettings
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    ProcessNamePattern = "teams",
+                    AutoSendKey = PowerModeAutoSendKey.CommandEnter
+                }
+            ]
+        };
+
+        await store.SaveAsync(expected, CancellationToken.None);
+
+        var content = await File.ReadAllTextAsync(path);
+        Assert.Contains("\"AutoSendKey\": \"commandEnter\"", content);
         var actual = await store.LoadAsync(CancellationToken.None);
         Assert.Equal(expected, actual);
     }

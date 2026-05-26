@@ -9,6 +9,7 @@ public sealed record PowerModeResolution(
 {
     public string? PowerModeName => TrimToNull(Rule?.Name);
     public string? PowerModeEmoji => TrimToNull(Rule?.Emoji);
+    public PowerModeAutoSendKey AutoSendKey => Rule?.AutoSendKey ?? PowerModeAutoSendKey.None;
 
     private static string? TrimToNull(string? value)
     {

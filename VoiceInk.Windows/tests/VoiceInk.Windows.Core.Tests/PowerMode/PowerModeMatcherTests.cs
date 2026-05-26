@@ -29,7 +29,8 @@ public sealed class PowerModeMatcherTests
                     AppendTrailingSpaceOverride = true,
                     RemoveFillerWordsOverride = false,
                     PunctuationCleanupModeOverride = PunctuationCleanupMode.RemoveTrailingPeriod,
-                    LowercaseTranscriptionOverride = true
+                    LowercaseTranscriptionOverride = true,
+                    AutoSendKey = PowerModeAutoSendKey.ShiftEnter
                 }
             ]
         };
@@ -49,6 +50,15 @@ public sealed class PowerModeMatcherTests
         Assert.False(resolution.EffectiveSettings.RemoveFillerWords);
         Assert.Equal(PunctuationCleanupMode.RemoveTrailingPeriod, resolution.EffectiveSettings.PunctuationCleanupMode);
         Assert.True(resolution.EffectiveSettings.LowercaseTranscription);
+        Assert.Equal(PowerModeAutoSendKey.ShiftEnter, resolution.AutoSendKey);
+    }
+
+    [Fact]
+    public void Resolve_ExposesNoAutoSendWhenNoRuleMatches()
+    {
+        var resolution = PowerModeMatcher.Resolve(BaseSettings(), target: null);
+
+        Assert.Equal(PowerModeAutoSendKey.None, resolution.AutoSendKey);
     }
 
     [Fact]

@@ -647,6 +647,78 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_AutoSendsPowerModeKeyAfterSuccessfulInsertion()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var insertion = new FakeTextInjectionService();
+        var autoSend = new FakePowerModeAutoSendService();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "base.bin",
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    ProcessNamePattern = "teams",
+                    AutoSendKey = PowerModeAutoSendKey.CommandEnter
+                }
+            ]
+        });
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper")),
+            insertion,
+            new FakeHistoryStore(),
+            settings,
+            powerModeTargetProvider: new FakePowerModeTargetProvider(new PowerModeTarget("Teams", "Chat", 300)),
+            powerModeAutoSendService: autoSend);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal(PowerModeAutoSendKey.CommandEnter, autoSend.LastKey);
+        Assert.Equal(1, autoSend.CallCount);
+    }
+
+    [Fact]
+    public async Task StopAsync_SkipsAutoSendWhenInsertionFails()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var autoSend = new FakePowerModeAutoSendService();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "base.bin",
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    ProcessNamePattern = "teams",
+                    AutoSendKey = PowerModeAutoSendKey.Enter
+                }
+            ]
+        });
+        var controller = new DictationController(
+            capture,
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(150), "local-whisper")),
+            new FakeTextInjectionService { ExceptionToThrow = new InvalidOperationException("paste failed") },
+            new FakeHistoryStore(),
+            settings,
+            powerModeTargetProvider: new FakePowerModeTargetProvider(new PowerModeTarget("Teams", "Chat", 300)),
+            powerModeAutoSendService: autoSend);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal(0, autoSend.CallCount);
+        Assert.Equal("paste failed", controller.LastError);
+    }
+
+    [Fact]
     public async Task StopAsync_UsesPromptSelectedDuringRecording()
     {
         var customPromptId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -1553,6 +1625,19 @@ public sealed class DictationControllerTests
             }
 
             InsertedText = text;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakePowerModeAutoSendService : IPowerModeAutoSendService
+    {
+        public int CallCount { get; private set; }
+        public PowerModeAutoSendKey? LastKey { get; private set; }
+
+        public Task SendAsync(PowerModeAutoSendKey key, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastKey = key;
             return Task.CompletedTask;
         }
     }

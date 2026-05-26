@@ -110,6 +110,7 @@ public sealed partial class MainWindow : Window
     private readonly List<string> diagnosticEvents = [];
     private string? lastDiagnosticStatus;
     private readonly WindowsCredentialSecretStore secretStore;
+    private readonly PowerModeAutoSendService powerModeAutoSendService = new();
     private readonly OpenAICompatibleTextEnhancementService textEnhancementService;
     private readonly TextEnhancementPipeline textEnhancementPipeline;
     private readonly OpenAICompatibleCloudTranscriptionService cloudTranscriptionService;
@@ -209,6 +210,8 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
+        PowerModeAutoSendComboBox.ItemsSource = PowerModeAutoSendKeyPresenter.Choices;
+        PowerModeAutoSendComboBox.DisplayMemberPath = nameof(PowerModeAutoSendKeyChoice.DisplayName);
         MetricsTimeFilterComboBox.ItemsSource = SessionMetricsTimeFilter.AllChoices;
         MetricsTimeFilterComboBox.SelectedIndex = 0;
         HistoryPlaybackRateComboBox.ItemsSource = HistoryPlaybackRatePresenter.Choices;
@@ -5802,7 +5805,8 @@ public sealed partial class MainWindow : Window
             powerModeTargetProvider,
             sessionMetricStore,
             recordingFeedback,
-            liveTranscriptionPreviewService);
+            liveTranscriptionPreviewService,
+            powerModeAutoSendService);
 
     private static (ISessionMetricStore Store, string? Warning) CreateSessionMetricStore(string databasePath)
     {
@@ -6203,6 +6207,8 @@ public sealed partial class MainWindow : Window
             PunctuationCleanupMode.RemoveTrailingPeriod => 3,
             _ => 0
         };
+        PowerModeAutoSendComboBox.SelectedIndex = PowerModeAutoSendKeyPresenter.SelectedIndexFor(
+            rule?.AutoSendKey ?? PowerModeAutoSendKey.None);
     }
 
     private PowerModeRule PowerModeRuleFromForm(PowerModeRule? existing)
@@ -6226,7 +6232,8 @@ public sealed partial class MainWindow : Window
             AppendTrailingSpaceOverride = PowerModeAppendTrailingSpaceCheckBox.IsChecked,
             RemoveFillerWordsOverride = PowerModeRemoveFillerWordsCheckBox.IsChecked,
             LowercaseTranscriptionOverride = PowerModeLowercaseCheckBox.IsChecked,
-            PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode()
+            PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode(),
+            AutoSendKey = PowerModeAutoSendKeyPresenter.KeyForSelectedIndex(PowerModeAutoSendComboBox.SelectedIndex)
         };
     }
 
@@ -7038,6 +7045,7 @@ public sealed partial class MainWindow : Window
         PowerModeRemoveFillerWordsCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeLowercaseCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModePunctuationCleanupComboBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeAutoSendComboBox.IsEnabled = powerModeControlsEnabled;
         AddPowerModeRuleButton.IsEnabled = powerModeControlsEnabled;
         UpdatePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;
         RemovePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;
