@@ -885,6 +885,12 @@ Onboarding checklist guidance slice completed on 2026-05-26:
 - Wired the first-run dialog to show setup progress and checklist guidance before the model, microphone, and shortcut controls.
 - Kept microphone device visibility advisory instead of a hard save blocker because Windows privacy settings can hide inputs until runtime.
 
+Onboarding setup stages slice completed on 2026-05-26:
+
+- Extended Core onboarding presentation with ordered setup stages for model, microphone, shortcut, and first dictation.
+- Added stage display rows to first-run onboarding above the detailed readiness checklist.
+- Preserved existing save, skip, microphone refresh, model download, and shortcut setup behavior.
+
 ### Packaging
 
 Windows needs open-source friendly packaging.

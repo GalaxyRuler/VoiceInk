@@ -12,12 +12,30 @@ public sealed record OnboardingChecklistItemPresentation(
     string Description,
     OnboardingChecklistItemState State);
 
+public sealed record OnboardingSetupStagePresentation(
+    string StepNumber,
+    string Title,
+    string Description,
+    OnboardingChecklistItemState State)
+{
+    public string DisplayText => $"{PrefixFor(State)} {StepNumber}. {Title} - {Description}";
+
+    private static string PrefixFor(OnboardingChecklistItemState state) =>
+        state switch
+        {
+            OnboardingChecklistItemState.Ready => "[Ready]",
+            OnboardingChecklistItemState.NeedsAttention => "[Needs attention]",
+            _ => "[Review]"
+        };
+}
+
 public sealed record OnboardingChecklistPresentation(
     string Title,
     string Description,
     string ProgressLabel,
     string NextAction,
     bool CanSaveSetup,
+    IReadOnlyList<OnboardingSetupStagePresentation> Stages,
     IReadOnlyList<OnboardingChecklistItemPresentation> Items)
 {
     public string ChecklistSummary => string.Join(
@@ -70,6 +88,39 @@ public static class OnboardingChecklistPresenter
         };
 
         var readyCount = items.Count(item => item.State == OnboardingChecklistItemState.Ready);
+        var stages = new[]
+        {
+            new OnboardingSetupStagePresentation(
+                "1",
+                "Choose Model",
+                status.HasModelPath
+                    ? "Local transcription model selected."
+                    : "Pick or download a local Whisper model.",
+                StateFor(status.HasModelPath)),
+            new OnboardingSetupStagePresentation(
+                "2",
+                "Check Microphone",
+                status.HasAudioInputChoices
+                    ? "At least one recording input is visible."
+                    : "Refresh devices or open Windows microphone settings.",
+                StateFor(status.HasAudioInputChoices)),
+            new OnboardingSetupStagePresentation(
+                "3",
+                "Set Shortcut",
+                status.HasPrimaryShortcut
+                    ? "Global recording shortcut configured."
+                    : "Choose the shortcut you will press from any app.",
+                StateFor(status.HasPrimaryShortcut)),
+            new OnboardingSetupStagePresentation(
+                "4",
+                "Try Dictation",
+                status.CanCompleteSetup && status.HasAudioInputChoices
+                    ? "Ready for a first focused-text-field smoke test."
+                    : "Save setup when required items are ready, then test insertion.",
+                status.CanCompleteSetup && status.HasAudioInputChoices
+                    ? OnboardingChecklistItemState.Ready
+                    : OnboardingChecklistItemState.Advisory)
+        };
 
         return new OnboardingChecklistPresentation(
             "Welcome to VoiceInk",
@@ -77,6 +128,7 @@ public static class OnboardingChecklistPresenter
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),
             status.CanCompleteSetup,
+            stages,
             items);
     }
 

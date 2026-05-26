@@ -18,6 +18,33 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("2 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
         Assert.False(presentation.CanSaveSetup);
+        Assert.Collection(
+            presentation.Stages,
+            stage =>
+            {
+                Assert.Equal("1", stage.StepNumber);
+                Assert.Equal("Choose Model", stage.Title);
+                Assert.Equal(OnboardingChecklistItemState.NeedsAttention, stage.State);
+                Assert.Equal("[Needs attention] 1. Choose Model - Pick or download a local Whisper model.", stage.DisplayText);
+            },
+            stage =>
+            {
+                Assert.Equal("2", stage.StepNumber);
+                Assert.Equal("Check Microphone", stage.Title);
+                Assert.Equal(OnboardingChecklistItemState.Ready, stage.State);
+            },
+            stage =>
+            {
+                Assert.Equal("3", stage.StepNumber);
+                Assert.Equal("Set Shortcut", stage.Title);
+                Assert.Equal(OnboardingChecklistItemState.Ready, stage.State);
+            },
+            stage =>
+            {
+                Assert.Equal("4", stage.StepNumber);
+                Assert.Equal("Try Dictation", stage.Title);
+                Assert.Equal(OnboardingChecklistItemState.Advisory, stage.State);
+            });
 
         Assert.Collection(
             presentation.Items,
@@ -65,6 +92,8 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("4 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
         Assert.All(presentation.Items.Take(3), item => Assert.Equal(OnboardingChecklistItemState.Ready, item.State));
+        Assert.All(presentation.Stages.Take(3), stage => Assert.Equal(OnboardingChecklistItemState.Ready, stage.State));
+        Assert.Equal(OnboardingChecklistItemState.Ready, presentation.Stages[3].State);
     }
 
     [Fact]
