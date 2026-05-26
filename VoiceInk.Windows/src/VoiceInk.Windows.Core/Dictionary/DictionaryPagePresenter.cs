@@ -148,7 +148,12 @@ public static class DictionaryPagePresenter
             "Import / Export",
             "Local JSON",
             "Dictionary import and export use local files and do not sync automatically.",
-            "Local")
+            "Local"),
+        new(
+            "Backup Workflow",
+            "Edit or restore",
+            "Export before bulk edits so you can review, edit, or restore dictionary entries later.",
+            "Backup")
     ];
 
     private static string ReplacementDisplayText(WordReplacement replacement)

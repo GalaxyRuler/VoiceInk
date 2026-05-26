@@ -94,6 +94,13 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Local JSON", row.Value);
                 Assert.Equal("Dictionary import and export use local files and do not sync automatically.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Backup Workflow", row.Title);
+                Assert.Equal("Edit or restore", row.Value);
+                Assert.Equal("Export before bulk edits so you can review, edit, or restore dictionary entries later.", row.Detail);
+                Assert.Equal("Backup", row.StatusBadge);
             });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
