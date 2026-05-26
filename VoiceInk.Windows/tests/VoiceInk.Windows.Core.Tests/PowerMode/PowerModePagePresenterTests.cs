@@ -21,6 +21,9 @@ public sealed class PowerModePagePresenterTests
         Assert.Equal(
             "Switch modes from the recorder, tray, global shortcuts, or direct rule shortcuts. Enabled rules keep their list order for number-slot selection.",
             presentation.ManualSwitchingSummary);
+        Assert.Equal(
+            "Specific process, title, and sanitized URL rules are checked in list order; the default fallback applies only when no specific rule matches.",
+            presentation.MatchGuidance);
         Assert.Equal("2 Power Modes (1 enabled, 1 disabled)", presentation.CountLabel);
         Assert.False(presentation.IsEmpty);
         Assert.Equal(string.Empty, presentation.EmptyTitle);
