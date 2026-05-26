@@ -27,6 +27,36 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Equal("Dictated 1,234 words across 2 sessions.", presentation.HeroSubtitle);
             Assert.Equal("Audio Duration: 10m 0s", presentation.AudioDurationDisplay);
             Assert.Collection(
+                presentation.DataGuidanceRows,
+                row =>
+                {
+                    Assert.Equal("Sessions and Words", row.Title);
+                    Assert.Equal("Completed work", row.Value);
+                    Assert.Equal("Counts come from completed recorder, file transcription, and retry rows saved locally.", row.Detail);
+                    Assert.Equal("SQLite", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Words Per Minute", row.Title);
+                    Assert.Equal("Words / audio", row.Value);
+                    Assert.Equal("WPM is calculated from dictated words and recorded audio duration in the selected filter.", row.Detail);
+                    Assert.Equal("Derived", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Saved Effort", row.Title);
+                    Assert.Equal("Estimate", row.Value);
+                    Assert.Equal("Keystrokes and time saved are local productivity estimates, not telemetry.", row.Detail);
+                    Assert.Equal("Local", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Export and Reset", row.Title);
+                    Assert.Equal("Metrics only", row.Value);
+                    Assert.Equal("CSV export writes a local file; reset clears metrics without deleting History or recordings.", row.Detail);
+                    Assert.Equal("User action", row.StatusBadge);
+                });
+            Assert.Collection(
                 presentation.ActionRows,
                 row =>
                 {

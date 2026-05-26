@@ -8,9 +8,16 @@ public sealed record SessionMetricsDashboardPresentation(
     string HeroSubtitle,
     bool IsEmpty,
     string AudioDurationDisplay,
+    IReadOnlyList<SessionMetricsDataGuidanceRow> DataGuidanceRows,
     IReadOnlyList<SessionMetricsActionRow> ActionRows,
     IReadOnlyList<SessionMetricsDiagnosticsRow> DiagnosticsRows,
     IReadOnlyList<SessionMetricsDashboardCard> Cards);
+
+public sealed record SessionMetricsDataGuidanceRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
 
 public sealed record SessionMetricsActionRow(
     string Title,
@@ -56,6 +63,7 @@ public static class SessionMetricsDashboardPresenter
             heroSubtitle,
             isEmpty,
             $"Audio Duration: {FormatDuration(summary.TotalAudioDuration, culture)}",
+            DataGuidanceRows(),
             ActionRows(normalizedFilterLabel, summary),
             DiagnosticsRows(normalizedFilterLabel, summary, culture),
             isEmpty
@@ -88,6 +96,30 @@ public static class SessionMetricsDashboardPresenter
                     "Orange")
             ]);
     }
+
+    private static IReadOnlyList<SessionMetricsDataGuidanceRow> DataGuidanceRows() =>
+    [
+        new(
+            "Sessions and Words",
+            "Completed work",
+            "Counts come from completed recorder, file transcription, and retry rows saved locally.",
+            "SQLite"),
+        new(
+            "Words Per Minute",
+            "Words / audio",
+            "WPM is calculated from dictated words and recorded audio duration in the selected filter.",
+            "Derived"),
+        new(
+            "Saved Effort",
+            "Estimate",
+            "Keystrokes and time saved are local productivity estimates, not telemetry.",
+            "Local"),
+        new(
+            "Export and Reset",
+            "Metrics only",
+            "CSV export writes a local file; reset clears metrics without deleting History or recordings.",
+            "User action")
+    ];
 
     private static IReadOnlyList<SessionMetricsActionRow> ActionRows(
         string filterLabel,
