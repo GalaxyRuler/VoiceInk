@@ -224,12 +224,13 @@ macOS supports primary and secondary recording shortcuts, toggle/push-to-talk/hy
 Implemented:
 
 - Configurable key+modifier shortcuts for primary and secondary recording toggle, paste last transcription, paste last enhanced transcription, retry last transcription, cancel active recording, open history, quick add to dictionary, and toggle enhancement.
+- Modifier-only primary and secondary recording shortcuts with Toggle, Push to Talk, and Hybrid key-up behavior.
+- Power Mode cycle and direct per-rule shortcuts.
+- Mini-recorder Ctrl/Alt digit prompt and Power Mode slots.
 - Validation for unsupported keys, Windows-key reservations, missing modifiers, and duplicate assignments.
 
 Windows gaps:
 
-- Modifier-only shortcut compatibility.
-- Power Mode shortcuts.
 - Shortcut recorder UI instead of text entry.
 - Rich OS-level conflict recovery beyond reporting `RegisterHotKey` failures.
 
@@ -879,7 +880,7 @@ Status on 2026-05-24:
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
 - Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
-- Remaining for this slice: dedicated Dictionary navigation page/richer layout, modifier-only shortcuts, endpoint-ID backed audio input identity, waveform polish, and richer visual parity.
+- Remaining for this slice: dedicated Dictionary navigation page/richer layout, endpoint-ID backed audio input identity, waveform polish, and richer visual parity.
 - Add focused tests and docs.
 
 ## Verification

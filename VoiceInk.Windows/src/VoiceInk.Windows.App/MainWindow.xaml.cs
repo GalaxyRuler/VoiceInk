@@ -1473,10 +1473,13 @@ public sealed partial class MainWindow : Window
         }
 
         var virtualKey = (int)e.Key;
+        var controlDown = IsKeyDown(VirtualKeyControl) || virtualKey == VirtualKeyControl;
+        var altDown = IsKeyDown(VirtualKeyMenu) || virtualKey == VirtualKeyMenu;
+        var shiftDown = IsKeyDown(VirtualKeyShift) || virtualKey == VirtualKeyShift;
         if (virtualKey == VirtualKeyEscape
-            && !IsKeyDown(VirtualKeyControl)
-            && !IsKeyDown(VirtualKeyMenu)
-            && !IsKeyDown(VirtualKeyShift))
+            && !controlDown
+            && !altDown
+            && !shiftDown)
         {
             textBox.Text = string.Empty;
             e.Handled = true;
@@ -1484,10 +1487,26 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        if (GlobalShortcut.TryCreateFromKeyCapture(
-                IsKeyDown(VirtualKeyControl),
-                IsKeyDown(VirtualKeyMenu),
-                IsKeyDown(VirtualKeyShift),
+        string? modifierOnlyError = null;
+        if (IsShortcutModifierKey(virtualKey)
+            && IsRecordingShortcutTextBox(textBox)
+            && GlobalShortcut.TryCreateModifierOnlyFromKeyCapture(
+                controlDown,
+                altDown,
+                shiftDown,
+                virtualKey,
+                out var modifierOnlyShortcut,
+                out modifierOnlyError))
+        {
+            textBox.Text = modifierOnlyShortcut!.DisplayText;
+            textBox.Select(textBox.Text.Length, 0);
+            e.Handled = true;
+            RefreshUiFromControllerState("Modifier-only shortcut captured");
+        }
+        else if (GlobalShortcut.TryCreateFromKeyCapture(
+                controlDown,
+                altDown,
+                shiftDown,
                 virtualKey,
                 out var shortcut,
                 out var error))
@@ -1500,7 +1519,7 @@ public sealed partial class MainWindow : Window
         else if (IsShortcutModifierKey(virtualKey))
         {
             e.Handled = true;
-            RefreshUiFromControllerState(error ?? "Press a non-modifier key with your shortcut");
+            RefreshUiFromControllerState(modifierOnlyError ?? error ?? "Press a non-modifier key with your shortcut");
         }
     }
 
@@ -8414,6 +8433,10 @@ public sealed partial class MainWindow : Window
 
     private static bool IsShortcutModifierKey(int virtualKey) =>
         virtualKey is VirtualKeyShift or VirtualKeyControl or VirtualKeyMenu;
+
+    private bool IsRecordingShortcutTextBox(TextBox textBox) =>
+        ReferenceEquals(textBox, RecordingHotkeyTextBox)
+        || ReferenceEquals(textBox, SecondaryRecordingHotkeyTextBox);
 
     private static bool IsKeyDown(int virtualKey) =>
         (GetKeyState(virtualKey) & 0x8000) != 0;

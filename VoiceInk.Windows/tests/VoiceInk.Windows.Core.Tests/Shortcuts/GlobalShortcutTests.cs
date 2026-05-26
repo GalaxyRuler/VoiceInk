@@ -37,6 +37,26 @@ public sealed class GlobalShortcutTests
         Assert.False(shortcut.Alt);
     }
 
+    [Theory]
+    [InlineData("Ctrl", 0x11, "Ctrl")]
+    [InlineData("Alt", 0x12, "Alt")]
+    [InlineData("Shift", 0x10, "Shift")]
+    [InlineData("Ctrl+Alt", 0, "Ctrl+Alt")]
+    public void TryParse_SupportsModifierOnlyRecordingShortcuts(
+        string value,
+        int expectedVirtualKey,
+        string expectedDisplay)
+    {
+        var parsed = GlobalShortcut.TryParse(value, out var shortcut, out var error);
+
+        Assert.True(parsed);
+        Assert.Null(error);
+        Assert.NotNull(shortcut);
+        Assert.True(shortcut.IsModifierOnly);
+        Assert.Equal(expectedVirtualKey, shortcut.VirtualKey);
+        Assert.Equal(expectedDisplay, shortcut.DisplayText);
+    }
+
     [Fact]
     public void TryParse_RejectsWindowsKeyShortcuts()
     {
@@ -50,7 +70,6 @@ public sealed class GlobalShortcutTests
     [Theory]
     [InlineData("")]
     [InlineData("Space")]
-    [InlineData("Ctrl+Alt")]
     [InlineData("Ctrl+Alt+Space+V")]
     [InlineData("Ctrl+Alt+Unknown")]
     [InlineData("Ctrl++A")]
@@ -116,6 +135,69 @@ public sealed class GlobalShortcutTests
         Assert.False(created);
         Assert.Null(shortcut);
         Assert.False(string.IsNullOrWhiteSpace(error));
+    }
+
+    [Theory]
+    [InlineData(0x11, "Ctrl")]
+    [InlineData(0x12, "Alt")]
+    [InlineData(0x10, "Shift")]
+    public void TryCreateModifierOnlyFromKeyCapture_FormatsCapturedModifierOnlyShortcut(
+        int virtualKey,
+        string expectedDisplay)
+    {
+        var created = GlobalShortcut.TryCreateModifierOnlyFromKeyCapture(
+            control: virtualKey == 0x11,
+            alt: virtualKey == 0x12,
+            shift: virtualKey == 0x10,
+            virtualKey,
+            out var shortcut,
+            out var error);
+
+        Assert.True(created);
+        Assert.Null(error);
+        Assert.NotNull(shortcut);
+        Assert.True(shortcut.IsModifierOnly);
+        Assert.Equal(expectedDisplay, shortcut.DisplayText);
+    }
+
+    [Fact]
+    public void BuildRegistrations_AllowsModifierOnlyRecordingShortcut()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl",
+            SecondaryRecordingHotkey = "Alt"
+        });
+
+        Assert.Empty(result.Errors);
+        Assert.Collection(
+            result.Registrations,
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.ToggleRecording, item.Action);
+                Assert.True(item.Shortcut.IsModifierOnly);
+                Assert.Equal("Ctrl", item.Shortcut.DisplayText);
+            },
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.ToggleRecording, item.Action);
+                Assert.True(item.Shortcut.IsModifierOnly);
+                Assert.Equal("Alt", item.Shortcut.DisplayText);
+            });
+    }
+
+    [Fact]
+    public void BuildRegistrations_RejectsModifierOnlyUtilityShortcut()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            PasteLastTranscriptionHotkey = "Ctrl"
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Paste Last Transcription: Modifier-only shortcuts are only supported for recording.");
     }
 
     [Fact]

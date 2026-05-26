@@ -135,7 +135,13 @@ public static class GlobalShortcutSettings
             return;
         }
 
-        if (usedShortcuts.ContainsKey(shortcut!.DisplayText))
+        if (shortcut!.IsModifierOnly && action != GlobalShortcutAction.ToggleRecording)
+        {
+            errors.Add($"{displayName}: Modifier-only shortcuts are only supported for recording.");
+            return;
+        }
+
+        if (usedShortcuts.ContainsKey(shortcut.DisplayText))
         {
             errors.Add($"{displayName} already uses {shortcut.DisplayText}.");
             return;

@@ -17,7 +17,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 78% | `[################----]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
-| Shortcuts | 91% | `[##################--]` | Primary/secondary recording shortcuts now support Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, and floating-recorder Ctrl/Alt digit prompt/Power Mode slots are supported. Modifier-only shortcuts remain. |
+| Shortcuts | 96% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, and floating-recorder Ctrl/Alt digit prompt/Power Mode slots are supported. Remaining work is deeper shortcut UI polish and rare Windows-reserved-key edge cases. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 98% | `[####################]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, Soniox, Speechmatics, plus Cartesia live preview streaming exist. Remaining cloud work is advanced provider-specific options and live credential smoke documentation. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
@@ -34,21 +34,20 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows audio input priority mode  [####################] 100%
+Windows modifier-only recording shortcuts  [####################] 100%
 ```
 
 Completed:
 
-- Added Core System Default/Custom/Prioritized audio input mode settings.
-- Added priority-list add/remove/reorder helpers and tests.
-- Added prioritized microphone selection with next-available and system-default fallback notices.
-- Added WinUI Audio Input mode and priority controls.
-- Persisted audio input mode/priority settings through JSON settings and backup.
+- Added Core modifier-only shortcut parsing and capture formatting.
+- Allowed modifier-only shortcuts for primary and secondary recording actions.
+- Rejected modifier-only utility shortcuts with explicit validation.
+- Routed modifier-only recording shortcuts through the low-level keyboard hook.
+- Preserved Toggle, Push to Talk, and Hybrid behavior for modifier-only recording shortcuts.
 
 ## Near-Term Priority
 
 1. Continue packaging from per-user Dev ZIP install to actual signed MSIX install/uninstall smoke and release signing flow when a trusted signing setup is available.
-2. Add modifier-only shortcut compatibility where Windows can support it safely.
-3. Add endpoint-ID backed audio input identity if/when the capture backend moves from WaveIn numbering to MMDevice/WASAPI.
-4. Add richer cloud-provider live smoke documentation for optional user-owned API keys and models.
-5. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.
+2. Add endpoint-ID backed audio input identity if/when the capture backend moves from WaveIn numbering to MMDevice/WASAPI.
+3. Add richer cloud-provider live smoke documentation for optional user-owned API keys and models.
+4. Continue visual parity polish for Power Mode, Settings, Metrics, Dictionary, and onboarding pages.

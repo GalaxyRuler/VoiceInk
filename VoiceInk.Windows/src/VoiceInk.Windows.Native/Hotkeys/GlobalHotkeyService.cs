@@ -61,6 +61,17 @@ public sealed class GlobalHotkeyService : IDisposable
 
             foreach (var registration in registrations)
             {
+                if (registration.Shortcut.IsModifierOnly)
+                {
+                    if (registration.Action != GlobalShortcutAction.ToggleRecording)
+                    {
+                        throw new InvalidOperationException(
+                            $"Modifier-only shortcuts are only supported for recording ({registration.Shortcut.DisplayText}).");
+                    }
+
+                    continue;
+                }
+
                 var id = nextId++;
                 if (!RegisterHotKey(
                         hotkeyWindow.Handle,
@@ -206,8 +217,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private void HandleRecordingKeyDown(int virtualKey)
     {
         var registration = recordingRegistrations.FirstOrDefault(registration =>
-            registration.Shortcut.VirtualKey == virtualKey
-            && AreModifiersPressed(registration.Shortcut));
+            RecordingShortcutMatchesKeyDown(registration.Shortcut, virtualKey));
         if (registration is null)
         {
             return;
@@ -226,7 +236,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private void HandleRecordingKeyUp(int virtualKey)
     {
         var released = pressedRecordingShortcuts
-            .Where(pair => pair.Value.Shortcut.VirtualKey == virtualKey)
+            .Where(pair => RecordingShortcutMatchesKeyUp(pair.Value.Shortcut, virtualKey))
             .Select(pair => pair.Key)
             .ToArray();
 
@@ -242,6 +252,24 @@ public sealed class GlobalHotkeyService : IDisposable
         IsKeyPressed(VkControl) == shortcut.Control
         && IsKeyPressed(VkMenu) == shortcut.Alt
         && IsKeyPressed(VkShift) == shortcut.Shift;
+
+    private static bool RecordingShortcutMatchesKeyDown(GlobalShortcut shortcut, int virtualKey) =>
+        shortcut.IsModifierOnly
+            ? IsModifierKey(virtualKey) && AreModifiersPressed(shortcut)
+            : shortcut.VirtualKey == virtualKey && AreModifiersPressed(shortcut);
+
+    private static bool RecordingShortcutMatchesKeyUp(GlobalShortcut shortcut, int virtualKey) =>
+        shortcut.IsModifierOnly
+            ? IsRequiredModifierKey(shortcut, virtualKey)
+            : shortcut.VirtualKey == virtualKey;
+
+    private static bool IsModifierKey(int virtualKey) =>
+        virtualKey is VkControl or VkMenu or VkShift;
+
+    private static bool IsRequiredModifierKey(GlobalShortcut shortcut, int virtualKey) =>
+        virtualKey == VkControl && shortcut.Control
+        || virtualKey == VkMenu && shortcut.Alt
+        || virtualKey == VkShift && shortcut.Shift;
 
     private void HandleMiniRecorderKeyDown(int virtualKey)
     {

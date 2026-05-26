@@ -5,7 +5,8 @@ public sealed record GlobalShortcut(
     bool Alt,
     bool Shift,
     int VirtualKey,
-    string KeyName)
+    string KeyName,
+    bool IsModifierOnly = false)
 {
     public string DisplayText => string.Join("+", DisplayTokens());
 
@@ -45,6 +46,39 @@ public sealed record GlobalShortcut(
         }
 
         shortcut = new GlobalShortcut(control, alt, shift, virtualKey, keyName);
+        return true;
+    }
+
+    public static bool TryCreateModifierOnlyFromKeyCapture(
+        bool control,
+        bool alt,
+        bool shift,
+        int virtualKey,
+        out GlobalShortcut? shortcut,
+        out string? error)
+    {
+        shortcut = null;
+        error = null;
+
+        if (virtualKey is 0x5B or 0x5C)
+        {
+            error = "Windows-key shortcuts are reserved by Windows.";
+            return false;
+        }
+
+        if (virtualKey is not 0x10 and not 0x11 and not 0x12)
+        {
+            error = "Press only modifier keys for a modifier-only shortcut.";
+            return false;
+        }
+
+        if (!control && !alt && !shift)
+        {
+            error = "A modifier-only shortcut must include at least one modifier.";
+            return false;
+        }
+
+        shortcut = CreateModifierOnly(control, alt, shift, virtualKey);
         return true;
     }
 
@@ -118,8 +152,8 @@ public sealed record GlobalShortcut(
 
         if (virtualKey is null || keyName is null)
         {
-            error = "A global shortcut must include one key.";
-            return false;
+            shortcut = CreateModifierOnly(control, alt, shift, virtualKey: null);
+            return true;
         }
 
         shortcut = new GlobalShortcut(control, alt, shift, virtualKey.Value, keyName);
@@ -143,7 +177,35 @@ public sealed record GlobalShortcut(
             yield return "Shift";
         }
 
-        yield return KeyName;
+        if (!IsModifierOnly)
+        {
+            yield return KeyName;
+        }
+    }
+
+    private static GlobalShortcut CreateModifierOnly(
+        bool control,
+        bool alt,
+        bool shift,
+        int? virtualKey)
+    {
+        var modifierCount = (control ? 1 : 0) + (alt ? 1 : 0) + (shift ? 1 : 0);
+        var modifierVirtualKey = modifierCount == 1
+            ? control ? 0x11 : alt ? 0x12 : 0x10
+            : 0;
+
+        if (virtualKey is 0x10 or 0x11 or 0x12 && modifierCount == 1)
+        {
+            modifierVirtualKey = virtualKey.Value;
+        }
+
+        return new GlobalShortcut(
+            control,
+            alt,
+            shift,
+            modifierVirtualKey,
+            string.Empty,
+            IsModifierOnly: true);
     }
 
     private static bool TryParseKey(string token, out int virtualKey, out string keyName)
