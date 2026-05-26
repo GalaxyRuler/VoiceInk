@@ -29,12 +29,18 @@ public sealed record OnboardingSetupStagePresentation(
         };
 }
 
+public sealed record OnboardingSummaryRowPresentation(
+    string Title,
+    string Description,
+    string StatusBadge);
+
 public sealed record OnboardingChecklistPresentation(
     string Title,
     string Description,
     string ProgressLabel,
     string NextAction,
     bool CanSaveSetup,
+    IReadOnlyList<OnboardingSummaryRowPresentation> SummaryRows,
     IReadOnlyList<OnboardingSetupStagePresentation> Stages,
     IReadOnlyList<OnboardingChecklistItemPresentation> Items)
 {
@@ -88,6 +94,33 @@ public static class OnboardingChecklistPresenter
         };
 
         var readyCount = items.Count(item => item.State == OnboardingChecklistItemState.Ready);
+        var summaryRows = new[]
+        {
+            new OnboardingSummaryRowPresentation(
+                "Model",
+                status.HasModelPath
+                    ? "Local Whisper model selected."
+                    : "Choose a local Whisper model.",
+                status.HasModelPath ? "Ready" : "Required"),
+            new OnboardingSummaryRowPresentation(
+                "Microphone",
+                status.HasAudioInputChoices
+                    ? "Recording input detected."
+                    : "Refresh devices or check Windows privacy settings.",
+                status.HasAudioInputChoices ? "Ready" : "Check"),
+            new OnboardingSummaryRowPresentation(
+                "Shortcut",
+                status.HasPrimaryShortcut
+                    ? "Ctrl+Alt+Space is ready."
+                    : "Set the shortcut you will use from any app.",
+                status.HasPrimaryShortcut ? "Ready" : "Required"),
+            new OnboardingSummaryRowPresentation(
+                "First Dictation",
+                status.CanCompleteSetup && status.HasAudioInputChoices
+                    ? "Click a text field, press your shortcut, speak, then press it again."
+                    : "Save setup after required items are ready, then try insertion in any text field.",
+                "Try next")
+        };
         var stages = new[]
         {
             new OnboardingSetupStagePresentation(
@@ -128,6 +161,7 @@ public static class OnboardingChecklistPresenter
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),
             status.CanCompleteSetup,
+            summaryRows,
             stages,
             items);
     }

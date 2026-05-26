@@ -898,6 +898,7 @@ Implemented:
 - Local whisper model path selection with `.bin` picker.
 - Recommended local model download entry point.
 - Windows microphone privacy settings link and audio input selection.
+- Compact readiness summary rows for model, microphone, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
 - Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
@@ -924,6 +925,12 @@ Onboarding setup stages slice completed on 2026-05-26:
 - Extended Core onboarding presentation with ordered setup stages for model, microphone, shortcut, and first dictation.
 - Added stage display rows to first-run onboarding above the detailed readiness checklist.
 - Preserved existing save, skip, microphone refresh, model download, and shortcut setup behavior.
+
+Onboarding readiness summary slice completed on 2026-05-26:
+
+- Added Core onboarding summary rows for model, microphone, shortcut, and first dictation with Ready, Required, Check, and Try next badges.
+- Rendered the summary inside the first-run dialog above the staged checklist.
+- Kept onboarding save, skip, recommended model download, microphone refresh, and shortcut behavior unchanged.
 
 ### Packaging
 

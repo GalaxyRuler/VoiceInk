@@ -2308,6 +2308,11 @@ public sealed partial class MainWindow : Window
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap
         };
+        var onboardingSummaryListView = new ListView
+        {
+            MaxHeight = 190,
+            SelectionMode = ListViewSelectionMode.None
+        };
         var onboardingStagesListView = new ListView
         {
             MaxHeight = 180,
@@ -2329,6 +2334,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
@@ -2346,6 +2352,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
@@ -2358,6 +2365,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
@@ -2369,6 +2377,7 @@ public sealed partial class MainWindow : Window
             statusTextBlock,
             onboardingDescriptionTextBlock,
             onboardingProgressTextBlock,
+            onboardingSummaryListView,
             onboardingStagesListView,
             onboardingChecklistTextBlock,
             microphoneStatusTextBlock,
@@ -2383,6 +2392,7 @@ public sealed partial class MainWindow : Window
         };
         content.Children.Add(onboardingDescriptionTextBlock);
         content.Children.Add(onboardingProgressTextBlock);
+        content.Children.Add(onboardingSummaryListView);
         content.Children.Add(onboardingStagesListView);
         content.Children.Add(onboardingChecklistTextBlock);
         content.Children.Add(modelPathTextBox);
@@ -3182,6 +3192,7 @@ public sealed partial class MainWindow : Window
         TextBlock statusTextBlock,
         TextBlock onboardingDescriptionTextBlock,
         TextBlock onboardingProgressTextBlock,
+        ListView onboardingSummaryListView,
         ListView onboardingStagesListView,
         TextBlock onboardingChecklistTextBlock,
         TextBlock microphoneStatusTextBlock,
@@ -3210,6 +3221,7 @@ public sealed partial class MainWindow : Window
                 statusTextBlock,
                 onboardingDescriptionTextBlock,
                 onboardingProgressTextBlock,
+                onboardingSummaryListView,
                 onboardingStagesListView,
                 onboardingChecklistTextBlock,
                 microphoneStatusTextBlock,
@@ -3234,6 +3246,7 @@ public sealed partial class MainWindow : Window
         TextBlock statusTextBlock,
         TextBlock? onboardingDescriptionTextBlock,
         TextBlock? onboardingProgressTextBlock,
+        ListView? onboardingSummaryListView,
         ListView? onboardingStagesListView,
         TextBlock? onboardingChecklistTextBlock,
         TextBlock? microphoneStatusTextBlock,
@@ -3260,6 +3273,13 @@ public sealed partial class MainWindow : Window
         if (onboardingProgressTextBlock is not null)
         {
             onboardingProgressTextBlock.Text = presentation.ProgressLabel;
+        }
+
+        if (onboardingSummaryListView is not null)
+        {
+            onboardingSummaryListView.ItemsSource = presentation.SummaryRows
+                .Select(row => $"{row.StatusBadge}: {row.Title} - {row.Description}")
+                .ToArray();
         }
 
         if (onboardingStagesListView is not null)
