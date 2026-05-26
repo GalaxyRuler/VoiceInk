@@ -5072,8 +5072,8 @@ public sealed partial class MainWindow : Window
         if (metricsInitializationWarning is not null)
         {
             ApplyMetricsUnavailable(metricsInitializationWarning);
-            TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
-            EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
+            TranscriptionModelPerformanceListView.ItemsSource = MetricsUnavailableRows("Metrics are disabled for this session");
+            EnhancementModelPerformanceListView.ItemsSource = MetricsUnavailableRows("Metrics are disabled for this session");
             return;
         }
 
@@ -5089,13 +5089,9 @@ public sealed partial class MainWindow : Window
 
         ApplyMetricsDashboardPresentation(SessionMetricsDashboardPresenter.Present(filter.Label, summary));
         TranscriptionModelPerformanceListView.ItemsSource = ModelPerformancePresenter
-            .PresentTranscription(transcriptionStats)
-            .Select(row => row.DisplayText)
-            .ToArray();
+            .PresentTranscription(transcriptionStats);
         EnhancementModelPerformanceListView.ItemsSource = ModelPerformancePresenter
-            .PresentEnhancement(enhancementStats)
-            .Select(row => row.DisplayText)
-            .ToArray();
+            .PresentEnhancement(enhancementStats);
     }
 
     private async Task<string?> RefreshMetricsBestEffortAsync(CancellationToken cancellationToken)
@@ -5113,11 +5109,22 @@ public sealed partial class MainWindow : Window
         {
             MetricsDatabasePathTextBox.Text = metricsPath;
             ApplyMetricsUnavailable($"Metrics unavailable: {ex.Message}");
-            TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
-            EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
+            TranscriptionModelPerformanceListView.ItemsSource = MetricsUnavailableRows("Metrics refresh failed");
+            EnhancementModelPerformanceListView.ItemsSource = MetricsUnavailableRows("Metrics refresh failed");
             return $"Metrics refresh failed: {ex.Message}";
         }
     }
+
+    private static IReadOnlyList<ModelPerformanceRow> MetricsUnavailableRows(string title) =>
+    [
+        new(
+            title,
+            string.Empty,
+            "Metrics storage is unavailable in this session.",
+            "No data",
+            "Unavailable",
+            IsEmpty: true)
+    ];
 
     private async Task ExportMetricsAsync()
     {

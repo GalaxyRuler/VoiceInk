@@ -683,6 +683,12 @@ Metrics model performance guidance slice completed on 2026-05-26:
 - Replaced ad hoc Metrics page model-performance strings with presenter output while keeping SQLite storage and CSV export unchanged.
 - Kept all Metrics views local-only; no commercial telemetry or remote analytics were added.
 
+Metrics model performance panel slice completed on 2026-05-26:
+
+- Extended Core model-performance rows with primary values and status badges for transcription speed, enhancement latency, and empty states.
+- Updated Windows Metrics transcription and enhancement model lists to use richer row templates instead of plain text rows.
+- Kept metrics persistence, aggregation, time filtering, reset, CSV export, and diagnostics behavior unchanged.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.

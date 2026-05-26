@@ -25,7 +25,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Power Mode | 90% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 84% | `[#################---]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
-| Metrics | 78% | `[################----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, presenter-backed model performance guidance, CSV export, and confirmed reset controls exist. Deeper model-performance panel styling and diagnostics expansion remain. |
+| Metrics | 81% | `[################----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper diagnostics expansion remains. |
 | Settings | 79% | `[################----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, and local data-safety overview guidance exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
 | Onboarding | 78% | `[################----]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, progress-aware readiness checklist, guided setup stages, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows Dictionary row polish  [####################] 100%
+Windows Metrics model performance panel  [####################] 100%
 ```
 
 Completed:
 
-- Added presenter-backed vocabulary and replacement row details/status badges.
-- Wired Dictionary vocabulary and replacement lists to richer WinUI row templates.
-- Added focused Core tests for vocabulary details and enabled/disabled replacement status copy.
+- Added presenter-backed model performance primary values and status badges.
+- Wired Metrics transcription and enhancement model lists to richer WinUI row templates.
+- Added focused Core tests for transcription, enhancement, and empty model-performance rows.
 
 ## Near-Term Priority
 

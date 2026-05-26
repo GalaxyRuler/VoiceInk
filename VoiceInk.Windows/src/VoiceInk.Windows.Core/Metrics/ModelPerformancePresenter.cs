@@ -6,6 +6,8 @@ public sealed record ModelPerformanceRow(
     string Title,
     string Subtitle,
     string Detail,
+    string PrimaryValue,
+    string StatusBadge,
     bool IsEmpty = false)
 {
     public string DisplayText =>
@@ -23,7 +25,9 @@ public static class ModelPerformancePresenter
             .Select(stat => new ModelPerformanceRow(
                 stat.Name,
                 $"{stat.SessionCount.ToString("N0", CultureInfo.CurrentCulture)} {Pluralize(stat.SessionCount, "session", "sessions")} - {stat.SpeedFactor:0.0}x realtime",
-                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing; {SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio"))
+                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing; {SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio",
+                $"{stat.SpeedFactor:0.0}x",
+                "Transcription"))
             .ToArray();
 
         return rows.Length == 0
@@ -31,6 +35,8 @@ public static class ModelPerformancePresenter
                 "No transcription model metrics yet",
                 string.Empty,
                 "Complete a local or cloud transcription to compare model speed.",
+                "No data",
+                "Waiting",
                 IsEmpty: true)]
             : rows;
     }
@@ -42,7 +48,9 @@ public static class ModelPerformancePresenter
             .Select(stat => new ModelPerformanceRow(
                 stat.Name,
                 $"{stat.SessionCount.ToString("N0", CultureInfo.CurrentCulture)} {Pluralize(stat.SessionCount, "session", "sessions")}",
-                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg enhancement processing"))
+                $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg enhancement processing",
+                SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration),
+                "Enhancement"))
             .ToArray();
 
         return rows.Length == 0
@@ -50,6 +58,8 @@ public static class ModelPerformancePresenter
                 "No enhancement model metrics yet",
                 string.Empty,
                 "Enable enhancement and complete a session to compare enhancement latency.",
+                "No data",
+                "Waiting",
                 IsEmpty: true)]
             : rows;
     }
