@@ -4947,7 +4947,7 @@ public sealed partial class MainWindow : Window
         MetricsDatabasePathTextBox.Text = metricsPath;
         if (metricsInitializationWarning is not null)
         {
-            MetricsSummaryTextBlock.Text = metricsInitializationWarning;
+            ApplyMetricsUnavailable(metricsInitializationWarning);
             TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
             EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics are disabled for this session" };
             return;
@@ -4963,7 +4963,7 @@ public sealed partial class MainWindow : Window
             since,
             cancellationToken);
 
-        MetricsSummaryTextBlock.Text = FormatMetricsSummary(filter.Label, summary);
+        ApplyMetricsDashboardPresentation(SessionMetricsDashboardPresenter.Present(filter.Label, summary));
         TranscriptionModelPerformanceListView.ItemsSource = transcriptionStats.Count == 0
             ? ["No transcription model metrics yet"]
             : transcriptionStats.Select(TranscriptionModelPerformanceListItem).ToArray();
@@ -4986,7 +4986,7 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             MetricsDatabasePathTextBox.Text = metricsPath;
-            MetricsSummaryTextBlock.Text = $"Metrics unavailable: {ex.Message}";
+            ApplyMetricsUnavailable($"Metrics unavailable: {ex.Message}");
             TranscriptionModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
             EnhancementModelPerformanceListView.ItemsSource = new[] { "Metrics refresh failed" };
             return $"Metrics refresh failed: {ex.Message}";
@@ -5089,45 +5089,34 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static string FormatMetricsSummary(string filterLabel, SessionMetricsSummary summary) =>
-        string.Join(
-            Environment.NewLine,
-            $"Filter: {filterLabel}",
-            $"Sessions Recorded: {summary.TotalSessions.ToString("N0", CultureInfo.CurrentCulture)}",
-            $"Words Dictated: {summary.TotalWords.ToString("N0", CultureInfo.CurrentCulture)}",
-            $"Words Per Minute: {summary.WordsPerMinute.ToString("0.0", CultureInfo.CurrentCulture)}",
-            $"Keystrokes Saved: {summary.KeystrokesSaved.ToString("N0", CultureInfo.CurrentCulture)}",
-            $"Time Saved: {FormatMetricDuration(summary.TimeSaved)}",
-            $"Audio Duration: {FormatMetricDuration(summary.TotalAudioDuration)}");
+    private void ApplyMetricsDashboardPresentation(SessionMetricsDashboardPresentation presentation)
+    {
+        MetricsHeroTitleTextBlock.Text = presentation.HeroTitle;
+        MetricsHeroSubtitleTextBlock.Text = presentation.IsEmpty ? string.Empty : presentation.HeroSubtitle;
+        MetricsEmptyStateTextBlock.Text = presentation.IsEmpty ? presentation.HeroSubtitle : string.Empty;
+        MetricsEmptyStateTextBlock.Visibility = presentation.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
+        MetricsDashboardCardsListView.ItemsSource = presentation.Cards;
+        MetricsAudioDurationTextBlock.Text = $"{presentation.FilterLabel} - {presentation.AudioDurationDisplay}";
+    }
+
+    private void ApplyMetricsUnavailable(string message)
+    {
+        MetricsHeroTitleTextBlock.Text = message;
+        MetricsHeroSubtitleTextBlock.Text = string.Empty;
+        MetricsEmptyStateTextBlock.Text = string.Empty;
+        MetricsEmptyStateTextBlock.Visibility = Visibility.Collapsed;
+        MetricsDashboardCardsListView.ItemsSource = Array.Empty<SessionMetricsDashboardCard>();
+        MetricsAudioDurationTextBlock.Text = string.Empty;
+    }
 
     private static string TranscriptionModelPerformanceListItem(ModelPerformanceStat stat) =>
         $"{stat.Name} - {stat.SessionCount:N0} sessions, {stat.SpeedFactor:0.0}x, "
-        + $"{FormatMetricDuration(stat.AverageProcessingDuration)} avg processing, "
-        + $"{FormatMetricDuration(stat.AverageAudioDuration)} avg audio";
+        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing, "
+        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio";
 
     private static string EnhancementModelPerformanceListItem(ModelPerformanceStat stat) =>
         $"{stat.Name} - {stat.SessionCount:N0} sessions, "
-        + $"{FormatMetricDuration(stat.AverageProcessingDuration)} avg enhancement";
-
-    private static string FormatMetricDuration(TimeSpan duration)
-    {
-        if (duration <= TimeSpan.Zero)
-        {
-            return "0s";
-        }
-
-        if (duration.TotalHours >= 1)
-        {
-            return $"{(int)duration.TotalHours}h {duration.Minutes}m";
-        }
-
-        if (duration.TotalMinutes >= 1)
-        {
-            return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
-        }
-
-        return $"{duration.TotalSeconds.ToString("0.#", CultureInfo.CurrentCulture)}s";
-    }
+        + $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg enhancement";
 
     private SessionMetricsTimeFilter SelectedMetricsTimeFilter() =>
         MetricsTimeFilterComboBox.SelectedItem as SessionMetricsTimeFilter
