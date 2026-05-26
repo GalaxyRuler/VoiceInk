@@ -11,6 +11,7 @@ public sealed record SettingsSectionPresentation(
     IReadOnlyList<SettingsActionSummary> ActionSummaries,
     IReadOnlyList<SettingsPreferenceSummary> PreferenceSummaries,
     IReadOnlyList<SettingsBackupGuidanceRow> BackupGuidanceRows,
+    IReadOnlyList<SettingsDiagnosticsGuidanceRow> DiagnosticsGuidanceRows,
     IReadOnlyList<SettingsSectionCopy> Sections);
 
 public sealed record SettingsActionSummary(
@@ -25,6 +26,12 @@ public sealed record SettingsPreferenceSummary(
     string StatusBadge);
 
 public sealed record SettingsBackupGuidanceRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
+
+public sealed record SettingsDiagnosticsGuidanceRow(
     string Title,
     string Value,
     string Detail,
@@ -70,6 +77,7 @@ public static class SettingsSectionPresenter
             ],
             PreferenceSummaries(settings),
             BackupGuidanceRows(),
+            DiagnosticsGuidanceRows(),
             [
                 new("shortcuts", "Shortcuts", "Configure recording, paste, retry, cancel, history, dictionary, enhancement, and Power Mode shortcuts."),
                 new("recordingFeedback", "Recording Feedback", "Control sound feedback, audio muting, media pause, and resume timing while recording."),
@@ -113,6 +121,25 @@ public static class SettingsSectionPresenter
             "Included",
             "Vocabulary words and replacements can be restored through settings backup or dictionary import/export.",
             "Portable")
+    ];
+
+    private static IReadOnlyList<SettingsDiagnosticsGuidanceRow> DiagnosticsGuidanceRows() =>
+    [
+        new(
+            "Diagnostic Logs",
+            "Local export",
+            "Logs are opened or exported from this Windows profile and are not sent automatically.",
+            "Local"),
+        new(
+            "Summary Copy",
+            "Sanitized",
+            "Copied diagnostics exclude API keys and credential values.",
+            "No secrets"),
+        new(
+            "Windows App Diagnostics",
+            "OS controlled",
+            "Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.",
+            "Windows")
     ];
 
     private static SettingsPreferenceSummary PasteSummary(AppSettings settings) =>

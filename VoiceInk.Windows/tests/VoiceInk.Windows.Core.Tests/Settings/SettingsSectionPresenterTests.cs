@@ -106,6 +106,29 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Vocabulary words and replacements can be restored through settings backup or dictionary import/export.", row.Detail);
                 Assert.Equal("Portable", row.StatusBadge);
             });
+        Assert.Collection(
+            presentation.DiagnosticsGuidanceRows,
+            row =>
+            {
+                Assert.Equal("Diagnostic Logs", row.Title);
+                Assert.Equal("Local export", row.Value);
+                Assert.Equal("Logs are opened or exported from this Windows profile and are not sent automatically.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Summary Copy", row.Title);
+                Assert.Equal("Sanitized", row.Value);
+                Assert.Equal("Copied diagnostics exclude API keys and credential values.", row.Detail);
+                Assert.Equal("No secrets", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Windows App Diagnostics", row.Title);
+                Assert.Equal("OS controlled", row.Value);
+                Assert.Equal("Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.", row.Detail);
+                Assert.Equal("Windows", row.StatusBadge);
+            });
         Assert.Equal(
             [
                 "Shortcuts",

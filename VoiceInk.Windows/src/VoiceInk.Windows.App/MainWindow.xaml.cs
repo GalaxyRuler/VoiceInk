@@ -2157,6 +2157,7 @@ public sealed partial class MainWindow : Window
         SettingsActionSummaryListView.ItemsSource = presentation.ActionSummaries;
         SettingsPreferenceSummaryListView.ItemsSource = presentation.PreferenceSummaries;
         SettingsBackupGuidanceListView.ItemsSource = presentation.BackupGuidanceRows;
+        DiagnosticsGuidanceListView.ItemsSource = presentation.DiagnosticsGuidanceRows;
 
         foreach (var section in presentation.Sections)
         {
