@@ -19,6 +19,7 @@ public sealed class ShellNavigationPresenterTests
             item => Assert.Equal(("AI Models", "AI Models", "Library", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Enhancement", "Enhancement", "Edit", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Power Mode", "Power Mode", "LightningBolt", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
+            item => Assert.Equal(("Permissions", "Permissions", "Permissions", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Audio Input", "Audio Input", "Microphone", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Dictionary", "Dictionary", "Character", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Settings", "Settings", "Setting", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),

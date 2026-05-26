@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [##################--] 91%
+VoiceInk Windows parity  [##################--] 92%
 ```
 
 ## Area Bars
@@ -15,7 +15,7 @@ VoiceInk Windows parity  [##################--] 91%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 84% | `[#################---]` | Local recording/transcription/insertion, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
-| Shell and tray | 76% | `[###############-----]` | Navigation shell, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
+| Shell and tray | 78% | `[################----]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 76% | `[###############-----]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, and direct per-rule Power Mode selection are configurable with typed or captured shortcut entry. Press-and-hold/key-up modes remain. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -26,24 +26,24 @@ VoiceInk Windows parity  [##################--] 91%
 | Dictionary | 75% | `[###############-----]` | Vocabulary, replacements, sorting, quick add, import/export, and pipeline integration exist. Rich macOS-style page polish remains. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 72% | `[##############------]` | SQLite metrics, dashboard summary, filters, model performance, CSV export, and confirmed reset controls exist. Visual parity and diagnostics expansion remain. |
-| Settings | 73% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
-| Audio input | 72% | `[##############------]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, and persistent status notices for active/rebound/unavailable/no-device states exist. Richer device health and permission UI remains. |
-| Onboarding | 68% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, and Settings reset. Richer setup polish remains. |
+| Settings | 74% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, and custom start/stop sound import/reset/test exist. Visual polish remains. |
+| Audio input | 74% | `[###############-----]` | Device refresh, system default/custom persistence, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices for active/rebound/unavailable/no-device states, and a Permissions-page microphone privacy link exist. Richer device health UI remains. |
+| Onboarding | 70% | `[##############------]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, readiness checklist, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer setup polish remains. |
 | Packaging | 52% | `[##########----------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, and a gated signed install/uninstall smoke helper exist. Actual signed MSIX install smoke, shortcut registration, and release signing flow remain. |
 
 ## Current Slice
 
 ```text
-Windows Soniox live preview  [####################] 100%
+Windows Permissions sidebar section  [####################] 100%
 ```
 
 Completed:
 
-- Added Soniox realtime WebSocket live preview startup.
-- Sent the Soniox realtime config with API key, model, 16 kHz mono `s16le`, and language hints.
-- Streamed recorder audio chunks as binary WebSocket frames.
-- Parsed Soniox token responses into recorder preview text.
-- Sent an empty binary frame during preview completion without replacing final async transcription.
+- Added the missing macOS-order `Permissions` route to the Windows sidebar.
+- Added a testable Core `PermissionsReadinessPresenter`.
+- Added readiness cards for shortcut, microphone, insertion, and screen context.
+- Linked microphone review to `ms-settings:privacy-microphone` without changing Windows privacy settings automatically.
+- Routed card actions back to Settings or Enhancement where appropriate.
 
 ## Near-Term Priority
 

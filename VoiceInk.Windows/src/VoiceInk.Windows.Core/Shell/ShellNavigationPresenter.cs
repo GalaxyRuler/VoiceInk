@@ -11,6 +11,7 @@ public static class ShellNavigationPresenter
         new("AI Models", "AI Models", "Library"),
         new("Enhancement", "Enhancement", "Edit"),
         new("Power Mode", "Power Mode", "LightningBolt"),
+        new("Permissions", "Permissions", "Permissions"),
         new("Audio Input", "Audio Input", "Microphone"),
         new("Dictionary", "Dictionary", "Character"),
         new("Settings", "Settings", "Setting"),

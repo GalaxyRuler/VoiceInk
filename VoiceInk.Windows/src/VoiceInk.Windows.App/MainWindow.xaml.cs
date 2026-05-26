@@ -23,6 +23,7 @@ using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Models;
 using VoiceInk.Windows.Core.Onboarding;
+using VoiceInk.Windows.Core.Permissions;
 using VoiceInk.Windows.Core.PowerMode;
 using VoiceInk.Windows.Core.Privacy;
 using VoiceInk.Windows.Core.Recording;
@@ -63,6 +64,7 @@ public sealed partial class MainWindow : Window
     private const string TranscribeAudioSectionTag = "Transcribe Audio";
     private const string ModelsSectionTag = "AI Models";
     private const string AudioInputSectionTag = "Audio Input";
+    private const string PermissionsSectionTag = "Permissions";
     private const string DictionarySectionTag = "Dictionary";
     private const string HistorySectionTag = "History";
     private const string MetricsSectionTag = "Metrics";
@@ -369,6 +371,10 @@ public sealed partial class MainWindow : Window
             if (tag == MetricsSectionTag)
             {
                 _ = RefreshMetricsWithStatusAsync("Metrics refreshed");
+            }
+            else if (tag == PermissionsSectionTag)
+            {
+                _ = RefreshPermissionsSectionAsync();
             }
         }
     }
@@ -2704,6 +2710,39 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Microphone settings failed: {ex.Message}");
+        }
+    }
+
+    private async void RefreshPermissionsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshPermissionsSectionAsync("Permissions refreshed");
+    }
+
+    private void OpenMicrophonePrivacySettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenWindowsMicrophoneSettings();
+    }
+
+    private async void PermissionActionButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string actionTarget })
+        {
+            return;
+        }
+
+        if (string.Equals(actionTarget, "ms-settings:privacy-microphone", StringComparison.OrdinalIgnoreCase))
+        {
+            OpenWindowsMicrophoneSettings();
+            return;
+        }
+
+        if (navigationItemsByTag.ContainsKey(actionTarget))
+        {
+            ShowShellSection(actionTarget);
+            if (actionTarget == MetricsSectionTag)
+            {
+                await RefreshMetricsWithStatusAsync("Metrics refreshed");
+            }
         }
     }
 
@@ -6712,6 +6751,7 @@ public sealed partial class MainWindow : Window
         ModelsSectionPanel.Visibility = tag == ModelsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         EnhancementSectionPanel.Visibility = tag == EnhancementSectionTag ? Visibility.Visible : Visibility.Collapsed;
         PowerModeSectionPanel.Visibility = tag == PowerModeSectionTag ? Visibility.Visible : Visibility.Collapsed;
+        PermissionsSectionPanel.Visibility = tag == PermissionsSectionTag ? Visibility.Visible : Visibility.Collapsed;
         AudioInputSectionPanel.Visibility = tag == AudioInputSectionTag ? Visibility.Visible : Visibility.Collapsed;
         DictionarySectionPanel.Visibility = tag == DictionarySectionTag ? Visibility.Visible : Visibility.Collapsed;
         HistorySectionPanel.Visibility = tag == HistorySectionTag ? Visibility.Visible : Visibility.Collapsed;
@@ -6736,6 +6776,31 @@ public sealed partial class MainWindow : Window
         var version = typeof(MainWindow).Assembly.GetName().Version?.ToString() ?? "source build";
         AboutVersionTextBlock.Text = $"VoiceInk for Windows {version}";
         RuntimePathTextBox.Text = AppContext.BaseDirectory;
+    }
+
+    private async Task RefreshPermissionsSectionAsync(string? statusOverride = null)
+    {
+        try
+        {
+            var settings = await settingsStore.LoadAsync(windowLifetime.Token);
+            var status = PermissionsReadinessPresenter.Build(settings, HasPhysicalAudioInputChoices());
+
+            PermissionsStatusInfoBar.Title = status.SummaryTitle;
+            PermissionsStatusInfoBar.Message = status.SummaryMessage;
+            PermissionsStatusInfoBar.Severity = status.SummarySeverity == "Ready"
+                ? InfoBarSeverity.Success
+                : InfoBarSeverity.Warning;
+            PermissionsChecklistListView.ItemsSource = status.Items;
+
+            RefreshUiFromControllerState(statusOverride ?? status.SummaryMessage);
+        }
+        catch (Exception ex)
+        {
+            PermissionsStatusInfoBar.Title = "Permission check failed";
+            PermissionsStatusInfoBar.Message = ex.Message;
+            PermissionsStatusInfoBar.Severity = InfoBarSeverity.Error;
+            RefreshUiFromControllerState($"Permission check failed: {ex.Message}");
+        }
     }
 
     private void OpenDiagnosticsFolder()

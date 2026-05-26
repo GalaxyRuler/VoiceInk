@@ -699,6 +699,68 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <StackPanel x:Name="PermissionsSectionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Permissions" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock
+                            Text="Review the Windows permissions and setup items VoiceInk needs for dictation, insertion, shortcuts, and contextual enhancement."
+                            TextWrapping="Wrap" />
+                        <InfoBar
+                            x:Name="PermissionsStatusInfoBar"
+                            IsClosable="False"
+                            IsOpen="True"
+                            Severity="Informational" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="RefreshPermissionsButton"
+                                Content="Refresh"
+                                Click="RefreshPermissionsButton_Click" />
+                            <Button
+                                x:Name="OpenMicrophonePrivacySettingsButton"
+                                Content="Open Windows Microphone Settings"
+                                Click="OpenMicrophonePrivacySettingsButton_Click" />
+                        </StackPanel>
+                        <ListView
+                            x:Name="PermissionsChecklistListView"
+                            IsItemClickEnabled="False"
+                            SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        BorderBrush="Gray"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="0,0,0,8"
+                                        Padding="12">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock
+                                                    Text="{Binding Title}"
+                                                    FontWeight="SemiBold" />
+                                                <TextBlock
+                                                    Text="{Binding Description}"
+                                                    TextWrapping="WrapWholeWords" />
+                                                <TextBlock
+                                                    Text="{Binding Status}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                            <Button
+                                                Grid.Column="1"
+                                                MinWidth="160"
+                                                VerticalAlignment="Center"
+                                                Content="{Binding ActionText}"
+                                                Tag="{Binding ActionTarget}"
+                                                Click="PermissionActionButton_Click" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+
                     <StackPanel x:Name="DictionarySectionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock Text="Dictionary" FontSize="24" FontWeight="SemiBold" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
