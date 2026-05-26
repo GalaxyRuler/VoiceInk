@@ -54,7 +54,7 @@ public sealed class EnhancementProviderPresetCatalogTests
             && item.ModelIds.Contains("mistral-small-latest"));
         Assert.Contains(presets, item =>
             item.Id == "ollama"
-            && item.Endpoint == "http://localhost:11434/v1/chat/completions"
+            && item.Endpoint == "http://localhost:11434/api/chat"
             && item.DefaultModel == "mistral"
             && !item.RequiresApiKey);
         Assert.Contains(presets, item =>
@@ -110,6 +110,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [InlineData("groq", "groq")]
     [InlineData("gemini", "gemini")]
     [InlineData("anthropic", "anthropic")]
+    [InlineData("ollama", "ollama")]
     [InlineData("local-cli", "local-cli")]
     [InlineData("missing", "openai-compatible")]
     public void ProviderNameFor_ReturnsStableHistoryMetadata(string providerId, string expected)
@@ -132,6 +133,7 @@ public sealed class EnhancementProviderPresetCatalogTests
     [Theory]
     [InlineData("https://api.example.test/v1/chat/completions")]
     [InlineData("http://localhost:11434/v1/chat/completions")]
+    [InlineData("http://localhost:11434/api/chat")]
     [InlineData("http://127.0.0.1:11434/v1/chat/completions")]
     public void ValidateEndpoint_AllowsHttpsAndLoopbackHttpEndpoints(string endpoint)
     {

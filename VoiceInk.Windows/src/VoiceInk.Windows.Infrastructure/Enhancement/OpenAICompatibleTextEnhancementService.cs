@@ -167,6 +167,10 @@ public sealed class OpenAICompatibleTextEnhancementService(
             request.ProviderId,
             EnhancementProviderPresetCatalog.Anthropic.Id,
             StringComparison.OrdinalIgnoreCase);
+        var isOllama = string.Equals(
+            request.ProviderId,
+            EnhancementProviderPresetCatalog.Ollama.Id,
+            StringComparison.OrdinalIgnoreCase);
         if (isAnthropic && !string.IsNullOrWhiteSpace(apiKey))
         {
             message.Headers.Add("x-api-key", apiKey);
@@ -187,6 +191,17 @@ public sealed class OpenAICompatibleTextEnhancementService(
                         MaxTokens: 1024,
                         request.Temperature),
                     JsonOptions)
+                : isOllama
+                    ? JsonSerializer.Serialize(
+                        new OllamaChatRequest(
+                            request.Model,
+                            [
+                                new ChatMessage("system", request.SystemMessage),
+                                new ChatMessage("user", request.UserMessage)
+                            ],
+                            Stream: false,
+                            new OllamaOptions(request.Temperature)),
+                        JsonOptions)
                 : JsonSerializer.Serialize(
                     new ChatCompletionsRequest(
                         request.Model,
@@ -235,6 +250,8 @@ public sealed class OpenAICompatibleTextEnhancementService(
 
             var content = isAnthropic
                 ? ExtractAnthropicMessageContent(json)
+                : isOllama
+                    ? ExtractOllamaMessageContent(json)
                 : ExtractMessageContent(json);
             if (string.IsNullOrWhiteSpace(content))
             {
@@ -246,6 +263,27 @@ public sealed class OpenAICompatibleTextEnhancementService(
                 providerName,
                 request.Model,
                 Stopwatch.GetElapsedTime(startedAt));
+        }
+    }
+
+    private static string ExtractOllamaMessageContent(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString()
+                ?? string.Empty;
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("AI enhancement provider returned invalid JSON.", ex);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new InvalidOperationException("AI enhancement provider returned an unexpected response.", ex);
         }
     }
 
@@ -335,6 +373,15 @@ public sealed class OpenAICompatibleTextEnhancementService(
     private sealed record ChatMessage(
         [property: JsonPropertyName("role")] string Role,
         [property: JsonPropertyName("content")] string Content);
+
+    private sealed record OllamaChatRequest(
+        [property: JsonPropertyName("model")] string Model,
+        [property: JsonPropertyName("messages")] IReadOnlyList<ChatMessage> Messages,
+        [property: JsonPropertyName("stream")] bool Stream,
+        [property: JsonPropertyName("options")] OllamaOptions Options);
+
+    private sealed record OllamaOptions(
+        [property: JsonPropertyName("temperature")] double Temperature);
 
     private sealed record AnthropicMessagesRequest(
         [property: JsonPropertyName("model")] string Model,

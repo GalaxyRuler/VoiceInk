@@ -106,7 +106,7 @@ public static class EnhancementProviderPresetCatalog
     public static EnhancementProviderPreset Ollama { get; } = new(
         "ollama",
         "Ollama",
-        "http://localhost:11434/v1/chat/completions",
+        "http://localhost:11434/api/chat",
         "mistral",
         [],
         RequiresApiKey: false);

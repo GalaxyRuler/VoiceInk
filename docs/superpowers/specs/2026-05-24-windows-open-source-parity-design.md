@@ -448,12 +448,11 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Added Anthropic as a native Messages API enhancement provider with provider-specific Credential Manager keys and macOS-aligned Claude model choices.
 - Added Local CLI enhancement hooks that execute user-configured Windows commands with VoiceInk prompt environment variables and use stdout as the enhanced text.
 - Added prompt icon and description editing for custom prompts while keeping predefined prompt metadata read-only.
+- Added native Ollama chat enhancement through the local `/api/chat` endpoint with `stream: false`, keyless localhost HTTP, native `message.content` parsing, and existing retry/timeout/output-filtering behavior.
 
 Windows gaps:
 
-- Screen/OCR, browser URL, and deeper app-specific context capture.
-- Recorder prompt picker activation.
-- AI re-enhance from History.
+- Richer assistant workflows and visual polish.
 
 Custom prompt persistence Windows target:
 

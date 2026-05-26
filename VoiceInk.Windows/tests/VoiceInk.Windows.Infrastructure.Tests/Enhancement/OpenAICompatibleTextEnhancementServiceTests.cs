@@ -88,15 +88,15 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
     }
 
     [Fact]
-    public async Task EnhanceAsync_OllamaProviderDoesNotRequireApiKeyOrBearerToken()
+    public async Task EnhanceAsync_OllamaProviderUsesNativeChatApiWithoutApiKey()
     {
         var handler = new QueueHttpMessageHandler(
-            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"Local text"}}]}"""));
+            _ => JsonResponse(HttpStatusCode.OK, """{"message":{"role":"assistant","content":"Local text"},"done":true}"""));
         var service = new OpenAICompatibleTextEnhancementService(new HttpClient(handler), new FakeSecretStore());
 
         var result = await service.EnhanceAsync(
             Request(
-                endpoint: "http://localhost:11434/v1/chat/completions",
+                endpoint: "http://localhost:11434/api/chat",
                 model: "mistral",
                 providerId: "ollama"),
             CancellationToken.None);
@@ -104,6 +104,16 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
         Assert.Equal("Local text", result.Text);
         Assert.Equal("ollama", result.ProviderName);
         Assert.Null(handler.Requests[0].Headers.Authorization);
+        Assert.Equal("http://localhost:11434/api/chat", handler.Requests[0].RequestUri?.ToString());
+
+        var body = JsonDocument.Parse(handler.Bodies[0]).RootElement;
+        Assert.Equal("mistral", body.GetProperty("model").GetString());
+        Assert.False(body.GetProperty("stream").GetBoolean());
+        var messages = body.GetProperty("messages");
+        Assert.Equal("system", messages[0].GetProperty("role").GetString());
+        Assert.Equal("system prompt", messages[0].GetProperty("content").GetString());
+        Assert.Equal("user", messages[1].GetProperty("role").GetString());
+        Assert.Equal("user prompt", messages[1].GetProperty("content").GetString());
     }
 
     [Fact]
