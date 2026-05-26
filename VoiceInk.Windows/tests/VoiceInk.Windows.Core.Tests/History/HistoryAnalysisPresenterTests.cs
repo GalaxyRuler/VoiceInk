@@ -53,6 +53,12 @@ public sealed class HistoryAnalysisPresenterTests
                 Assert.Equal("Audio Storage", row.Title);
                 Assert.Equal("Text only", row.Value);
                 Assert.Equal("No audio file is attached to this history item.", row.Detail);
+            },
+            row =>
+            {
+                Assert.Equal("Export Scope", row.Title);
+                Assert.Equal("User initiated", row.Value);
+                Assert.Equal("History text, metadata, and audio paths stay local unless you copy, paste, or export them.", row.Detail);
             });
     }
 
@@ -79,6 +85,7 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Local Whisper", rows[3].Value);
         Assert.Equal("Transcription duration unavailable.", rows[3].Detail);
         Assert.Equal("Text only", rows[4].Value);
+        Assert.Equal("Export Scope", rows[5].Title);
     }
 
     [Fact]
@@ -101,5 +108,7 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Audio Storage", rows[4].Title);
         Assert.Equal("Audio saved", rows[4].Value);
         Assert.Equal("Audio can be opened or replayed while the file remains on disk.", rows[4].Detail);
+        Assert.Equal("Export Scope", rows[5].Title);
+        Assert.Equal("User initiated", rows[5].Value);
     }
 }

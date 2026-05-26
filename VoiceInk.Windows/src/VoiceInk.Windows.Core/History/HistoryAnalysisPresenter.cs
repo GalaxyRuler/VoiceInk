@@ -38,7 +38,11 @@ public static partial class HistoryAnalysisPresenter
                 string.IsNullOrWhiteSpace(item.AudioFilePath) ? "Text only" : "Audio saved",
                 string.IsNullOrWhiteSpace(item.AudioFilePath)
                     ? "No audio file is attached to this history item."
-                    : "Audio can be opened or replayed while the file remains on disk.")
+                    : "Audio can be opened or replayed while the file remains on disk."),
+            new(
+                "Export Scope",
+                "User initiated",
+                "History text, metadata, and audio paths stay local unless you copy, paste, or export them.")
         ];
     }
 

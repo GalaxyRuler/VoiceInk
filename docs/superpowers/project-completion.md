@@ -24,7 +24,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Context features | 84% | `[#################---]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, display-targeted OCR region selection, Enhancement context readiness summary rows, provider-aware context privacy boundary rows, explicit OCR capture-scope privacy rows, and context action guidance rows exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 91% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, page-level match precedence guidance, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 90% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows including local backup workflow guidance, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
-| History | 93% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing and audio storage state, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
+| History | 94% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing, audio storage state, and export-scope privacy disclosure, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 89% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics, metric data/formula guidance rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 88% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows exist. Deeper form layout polish remains. |
 | Audio input | 93% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows enhancement no-fallback privacy row  [####################] 100%
+Windows History export-scope row  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the enhancement no-fallback privacy row spec and implementation plan.
-- Added a failing enhancement readiness presenter assertion for provider fallback privacy disclosure.
-- Added the `Provider Fallback` privacy row when enhancement is enabled.
-- Ran focused enhancement readiness presenter tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the History export-scope row spec and implementation plan.
+- Added failing History analysis presenter assertions for local copy/paste/export disclosure.
+- Added the `Export Scope` analysis row to `HistoryAnalysisPresenter`.
+- Ran focused History analysis presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
