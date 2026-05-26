@@ -19,6 +19,36 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
         Assert.False(presentation.CanSaveSetup);
         Assert.Collection(
+            presentation.TutorialSteps,
+            step =>
+            {
+                Assert.Equal("1", step.StepNumber);
+                Assert.Equal("Click a text field", step.Title);
+                Assert.Equal("Place the cursor where VoiceInk should insert your first dictation.", step.Description);
+                Assert.Equal("Waiting", step.StatusBadge);
+            },
+            step =>
+            {
+                Assert.Equal("2", step.StepNumber);
+                Assert.Equal("Press Ctrl+Alt+Space", step.Title);
+                Assert.Equal("Start recording with your primary shortcut.", step.Description);
+                Assert.Equal("Waiting", step.StatusBadge);
+            },
+            step =>
+            {
+                Assert.Equal("3", step.StepNumber);
+                Assert.Equal("Speak a short phrase", step.Title);
+                Assert.Equal("Say a sentence you can easily recognize in the target field.", step.Description);
+                Assert.Equal("Waiting", step.StatusBadge);
+            },
+            step =>
+            {
+                Assert.Equal("4", step.StepNumber);
+                Assert.Equal("Press Ctrl+Alt+Space again", step.Title);
+                Assert.Equal("Stop recording and let VoiceInk insert the transcription.", step.Description);
+                Assert.Equal("Waiting", step.StatusBadge);
+            });
+        Assert.Collection(
             presentation.SetupActions,
             action =>
             {
@@ -150,6 +180,9 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal(["Ready", "Ready", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
         Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
         Assert.Equal("Click Field and Speak", presentation.SetupActions[3].CommandText);
+        Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
+        Assert.Equal("Press Ctrl+Alt+Space", presentation.TutorialSteps[1].Title);
+        Assert.Equal("Press Ctrl+Alt+Space again", presentation.TutorialSteps[3].Title);
         Assert.All(presentation.Items.Take(3), item => Assert.Equal(OnboardingChecklistItemState.Ready, item.State));
         Assert.All(presentation.Stages.Take(3), stage => Assert.Equal(OnboardingChecklistItemState.Ready, stage.State));
         Assert.Equal(OnboardingChecklistItemState.Ready, presentation.Stages[3].State);

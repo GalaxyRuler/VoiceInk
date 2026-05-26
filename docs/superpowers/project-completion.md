@@ -28,22 +28,22 @@ VoiceInk Windows parity  [###################-] 95%
 | Metrics | 86% | `[#################---]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 84% | `[#################---]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, and current-state rows for paste, clipboard restore, recording feedback, and cleanup exist. Deeper form layout polish remains. |
 | Audio input | 91% | `[##################--]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
-| Onboarding | 83% | `[#################---]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, compact readiness summary rows, action rows, progress-aware readiness checklist, guided setup stages, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
+| Onboarding | 85% | `[#################---]` | First-run setup covers model path, recommended local model download, microphone health, microphone settings, compact readiness summary rows, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 65% | `[#############-------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper, and a read-only release readiness report exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Windows context action guidance  [####################] 100%
+Windows onboarding tutorial steps  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the context action guidance spec and implementation plan.
-- Added failing presenter tests for context action rows.
-- Added Core presenter action rows for Enhancement, Clipboard Context, Screen OCR setup/readiness, and source order.
-- Rendered the action rows in the Enhancement page.
-- Ran focused context tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the onboarding tutorial spec and implementation plan.
+- Added failing presenter tests for macOS-style tutorial steps.
+- Added Core tutorial step presentation rows.
+- Rendered tutorial steps in the first-run onboarding dialog.
+- Ran focused onboarding tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

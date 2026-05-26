@@ -4,6 +4,7 @@ public sealed record OnboardingSetupStatus(
     bool HasModelPath,
     bool HasPrimaryShortcut,
     bool HasAudioInputChoices,
+    string PrimaryShortcut,
     bool CanCompleteSetup,
     IReadOnlyList<string> HealthChecks)
 {

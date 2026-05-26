@@ -15,6 +15,7 @@ public static class OnboardingSetupStatusService
             hasModelPath,
             hasPrimaryShortcut,
             hasAudioInputChoices,
+            string.IsNullOrWhiteSpace(settings.Hotkey) ? "your shortcut" : settings.Hotkey.Trim(),
             CanCompleteSetup: hasModelPath && hasPrimaryShortcut,
             HealthChecks:
             [

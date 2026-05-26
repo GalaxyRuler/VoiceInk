@@ -40,12 +40,19 @@ public sealed record OnboardingSetupActionPresentation(
     string CommandText,
     string StatusBadge);
 
+public sealed record OnboardingTutorialStepPresentation(
+    string StepNumber,
+    string Title,
+    string Description,
+    string StatusBadge);
+
 public sealed record OnboardingChecklistPresentation(
     string Title,
     string Description,
     string ProgressLabel,
     string NextAction,
     bool CanSaveSetup,
+    IReadOnlyList<OnboardingTutorialStepPresentation> TutorialSteps,
     IReadOnlyList<OnboardingSetupActionPresentation> SetupActions,
     IReadOnlyList<OnboardingSummaryRowPresentation> SummaryRows,
     IReadOnlyList<OnboardingSetupStagePresentation> Stages,
@@ -201,6 +208,7 @@ public static class OnboardingChecklistPresenter
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),
             status.CanCompleteSetup,
+            TutorialSteps(status),
             setupActions,
             summaryRows,
             stages,
@@ -209,6 +217,36 @@ public static class OnboardingChecklistPresenter
 
     private static OnboardingChecklistItemState StateFor(bool isReady) =>
         isReady ? OnboardingChecklistItemState.Ready : OnboardingChecklistItemState.NeedsAttention;
+
+    private static IReadOnlyList<OnboardingTutorialStepPresentation> TutorialSteps(OnboardingSetupStatus status)
+    {
+        var stepStatus = status.CanCompleteSetup && status.HasAudioInputChoices ? "Ready" : "Waiting";
+        var shortcut = string.IsNullOrWhiteSpace(status.PrimaryShortcut) ? "your shortcut" : status.PrimaryShortcut.Trim();
+
+        return
+        [
+            new OnboardingTutorialStepPresentation(
+                "1",
+                "Click a text field",
+                "Place the cursor where VoiceInk should insert your first dictation.",
+                stepStatus),
+            new OnboardingTutorialStepPresentation(
+                "2",
+                $"Press {shortcut}",
+                "Start recording with your primary shortcut.",
+                stepStatus),
+            new OnboardingTutorialStepPresentation(
+                "3",
+                "Speak a short phrase",
+                "Say a sentence you can easily recognize in the target field.",
+                stepStatus),
+            new OnboardingTutorialStepPresentation(
+                "4",
+                $"Press {shortcut} again",
+                "Stop recording and let VoiceInk insert the transcription.",
+                stepStatus)
+        ];
+    }
 
     private static string NextActionFor(OnboardingSetupStatus status)
     {
