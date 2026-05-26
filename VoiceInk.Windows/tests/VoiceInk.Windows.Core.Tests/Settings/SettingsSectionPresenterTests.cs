@@ -105,6 +105,13 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Included", row.Value);
                 Assert.Equal("Vocabulary words and replacements can be restored through settings backup or dictionary import/export.", row.Detail);
                 Assert.Equal("Portable", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Windows Profile", row.Title);
+                Assert.Equal("User-chosen file", row.Value);
+                Assert.Equal("Backups are written only when you choose an export location; VoiceInk does not roam settings automatically.", row.Detail);
+                Assert.Equal("Manual", row.StatusBadge);
             });
         Assert.Collection(
             presentation.DiagnosticsGuidanceRows,

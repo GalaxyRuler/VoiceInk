@@ -120,7 +120,12 @@ public static class SettingsSectionPresenter
             "Dictionary",
             "Included",
             "Vocabulary words and replacements can be restored through settings backup or dictionary import/export.",
-            "Portable")
+            "Portable"),
+        new(
+            "Windows Profile",
+            "User-chosen file",
+            "Backups are written only when you choose an export location; VoiceInk does not roam settings automatically.",
+            "Manual")
     ];
 
     private static IReadOnlyList<SettingsDiagnosticsGuidanceRow> DiagnosticsGuidanceRows() =>
