@@ -388,6 +388,7 @@ Cloud Transcription slice completed on 2026-05-25:
 - Added sanitized configuration, HTTP, and JSON response errors that do not include provider response bodies or API keys.
 - Added a router between local Whisper and OpenAI-compatible transcription so the existing UI workflows use the selected provider.
 - Added WinUI endpoint/model/key controls and key save/clear/status actions without storing API keys in JSON settings.
+- Added endpoint-query `response_format` support for OpenAI-compatible transcription so users can request formats such as `verbose_json` while preserving the default `json` behavior.
 
 Cloud provider preset slice completed on 2026-05-25:
 

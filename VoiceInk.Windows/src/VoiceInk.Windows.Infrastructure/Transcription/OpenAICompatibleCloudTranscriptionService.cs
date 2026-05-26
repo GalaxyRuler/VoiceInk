@@ -89,7 +89,10 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
         audioContent.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
         content.Add(audioContent, "file", Path.GetFileName(audio.FilePath));
         content.Add(new StringContent(options.CloudModel.Trim()), "model");
-        content.Add(new StringContent("json"), "response_format");
+        content.Add(
+            new StringContent(
+                QueryParameterValue(options.CloudEndpoint, "response_format") ?? "json"),
+            "response_format");
 
         if (!string.IsNullOrWhiteSpace(options.Language)
             && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase))
@@ -124,4 +127,31 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
 
     private static string SanitizedHttpError(HttpStatusCode statusCode) =>
         $"Cloud transcription provider returned HTTP {(int)statusCode}.";
+
+    private static string? QueryParameterValue(string endpoint, string name)
+    {
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var query = uri.Query.TrimStart('?');
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return null;
+        }
+
+        foreach (var part in query.Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var pieces = part.Split('=', 2);
+            if (!string.Equals(Uri.UnescapeDataString(pieces[0]), name, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            return pieces.Length == 2 ? Uri.UnescapeDataString(pieces[1]) : string.Empty;
+        }
+
+        return null;
+    }
 }
