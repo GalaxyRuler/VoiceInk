@@ -3,6 +3,8 @@ namespace VoiceInk.Windows.Core.Dictionary;
 public sealed record DictionaryPagePresentation(
     string HeroTitle,
     string HeroDescription,
+    string OverviewSummary,
+    string LocalBackupGuidance,
     string VocabularySectionTitle,
     string VocabularySectionDescription,
     string VocabularyCountLabel,
@@ -50,6 +52,8 @@ public static class DictionaryPagePresenter
         return new DictionaryPagePresentation(
             "Dictionary Settings",
             "Enhance VoiceInk's transcription accuracy by teaching it your vocabulary",
+            OverviewSummary(vocabularyRows.Length, replacementRows.Count(item => item.IsEnabled), replacementRows.Count(item => !item.IsEnabled)),
+            "Import and export use local VoiceInk dictionary JSON only.",
             "Vocabulary",
             "Add words to help VoiceInk recognize them properly. (Requires AI enhancement)",
             $"Vocabulary Words ({vocabularyRows.Length})",
@@ -69,4 +73,35 @@ public static class DictionaryPagePresenter
         var display = $"{replacement.OriginalText} -> {replacement.ReplacementText}";
         return replacement.IsEnabled ? display : $"{display} (disabled)";
     }
+
+    private static string OverviewSummary(
+        int vocabularyCount,
+        int enabledReplacementCount,
+        int disabledReplacementCount)
+    {
+        if (vocabularyCount == 0 && enabledReplacementCount == 0 && disabledReplacementCount == 0)
+        {
+            return "No dictionary entries yet. Add vocabulary for names, terms, and product words; add replacements for repeated misrecognitions.";
+        }
+
+        return $"{vocabularyCount} {Pluralize(vocabularyCount, "vocabulary word", "vocabulary words")} help AI enhancement and supported transcription prompts. "
+            + $"{ActiveReplacementText(enabledReplacementCount)}; {DisabledReplacementText(disabledReplacementCount)}.";
+    }
+
+    private static string ActiveReplacementText(int count) =>
+        count == 0
+            ? "No active replacements"
+            : count == 1
+                ? "1 active replacement runs after transcription"
+                : $"{count} active replacements run after transcription";
+
+    private static string DisabledReplacementText(int count) =>
+        count == 0
+            ? "no disabled replacements"
+            : count == 1
+                ? "1 disabled replacement is kept for later"
+                : $"{count} disabled replacements are kept for later";
+
+    private static string Pluralize(int count, string singular, string plural) =>
+        count == 1 ? singular : plural;
 }

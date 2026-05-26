@@ -591,7 +591,13 @@ Implemented core:
 - Dictionary-only JSON backup export/import using macOS backup field names for vocabulary and word replacements.
 - Quick-add dialog with Vocabulary and Word Replacement modes, opened by shell button or global shortcut.
 - A Core `DictionaryPagePresenter` with macOS-style hero/section labels, count labels, empty-state guidance, and enabled/disabled replacement row display.
-- Windows Dictionary page presentation text for `Dictionary Settings`, `Vocabulary`, `Word Replacements`, list counts, and empty guidance.
+- Windows Dictionary page presentation text for `Dictionary Settings`, `Vocabulary`, `Word Replacements`, list counts, overview guidance, local JSON import/export guidance, and empty guidance.
+
+Dictionary overview guidance slice completed on 2026-05-26:
+
+- Added presenter-backed overview copy explaining that vocabulary helps AI enhancement and supported transcription prompts, while active replacements run after transcription.
+- Added disabled replacement count guidance so saved-but-disabled rules are visible without implying they affect output.
+- Added local dictionary JSON import/export guidance to keep the open-source Windows flow explicit and local-only.
 
 Windows gaps:
 

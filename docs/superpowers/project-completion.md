@@ -23,7 +23,7 @@ VoiceInk Windows parity  [###################-] 95%
 | AI enhancement | 90% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 87% | `[#################---]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, and macOS-style page/empty-state copy exist. Deeper visual layout polish remains. |
-| Dictionary | 79% | `[################----]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, and disabled replacement row presentation exist. Remaining work is richer card/flow layout polish. |
+| Dictionary | 81% | `[################----]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, empty states, local overview guidance, and disabled replacement row presentation exist. Remaining work is richer card/flow layout polish. |
 | History | 90% | `[##################--]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish and analysis overlays. |
 | Metrics | 76% | `[###############-----]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, model performance, CSV export, and confirmed reset controls exist. Deeper model-performance panel styling and diagnostics expansion remain. |
 | Settings | 77% | `[###############-----]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, and macOS-style section descriptions exist. Deeper form layout polish remains. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows model library overview  [####################] 100%
+Windows dictionary overview guidance  [####################] 100%
 ```
 
 Completed:
 
-- Added a Core model library overview presenter for local model counts, recommended highlights, default model state, and stale-import cleanup guidance.
-- Wired the AI Models page to show the local library overview above catalog cards.
-- Added focused Core tests for empty, populated, and unavailable-import overview states.
+- Added Dictionary overview copy for vocabulary prompt usage, active replacements, disabled replacements, and local JSON import/export.
+- Wired the Dictionary page hero area to show the overview before import/export and quick-add actions.
+- Added focused Core tests for empty, active, and disabled replacement states.
 
 ## Near-Term Priority
 

@@ -29,6 +29,12 @@ public sealed class DictionaryPagePresenterTests
             presentation.HeroDescription);
         Assert.Equal("Vocabulary Words (2)", presentation.VocabularyCountLabel);
         Assert.Equal("Word Replacements (2)", presentation.ReplacementCountLabel);
+        Assert.Equal(
+            "2 vocabulary words help AI enhancement and supported transcription prompts. 1 active replacement runs after transcription; 1 disabled replacement is kept for later.",
+            presentation.OverviewSummary);
+        Assert.Equal(
+            "Import and export use local VoiceInk dictionary JSON only.",
+            presentation.LocalBackupGuidance);
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
         Assert.Equal(["VoiceInk", "AssemblyAI"], presentation.VocabularyRows.Select(row => row.DisplayText).ToArray());
@@ -55,11 +61,32 @@ public sealed class DictionaryPagePresenterTests
 
         Assert.Equal("Vocabulary Words (0)", presentation.VocabularyCountLabel);
         Assert.Equal("Word Replacements (0)", presentation.ReplacementCountLabel);
+        Assert.Equal(
+            "No dictionary entries yet. Add vocabulary for names, terms, and product words; add replacements for repeated misrecognitions.",
+            presentation.OverviewSummary);
+        Assert.Equal(
+            "Import and export use local VoiceInk dictionary JSON only.",
+            presentation.LocalBackupGuidance);
         Assert.Equal("Add words to help VoiceInk recognize them properly.", presentation.VocabularyEmptyText);
         Assert.Equal(
             "Define word replacements to automatically replace specific words or phrases.",
             presentation.ReplacementEmptyText);
         Assert.Empty(presentation.VocabularyRows);
         Assert.Empty(presentation.ReplacementRows);
+    }
+
+    [Fact]
+    public void Present_AllReplacementsDisabled_ShowsDisabledGuidance()
+    {
+        var replacements = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "Voice ink", "VoiceInk", Now, false)
+        };
+
+        var presentation = DictionaryPagePresenter.Present([], replacements);
+
+        Assert.Equal(
+            "0 vocabulary words help AI enhancement and supported transcription prompts. No active replacements; 1 disabled replacement is kept for later.",
+            presentation.OverviewSummary);
     }
 }
