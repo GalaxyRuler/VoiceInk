@@ -20,7 +20,8 @@ public static class TrayShellPresenter
             ToggleRecordingLabel(dictationState),
             canToggleRecording,
             CanQuickAddDictionary: canUseOperationalCommands && dictationState == DictationState.Idle,
-            CanOpenHistory: canUseOperationalCommands);
+            CanOpenHistory: canUseOperationalCommands,
+            CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle);
     }
 
     private static string StatusText(

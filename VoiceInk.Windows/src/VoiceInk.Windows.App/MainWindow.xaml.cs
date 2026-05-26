@@ -434,6 +434,151 @@ public sealed partial class MainWindow : Window
         await OpenHistoryWindowAsync();
     }
 
+    private async void TrayIconService_SelectTranscriptionModelRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        var selectedModel = modelChoices.FirstOrDefault(model =>
+            string.Equals(model.Path, e.Id, StringComparison.OrdinalIgnoreCase));
+        if (selectedModel is null)
+        {
+            RefreshUiFromControllerState("Tray model selection unavailable");
+            return;
+        }
+
+        await UseLocalModelPathFromTrayAsync(selectedModel.Path, selectedModel.DisplayName);
+    }
+
+    private async void TrayIconService_SelectTranscriptionProviderRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        if (string.Equals(e.Id, "local", StringComparison.OrdinalIgnoreCase))
+        {
+            TranscriptionProviderComboBox.SelectedIndex = 0;
+        }
+        else
+        {
+            TranscriptionProviderComboBox.SelectedIndex = 1;
+            SelectCloudTranscriptionPreset(e.Id);
+            ApplySelectedCloudTranscriptionPreset(fillConfiguration: true);
+        }
+
+        await ApplyTranscriptionProviderSettingsAsync();
+    }
+
+    private async void TrayIconService_ToggleEnhancementRequested(object? sender, EventArgs e)
+    {
+        EnhancementEnabledCheckBox.IsChecked = EnhancementEnabledCheckBox.IsChecked != true;
+        await SaveSettingsFromTrayAsync(EnhancementEnabledCheckBox.IsChecked == true
+            ? "AI Enhancement enabled"
+            : "AI Enhancement disabled");
+    }
+
+    private async void TrayIconService_SelectEnhancementPromptRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        if (!Guid.TryParse(e.Id, out var promptId))
+        {
+            RefreshUiFromControllerState("Tray prompt selection unavailable");
+            return;
+        }
+
+        SelectEnhancementPrompt(promptId);
+        await SaveSettingsFromTrayAsync($"Prompt: {SelectedEnhancementPrompt()?.Title ?? "Default"}");
+    }
+
+    private async void TrayIconService_SelectEnhancementProviderRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        SelectEnhancementPreset(e.Id);
+        ApplySelectedEnhancementPreset(fillConfiguration: true);
+        await ApplyEnhancementSettingsAsync();
+    }
+
+    private async void TrayIconService_SelectLanguageRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        var selectedIndex = languageChoices
+            .ToList()
+            .FindIndex(choice => string.Equals(choice.Code, e.Id, StringComparison.OrdinalIgnoreCase));
+        if (selectedIndex < 0)
+        {
+            RefreshUiFromControllerState("Tray language selection unavailable");
+            return;
+        }
+
+        LanguageComboBox.SelectedIndex = selectedIndex;
+        await SaveSettingsFromTrayAsync($"Language: {languageChoices[selectedIndex].DisplayName}");
+    }
+
+    private async void TrayIconService_SelectAudioInputRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        if (string.Equals(e.Id, AudioInputModeSettings.SystemDefault, StringComparison.OrdinalIgnoreCase))
+        {
+            AudioInputModeComboBox.SelectedIndex = AudioInputModeToSelectedIndex(AudioInputModeSettings.SystemDefault);
+            AudioInputComboBox.SelectedIndex = audioInputChoices.ToList().FindIndex(choice => choice.DeviceNumber is null);
+            await ApplyAudioInputAsync();
+            return;
+        }
+
+        if (!int.TryParse(e.Id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var deviceNumber))
+        {
+            RefreshUiFromControllerState("Tray audio input selection unavailable");
+            return;
+        }
+
+        var selectedIndex = audioInputChoices
+            .ToList()
+            .FindIndex(choice => choice.DeviceNumber == deviceNumber);
+        if (selectedIndex < 0)
+        {
+            RefreshUiFromControllerState("Tray audio input is no longer available");
+            return;
+        }
+
+        AudioInputModeComboBox.SelectedIndex = AudioInputModeToSelectedIndex(AudioInputModeSettings.Custom);
+        AudioInputComboBox.SelectedIndex = selectedIndex;
+        await ApplyAudioInputAsync();
+    }
+
+    private async void TrayIconService_SelectPowerModeRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        selectedPowerModeRuleId = string.IsNullOrWhiteSpace(e.Id)
+            ? null
+            : Guid.TryParse(e.Id, out var ruleId)
+                ? ruleId
+                : selectedPowerModeRuleId;
+        RefreshPowerModeRulesListView(selectedPowerModeRuleId);
+        var selectedRule = selectedPowerModeRuleId is { } selectedId
+            ? powerModeRules.FirstOrDefault(rule => rule.Id == selectedId)
+            : null;
+        await SaveSettingsFromTrayAsync(selectedRule is null
+            ? "Power Mode: Auto"
+            : $"Power Mode: {PowerModeDisplay(selectedRule.Name, selectedRule.Emoji)}");
+    }
+
+    private async void TrayIconService_ToggleClipboardContextRequested(object? sender, EventArgs e)
+    {
+        UseClipboardContextCheckBox.IsChecked = UseClipboardContextCheckBox.IsChecked != true;
+        await SaveSettingsFromTrayAsync(UseClipboardContextCheckBox.IsChecked == true
+            ? "Clipboard Context enabled"
+            : "Clipboard Context disabled");
+    }
+
+    private async void TrayIconService_ToggleOcrContextRequested(object? sender, EventArgs e)
+    {
+        UseOcrContextCheckBox.IsChecked = UseOcrContextCheckBox.IsChecked != true;
+        await SaveSettingsFromTrayAsync(UseOcrContextCheckBox.IsChecked == true
+            ? "Context Awareness enabled"
+            : "Context Awareness disabled");
+    }
+
+    private void TrayIconService_OpenModelsRequested(object? sender, EventArgs e) =>
+        RestoreAndShowSection(ModelsSectionTag);
+
+    private void TrayIconService_OpenEnhancementRequested(object? sender, EventArgs e) =>
+        RestoreAndShowSection(EnhancementSectionTag);
+
+    private void TrayIconService_OpenAudioInputRequested(object? sender, EventArgs e) =>
+        RestoreAndShowSection(AudioInputSectionTag);
+
+    private void TrayIconService_OpenSettingsRequested(object? sender, EventArgs e) =>
+        RestoreAndShowSection(SettingsSectionTag);
+
     private void TrayIconService_ExitRequested(object? sender, EventArgs e)
     {
         exitRequested = true;
@@ -3190,6 +3335,22 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState($"Default model: {displayName}");
     }
 
+    private async Task UseLocalModelPathFromTrayAsync(string modelPath, string displayName)
+    {
+        try
+        {
+            await UseLocalModelPathAsync(modelPath, displayName);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Tray model selection failed: {ex.Message}");
+        }
+    }
+
     private async Task DownloadSelectedCatalogModelAsync()
     {
         var selectedModel = SelectedCatalogModelItem();
@@ -5520,6 +5681,13 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
+    private void RestoreAndShowSection(string sectionTag)
+    {
+        RestoreAndActivateWindow();
+        ShowShellSection(sectionTag);
+        RefreshUiFromControllerState();
+    }
+
     private async Task ApplyTranscriptionProviderSettingsAsync()
     {
         if (!settingsLoaded || IsOperationActive())
@@ -6372,6 +6540,28 @@ public sealed partial class MainWindow : Window
             }
 
             throw;
+        }
+    }
+
+    private async Task SaveSettingsFromTrayAsync(string status)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(status);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Tray setting update failed: {ex.Message}");
         }
     }
 
@@ -8354,6 +8544,82 @@ public sealed partial class MainWindow : Window
             operationActive,
             displayStatus);
         trayIconService?.UpdateState(trayState);
+        trayIconService?.UpdateQuickSettings(BuildTrayQuickSettingsState());
+    }
+
+    private TrayQuickSettingsState BuildTrayQuickSettingsState()
+    {
+        if (!settingsLoaded)
+        {
+            return TrayQuickSettingsState.Empty;
+        }
+
+        var selectedModelPath = ModelPathTextBox.Text.Trim();
+        var selectedCloudProviderId = SelectedCloudTranscriptionProviderId();
+        var selectedEnhancementProviderId = SelectedEnhancementProviderId();
+        var selectedPromptId = SelectedEnhancementPromptId();
+        var selectedLanguage = SelectedLanguageCode();
+        var selectedAudioDeviceNumber = SelectedAudioInputDeviceNumber();
+        var selectedAudioMode = SelectedAudioInputMode();
+
+        return new TrayQuickSettingsState(
+            TranscriptionModels: modelChoices
+                .Select(model => new TrayMenuOption(
+                    model.Path,
+                    model.DisplayName,
+                    string.Equals(model.Path, selectedModelPath, StringComparison.OrdinalIgnoreCase)))
+                .ToArray(),
+            TranscriptionProviders:
+            [
+                new TrayMenuOption(
+                    "local",
+                    "Local Whisper",
+                    SelectedTranscriptionProvider() == TranscriptionProviderKind.LocalWhisper),
+                .. TranscriptionProviderPresetCatalog.All.Select(provider => new TrayMenuOption(
+                    provider.Id,
+                    provider.DisplayName,
+                    SelectedTranscriptionProvider() == TranscriptionProviderKind.OpenAICompatible
+                        && string.Equals(provider.Id, selectedCloudProviderId, StringComparison.OrdinalIgnoreCase)))
+            ],
+            EnhancementPrompts: enhancementPrompts
+                .Select(prompt => new TrayMenuOption(
+                    prompt.Id.ToString(),
+                    prompt.Title,
+                    prompt.Id == selectedPromptId))
+                .ToArray(),
+            EnhancementProviders: EnhancementProviderPresetCatalog.All
+                .Select(provider => new TrayMenuOption(
+                    provider.Id,
+                    provider.DisplayName,
+                    string.Equals(provider.Id, selectedEnhancementProviderId, StringComparison.OrdinalIgnoreCase)))
+                .ToArray(),
+            Languages: languageChoices
+                .Select(choice => new TrayMenuOption(
+                    choice.Code,
+                    choice.DisplayName,
+                    string.Equals(choice.Code, selectedLanguage, StringComparison.OrdinalIgnoreCase)))
+                .ToArray(),
+            AudioInputs: audioInputChoices
+                .Select(choice => new TrayMenuOption(
+                    choice.DeviceNumber?.ToString(CultureInfo.InvariantCulture) ?? AudioInputModeSettings.SystemDefault,
+                    choice.DisplayText,
+                    choice.DeviceNumber == selectedAudioDeviceNumber
+                        || (choice.DeviceNumber is null
+                            && selectedAudioMode == AudioInputModeSettings.SystemDefault)))
+                .ToArray(),
+            PowerModes:
+            [
+                new TrayMenuOption(string.Empty, "Auto", selectedPowerModeRuleId is null),
+                .. powerModeRules
+                    .Where(rule => rule.IsEnabled)
+                    .Select(rule => new TrayMenuOption(
+                        rule.Id.ToString(),
+                        PowerModeDisplay(rule.Name, rule.Emoji),
+                        rule.Id == selectedPowerModeRuleId))
+            ],
+            IsEnhancementEnabled: EnhancementEnabledCheckBox.IsChecked == true,
+            UseClipboardContext: UseClipboardContextCheckBox.IsChecked == true,
+            UseOcrContext: UseOcrContextCheckBox.IsChecked == true);
     }
 
     private static string StateToStatusText(DictationState state) =>
@@ -8803,6 +9069,20 @@ public sealed partial class MainWindow : Window
         trayIconService.ShowRequested += TrayIconService_ShowRequested;
         trayIconService.HideRequested += TrayIconService_HideRequested;
         trayIconService.ToggleRecordingRequested += TrayIconService_ToggleRecordingRequested;
+        trayIconService.SelectTranscriptionModelRequested += TrayIconService_SelectTranscriptionModelRequested;
+        trayIconService.SelectTranscriptionProviderRequested += TrayIconService_SelectTranscriptionProviderRequested;
+        trayIconService.ToggleEnhancementRequested += TrayIconService_ToggleEnhancementRequested;
+        trayIconService.SelectEnhancementPromptRequested += TrayIconService_SelectEnhancementPromptRequested;
+        trayIconService.SelectEnhancementProviderRequested += TrayIconService_SelectEnhancementProviderRequested;
+        trayIconService.SelectLanguageRequested += TrayIconService_SelectLanguageRequested;
+        trayIconService.SelectAudioInputRequested += TrayIconService_SelectAudioInputRequested;
+        trayIconService.SelectPowerModeRequested += TrayIconService_SelectPowerModeRequested;
+        trayIconService.ToggleClipboardContextRequested += TrayIconService_ToggleClipboardContextRequested;
+        trayIconService.ToggleOcrContextRequested += TrayIconService_ToggleOcrContextRequested;
+        trayIconService.OpenModelsRequested += TrayIconService_OpenModelsRequested;
+        trayIconService.OpenEnhancementRequested += TrayIconService_OpenEnhancementRequested;
+        trayIconService.OpenAudioInputRequested += TrayIconService_OpenAudioInputRequested;
+        trayIconService.OpenSettingsRequested += TrayIconService_OpenSettingsRequested;
         trayIconService.QuickAddDictionaryRequested += TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested += TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested += TrayIconService_ExitRequested;
@@ -8860,6 +9140,20 @@ public sealed partial class MainWindow : Window
         trayIconService.ShowRequested -= TrayIconService_ShowRequested;
         trayIconService.HideRequested -= TrayIconService_HideRequested;
         trayIconService.ToggleRecordingRequested -= TrayIconService_ToggleRecordingRequested;
+        trayIconService.SelectTranscriptionModelRequested -= TrayIconService_SelectTranscriptionModelRequested;
+        trayIconService.SelectTranscriptionProviderRequested -= TrayIconService_SelectTranscriptionProviderRequested;
+        trayIconService.ToggleEnhancementRequested -= TrayIconService_ToggleEnhancementRequested;
+        trayIconService.SelectEnhancementPromptRequested -= TrayIconService_SelectEnhancementPromptRequested;
+        trayIconService.SelectEnhancementProviderRequested -= TrayIconService_SelectEnhancementProviderRequested;
+        trayIconService.SelectLanguageRequested -= TrayIconService_SelectLanguageRequested;
+        trayIconService.SelectAudioInputRequested -= TrayIconService_SelectAudioInputRequested;
+        trayIconService.SelectPowerModeRequested -= TrayIconService_SelectPowerModeRequested;
+        trayIconService.ToggleClipboardContextRequested -= TrayIconService_ToggleClipboardContextRequested;
+        trayIconService.ToggleOcrContextRequested -= TrayIconService_ToggleOcrContextRequested;
+        trayIconService.OpenModelsRequested -= TrayIconService_OpenModelsRequested;
+        trayIconService.OpenEnhancementRequested -= TrayIconService_OpenEnhancementRequested;
+        trayIconService.OpenAudioInputRequested -= TrayIconService_OpenAudioInputRequested;
+        trayIconService.OpenSettingsRequested -= TrayIconService_OpenSettingsRequested;
         trayIconService.QuickAddDictionaryRequested -= TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested -= TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested -= TrayIconService_ExitRequested;

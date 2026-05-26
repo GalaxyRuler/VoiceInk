@@ -20,6 +20,7 @@ public sealed class TrayShellPresenterTests
         Assert.True(state.CanToggleRecording);
         Assert.True(state.CanQuickAddDictionary);
         Assert.True(state.CanOpenHistory);
+        Assert.True(state.CanUseQuickSettings);
     }
 
     [Fact]
@@ -36,6 +37,7 @@ public sealed class TrayShellPresenterTests
         Assert.True(state.CanToggleRecording);
         Assert.False(state.CanQuickAddDictionary);
         Assert.True(state.CanOpenHistory);
+        Assert.False(state.CanUseQuickSettings);
     }
 
     [Fact]
@@ -52,6 +54,7 @@ public sealed class TrayShellPresenterTests
         Assert.False(state.CanToggleRecording);
         Assert.False(state.CanQuickAddDictionary);
         Assert.False(state.CanOpenHistory);
+        Assert.False(state.CanUseQuickSettings);
     }
 
     [Fact]
@@ -81,5 +84,6 @@ public sealed class TrayShellPresenterTests
         Assert.False(state.CanToggleRecording);
         Assert.False(state.CanQuickAddDictionary);
         Assert.False(state.CanOpenHistory);
+        Assert.False(state.CanUseQuickSettings);
     }
 }

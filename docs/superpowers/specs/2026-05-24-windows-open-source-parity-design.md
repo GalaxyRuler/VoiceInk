@@ -107,24 +107,28 @@ macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarVie
 Implemented:
 
 - Sidebar navigation with Dashboard, Transcribe Audio, History, AI Models, Enhancement, Audio Input, Dictionary, Settings, and About / Open Source sections.
-- Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk commands.
+- Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, model/provider/enhancement/language/audio/context/Power Mode quick-setting submenus, Quick Add to Dictionary, History, settings routes, and Quit VoiceInk commands.
 - Close-to-tray behavior for the main window, with explicit Quit from the tray.
 - Tray state presenter for recording/busy/loading labels and enabled states.
 - About / Open Source section with version/source information and local-only diagnostics folder/summary actions.
 
 Windows gaps:
 
-- Dedicated settings pages beyond grouped existing shortcut/cleanup controls.
-- Dedicated multi-window History surface.
-- Power Mode and Permissions sections.
-- Tray submenus for model/provider/enhancement/language/audio/context/settings once those Windows subsystems exist.
+- Remaining shell work is richer visual polish and rare tray edge-case recovery.
 
 Tray-shell slice completed on 2026-05-24:
 
 - Native Windows tray icon with menu entries for Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk.
 - Menu state synchronized with dictation state so recording and busy states use correct labels/enabled states.
 - macOS commercial updater/support items omitted. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray shell.
-- Model/provider/enhancement/language/audio context submenus remain later work until those Windows subsystems and view-models exist.
+- Model/provider/enhancement/language/audio context submenus were deferred until those Windows subsystems and view-models existed.
+
+Rich tray menu slice completed on 2026-05-26:
+
+- Added tray submenus for transcription model, transcription provider, language, AI prompt, AI provider, Power Mode, and audio input.
+- Added tray toggles for AI Enhancement, Clipboard Context, and Context Awareness.
+- Added tray routes to Manage Models, Enhancement Settings, Audio Input Settings, and Settings.
+- Disabled quick-setting submenus while settings are loading, recording is active, or post-recording work is busy.
 
 Navigation-settings-shell slice completed on 2026-05-25:
 

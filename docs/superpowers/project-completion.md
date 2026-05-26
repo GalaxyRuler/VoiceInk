@@ -15,7 +15,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 88% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
-| Shell and tray | 78% | `[################----]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, and dedicated History window routing are in place. Rich tray submenus remain. |
+| Shell and tray | 86% | `[#################---]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 97% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, and read-only recorder fields with explicit Record buttons. Remaining work is rare Windows-reserved-key conflict recovery. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -34,14 +34,14 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows prompt metadata editor  [####################] 100%
+Windows rich tray menu  [####################] 100%
 ```
 
 Completed:
 
-- Added prompt icon and description fields to the Enhancement prompt editor.
-- Saved custom prompt metadata through the existing prompt persistence path.
-- Kept predefined prompt metadata read-only while preserving editable trigger words.
+- Added macOS-style quick-setting submenus to the Windows tray icon.
+- Routed tray selections through existing settings, provider, prompt, audio, language, Power Mode, and warmup paths.
+- Kept commercial updater/support menu items omitted and replaced with local open-source settings routes.
 
 ## Near-Term Priority
 

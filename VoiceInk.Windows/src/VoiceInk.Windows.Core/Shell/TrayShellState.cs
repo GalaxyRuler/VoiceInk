@@ -5,4 +5,5 @@ public sealed record TrayShellState(
     string ToggleRecordingLabel,
     bool CanToggleRecording,
     bool CanQuickAddDictionary,
-    bool CanOpenHistory);
+    bool CanOpenHistory,
+    bool CanUseQuickSettings);
