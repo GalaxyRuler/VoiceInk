@@ -10,5 +10,6 @@ public enum GlobalShortcutAction
     OpenHistoryWindow,
     QuickAddToDictionary,
     ToggleEnhancement,
-    CyclePowerMode
+    CyclePowerMode,
+    SelectPowerModeRule
 }

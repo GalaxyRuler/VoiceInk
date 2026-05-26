@@ -1,3 +1,6 @@
 namespace VoiceInk.Windows.Core.Shortcuts;
 
-public sealed record GlobalShortcutRegistration(GlobalShortcutAction Action, GlobalShortcut Shortcut);
+public sealed record GlobalShortcutRegistration(
+    GlobalShortcutAction Action,
+    GlobalShortcut Shortcut,
+    Guid? PowerModeRuleId = null);

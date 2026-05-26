@@ -765,6 +765,9 @@ public sealed partial class MainWindow : Window
                 case GlobalShortcutAction.CyclePowerMode:
                     await CyclePowerModeAsync();
                     break;
+                case GlobalShortcutAction.SelectPowerModeRule:
+                    await SelectPowerModeRuleShortcutAsync(e.PowerModeRuleId);
+                    break;
                 default:
                     await ToggleCurrentRecordingAsync();
                     break;
@@ -5220,6 +5223,37 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task SelectPowerModeRuleShortcutAsync(Guid? ruleId)
+    {
+        if (!settingsLoaded || IsOperationActive() || ruleId is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var selectedRule = powerModeRules.FirstOrDefault(rule => rule.Id == ruleId.Value && rule.IsEnabled);
+            if (selectedRule is null)
+            {
+                RefreshUiFromControllerState("Power Mode shortcut target unavailable");
+                return;
+            }
+
+            selectedPowerModeRuleId = selectedRule.Id;
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshPowerModeRulesListView(selectedPowerModeRuleId);
+            RefreshUiFromControllerState($"Power Mode: {PowerModeDisplay(selectedRule.Name, selectedRule.Emoji)}");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Power Mode shortcut failed: {ex.Message}");
+        }
+    }
+
     private async Task SaveEnhancementKeyAsync()
     {
         if (!settingsLoaded || IsOperationActive(includeCurrentEnhancementKeySave: false))
@@ -6209,6 +6243,7 @@ public sealed partial class MainWindow : Window
         };
         PowerModeAutoSendComboBox.SelectedIndex = PowerModeAutoSendKeyPresenter.SelectedIndexFor(
             rule?.AutoSendKey ?? PowerModeAutoSendKey.None);
+        PowerModeShortcutTextBox.Text = rule?.Shortcut ?? string.Empty;
     }
 
     private PowerModeRule PowerModeRuleFromForm(PowerModeRule? existing)
@@ -6233,7 +6268,8 @@ public sealed partial class MainWindow : Window
             RemoveFillerWordsOverride = PowerModeRemoveFillerWordsCheckBox.IsChecked,
             LowercaseTranscriptionOverride = PowerModeLowercaseCheckBox.IsChecked,
             PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode(),
-            AutoSendKey = PowerModeAutoSendKeyPresenter.KeyForSelectedIndex(PowerModeAutoSendComboBox.SelectedIndex)
+            AutoSendKey = PowerModeAutoSendKeyPresenter.KeyForSelectedIndex(PowerModeAutoSendComboBox.SelectedIndex),
+            Shortcut = PowerModeShortcutTextBox.Text.Trim()
         };
     }
 
@@ -7046,6 +7082,7 @@ public sealed partial class MainWindow : Window
         PowerModeLowercaseCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModePunctuationCleanupComboBox.IsEnabled = powerModeControlsEnabled;
         PowerModeAutoSendComboBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeShortcutTextBox.IsEnabled = powerModeControlsEnabled;
         AddPowerModeRuleButton.IsEnabled = powerModeControlsEnabled;
         UpdatePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;
         RemovePowerModeRuleButton.IsEnabled = powerModeControlsEnabled && SelectedPowerModeRule() is not null;

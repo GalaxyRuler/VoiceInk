@@ -15,7 +15,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private const uint ModNoRepeat = 0x4000;
 
     private readonly HotkeyWindow hotkeyWindow;
-    private readonly Dictionary<int, GlobalShortcutAction> registeredActions = [];
+    private readonly Dictionary<int, GlobalShortcutRegistration> registeredActions = [];
     private bool disposed;
 
     public GlobalHotkeyService(IntPtr windowHandle)
@@ -56,7 +56,7 @@ public sealed class GlobalHotkeyService : IDisposable
                         error);
                 }
 
-                registeredActions.Add(id, registration.Action);
+                registeredActions.Add(id, registration);
             }
         }
         catch
@@ -79,9 +79,9 @@ public sealed class GlobalHotkeyService : IDisposable
         disposed = true;
     }
 
-    private void OnHotkeyPressed(GlobalShortcutAction action)
+    private void OnHotkeyPressed(GlobalShortcutRegistration registration)
     {
-        HotkeyPressed?.Invoke(this, new GlobalHotkeyPressedEventArgs(action));
+        HotkeyPressed?.Invoke(this, new GlobalHotkeyPressedEventArgs(registration.Action, registration.PowerModeRuleId));
     }
 
     private void UnregisterHotkeys()
@@ -126,9 +126,9 @@ public sealed class GlobalHotkeyService : IDisposable
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WmHotkey
-                && owner.registeredActions.TryGetValue(m.WParam.ToInt32(), out var action))
+                && owner.registeredActions.TryGetValue(m.WParam.ToInt32(), out var registration))
             {
-                owner.OnHotkeyPressed(action);
+                owner.OnHotkeyPressed(registration);
                 return;
             }
 
@@ -137,7 +137,10 @@ public sealed class GlobalHotkeyService : IDisposable
     }
 }
 
-public sealed class GlobalHotkeyPressedEventArgs(GlobalShortcutAction action) : EventArgs
+public sealed class GlobalHotkeyPressedEventArgs(
+    GlobalShortcutAction action,
+    Guid? powerModeRuleId = null) : EventArgs
 {
     public GlobalShortcutAction Action { get; } = action;
+    public Guid? PowerModeRuleId { get; } = powerModeRuleId;
 }

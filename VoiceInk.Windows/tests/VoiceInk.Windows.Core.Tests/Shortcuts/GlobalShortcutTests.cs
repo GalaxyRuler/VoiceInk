@@ -1,5 +1,6 @@
 using VoiceInk.Windows.Core.Settings;
 using VoiceInk.Windows.Core.Shortcuts;
+using VoiceInk.Windows.Core.PowerMode;
 using Xunit;
 
 namespace VoiceInk.Windows.Core.Tests.Shortcuts;
@@ -328,5 +329,65 @@ public sealed class GlobalShortcutTests
         Assert.Contains(
             result.Errors,
             item => item == "Cycle Power Mode already uses Ctrl+Alt+Space.");
+    }
+
+    [Fact]
+    public void BuildRegistrations_AddsEnabledPowerModeRuleShortcutsWithRulePayload()
+    {
+        var ruleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = ruleId,
+                    Name = "Chat",
+                    IsEnabled = true,
+                    Shortcut = "Ctrl+Alt+1"
+                },
+                new PowerModeRule
+                {
+                    Name = "Disabled",
+                    IsEnabled = false,
+                    Shortcut = "Ctrl+Alt+2"
+                }
+            ]
+        });
+
+        Assert.Empty(result.Errors);
+        Assert.Collection(
+            result.Registrations,
+            item => Assert.Equal(GlobalShortcutAction.ToggleRecording, item.Action),
+            item =>
+            {
+                Assert.Equal(GlobalShortcutAction.SelectPowerModeRule, item.Action);
+                Assert.Equal(ruleId, item.PowerModeRuleId);
+                Assert.Equal("Ctrl+Alt+1", item.Shortcut.DisplayText);
+            });
+    }
+
+    [Fact]
+    public void BuildRegistrations_ReportsDuplicatePowerModeRuleShortcutAssignment()
+    {
+        var result = GlobalShortcutSettings.BuildRegistrations(new AppSettings
+        {
+            Hotkey = "Ctrl+Alt+Space",
+            PasteLastTranscriptionHotkey = "Ctrl+Alt+1",
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    IsEnabled = true,
+                    Shortcut = "Ctrl+Alt+1"
+                }
+            ]
+        });
+
+        Assert.Contains(
+            result.Errors,
+            item => item == "Power Mode: Chat already uses Ctrl+Alt+1.");
     }
 }

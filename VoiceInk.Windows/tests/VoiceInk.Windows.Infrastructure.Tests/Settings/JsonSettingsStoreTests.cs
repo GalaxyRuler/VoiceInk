@@ -102,6 +102,15 @@ public sealed class JsonSettingsStoreTests
                     "C:\\Models\\ggml-base.en.bin",
                     "ggml-base.en",
                     DateTimeOffset.Parse("2026-05-24T12:00:00Z"))
+            ],
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Chat",
+                    IsEnabled = true,
+                    Shortcut = "Ctrl+Alt+1"
+                }
             ]
         };
 

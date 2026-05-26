@@ -90,6 +90,18 @@ public static class GlobalShortcutSettings
             registrations,
             errors,
             usedShortcuts);
+        foreach (var rule in settings.PowerModeRules.Where(rule => rule.IsEnabled))
+        {
+            AddRegistration(
+                rule.Shortcut,
+                GlobalShortcutAction.SelectPowerModeRule,
+                $"Power Mode: {PowerModeRuleDisplayName(rule)}",
+                required: false,
+                registrations,
+                errors,
+                usedShortcuts,
+                rule.Id);
+        }
 
         return new GlobalShortcutRegistrationResult(registrations, errors);
     }
@@ -101,7 +113,8 @@ public static class GlobalShortcutSettings
         bool required,
         ICollection<GlobalShortcutRegistration> registrations,
         ICollection<string> errors,
-        IDictionary<string, string> usedShortcuts)
+        IDictionary<string, string> usedShortcuts,
+        Guid? powerModeRuleId = null)
     {
         if (string.IsNullOrWhiteSpace(shortcutText))
         {
@@ -126,6 +139,9 @@ public static class GlobalShortcutSettings
         }
 
         usedShortcuts.Add(shortcut.DisplayText, displayName);
-        registrations.Add(new GlobalShortcutRegistration(action, shortcut));
+        registrations.Add(new GlobalShortcutRegistration(action, shortcut, powerModeRuleId));
     }
+
+    private static string PowerModeRuleDisplayName(PowerMode.PowerModeRule rule) =>
+        string.IsNullOrWhiteSpace(rule.Name) ? "New Power Mode" : rule.Name.Trim();
 }

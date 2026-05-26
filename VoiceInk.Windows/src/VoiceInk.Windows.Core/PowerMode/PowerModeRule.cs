@@ -22,4 +22,5 @@ public sealed record PowerModeRule
     public PunctuationCleanupMode? PunctuationCleanupModeOverride { get; init; }
     public bool? LowercaseTranscriptionOverride { get; init; }
     public PowerModeAutoSendKey AutoSendKey { get; init; } = PowerModeAutoSendKey.None;
+    public string Shortcut { get; init; } = string.Empty;
 }
