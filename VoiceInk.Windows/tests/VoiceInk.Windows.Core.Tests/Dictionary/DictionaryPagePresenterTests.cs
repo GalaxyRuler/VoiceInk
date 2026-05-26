@@ -65,6 +65,36 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Import and export stay on this Windows profile unless you choose a file.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
             });
+        Assert.Collection(
+            presentation.RuleGuidanceRows,
+            row =>
+            {
+                Assert.Equal("Vocabulary", row.Title);
+                Assert.Equal("Prompt support", row.Value);
+                Assert.Equal("Vocabulary words are included in enhancement and supported transcription prompts.", row.Detail);
+                Assert.Equal("Context", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Enabled Replacements", row.Title);
+                Assert.Equal("After transcription", row.Value);
+                Assert.Equal("Enabled replacements run after transcription cleanup and before insertion.", row.Detail);
+                Assert.Equal("Automatic", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Disabled Replacements", row.Title);
+                Assert.Equal("Saved only", row.Value);
+                Assert.Equal("Disabled replacements stay in the local dictionary and are skipped until re-enabled.", row.Detail);
+                Assert.Equal("Paused", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Import / Export", row.Title);
+                Assert.Equal("Local JSON", row.Value);
+                Assert.Equal("Dictionary import and export use local files and do not sync automatically.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
         Assert.Equal(["VoiceInk", "AssemblyAI"], presentation.VocabularyRows.Select(row => row.DisplayText).ToArray());

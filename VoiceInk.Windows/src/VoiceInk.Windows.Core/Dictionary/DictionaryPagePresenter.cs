@@ -6,6 +6,7 @@ public sealed record DictionaryPagePresentation(
     string OverviewSummary,
     string LocalBackupGuidance,
     IReadOnlyList<DictionarySummaryRow> SummaryRows,
+    IReadOnlyList<DictionaryRuleGuidanceRow> RuleGuidanceRows,
     string VocabularySectionTitle,
     string VocabularySectionDescription,
     string VocabularyCountLabel,
@@ -25,6 +26,12 @@ public sealed record DictionaryVocabularyRow(
     string StatusBadge);
 
 public sealed record DictionarySummaryRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge);
+
+public sealed record DictionaryRuleGuidanceRow(
     string Title,
     string Value,
     string Detail,
@@ -78,6 +85,7 @@ public static class DictionaryPagePresenter
                 vocabularyRows.Length,
                 replacementRows.Count(item => item.IsEnabled),
                 replacementRows.Count(item => !item.IsEnabled)),
+            RuleGuidanceRows(),
             "Vocabulary",
             "Add words to help VoiceInk recognize them properly. (Requires AI enhancement)",
             $"Vocabulary Words ({vocabularyRows.Length})",
@@ -116,6 +124,30 @@ public static class DictionaryPagePresenter
             "Local Backup",
             "JSON",
             "Import and export stay on this Windows profile unless you choose a file.",
+            "Local")
+    ];
+
+    private static IReadOnlyList<DictionaryRuleGuidanceRow> RuleGuidanceRows() =>
+    [
+        new(
+            "Vocabulary",
+            "Prompt support",
+            "Vocabulary words are included in enhancement and supported transcription prompts.",
+            "Context"),
+        new(
+            "Enabled Replacements",
+            "After transcription",
+            "Enabled replacements run after transcription cleanup and before insertion.",
+            "Automatic"),
+        new(
+            "Disabled Replacements",
+            "Saved only",
+            "Disabled replacements stay in the local dictionary and are skipped until re-enabled.",
+            "Paused"),
+        new(
+            "Import / Export",
+            "Local JSON",
+            "Dictionary import and export use local files and do not sync automatically.",
             "Local")
     ];
 
