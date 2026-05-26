@@ -25,7 +25,10 @@ This slice implements only those grounded probe shapes and returns a clear "not 
   - Mistral;
   - xAI;
   - Deepgram;
-  - AssemblyAI.
+  - AssemblyAI;
+  - ElevenLabs;
+  - Soniox;
+  - Gemini.
 - Return sanitized success/failure messages that do not include response bodies or API keys.
 - Add a `Test Provider` control in AI Models near cloud transcription settings.
 

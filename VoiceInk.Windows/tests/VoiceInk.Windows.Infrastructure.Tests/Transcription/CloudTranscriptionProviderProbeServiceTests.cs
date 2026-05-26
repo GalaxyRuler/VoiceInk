@@ -56,6 +56,50 @@ public sealed class CloudTranscriptionProviderProbeServiceTests
     }
 
     [Fact]
+    public async Task ProbeAsync_ElevenLabsUsesModelsEndpointAndXiApiKeyHeader()
+    {
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "eleven-secret" });
+
+        var result = await service.ProbeAsync(Settings("elevenlabs"), CancellationToken.None);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("https://api.elevenlabs.io/v1/models", handler.LastRequest?.RequestUri?.ToString());
+        Assert.NotNull(handler.LastRequest);
+        Assert.True(handler.LastRequest.Headers.TryGetValues("xi-api-key", out var values));
+        Assert.Equal("eleven-secret", Assert.Single(values!));
+    }
+
+    [Fact]
+    public async Task ProbeAsync_SonioxUsesModelsEndpointAndBearerHeader()
+    {
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "soniox-secret" });
+
+        var result = await service.ProbeAsync(Settings("soniox"), CancellationToken.None);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("https://api.soniox.com/v1/models", handler.LastRequest?.RequestUri?.ToString());
+        Assert.Equal("Bearer", handler.LastRequest?.Headers.Authorization?.Scheme);
+        Assert.Equal("soniox-secret", handler.LastRequest?.Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task ProbeAsync_GeminiUsesModelsEndpointAndApiKeyHeader()
+    {
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "gemini-secret" });
+
+        var result = await service.ProbeAsync(Settings("gemini"), CancellationToken.None);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("https://generativelanguage.googleapis.com/v1beta/models", handler.LastRequest?.RequestUri?.ToString());
+        Assert.NotNull(handler.LastRequest);
+        Assert.True(handler.LastRequest.Headers.TryGetValues("x-goog-api-key", out var values));
+        Assert.Equal("gemini-secret", Assert.Single(values!));
+    }
+
+    [Fact]
     public async Task ProbeAsync_MissingKeyDoesNotSendHttp()
     {
         var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
@@ -93,9 +137,9 @@ public sealed class CloudTranscriptionProviderProbeServiceTests
     public async Task ProbeAsync_UnsupportedProviderReturnsClearMessageWithoutHttp()
     {
         var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "soniox-secret" });
+        var service = new CloudTranscriptionProviderProbeService(new HttpClient(handler), new FakeSecretStore { Secret = "cartesia-secret" });
 
-        var result = await service.ProbeAsync(Settings("soniox"), CancellationToken.None);
+        var result = await service.ProbeAsync(Settings("cartesia"), CancellationToken.None);
 
         Assert.False(result.IsSuccessful);
         Assert.Contains("not available", result.Message);

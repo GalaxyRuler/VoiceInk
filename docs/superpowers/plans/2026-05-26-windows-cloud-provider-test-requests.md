@@ -6,7 +6,7 @@
 
 ## Task 1: Add Probe Tests
 
-Write focused tests for Deepgram, Groq/OpenAI-compatible, custom endpoint derivation, missing-key short circuiting, sanitized errors, and unsupported provider messaging.
+Write focused tests for Deepgram, AssemblyAI, Groq/OpenAI-compatible, custom endpoint derivation, ElevenLabs, Soniox, Gemini, missing-key short circuiting, sanitized errors, and unsupported provider messaging.
 
 Status: completed.
 

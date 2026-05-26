@@ -19,7 +19,7 @@ VoiceInk Windows parity  [##################--] 89%
 | Floating recorder | 87% | `[#################---]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 67% | `[#############-------]` | Primary/secondary toggle, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, and cycle Power Mode are configurable. Press-and-hold modes, per-rule Power Mode shortcuts, and shortcut recorder UI remain. |
 | Model management | 72% | `[##############------]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
-| Cloud transcription | 92% | `[##################--]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for Custom/Groq/Mistral/xAI/Deepgram/AssemblyAI, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Gemini inline-audio generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, plus Cartesia live preview streaming exist. More provider test probes, Files API upload for long Gemini recordings, and more streaming providers remain. |
+| Cloud transcription | 93% | `[###################-]` | OpenAI-compatible adapter, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for Custom/Groq/Mistral/xAI/Deepgram/AssemblyAI/ElevenLabs/Soniox/Gemini, direct Deepgram batch requests, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling, Speechmatics Jobs API batch transcription, Gemini inline-audio generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, and Deepgram, AssemblyAI, plus Cartesia live preview streaming exist. Speechmatics/Cartesia safe probe endpoints, Files API upload for long Gemini recordings, and more streaming providers remain. |
 | AI enhancement | 73% | `[###############-----]` | OpenAI-compatible enhancement, presets, custom prompts, trigger-word activation, context, retries/timeouts, secure keys, and a toggle-enhancement shortcut exist. Local/Ollama-style hooks and richer assistant workflows remain. |
 | Context features | 73% | `[###############-----]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, and a visual OCR region picker exist with graceful degradation. Multi-monitor picker refinement remains. |
 | Power Mode | 71% | `[##############------]` | Rule model, process/title/browser URL matching, default fallback, explicit recorder chooser selection, cycle shortcut, settings overlays, history metadata, and editor UI exist. Auto-send keys and per-rule shortcuts remain. |
@@ -40,13 +40,13 @@ Windows cloud provider test requests  [####################] 100%
 Completed:
 
 - Added a metadata-only cloud transcription provider probe service.
-- Added safe key probes for Custom OpenAI-compatible, Groq, Mistral, xAI, Deepgram, and AssemblyAI.
+- Added safe key probes for Custom OpenAI-compatible, Groq, Mistral, xAI, Deepgram, AssemblyAI, ElevenLabs, Soniox, and Gemini.
 - Added `Test Provider` in AI Models with sanitized success/failure status.
 - Kept unsupported-provider probes explicit rather than inventing undocumented request shapes.
 
 ## Near-Term Priority
 
-1. Add remaining grounded cloud provider test probes.
+1. Add remaining grounded Speechmatics and Cartesia provider test probes if official safe metadata endpoints are available.
 2. Continue packaging from signed-build artifact validation to actual signed MSIX install/uninstall smoke, shortcut registration, and release signing flow.
 3. Expand streaming/live preview beyond Deepgram and continue recorder waveform visual polish.
 4. Add broader onboarding permission health checks and setup polish.

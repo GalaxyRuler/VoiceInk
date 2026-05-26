@@ -72,6 +72,27 @@ public sealed class CloudTranscriptionProviderProbeService(HttpClient httpClient
             return request;
         }
 
+        if (preset.Id == TranscriptionProviderPresetCatalog.ElevenLabs.Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.elevenlabs.io/v1/models");
+            request.Headers.TryAddWithoutValidation("xi-api-key", apiKey);
+            return request;
+        }
+
+        if (preset.Id == TranscriptionProviderPresetCatalog.Soniox.Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.soniox.com/v1/models");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            return request;
+        }
+
+        if (preset.Id == TranscriptionProviderPresetCatalog.Gemini.Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://generativelanguage.googleapis.com/v1beta/models");
+            request.Headers.TryAddWithoutValidation("x-goog-api-key", apiKey);
+            return request;
+        }
+
         if (OpenAICompatibleProbeProviders.Contains(preset.Id))
         {
             var endpoint = preset.Id == TranscriptionProviderPresetCatalog.Custom.Id
