@@ -546,6 +546,12 @@ Browser URL context slice completed on 2026-05-26:
 - Added sanitized active browser URL context where supported by Windows foreground-window inspection.
 - Kept browser context local to the enhancement request and persisted only through the existing local History AI-request diagnostics.
 
+Context readiness summary slice completed on 2026-05-26:
+
+- Added Core Enhancement context readiness rows for clipboard context, selected text context, active app/site context, and screen OCR.
+- Rendered those rows on the Enhancement page so users can see off/on/best-effort/region-required states before recording.
+- Kept context capture local and best-effort, with no telemetry, account, or commercial context features.
+
 Windows gaps:
 
 - Deeper context visual polish and permission diagnostics for edge-case Windows display/browser configurations.

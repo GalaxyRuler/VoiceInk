@@ -2072,6 +2072,7 @@ public sealed partial class MainWindow : Window
         OcrRegionTopNumberBox.Value = settings.OcrCaptureRegionTop;
         OcrRegionWidthNumberBox.Value = settings.OcrCaptureRegionWidth;
         OcrRegionHeightNumberBox.Value = settings.OcrCaptureRegionHeight;
+        ApplyEnhancementContextReadinessPresentation(EnhancementContextReadinessPresenter.Present(settings));
         RefreshOcrDisplayChoices();
         suppressEnhancementPresetChanged = true;
         SelectEnhancementPreset(settings.EnhancementProviderId);
@@ -2160,6 +2161,13 @@ public sealed partial class MainWindow : Window
         {
             SectionDescriptionTextBlock(section.Key).Text = section.Description;
         }
+    }
+
+    private void ApplyEnhancementContextReadinessPresentation(EnhancementContextReadinessPresentation presentation)
+    {
+        EnhancementContextReadinessTitleTextBlock.Text = presentation.Title;
+        EnhancementContextReadinessDescriptionTextBlock.Text = presentation.Description;
+        EnhancementContextReadinessListView.ItemsSource = presentation.Rows;
     }
 
     private void RefreshOcrDisplayChoices()
