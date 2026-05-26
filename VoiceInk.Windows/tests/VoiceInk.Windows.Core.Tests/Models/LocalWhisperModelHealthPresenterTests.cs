@@ -32,4 +32,74 @@ public sealed class LocalWhisperModelHealthPresenterTests
                 : LocalWhisperModelRepairAction.ImportReplacement,
             presentation.RepairAction);
     }
+
+    [Fact]
+    public void Present_ReadyModel_ShowsWarmupAndStorageGuidanceRows()
+    {
+        var health = new LocalWhisperModelHealth(
+            LocalWhisperModelHealthStatus.Ready,
+            "Default Model: ggml-base.en",
+            CanUse: true);
+
+        var presentation = LocalWhisperModelHealthPresenter.Present(health);
+
+        Assert.Collection(
+            presentation.GuidanceRows,
+            row =>
+            {
+                Assert.Equal("Model File", row.Title);
+                Assert.Equal("Ready", row.Value);
+                Assert.Equal("The selected whisper.cpp .bin file can be used for local transcription.", row.Detail);
+                Assert.Equal("Usable", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Warmup", row.Title);
+                Assert.Equal("Available", row.Value);
+                Assert.Equal("Prewarm can load this model before the first recording to reduce startup latency.", row.Detail);
+                Assert.Equal("Optional", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Storage", row.Title);
+                Assert.Equal("Local path", row.Value);
+                Assert.Equal("VoiceInk keeps the model on this Windows profile and does not upload it for local transcription.", row.Detail);
+                Assert.Equal("Local", row.StatusBadge);
+            });
+    }
+
+    [Fact]
+    public void Present_BrokenModel_ShowsRepairGuidanceRows()
+    {
+        var health = new LocalWhisperModelHealth(
+            LocalWhisperModelHealthStatus.Missing,
+            "Model file not found: C:\\Models\\missing.bin",
+            CanUse: false);
+
+        var presentation = LocalWhisperModelHealthPresenter.Present(health);
+
+        Assert.Collection(
+            presentation.GuidanceRows,
+            row =>
+            {
+                Assert.Equal("Model File", row.Title);
+                Assert.Equal("Unavailable", row.Value);
+                Assert.Equal("VoiceInk cannot use this model until the path points to a complete .bin file.", row.Detail);
+                Assert.Equal("Repair", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Warmup", row.Title);
+                Assert.Equal("Blocked", row.Value);
+                Assert.Equal("Warmup is disabled until the selected model path is usable.", row.Detail);
+                Assert.Equal("Waiting", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Storage", row.Title);
+                Assert.Equal("User-owned path", row.Value);
+                Assert.Equal("Repairing the reference does not delete model files from disk.", row.Detail);
+                Assert.Equal("Safe repair", row.StatusBadge);
+            });
+    }
 }

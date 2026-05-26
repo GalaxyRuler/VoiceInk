@@ -7194,6 +7194,7 @@ public sealed partial class MainWindow : Window
         var healthPresentation = LocalWhisperModelHealthPresenter.Present(health);
         DefaultModelStatusTextBlock.Text = health.Message;
         ModelRepairHintTextBlock.Text = $"{healthPresentation.Title}: {healthPresentation.Guidance}";
+        ModelHealthGuidanceListView.ItemsSource = healthPresentation.GuidanceRows;
         RepairModelPathButton.Content = healthPresentation.ActionLabel;
         currentModelRepairAction = healthPresentation.RepairAction;
 
