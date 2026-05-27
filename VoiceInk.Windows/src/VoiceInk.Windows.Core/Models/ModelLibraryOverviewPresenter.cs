@@ -12,13 +12,25 @@ public sealed record ModelLibraryStorageGuidanceRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => ModelLibraryAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record ModelLibraryActionRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => ModelLibraryAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
+
+internal static class ModelLibraryAccessibleName
+{
+    public static string From(params string[] parts) =>
+        string.Join(", ", parts.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part.Trim()));
+}
 
 public static class ModelLibraryOverviewPresenter
 {

@@ -206,4 +206,27 @@ public sealed class ModelLibraryOverviewPresenterTests
         Assert.Equal("Default local model: custom-medical.", presentation.DefaultModelLabel);
         Assert.Equal("custom-medical", presentation.ActionRows[2].Value);
     }
+
+    [Fact]
+    public void Present_RowsExposeAccessibleNames()
+    {
+        var model = new LocalWhisperModel(
+            "C:\\Models\\ggml-base.en.bin",
+            "ggml-base.en",
+            DateTimeOffset.UnixEpoch);
+        var items = LocalWhisperModelService.BuildCatalogItems([model], model.Path);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [model],
+            selectedModelPath: model.Path,
+            unavailableImportedModelCount: 0);
+
+        Assert.Equal(
+            "Downloaded Models, App-local, Local, Catalog downloads are stored under this Windows profile's VoiceInk Models folder.",
+            presentation.StorageGuidanceRows[0].AccessibleName);
+        Assert.Equal(
+            "Download Models, 1 of 8 available, Available, Downloaded catalog models are ready for private local transcription.",
+            presentation.ActionRows[0].AccessibleName);
+    }
 }

@@ -32,4 +32,17 @@ public sealed record WhisperModelCatalogItem(
                     : "Available";
 
     public string PrimaryActionLabel => IsDownloaded ? "Set as Default" : "Download";
+
+    public string AccessibleName => string.Join(
+        ", ",
+        new[]
+        {
+            DisplayName,
+            Status,
+            LanguageDisplay,
+            Size,
+            $"speed {SpeedScore}",
+            $"accuracy {AccuracyScore}",
+            Description
+        }.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part.Trim()));
 }

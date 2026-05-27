@@ -82,6 +82,17 @@ public sealed class LocalWhisperModelServiceTests
     }
 
     [Fact]
+    public void CatalogItems_ExposeAccessibleNames()
+    {
+        var model = WhisperModelCatalog.All.Single(model => model.Name == "ggml-base.en");
+        var item = new WhisperModelCatalogItem(model, @"C:\Models\ggml-base.en.bin", IsRecommended: true, IsDefault: true);
+
+        Assert.Equal(
+            $"{model.DisplayName}, Default Model, {model.LanguageDisplay}, {model.Size}, speed {model.SpeedScore}, accuracy {model.AccuracyScore}, {model.Description}",
+            item.AccessibleName);
+    }
+
+    [Fact]
     public void AddOrReplaceCatalogModel_ReplacesExistingModelWithSameDisplayName()
     {
         var previous = new LocalWhisperModel(

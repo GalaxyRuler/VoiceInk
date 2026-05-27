@@ -57,6 +57,24 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
     }
 
+    [Theory]
+    [InlineData("ModelLibraryActionListView")]
+    [InlineData("ModelLibraryStorageGuidanceListView")]
+    [InlineData("LocalModelCatalogListView")]
+    public void MainWindow_ModelLibraryRows_BindAccessibleName(string listViewName)
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var listStart = xaml.IndexOf($"x:Name=\"{listViewName}\"", StringComparison.Ordinal);
+        Assert.True(listStart >= 0);
+        var templateStart = xaml.IndexOf("<DataTemplate>", listStart, StringComparison.Ordinal);
+        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
+        Assert.True(templateStart >= 0);
+        Assert.True(templateEnd > templateStart);
+
+        var template = xaml[templateStart..templateEnd];
+        Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
