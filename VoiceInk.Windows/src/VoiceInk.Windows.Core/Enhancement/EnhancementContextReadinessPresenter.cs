@@ -207,6 +207,11 @@ public static class EnhancementContextReadinessPresenter
                 "Selected text and clipboard context are read best-effort and are not stored as separate context records.",
                 "Ephemeral"),
             new(
+                "Browser URL",
+                "Sanitized",
+                "When browser context is available, VoiceInk keeps origin and path and strips query strings/fragments before prompt rendering.",
+                "Reduced detail"),
+            new(
                 "Screen OCR Boundary",
                 "Local capture",
                 "OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.",

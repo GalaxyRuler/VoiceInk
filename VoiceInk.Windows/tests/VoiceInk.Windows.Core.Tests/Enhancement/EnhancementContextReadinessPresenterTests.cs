@@ -64,6 +64,13 @@ public sealed class EnhancementContextReadinessPresenterTests
             },
             row =>
             {
+                Assert.Equal("Browser URL", row.Title);
+                Assert.Equal("Sanitized", row.Value);
+                Assert.Equal("When browser context is available, VoiceInk keeps origin and path and strips query strings/fragments before prompt rendering.", row.Detail);
+                Assert.Equal("Reduced detail", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Screen OCR Boundary", row.Title);
                 Assert.Equal("Local capture", row.Value);
                 Assert.Equal("OCR runs locally before prompt rendering; OCR text can be included if the selected enhancement provider is cloud-based.", row.Detail);
@@ -107,6 +114,19 @@ public sealed class EnhancementContextReadinessPresenterTests
                 Assert.Equal("Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
             });
+    }
+
+    [Fact]
+    public void Present_ShowsBrowserUrlSanitizationPrivacyBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Browser URL"
+                && row.Value == "Sanitized"
+                && row.Detail == "When browser context is available, VoiceInk keeps origin and path and strips query strings/fragments before prompt rendering."
+                && row.StatusBadge == "Reduced detail");
     }
 
     [Fact]
