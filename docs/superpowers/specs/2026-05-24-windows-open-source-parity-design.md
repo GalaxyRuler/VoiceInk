@@ -224,6 +224,12 @@ Recorder Power label slice completed on 2026-05-27:
 - Bound the floating recorder window to that Core label instead of recomputing the text in WinUI.
 - Kept Power Mode matching, selected-rule persistence, no-activate recorder behavior, chooser panels, and Stop/Cancel behavior unchanged.
 
+Floating-recorder state accessibility slice completed on 2026-05-27:
+
+- Added a presenter-backed recorder chrome UI Automation name containing recorder state, detail, elapsed time, footer intent, and live-preview availability.
+- Bound the WinUI recorder chrome to the Core accessible name when state is applied.
+- Kept visual layout, no-activate behavior, Stop/Cancel commands, Prompt/Power controls, and live transcript gating unchanged.
+
 Windows gaps:
 
 - Pixel-perfect macOS physical notch geometry is intentionally not implemented because Windows does not expose macOS safe-area notch metrics; the Windows equivalent is a top-center notch-style recorder.

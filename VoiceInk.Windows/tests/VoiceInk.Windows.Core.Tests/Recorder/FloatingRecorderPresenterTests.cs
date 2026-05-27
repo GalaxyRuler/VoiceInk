@@ -26,6 +26,22 @@ public sealed class FloatingRecorderPresenterTests
     }
 
     [Fact]
+    public void FromState_Recording_ExposesRecorderAccessibleName()
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(65),
+            "Recording",
+            isOperationActive: false,
+            partialTranscript: "hello from the live recorder",
+            showLiveTranscriptPreview: true);
+
+        Assert.Equal(
+            "VoiceInk recorder, Recording, Listening, 01:05, Stop inserts, Cancel discards., Live preview available",
+            state.AccessibleName);
+    }
+
+    [Fact]
     public void FromState_Recording_CarriesInputLevel()
     {
         var state = FloatingRecorderPresenter.FromState(
