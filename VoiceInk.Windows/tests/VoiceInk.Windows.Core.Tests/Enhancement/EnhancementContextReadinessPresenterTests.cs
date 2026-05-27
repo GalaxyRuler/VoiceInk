@@ -186,6 +186,23 @@ public sealed class EnhancementContextReadinessPresenterTests
     }
 
     [Fact]
+    public void Present_WithOcrContext_ShowsLocalRecognizerLanguageBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                UseOcrContext = true
+            });
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "OCR Language Support"
+                && row.Value == "Windows recognizers"
+                && row.Detail == "Screen text recognition uses local Windows OCR language support; unsupported languages may produce empty or partial context."
+                && row.StatusBadge == "Local");
+    }
+
+    [Fact]
     public void Present_WithValidOcrRegion_ShowsRegionSize()
     {
         var presentation = EnhancementContextReadinessPresenter.Present(

@@ -247,10 +247,18 @@ public static class EnhancementContextReadinessPresenter
         {
             rows.Add(OcrCaptureScopeRow(settings));
             rows.Add(OcrCaptureConsentRow());
+            rows.Add(OcrLanguageSupportRow());
         }
 
         return rows;
     }
+
+    private static EnhancementContextPrivacyRow OcrLanguageSupportRow() =>
+        new(
+            "OCR Language Support",
+            "Windows recognizers",
+            "Screen text recognition uses local Windows OCR language support; unsupported languages may produce empty or partial context.",
+            "Local");
 
     private static EnhancementContextPrivacyRow OcrCaptureConsentRow() =>
         new(

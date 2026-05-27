@@ -546,6 +546,7 @@ Screen OCR context slices completed on 2026-05-26:
 - Added default-off local OCR context capture with region-aware screen capture plumbing and graceful empty/unavailable fallback.
 - Added visible numeric OCR region controls and a visual OCR region picker that writes absolute virtual-screen coordinates.
 - Added display-targeted OCR region selection so multi-monitor users can choose which display receives the fullscreen picker overlay.
+- Added Enhancement privacy guidance explaining that local Windows OCR language support can affect whether OCR context is complete.
 
 Browser URL context slice completed on 2026-05-26:
 
@@ -557,6 +558,12 @@ Context readiness summary slice completed on 2026-05-26:
 - Added Core Enhancement context readiness rows for clipboard context, selected text context, active app/site context, and screen OCR.
 - Rendered those rows on the Enhancement page so users can see off/on/best-effort/region-required states before recording.
 - Kept context capture local and best-effort, with no telemetry, account, or commercial context features.
+
+OCR language support guidance slice completed on 2026-05-27:
+
+- Added presenter-backed Enhancement privacy guidance that Screen OCR uses local Windows OCR recognizers.
+- Explained that unsupported languages may produce empty or partial context while keeping existing graceful degradation.
+- Kept OCR capture, prompt rendering, provider selection, fallback, and history behavior unchanged.
 
 Windows gaps:
 
