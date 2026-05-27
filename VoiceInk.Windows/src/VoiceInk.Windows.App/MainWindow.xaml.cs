@@ -2534,6 +2534,11 @@ public sealed partial class MainWindow : Window
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap
         };
+        var onboardingCurrentStageTextBlock = new TextBlock
+        {
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap
+        };
         var onboardingSummaryListView = new ListView
         {
             MaxHeight = 190,
@@ -2578,6 +2583,7 @@ public sealed partial class MainWindow : Window
         AutomationProperties.SetName(onboardingSummaryListView, "Onboarding readiness summary");
         AutomationProperties.SetName(onboardingStagesListView, "Onboarding setup stages");
         AutomationProperties.SetName(onboardingTutorialListView, "Onboarding first dictation tutorial");
+        AutomationProperties.SetName(onboardingCurrentStageTextBlock, "Onboarding current setup step");
         AutomationProperties.SetName(onboardingChecklistTextBlock, "Onboarding setup checklist");
         AutomationProperties.SetName(statusTextBlock, "Onboarding next action");
         AutomationProperties.SetName(microphoneStatusTextBlock, "Onboarding microphone status");
@@ -2587,6 +2593,7 @@ public sealed partial class MainWindow : Window
             onboardingDescriptionTextBlock,
             onboardingHeroTextBlock,
             onboardingProgressTextBlock,
+            onboardingCurrentStageTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
@@ -2608,6 +2615,7 @@ public sealed partial class MainWindow : Window
             onboardingDescriptionTextBlock,
             onboardingHeroTextBlock,
             onboardingProgressTextBlock,
+            onboardingCurrentStageTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
@@ -2624,6 +2632,7 @@ public sealed partial class MainWindow : Window
             onboardingDescriptionTextBlock,
             onboardingHeroTextBlock,
             onboardingProgressTextBlock,
+            onboardingCurrentStageTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
@@ -2639,6 +2648,7 @@ public sealed partial class MainWindow : Window
             onboardingDescriptionTextBlock,
             onboardingHeroTextBlock,
             onboardingProgressTextBlock,
+            onboardingCurrentStageTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
             onboardingStagesListView,
@@ -2657,6 +2667,7 @@ public sealed partial class MainWindow : Window
         content.Children.Add(onboardingDescriptionTextBlock);
         content.Children.Add(onboardingHeroTextBlock);
         content.Children.Add(onboardingProgressTextBlock);
+        content.Children.Add(onboardingCurrentStageTextBlock);
         content.Children.Add(onboardingActionListView);
         content.Children.Add(onboardingSummaryListView);
         content.Children.Add(onboardingStagesListView);
@@ -3460,6 +3471,7 @@ public sealed partial class MainWindow : Window
         TextBlock onboardingDescriptionTextBlock,
         TextBlock onboardingHeroTextBlock,
         TextBlock onboardingProgressTextBlock,
+        TextBlock onboardingCurrentStageTextBlock,
         ListView onboardingActionListView,
         ListView onboardingSummaryListView,
         ListView onboardingStagesListView,
@@ -3492,6 +3504,7 @@ public sealed partial class MainWindow : Window
                 onboardingDescriptionTextBlock,
                 onboardingHeroTextBlock,
                 onboardingProgressTextBlock,
+                onboardingCurrentStageTextBlock,
                 onboardingActionListView,
                 onboardingSummaryListView,
                 onboardingStagesListView,
@@ -3520,6 +3533,7 @@ public sealed partial class MainWindow : Window
         TextBlock? onboardingDescriptionTextBlock,
         TextBlock? onboardingHeroTextBlock,
         TextBlock? onboardingProgressTextBlock,
+        TextBlock? onboardingCurrentStageTextBlock,
         ListView? onboardingActionListView,
         ListView? onboardingSummaryListView,
         ListView? onboardingStagesListView,
@@ -3554,6 +3568,13 @@ public sealed partial class MainWindow : Window
         if (onboardingProgressTextBlock is not null)
         {
             onboardingProgressTextBlock.Text = presentation.ProgressLabel;
+        }
+
+        if (onboardingCurrentStageTextBlock is not null)
+        {
+            onboardingCurrentStageTextBlock.Text =
+                $"{presentation.CurrentStageLabel}: {presentation.CurrentStageTitle} - {presentation.CurrentStageDescription}";
+            AutomationProperties.SetName(onboardingCurrentStageTextBlock, presentation.CurrentStageAccessibleName);
         }
 
         if (onboardingActionListView is not null)

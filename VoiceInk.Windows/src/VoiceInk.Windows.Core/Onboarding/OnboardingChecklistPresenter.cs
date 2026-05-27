@@ -20,10 +20,12 @@ public sealed record OnboardingSetupStagePresentation(
 {
     public string DisplayText => $"{PrefixFor(State)} {StepNumber}. {Title} - {Description}";
 
+    public string StatusBadge => StateLabelFor(State);
+
     public string AccessibleName => OnboardingRowAccessibleName.From(
         StepNumber,
         Title,
-        StateLabelFor(State),
+        StatusBadge,
         Description);
 
     private static string PrefixFor(OnboardingChecklistItemState state) =>
@@ -87,6 +89,11 @@ public sealed record OnboardingChecklistPresentation(
     string Description,
     string ProgressLabel,
     string NextAction,
+    string CurrentStageLabel,
+    string CurrentStageTitle,
+    string CurrentStageDescription,
+    string CurrentStageStatusBadge,
+    string CurrentStageAccessibleName,
     bool CanSaveSetup,
     IReadOnlyList<OnboardingTutorialStepPresentation> TutorialSteps,
     IReadOnlyList<OnboardingSetupActionPresentation> SetupActions,
@@ -274,6 +281,9 @@ public static class OnboardingChecklistPresenter
                     ? OnboardingChecklistItemState.Ready
                     : OnboardingChecklistItemState.Advisory)
         };
+        var currentStage = CurrentStageFrom(stages);
+        var currentStageIndex = Array.IndexOf(stages, currentStage) + 1;
+        var currentStageLabel = $"Step {currentStageIndex} of {stages.Length}";
 
         return new OnboardingChecklistPresentation(
             "Welcome to VoiceInk",
@@ -287,6 +297,11 @@ public static class OnboardingChecklistPresenter
             "Set up your local model, microphone, and shortcut once, then dictate anywhere from the tray or keyboard.",
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),
+            currentStageLabel,
+            currentStage.Title,
+            currentStage.Description,
+            currentStage.StatusBadge,
+            OnboardingRowAccessibleName.From(currentStageLabel, currentStage.Title, currentStage.StatusBadge, currentStage.Description),
             status.CanCompleteSetup,
             TutorialSteps(status),
             setupActions,
@@ -297,6 +312,11 @@ public static class OnboardingChecklistPresenter
 
     private static OnboardingChecklistItemState StateFor(bool isReady) =>
         isReady ? OnboardingChecklistItemState.Ready : OnboardingChecklistItemState.NeedsAttention;
+
+    private static OnboardingSetupStagePresentation CurrentStageFrom(IReadOnlyList<OnboardingSetupStagePresentation> stages) =>
+        stages.FirstOrDefault(stage => stage.State == OnboardingChecklistItemState.NeedsAttention)
+            ?? stages.FirstOrDefault(stage => stage.State == OnboardingChecklistItemState.Advisory)
+            ?? stages[^1];
 
     private static IReadOnlyList<OnboardingTutorialStepPresentation> TutorialSteps(OnboardingSetupStatus status)
     {

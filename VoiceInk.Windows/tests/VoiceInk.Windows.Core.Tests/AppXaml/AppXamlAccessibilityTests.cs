@@ -66,6 +66,8 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.SetName(onboardingSummaryListView", code);
         Assert.Contains("AutomationProperties.SetName(onboardingStagesListView", code);
         Assert.Contains("AutomationProperties.SetName(onboardingTutorialListView", code);
+        Assert.Contains("AutomationProperties.SetName(onboardingCurrentStageTextBlock", code);
+        Assert.Contains("presentation.CurrentStageAccessibleName", code);
     }
 
     [Fact]

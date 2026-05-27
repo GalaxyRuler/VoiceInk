@@ -1121,11 +1121,12 @@ Implemented:
 - Compact readiness summary rows for model, microphone, Windows permission, text insertion, context awareness, shortcut, and first dictation.
 - Action rows for model, microphone, manual privacy, text insertion, context awareness, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, text insertion, context awareness, and first dictation test.
+- Presenter-backed current-step focus panel for the next required/advisory onboarding stage.
 - Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
 Windows gaps:
 
-- Richer multi-step visual flow matching the macOS animated welcome, permissions, model, and tutorial pages.
+- Richer multi-step visual styling matching the macOS animated welcome, permissions, model, and tutorial pages.
 - Permission health checks beyond microphone privacy and device visibility.
 
 Onboarding slice completed on 2026-05-24:
@@ -1176,6 +1177,12 @@ Onboarding text insertion readiness slice completed on 2026-05-27:
 - Added a Windows-native Text Insertion readiness row as the platform adaptation of macOS Accessibility Access onboarding.
 - Clarified that VoiceInk inserts through the focused field by using clipboard paste and keeps History available if the target app rejects paste or loses focus.
 - Preserved the no-fake-permission boundary: onboarding explains the Windows flow without adding registry changes, OS prompts, telemetry, or paid support.
+
+Onboarding current-step focus slice completed on 2026-05-27:
+
+- Added presenter-backed current-step label, title, description, status, and UI Automation name derived from the first setup stage needing attention, then advisory, then ready.
+- Rendered the current-step summary near the top of the first-run dialog so the Windows flow is closer to the macOS guided welcome/permissions/model/tutorial sequence.
+- Kept onboarding completion rules, settings persistence, model selection/download, microphone refresh, shortcut editing, and tutorial steps unchanged.
 
 ### Packaging
 

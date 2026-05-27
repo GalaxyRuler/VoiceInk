@@ -255,6 +255,42 @@ public sealed class OnboardingChecklistPresenterTests
     }
 
     [Fact]
+    public void Present_ExposesCurrentSetupFocusPanel()
+    {
+        var missingModelStatus = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                Hotkey = "Ctrl+Alt+Space"
+            },
+            hasAudioInputChoices: true);
+
+        var missingModelPresentation = OnboardingChecklistPresenter.Present(missingModelStatus);
+
+        Assert.Equal("Step 1 of 4", missingModelPresentation.CurrentStageLabel);
+        Assert.Equal("Choose Model", missingModelPresentation.CurrentStageTitle);
+        Assert.Equal("Pick or download a local Whisper model.", missingModelPresentation.CurrentStageDescription);
+        Assert.Equal("Needs attention", missingModelPresentation.CurrentStageStatusBadge);
+        Assert.Equal(
+            "Step 1 of 4, Choose Model, Needs attention, Pick or download a local Whisper model.",
+            missingModelPresentation.CurrentStageAccessibleName);
+
+        var readyStatus = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Hotkey = "Ctrl+Alt+Space"
+            },
+            hasAudioInputChoices: true);
+
+        var readyPresentation = OnboardingChecklistPresenter.Present(readyStatus);
+
+        Assert.Equal("Step 4 of 4", readyPresentation.CurrentStageLabel);
+        Assert.Equal("Try Dictation", readyPresentation.CurrentStageTitle);
+        Assert.Equal("Ready for a first focused-text-field smoke test.", readyPresentation.CurrentStageDescription);
+        Assert.Equal("Ready", readyPresentation.CurrentStageStatusBadge);
+    }
+
+    [Fact]
     public void Present_MissingMicrophone_KeepsSetupCompletableWithAdvisory()
     {
         var status = OnboardingSetupStatusService.Build(
