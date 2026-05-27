@@ -26,6 +26,7 @@ public sealed class JsonSettingsStoreTests
         var reloaded = await store.LoadAsync(CancellationToken.None);
         Assert.Equal(new AppSettings(), reloaded);
         Assert.True(reloaded.PrewarmModelOnWake);
+        Assert.True(reloaded.IsVadEnabled);
         Assert.True(reloaded.IsTextFormattingEnabled);
         Assert.True(reloaded.AppendTrailingSpace);
         Assert.Equal("en", reloaded.Language);
@@ -47,6 +48,7 @@ public sealed class JsonSettingsStoreTests
             PasteMethod = "directText",
             LaunchAtLogin = true,
             PrewarmModelOnWake = false,
+            IsVadEnabled = false,
             ShowLiveTranscriptPreview = true,
             RecorderStyle = "notch",
             IsSoundFeedbackEnabled = false,

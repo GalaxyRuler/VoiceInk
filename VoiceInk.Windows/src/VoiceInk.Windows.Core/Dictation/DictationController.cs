@@ -24,7 +24,8 @@ public sealed class DictationController(
     ISessionMetricStore? sessionMetricStore = null,
     IRecordingCaptureStopFeedback? recordingCaptureStopFeedback = null,
     ILiveTranscriptionPreviewService? liveTranscriptionPreviewService = null,
-    IPowerModeAutoSendService? powerModeAutoSendService = null)
+    IPowerModeAutoSendService? powerModeAutoSendService = null,
+    IVoiceActivityDetector? voiceActivityDetector = null)
 {
     private readonly SemaphoreSlim lifecycleGate = new(1, 1);
     private readonly IDictionaryStore dictionaryStore = dictionaryStore ?? EmptyDictionaryStore.Instance;
@@ -148,6 +149,18 @@ public sealed class DictationController(
                     var vocabulary = await this.dictionaryStore.ListVocabularyAsync(cancellationToken);
                     var replacements = await this.dictionaryStore.ListReplacementsAsync(cancellationToken);
                     var vocabularyPrompt = DictionaryService.RenderVocabularyPrompt(vocabulary);
+
+                    if (settings.IsVadEnabled && voiceActivityDetector is not null)
+                    {
+                        var voiceActivity = await voiceActivityDetector.AnalyzeAsync(audio, cancellationToken);
+                        if (!voiceActivity.HasSpeech)
+                        {
+                            State = DictationState.Idle;
+                            LastWarning = "No speech detected";
+                            ResetPartialTranscript();
+                            return;
+                        }
+                    }
 
                     State = DictationState.Transcribing;
                     var transcription = await transcriptionService.TranscribeAsync(

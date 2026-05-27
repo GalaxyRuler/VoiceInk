@@ -495,6 +495,64 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_WhenVadEnabledAndNoSpeechDetectedSkipsTranscription()
+    {
+        var audio = new AudioCaptureResult("silent.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("should not run", TimeSpan.Zero, "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var voiceActivity = new FakeVoiceActivityDetector(new VoiceActivityResult(false, TimeSpan.Zero));
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                IsVadEnabled = true
+            }),
+            voiceActivityDetector: voiceActivity);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal(1, voiceActivity.CallCount);
+        Assert.Same(audio, voiceActivity.LastAudio);
+        Assert.Equal(0, transcription.CallCount);
+        Assert.Null(insertion.InsertedText);
+        Assert.Empty(history.Items);
+        Assert.Equal(DictationState.Idle, controller.State);
+        Assert.Equal("No speech detected", controller.LastWarning);
+    }
+
+    [Fact]
+    public async Task StopAsync_WhenVadDisabledDoesNotAnalyzeVoiceActivity()
+    {
+        var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.FromMilliseconds(1), "local-whisper"));
+        var voiceActivity = new FakeVoiceActivityDetector(new VoiceActivityResult(false, TimeSpan.Zero));
+        var controller = new DictationController(
+            capture,
+            transcription,
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                IsVadEnabled = false
+            }),
+            voiceActivityDetector: voiceActivity);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal(0, voiceActivity.CallCount);
+        Assert.Equal(1, transcription.CallCount);
+    }
+
+    [Fact]
     public async Task StopAsync_PassesCloudTranscriptionOptionsAndSavesCloudModelMetadata()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
@@ -1596,6 +1654,21 @@ public sealed class DictationControllerTests
             }
 
             return result;
+        }
+    }
+
+    private sealed class FakeVoiceActivityDetector(VoiceActivityResult result) : IVoiceActivityDetector
+    {
+        public int CallCount { get; private set; }
+        public AudioCaptureResult? LastAudio { get; private set; }
+
+        public Task<VoiceActivityResult> AnalyzeAsync(
+            AudioCaptureResult audio,
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastAudio = audio;
+            return Task.FromResult(result);
         }
     }
 

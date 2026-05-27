@@ -212,6 +212,7 @@ public sealed partial class MainWindow : Window
     private bool suppressLanguageChanged;
     private bool suppressPrewarmChanged;
     private bool suppressLiveTranscriptPreviewChanged;
+    private bool suppressVadChanged;
     private bool suppressRecorderStyleChanged;
     private bool suppressCloudTranscriptionPresetChanged;
     private bool suppressCloudTranscriptionModelChanged;
@@ -1417,6 +1418,31 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void VoiceActivityDetectionCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (suppressVadChanged || !settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshUiFromControllerState(
+                VoiceActivityDetectionCheckBox.IsChecked == true
+                    ? "Voice Activity Detection enabled"
+                    : "Voice Activity Detection disabled");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Voice Activity Detection update failed: {ex.Message}");
+        }
+    }
+
     private async void RecorderStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (suppressRecorderStyleChanged
@@ -2021,6 +2047,7 @@ public sealed partial class MainWindow : Window
             suppressModelPathChanged = false;
             suppressPrewarmChanged = false;
             suppressLiveTranscriptPreviewChanged = false;
+            suppressVadChanged = false;
             suppressRecorderStyleChanged = false;
             suppressCloudTranscriptionPresetChanged = false;
             suppressCloudTranscriptionModelChanged = false;
@@ -2107,6 +2134,9 @@ public sealed partial class MainWindow : Window
         suppressLiveTranscriptPreviewChanged = true;
         ShowLiveTranscriptPreviewCheckBox.IsChecked = settings.ShowLiveTranscriptPreview;
         suppressLiveTranscriptPreviewChanged = false;
+        suppressVadChanged = true;
+        VoiceActivityDetectionCheckBox.IsChecked = settings.IsVadEnabled;
+        suppressVadChanged = false;
         suppressRecorderStyleChanged = true;
         RecorderStyleComboBox.SelectedIndex = RecorderStyleToSelectedIndex(settings.RecorderStyle);
         suppressRecorderStyleChanged = false;
@@ -6967,6 +6997,7 @@ public sealed partial class MainWindow : Window
             PasteMethod = SelectedPasteMethod(),
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
             PrewarmModelOnWake = PrewarmModelOnWakeCheckBox.IsChecked == true,
+            IsVadEnabled = VoiceActivityDetectionCheckBox.IsChecked == true,
             ShowLiveTranscriptPreview = ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
             RecorderStyle = SelectedRecorderStyle(),
             IsSoundFeedbackEnabled = SoundFeedbackCheckBox.IsChecked == true,
@@ -7025,7 +7056,8 @@ public sealed partial class MainWindow : Window
             sessionMetricStore,
             recordingFeedback,
             liveTranscriptionPreviewService,
-            powerModeAutoSendService);
+            powerModeAutoSendService,
+            new WavVoiceActivityDetector());
 
     private static (ISessionMetricStore Store, string? Warning) CreateSessionMetricStore(string databasePath)
     {
@@ -8414,6 +8446,7 @@ public sealed partial class MainWindow : Window
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
         ShowLiveTranscriptPreviewCheckBox.IsEnabled = modelControlsEnabled;
+        VoiceActivityDetectionCheckBox.IsEnabled = modelControlsEnabled;
         RecorderStyleComboBox.IsEnabled = settingsLoaded
             && !operationActive
             && !controllerBusy

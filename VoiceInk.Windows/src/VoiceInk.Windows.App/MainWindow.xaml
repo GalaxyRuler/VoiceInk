@@ -353,6 +353,11 @@
                                 Content="Show Live Transcript Preview"
                                 Checked="ShowLiveTranscriptPreviewCheckBox_Changed"
                                 Unchecked="ShowLiveTranscriptPreviewCheckBox_Changed" />
+                            <CheckBox
+                                x:Name="VoiceActivityDetectionCheckBox"
+                                Content="Voice Activity Detection (VAD)"
+                                Checked="VoiceActivityDetectionCheckBox_Changed"
+                                Unchecked="VoiceActivityDetectionCheckBox_Changed" />
                             <Button
                                 x:Name="WarmupSelectedModelButton"
                                 HorizontalAlignment="Left"
