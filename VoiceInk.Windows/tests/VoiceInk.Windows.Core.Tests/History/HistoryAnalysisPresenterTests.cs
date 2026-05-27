@@ -44,6 +44,12 @@ public sealed class HistoryAnalysisPresenterTests
             },
             row =>
             {
+                Assert.Equal("Text Variants", row.Title);
+                Assert.Equal("Original, enhanced, final", row.Value);
+                Assert.Equal("Copy actions can use the saved original transcript, enhanced text, or final inserted text.", row.Detail);
+            },
+            row =>
+            {
                 Assert.Equal("Provider", row.Title);
                 Assert.Equal("Local Whisper", row.Value);
                 Assert.Equal("Transcription completed in 5s.", row.Detail);
@@ -88,13 +94,16 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Speech rate unavailable", rows[1].Detail);
         Assert.Equal("Failed", rows[2].Value);
         Assert.Equal("Provider failed", rows[2].Detail);
-        Assert.Equal("Local Whisper", rows[3].Value);
-        Assert.Equal("Transcription duration unavailable.", rows[3].Detail);
-        Assert.Equal("Text only", rows[4].Value);
-        Assert.Equal("Retry and Re-enhance", rows[5].Title);
-        Assert.Equal("Unavailable", rows[5].Value);
-        Assert.Equal("Retry and re-enhance are available only for completed history items.", rows[5].Detail);
-        Assert.Equal("Export Scope", rows[6].Title);
+        Assert.Equal("Text Variants", rows[3].Title);
+        Assert.Equal("Fallback only", rows[3].Value);
+        Assert.Equal("Only the final visible text is available for copy/export.", rows[3].Detail);
+        Assert.Equal("Local Whisper", rows[4].Value);
+        Assert.Equal("Transcription duration unavailable.", rows[4].Detail);
+        Assert.Equal("Text only", rows[5].Value);
+        Assert.Equal("Retry and Re-enhance", rows[6].Title);
+        Assert.Equal("Unavailable", rows[6].Value);
+        Assert.Equal("Retry and re-enhance are available only for completed history items.", rows[6].Detail);
+        Assert.Equal("Export Scope", rows[7].Title);
     }
 
     [Fact]
@@ -111,17 +120,20 @@ public sealed class HistoryAnalysisPresenterTests
 
         var rows = HistoryAnalysisPresenter.Present(item);
 
-        Assert.Equal("Provider", rows[3].Title);
-        Assert.Equal("Deepgram", rows[3].Value);
-        Assert.Equal("Transcription completed in 2s.", rows[3].Detail);
-        Assert.Equal("Audio Storage", rows[4].Title);
-        Assert.Equal("Audio saved", rows[4].Value);
-        Assert.Equal("Audio can be opened or replayed while the file remains on disk.", rows[4].Detail);
-        Assert.Equal("Retry and Re-enhance", rows[5].Title);
-        Assert.Equal("Audio and original text", rows[5].Value);
-        Assert.Equal("Retry uses the saved audio file; re-enhance uses the original transcript text for a fresh AI pass.", rows[5].Detail);
-        Assert.Equal("Export Scope", rows[6].Title);
-        Assert.Equal("User initiated", rows[6].Value);
+        Assert.Equal("Text Variants", rows[3].Title);
+        Assert.Equal("Original and final", rows[3].Value);
+        Assert.Equal("Original and final text are available; no separate enhanced text was saved.", rows[3].Detail);
+        Assert.Equal("Provider", rows[4].Title);
+        Assert.Equal("Deepgram", rows[4].Value);
+        Assert.Equal("Transcription completed in 2s.", rows[4].Detail);
+        Assert.Equal("Audio Storage", rows[5].Title);
+        Assert.Equal("Audio saved", rows[5].Value);
+        Assert.Equal("Audio can be opened or replayed while the file remains on disk.", rows[5].Detail);
+        Assert.Equal("Retry and Re-enhance", rows[6].Title);
+        Assert.Equal("Audio and original text", rows[6].Value);
+        Assert.Equal("Retry uses the saved audio file; re-enhance uses the original transcript text for a fresh AI pass.", rows[6].Detail);
+        Assert.Equal("Export Scope", rows[7].Title);
+        Assert.Equal("User initiated", rows[7].Value);
     }
 
     [Fact]
@@ -135,7 +147,7 @@ public sealed class HistoryAnalysisPresenterTests
             TimeSpan.FromSeconds(10),
             TimeSpan.FromSeconds(2));
 
-        var row = HistoryAnalysisPresenter.Present(item)[3];
+        var row = HistoryAnalysisPresenter.Present(item)[4];
 
         Assert.Equal(
             "Provider, Deepgram, Transcription completed in 2s.",

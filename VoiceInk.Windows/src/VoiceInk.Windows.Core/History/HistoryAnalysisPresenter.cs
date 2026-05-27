@@ -35,6 +35,7 @@ public static partial class HistoryAnalysisPresenter
                 "Enhancement",
                 EnhancementValue(item),
                 EnhancementDetail(item)),
+            TextVariantsRow(item),
             new(
                 "Provider",
                 string.IsNullOrWhiteSpace(item.ProviderName) ? "Unknown" : item.ProviderName,
@@ -105,6 +106,30 @@ public static partial class HistoryAnalysisPresenter
         }
 
         return "No enhanced text saved";
+    }
+
+    private static HistoryAnalysisRow TextVariantsRow(TranscriptionHistoryItem item)
+    {
+        if (item.Status != TranscriptionHistoryStatus.Completed)
+        {
+            return new(
+                "Text Variants",
+                "Fallback only",
+                "Only the final visible text is available for copy/export.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.EnhancedText))
+        {
+            return new(
+                "Text Variants",
+                "Original, enhanced, final",
+                "Copy actions can use the saved original transcript, enhanced text, or final inserted text.");
+        }
+
+        return new(
+            "Text Variants",
+            "Original and final",
+            "Original and final text are available; no separate enhanced text was saved.");
     }
 
     private static string ProviderDetail(TranscriptionHistoryItem item) =>
