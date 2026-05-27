@@ -55,6 +55,13 @@ public sealed class SessionMetricsDashboardPresenterTests
                     Assert.Equal("Metrics only", row.Value);
                     Assert.Equal("CSV export writes a local file; reset clears metrics without deleting History or recordings.", row.Detail);
                     Assert.Equal("User action", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Model Performance", row.Title);
+                    Assert.Equal("Local averages", row.Value);
+                    Assert.Equal("Model rows summarize completed local records in the selected filter, not remote telemetry.", row.Detail);
+                    Assert.Equal("Interpretation", row.StatusBadge);
                 });
             Assert.Collection(
                 presentation.ActionRows,

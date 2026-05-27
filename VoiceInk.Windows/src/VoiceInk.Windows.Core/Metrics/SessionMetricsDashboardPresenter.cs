@@ -118,7 +118,12 @@ public static class SessionMetricsDashboardPresenter
             "Export and Reset",
             "Metrics only",
             "CSV export writes a local file; reset clears metrics without deleting History or recordings.",
-            "User action")
+            "User action"),
+        new(
+            "Model Performance",
+            "Local averages",
+            "Model rows summarize completed local records in the selected filter, not remote telemetry.",
+            "Interpretation")
     ];
 
     private static IReadOnlyList<SessionMetricsActionRow> ActionRows(
