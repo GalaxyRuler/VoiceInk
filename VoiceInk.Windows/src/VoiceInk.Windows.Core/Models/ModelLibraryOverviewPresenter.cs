@@ -84,6 +84,11 @@ public static class ModelLibraryOverviewPresenter
             "Whisper.cpp GGML models commonly use filenames such as ggml-base.en.bin.",
             "Check import"),
         new(
+            "Download Source",
+            "whisper.cpp GGML",
+            "Catalog downloads use open-source whisper.cpp GGML model files hosted on Hugging Face.",
+            "Open source"),
+        new(
             "Compatibility Check",
             "GGML header",
             "VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.",

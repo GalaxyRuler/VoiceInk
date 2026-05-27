@@ -69,6 +69,7 @@ The Windows MVP already has:
 - First-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Imported local Whisper `.bin` model references with shell selection for the default model path.
 - Local Whisper catalog cards with direct GGML `.bin` downloads into the app data models folder and default model selection.
+- Local model library guidance that catalog downloads use open-source whisper.cpp GGML files hosted on Hugging Face.
 - Configurable global key+modifier shortcuts for primary and secondary recording toggle, paste last, paste last enhanced, retry last transcription, cancel recording, open history, quick add to dictionary, and toggle enhancement.
 - README notes for repo root commands, local .NET 10 SDK, and Windows App SDK short-path workaround.
 - Core dictionary models and replacement logic.
@@ -354,6 +355,12 @@ Model library actions slice completed on 2026-05-26:
 - Added Core model library action rows for catalog downloads, imported models, default model selection, and repair/warmup state.
 - Rendered the action rows under the AI Models local library overview so download/import/default/repair/warmup status is visible before using the catalog list.
 - Kept model download, import, default selection, repair, warmup, and settings persistence unchanged.
+
+Model download source guidance slice completed on 2026-05-27:
+
+- Added presenter-backed storage guidance naming the open-source whisper.cpp GGML model source.
+- Explained that catalog downloads use whisper.cpp GGML files hosted on Hugging Face.
+- Kept model catalog URLs, downloads, imports, validation, warmup, and default selection unchanged.
 
 Windows gaps:
 
