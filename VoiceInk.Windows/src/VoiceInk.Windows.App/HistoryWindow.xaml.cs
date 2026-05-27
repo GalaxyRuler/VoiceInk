@@ -210,7 +210,7 @@ public sealed partial class HistoryWindow : Window
             nextHistoryCursor = page.NextCursor;
             hasMoreHistory = page.HasMore;
             historyRows = historyItems
-                .Select(item => new HistoryWindowListRow(item.Id, HistoryListItem(item)))
+                .Select(item => new HistoryWindowListRow(item.Id, HistoryListItem(item), HistoryListAccessibleName(item)))
                 .ToArray();
             HistoryListView.ItemsSource = historyRows;
             RefreshHistoryListHeader();
@@ -801,6 +801,32 @@ public sealed partial class HistoryWindow : Window
         return $"{item.CreatedAt.LocalDateTime:g}  [{item.Status}]  {preview}";
     }
 
+    private static string HistoryListAccessibleName(TranscriptionHistoryItem item)
+    {
+        var text = item.EnhancedText ?? item.Text;
+        var preview = text.ReplaceLineEndings(" ").Trim();
+        if (preview.Length > 120)
+        {
+            preview = $"{preview[..120]}...";
+        }
+
+        var audio = item.AudioDuration > TimeSpan.Zero
+            ? $"Audio {Seconds(item.AudioDuration)} seconds"
+            : "Audio not recorded";
+
+        return string.Join(
+            ", ",
+            new[]
+            {
+                $"Recorded {item.CreatedAt.LocalDateTime:g}",
+                $"Status {item.Status}",
+                $"Provider {item.ProviderName}",
+                $"Language {item.Language}",
+                audio,
+                string.IsNullOrWhiteSpace(preview) ? "No transcript text" : preview
+            }.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
     private static string Seconds(TimeSpan duration) =>
         duration.TotalSeconds.ToString("0.000", CultureInfo.CurrentCulture);
 
@@ -817,7 +843,7 @@ public sealed partial class HistoryWindow : Window
         };
     }
 
-    private sealed record HistoryWindowListRow(Guid Id, string DisplayText)
+    private sealed record HistoryWindowListRow(Guid Id, string DisplayText, string AccessibleName)
     {
         public override string ToString() => DisplayText;
     }

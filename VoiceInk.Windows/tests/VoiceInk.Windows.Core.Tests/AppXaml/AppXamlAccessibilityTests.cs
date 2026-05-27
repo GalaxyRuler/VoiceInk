@@ -75,6 +75,24 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
     }
 
+    [Fact]
+    public void HistoryWindow_HistoryRows_BindAccessibleName()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "HistoryWindow.xaml"));
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "HistoryWindow.xaml.cs"));
+        var listStart = xaml.IndexOf("x:Name=\"HistoryListView\"", StringComparison.Ordinal);
+        Assert.True(listStart >= 0);
+        var templateStart = xaml.IndexOf("<DataTemplate>", listStart, StringComparison.Ordinal);
+        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
+        Assert.True(templateStart >= 0);
+        Assert.True(templateEnd > templateStart);
+
+        var template = xaml[templateStart..templateEnd];
+        Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
+        Assert.Contains("HistoryWindowListRow(Guid Id, string DisplayText, string AccessibleName)", code);
+        Assert.Contains("HistoryListAccessibleName", code);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

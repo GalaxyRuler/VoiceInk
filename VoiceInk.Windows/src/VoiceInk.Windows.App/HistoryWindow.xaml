@@ -63,7 +63,16 @@
                     x:Name="HistoryListView"
                     Grid.Row="2"
                     SelectionChanged="HistoryListView_SelectionChanged"
-                    SelectionMode="Multiple" />
+                    SelectionMode="Multiple">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                AutomationProperties.Name="{Binding AccessibleName}"
+                                Text="{Binding DisplayText}"
+                                TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
                 <Button
                     x:Name="LoadMoreHistoryButton"
                     Grid.Row="3"
