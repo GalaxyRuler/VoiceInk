@@ -7,7 +7,7 @@ This tracker is an approximate parity bar for the full free/open-source Windows 
 ## Overall
 
 ```text
-VoiceInk Windows parity  [####################] 98%
+VoiceInk Windows parity  [####################] 99%
 ```
 
 ## Area Bars
