@@ -102,6 +102,13 @@ public sealed class EnhancementContextReadinessPresenterTests
             },
             row =>
             {
+                Assert.Equal("Selected Text", row.Title);
+                Assert.Equal("Automatic", row.Value);
+                Assert.Equal("Reads the current selection with a temporary clipboard fallback when Windows and the target app allow it.", row.Detail);
+                Assert.Equal("Best effort", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Clipboard Context", row.Title);
                 Assert.Equal("Off", row.Value);
                 Assert.Equal("Turn on Clipboard Context when clipboard text should guide enhancement.", row.Detail);
@@ -127,6 +134,19 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Sanitized"
                 && row.Detail == "When browser context is available, VoiceInk keeps origin and path and strips query strings/fragments before prompt rendering."
                 && row.StatusBadge == "Reduced detail");
+    }
+
+    [Fact]
+    public void Present_ShowsSelectedTextActionGuidance()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Selected Text"
+                && row.Value == "Automatic"
+                && row.Detail == "Reads the current selection with a temporary clipboard fallback when Windows and the target app allow it."
+                && row.StatusBadge == "Best effort");
     }
 
     [Fact]

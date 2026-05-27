@@ -114,6 +114,7 @@ public static class EnhancementContextReadinessPresenter
         var rows = new List<EnhancementContextActionRow>
         {
             EnhancementActionRow(settings),
+            SelectedTextActionRow(),
             ClipboardActionRow(settings)
         };
 
@@ -139,6 +140,13 @@ public static class EnhancementContextReadinessPresenter
                 "Off",
                 "Enable Enhancement before context is appended to prompts.",
                 "Enable");
+
+    private static EnhancementContextActionRow SelectedTextActionRow() =>
+        new(
+            "Selected Text",
+            "Automatic",
+            "Reads the current selection with a temporary clipboard fallback when Windows and the target app allow it.",
+            "Best effort");
 
     private static EnhancementContextActionRow ClipboardActionRow(AppSettings settings) =>
         settings.UseClipboardContext
