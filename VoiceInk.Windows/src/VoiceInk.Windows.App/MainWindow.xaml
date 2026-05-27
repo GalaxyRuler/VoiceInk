@@ -1895,6 +1895,11 @@
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                     TextWrapping="Wrap" />
                                 <TextBlock
+                                    x:Name="MetricsSummaryLineTextBlock"
+                                    AutomationProperties.Name="Metrics selected filter summary"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
                                     x:Name="MetricsEmptyStateTextBlock"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                     TextWrapping="Wrap"

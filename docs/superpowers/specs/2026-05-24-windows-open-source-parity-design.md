@@ -896,6 +896,12 @@ Metrics model performance accessibility slice completed on 2026-05-27:
 - Bound the Metrics row templates to `AutomationProperties.Name` so assistive technologies receive a complete row summary.
 - Kept visible text, metric calculations, CSV export, filters, and performance status badges unchanged.
 
+Metrics summary line slice completed on 2026-05-28:
+
+- Added a presenter-backed summary line for the selected filter, completed sessions, words, and audio duration.
+- Rendered the summary near the Metrics dashboard hero with a stable UI Automation name.
+- Kept metrics persistence, aggregation, export, reset, History, and model performance behavior unchanged.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.

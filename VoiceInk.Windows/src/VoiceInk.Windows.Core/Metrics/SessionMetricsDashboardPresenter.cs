@@ -6,6 +6,7 @@ public sealed record SessionMetricsDashboardPresentation(
     string FilterLabel,
     string HeroTitle,
     string HeroSubtitle,
+    string SummaryLine,
     bool IsEmpty,
     string AudioDurationDisplay,
     IReadOnlyList<SessionMetricsDataGuidanceRow> DataGuidanceRows,
@@ -74,11 +75,15 @@ public static class SessionMetricsDashboardPresenter
         var heroSubtitle = isEmpty
             ? "Start your first recording to unlock value insights."
             : $"Dictated {summary.TotalWords.ToString("N0", culture)} words across {summary.TotalSessions.ToString("N0", culture)} {Pluralize(summary.TotalSessions, "session", "sessions")}.";
+        var summaryLine = isEmpty
+            ? $"{normalizedFilterLabel}: no completed sessions yet."
+            : $"{normalizedFilterLabel}: {summary.TotalSessions.ToString("N0", culture)} {Pluralize(summary.TotalSessions, "session", "sessions")}, {summary.TotalWords.ToString("N0", culture)} words, {FormatDuration(summary.TotalAudioDuration, culture)} audio.";
 
         return new SessionMetricsDashboardPresentation(
             normalizedFilterLabel,
             heroTitle,
             heroSubtitle,
+            summaryLine,
             isEmpty,
             $"Audio Duration: {FormatDuration(summary.TotalAudioDuration, culture)}",
             DataGuidanceRows(),

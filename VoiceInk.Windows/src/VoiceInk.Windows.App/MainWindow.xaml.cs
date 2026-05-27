@@ -5845,6 +5845,7 @@ public sealed partial class MainWindow : Window
     {
         MetricsHeroTitleTextBlock.Text = presentation.HeroTitle;
         MetricsHeroSubtitleTextBlock.Text = presentation.IsEmpty ? string.Empty : presentation.HeroSubtitle;
+        MetricsSummaryLineTextBlock.Text = presentation.SummaryLine;
         MetricsEmptyStateTextBlock.Text = presentation.IsEmpty ? presentation.HeroSubtitle : string.Empty;
         MetricsEmptyStateTextBlock.Visibility = presentation.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
         MetricsDashboardCardsListView.ItemsSource = presentation.Cards;
@@ -5858,6 +5859,7 @@ public sealed partial class MainWindow : Window
     {
         MetricsHeroTitleTextBlock.Text = message;
         MetricsHeroSubtitleTextBlock.Text = string.Empty;
+        MetricsSummaryLineTextBlock.Text = string.Empty;
         MetricsEmptyStateTextBlock.Text = string.Empty;
         MetricsEmptyStateTextBlock.Visibility = Visibility.Collapsed;
         MetricsDashboardCardsListView.ItemsSource = Array.Empty<SessionMetricsDashboardCard>();

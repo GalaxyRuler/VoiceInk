@@ -40,6 +40,17 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Fact]
+    public void MainWindow_MetricsSummaryLine_HasAutomationName()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("x:Name=\"MetricsSummaryLineTextBlock\"", xaml);
+        Assert.Contains("AutomationProperties.Name=\"Metrics selected filter summary\"", xaml);
+        Assert.Contains("MetricsSummaryLineTextBlock.Text = presentation.SummaryLine", code);
+    }
+
+    [Fact]
     public void MainWindow_ShellNavigation_UsesFooterMenuItemsForSettingsAndAbout()
     {
         var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));

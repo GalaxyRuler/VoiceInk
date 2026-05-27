@@ -25,6 +25,7 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.Equal("Last 7 days", presentation.FilterLabel);
             Assert.Equal("You have saved 25m 0s with VoiceInk", presentation.HeroTitle);
             Assert.Equal("Dictated 1,234 words across 2 sessions.", presentation.HeroSubtitle);
+            Assert.Equal("Last 7 days: 2 sessions, 1,234 words, 10m 0s audio.", presentation.SummaryLine);
             Assert.Equal("Audio Duration: 10m 0s", presentation.AudioDurationDisplay);
             Assert.Collection(
                 presentation.DataGuidanceRows,
@@ -259,6 +260,7 @@ public sealed class SessionMetricsDashboardPresenterTests
             Assert.True(presentation.IsEmpty);
             Assert.Equal("No Recorder Sessions Yet", presentation.HeroTitle);
             Assert.Equal("Start your first recording to unlock value insights.", presentation.HeroSubtitle);
+            Assert.Equal("All time: no completed sessions yet.", presentation.SummaryLine);
             Assert.Empty(presentation.Cards);
             Assert.Equal("Audio Duration: 0s", presentation.AudioDurationDisplay);
             Assert.Equal("0 completed sessions in All time.", presentation.DiagnosticsRows[0].Detail);
