@@ -1,0 +1,25 @@
+{
+  "class": "container",
+  "hardwareRequirement": "standard",
+  "dryRunOnly": true,
+  "networkMode": "none",
+  "liveExecution": {
+    "allowed": false,
+    "requiresNetwork": false
+  },
+  "commandShell": "pwsh",
+  "commands": [
+    {
+      "name": "release-readiness",
+      "run": ".\\VoiceInk.Windows\\scripts\\test-release-readiness.ps1"
+    },
+    {
+      "name": "packaging-assets",
+      "run": "& '..\\.dotnet-sdk-10\\dotnet.exe' test VoiceInk.Windows\\tests\\VoiceInk.Windows.Core.Tests\\VoiceInk.Windows.Core.Tests.csproj --filter FullyQualifiedName~WindowsPackagingAssetsTests"
+    }
+  ],
+  "notes": [
+    "Dry-run only: this profile plans release metadata checks and never signs, installs, publishes, imports certificates, or mutates trust stores.",
+    "Live container execution remains closed until a project owner reviews image/runtime/network choices."
+  ]
+}

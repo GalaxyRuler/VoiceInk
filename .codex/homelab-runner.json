@@ -1,0 +1,35 @@
+﻿{
+    "schemaVersion":  1,
+    "projectName":  "VoiceInk Windows",
+    "homelabRootEnv":  "CODEX_HOMELAB_ROOT",
+    "homelabRootFallback":  "C:\\Users\\Admin\\Documents\\Codex\\Homelab\\codex-isolated-test-runners",
+    "allowedClasses":  [
+                           "container",
+                           "headless"
+                       ],
+    "preferredRoutes":  {
+                            "container":  "container",
+                            "headless":  "container"
+                        },
+    "profiles":  {
+                     "windows-dotnet-cli":  {
+                                                "class":  "headless",
+                                                "profilePath":  "qa/profiles/windows-dotnet-cli.json",
+                                                "approvalRequired":  false
+                                            },
+                     "release-metadata":  {
+                                              "class":  "container",
+                                              "profilePath":  "qa/profiles/release-metadata.json",
+                                              "approvalRequired":  false
+                                          }
+                 },
+    "secretRefs":  {
+
+                   },
+    "forbidden":  [
+                      "Do not run GUI smoke tests on active WHITEDRAGON",
+                      "Do not install or uninstall MSI/MSIX packages on active WHITEDRAGON",
+                      "Do not import signing certificates or mutate certificate trust stores from Homelab metadata",
+                      "Do not store project-specific runner profiles in Homelab core"
+                  ]
+}

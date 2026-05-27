@@ -1,0 +1,29 @@
+{
+  "class": "headless",
+  "hardwareRequirement": "standard",
+  "dryRunOnly": true,
+  "networkMode": "none",
+  "liveExecution": {
+    "allowed": false,
+    "requiresNetwork": false
+  },
+  "commandShell": "pwsh",
+  "commands": [
+    {
+      "name": "restore",
+      "run": "& '..\\.dotnet-sdk-10\\dotnet.exe' restore VoiceInk.Windows\\VoiceInk.Windows.sln"
+    },
+    {
+      "name": "test",
+      "run": "& '..\\.dotnet-sdk-10\\dotnet.exe' test VoiceInk.Windows\\VoiceInk.Windows.sln"
+    },
+    {
+      "name": "build-debug-x64",
+      "run": "& '..\\.dotnet-sdk-10\\dotnet.exe' build VoiceInk.Windows\\VoiceInk.Windows.sln -c Debug -p:Platform=x64"
+    }
+  ],
+  "notes": [
+    "Dry-run only until a Windows-capable headless runner profile is explicitly approved.",
+    "Uses the repo-local .NET 10 SDK path expected by this worktree layout."
+  ]
+}
