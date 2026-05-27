@@ -880,6 +880,10 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
                         <TextBlock
+                            x:Name="PowerModeSessionGuidanceTextBlock"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
                             x:Name="PowerModeCountTextBlock"
                             FontWeight="SemiBold"
                             TextWrapping="Wrap" />

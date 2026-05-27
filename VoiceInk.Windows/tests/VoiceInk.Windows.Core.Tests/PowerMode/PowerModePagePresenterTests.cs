@@ -27,6 +27,9 @@ public sealed class PowerModePagePresenterTests
         Assert.Equal(
             "Rule overrides temporarily layer over Settings while the selected Power Mode is active; blank override fields keep the current Settings value.",
             presentation.OverrideGuidance);
+        Assert.Equal(
+            "Automatic matches and manual selections are resolved for each recording, so rule overrides do not rewrite your base Settings.",
+            presentation.SessionGuidance);
         Assert.Equal("2 Power Modes (1 enabled, 1 disabled)", presentation.CountLabel);
         Assert.False(presentation.IsEmpty);
         Assert.Equal(string.Empty, presentation.EmptyTitle);
@@ -49,6 +52,16 @@ public sealed class PowerModePagePresenterTests
                 Assert.Equal("No direct shortcut", row.ShortcutSummary);
                 Assert.Equal("Disabled", row.StatusBadge);
             });
+    }
+
+    [Fact]
+    public void Present_ExposesSessionScopedOverrideGuidance()
+    {
+        var presentation = PowerModePagePresenter.Present([]);
+
+        Assert.Equal(
+            "Automatic matches and manual selections are resolved for each recording, so rule overrides do not rewrite your base Settings.",
+            presentation.SessionGuidance);
     }
 
     [Fact]
