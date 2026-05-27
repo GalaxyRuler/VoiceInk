@@ -144,6 +144,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("VoiceInk.Windows.App.deps.json", script);
         Assert.Contains("VoiceInk.Windows.App.runtimeconfig.json", script);
         Assert.Contains("VOICEINK-WINDOWS-README.txt", script);
+        Assert.Contains("LICENSE.txt", script);
+        Assert.Contains("GNU GENERAL PUBLIC LICENSE", script);
         Assert.Contains("Microsoft.WindowsAppRuntime.Bootstrap.dll", script);
         Assert.Contains("Expand-Archive", script);
         Assert.Contains("Refusing to inspect path outside artifact root", script);
@@ -154,6 +156,25 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Remove-Item -LiteralPath $PackagePath", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DevZipPackageScript_IncludesRepositoryLicenseText()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "package-dev-zip.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("LICENSE", script);
+        Assert.Contains("LICENSE.txt", script);
+        Assert.Contains("Copy-Item", script);
+        Assert.Contains("VOICEINK-WINDOWS-README.txt", script);
+        Assert.Contains("open-source Windows fork", script);
+
+        Assert.DoesNotContain("Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

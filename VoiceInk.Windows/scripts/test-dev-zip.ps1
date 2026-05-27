@@ -108,11 +108,17 @@ Assert-FileExists -RootPath $inspectRoot -RelativePath "VoiceInk.Windows.App.exe
 Assert-FileExists -RootPath $inspectRoot -RelativePath "VoiceInk.Windows.App.deps.json"
 Assert-FileExists -RootPath $inspectRoot -RelativePath "VoiceInk.Windows.App.runtimeconfig.json"
 Assert-FileExists -RootPath $inspectRoot -RelativePath "VOICEINK-WINDOWS-README.txt"
+Assert-FileExists -RootPath $inspectRoot -RelativePath "LICENSE.txt"
 Assert-FileExists -RootPath $inspectRoot -RelativePath "Microsoft.WindowsAppRuntime.Bootstrap.dll"
 
 $readme = Get-Content -Raw -LiteralPath (Join-Path $inspectRoot "VOICEINK-WINDOWS-README.txt")
 if ($readme -notmatch "C:\\Models\\ggml-base\.en\.bin") {
     throw "Package README must include the local GGML model smoke-test path."
+}
+
+$license = Get-Content -Raw -LiteralPath (Join-Path $inspectRoot "LICENSE.txt")
+if ($license -notmatch "GNU GENERAL PUBLIC LICENSE") {
+    throw "Package LICENSE.txt must include the GNU GPL license text."
 }
 
 Write-Host "Dev ZIP smoke validation passed:"

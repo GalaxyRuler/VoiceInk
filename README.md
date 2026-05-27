@@ -101,7 +101,7 @@ The Windows fork includes a repo-local packaging script for an unpackaged, self-
 .\VoiceInk.Windows\scripts\package-dev-zip.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe"
 ```
 
-The ZIP is written to `VoiceInk.Windows\artifacts\dev-zip\VoiceInk-Windows-dev-win-x64.zip`. Extract it and launch `VoiceInk.Windows.App.exe`. On first run, configure a whisper.cpp-compatible GGML `.bin` model such as `C:\Models\ggml-base.en.bin`; app data remains under `%LocalAppData%\VoiceInk.Windows`.
+The ZIP is written to `VoiceInk.Windows\artifacts\dev-zip\VoiceInk-Windows-dev-win-x64.zip`. Extract it and launch `VoiceInk.Windows.App.exe`. On first run, configure a whisper.cpp-compatible GGML `.bin` model such as `C:\Models\ggml-base.en.bin`; app data remains under `%LocalAppData%\VoiceInk.Windows`. The dev ZIP includes the repository GPL license text as `LICENSE.txt`.
 
 This dev ZIP is for source-built testing. It does not create Start Menu shortcuts, register uninstall entries, sign binaries, or install an MSIX/package identity.
 

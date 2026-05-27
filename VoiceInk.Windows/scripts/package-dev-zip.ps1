@@ -162,6 +162,13 @@ Notes:
 
 Set-Content -LiteralPath (Join-Path $packageDirectory "VOICEINK-WINDOWS-README.txt") -Value $readme -Encoding UTF8
 
+$licensePath = Join-Path $repoRoot "LICENSE"
+if (!(Test-Path -LiteralPath $licensePath -PathType Leaf)) {
+    throw "Repository LICENSE file was not found: $licensePath"
+}
+
+Copy-Item -LiteralPath $licensePath -Destination (Join-Path $packageDirectory "LICENSE.txt") -Force
+
 Write-Host "Creating ZIP package..."
 Compress-Archive -Path (Join-Path $packageDirectory "*") -DestinationPath $zipPath -Force
 
