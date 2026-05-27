@@ -8,4 +8,5 @@ public sealed record TrayShellState(
     bool CanOpenHistory,
     bool CanUseQuickSettings,
     string VisibilityGuidance,
-    string VisibilityMenuText);
+    string VisibilityMenuText,
+    string TooltipText);

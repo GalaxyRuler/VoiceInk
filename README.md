@@ -164,6 +164,8 @@ On first launch, VoiceInk for Windows opens a setup dialog for the local whisper
 
 The OpenAI enhancement preset follows the macOS request-temperature rule: `gpt-5` model names use `1.0`, while other OpenAI models and Custom OpenAI-compatible endpoints use the existing `0.3` default.
 
+The tray icon tooltip includes the current VoiceInk status plus concise taskbar corner overflow pinning guidance, while the tray menu keeps the longer visibility guidance row.
+
 Primary and secondary recording shortcuts each support key-based or modifier-only Toggle, Push to Talk, and Hybrid modes. Windows uses a low-level key-up hook only for recording shortcuts and keeps utility shortcuts on `RegisterHotKey`.
 
 While the floating recorder is active, `Ctrl+1` through `Ctrl+0` selects prompt slots and `Alt+1` through `Alt+0` selects enabled Power Mode rules.

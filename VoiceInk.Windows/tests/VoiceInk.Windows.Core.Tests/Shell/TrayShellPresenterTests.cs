@@ -25,6 +25,7 @@ public sealed class TrayShellPresenterTests
             "If the VoiceInk notification-area icon is hidden, open Windows taskbar corner overflow and pin it; the main window can always be opened from the tray menu.",
             state.VisibilityGuidance);
         Assert.Equal("Taskbar settings: Other system tray icons", state.VisibilityMenuText);
+        Assert.Equal("VoiceInk - Idle - Pin via taskbar corner overflow", state.TooltipText);
     }
 
     [Fact]

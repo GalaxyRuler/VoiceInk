@@ -140,7 +140,7 @@ public sealed class TrayIconService : IDisposable
         historyItem.Enabled = state.CanOpenHistory;
         SetQuickSettingsEnabled(state.CanUseQuickSettings);
         visibilityGuidanceItem.Text = state.VisibilityMenuText;
-        notifyIcon.Text = Truncate($"VoiceInk - {state.StatusText}", MaxTooltipLength);
+        notifyIcon.Text = Truncate(state.TooltipText, MaxTooltipLength);
     }
 
     public void UpdateQuickSettings(TrayQuickSettingsState state)
