@@ -67,6 +67,16 @@ public sealed class GlobalShortcutTests
         Assert.Equal("Windows-key shortcuts are reserved by Windows.", error);
     }
 
+    [Fact]
+    public void TryParse_RejectsF12BecauseWindowsReservesIt()
+    {
+        var parsed = GlobalShortcut.TryParse("Ctrl+F12", out var shortcut, out var error);
+
+        Assert.False(parsed);
+        Assert.Null(shortcut);
+        Assert.Equal("F12 is reserved by Windows for debugger use.", error);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("Space")]
@@ -85,7 +95,6 @@ public sealed class GlobalShortcutTests
     }
 
     [Theory]
-    [InlineData("Ctrl+F12", 0x7B, "Ctrl+F12")]
     [InlineData("Alt+Escape", 0x1B, "Alt+Escape")]
     [InlineData("Shift+0", 0x30, "Shift+0")]
     public void TryParse_SupportsExpectedKeys(string value, int expectedVirtualKey, string expectedDisplay)

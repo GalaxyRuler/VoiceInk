@@ -33,6 +33,12 @@ public sealed record GlobalShortcut(
             return false;
         }
 
+        if (virtualKey == 0x7B)
+        {
+            error = "F12 is reserved by Windows for debugger use.";
+            return false;
+        }
+
         if (!control && !alt && !shift)
         {
             error = "A global shortcut must include at least one modifier.";
@@ -137,6 +143,12 @@ public sealed record GlobalShortcut(
             if (!TryParseKey(token, out var parsedVirtualKey, out var parsedKeyName))
             {
                 error = $"Unsupported shortcut key: {token}.";
+                return false;
+            }
+
+            if (parsedVirtualKey == 0x7B)
+            {
+                error = "F12 is reserved by Windows for debugger use.";
                 return false;
             }
 

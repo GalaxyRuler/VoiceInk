@@ -17,7 +17,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Core dictation pipeline | 88% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
 | Shell and tray | 88% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 92% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
-| Shortcuts | 97% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, and read-only recorder fields with explicit Record buttons. Remaining work is rare Windows-reserved-key conflict recovery. |
+| Shortcuts | 98% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, and duplicate assignment detection. Remaining work is rare native registration conflict diagnostics when another app owns a shortcut. |
 | Model management | 90% | `[##################--]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows including expected `ggml-*.bin` filename guidance, model path health checks with actionable repair and user-selected validation guidance, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 99% | `[####################]` | OpenAI-compatible adapter with endpoint-query `response_format` support, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests with advanced endpoint query option preservation, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, Deepgram/AssemblyAI/Soniox/Speechmatics/Cartesia live preview streaming, and a user-owned-key smoke runbook exist. Remaining cloud work is advanced provider-specific options. |
 | AI enhancement | 92% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, explicit no-automatic-provider-fallback privacy guidance, bounded timeout/retry readiness guidance, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Onboarding permission fallback guidance  [####################] 100%
+Shortcut reserved-key guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows onboarding permission fallback guidance spec and implementation plan.
-- Added failing onboarding presenter assertions for a manual microphone privacy fallback action.
-- Added a `Manual Privacy Path` setup action that points to Settings > Privacy & security > Microphone.
-- Ran focused onboarding presenter tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows shortcut reserved-key guidance spec and implementation plan.
+- Added a failing shortcut parser assertion for documented F12 reserved-key behavior.
+- Rejected F12 during typed shortcut parsing and captured-key shortcut creation.
+- Ran the focused shortcut suite, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
