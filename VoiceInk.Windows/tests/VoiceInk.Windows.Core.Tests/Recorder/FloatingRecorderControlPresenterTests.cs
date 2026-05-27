@@ -26,6 +26,8 @@ public sealed class FloatingRecorderControlPresenterTests
         Assert.True(state.CanToggleEnhancement);
         Assert.False(state.IsEnhancementEnabled);
         Assert.Equal("Chat", state.PromptTitle);
+        Assert.Equal("Recorder prompt chooser", state.PromptButtonAccessibleName);
+        Assert.Equal("Opens the recorder prompt chooser and enables AI enhancement before selecting a prompt.", state.PromptButtonHelpText);
         Assert.Equal(prompts.Count, state.PromptChoices.Count);
         Assert.All(state.PromptChoices, choice => Assert.True(choice.IsDisabled));
         Assert.Equal(selectedPrompt.Id, Assert.Single(state.PromptChoices, choice => choice.IsSelected).Id);
@@ -88,8 +90,29 @@ public sealed class FloatingRecorderControlPresenterTests
         Assert.Equal("Terminal", state.PowerModeTitle);
         Assert.Equal(">", state.PowerModeEmoji);
         Assert.Equal("> Terminal", state.PowerModeButtonLabel);
+        Assert.Equal("Recorder Power Mode: > Terminal", state.PowerModeButtonAccessibleName);
+        Assert.Equal("Opens the recorder Power Mode chooser. Current selection: > Terminal.", state.PowerModeButtonHelpText);
         Assert.Equal(new Guid?[] { null, Guid.Parse("11111111-1111-1111-1111-111111111111"), selectedRuleId }, state.PowerModeChoices.Select(choice => choice.Id).ToArray());
         Assert.Equal(selectedRuleId, Assert.Single(state.PowerModeChoices, choice => choice.IsSelected).Id);
+    }
+
+    [Fact]
+    public void FromSettings_ExposesPromptControlAccessibleNameWhenEnhancementIsEnabled()
+    {
+        var prompts = EnhancementPromptCatalog.CreateDefaultPrompts();
+        var selectedPrompt = prompts.Single(prompt => prompt.Title == "Chat");
+
+        var state = FloatingRecorderControlPresenter.FromSettings(
+            new AppSettings
+            {
+                IsEnhancementEnabled = true,
+                SelectedEnhancementPromptId = selectedPrompt.Id
+            },
+            prompts,
+            []);
+
+        Assert.Equal("Recorder prompt: Chat", state.PromptButtonAccessibleName);
+        Assert.Equal("Opens the recorder prompt chooser. Current prompt: Chat.", state.PromptButtonHelpText);
     }
 
     [Fact]

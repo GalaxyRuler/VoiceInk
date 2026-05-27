@@ -249,6 +249,12 @@ Floating-recorder state accessibility slice completed on 2026-05-27:
 - Added presenter-backed UI Automation HelpText for longer state detail, controls, elapsed time, and live-preview disclosure.
 - Kept visual layout, no-activate behavior, Stop/Cancel commands, Prompt/Power controls, and live transcript gating unchanged.
 
+Floating-recorder control accessibility slice completed on 2026-05-27:
+
+- Added presenter-backed dynamic UI Automation names and HelpText for the Prompt and Power Mode recorder buttons.
+- Bound the WinUI recorder buttons to the Core semantic strings and aligned their tooltips with the same HelpText.
+- Kept visible labels, no-activate behavior, hover popovers, Prompt/Power persistence, and Stop/Cancel behavior unchanged.
+
 Windows gaps:
 
 - Pixel-perfect macOS physical notch geometry is intentionally not implemented because Windows does not expose macOS safe-area notch metrics; the Windows equivalent is a top-center notch-style recorder.

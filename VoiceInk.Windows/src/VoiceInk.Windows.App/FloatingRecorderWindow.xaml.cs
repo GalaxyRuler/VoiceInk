@@ -114,11 +114,9 @@ public sealed partial class FloatingRecorderWindow : Window
 
         PromptButtonTextBlock.Text = state.IsEnhancementEnabled ? state.PromptTitle : "Prompt";
         PromptButton.IsEnabled = canUseControls && state.CanOpenPromptControls;
-        ToolTipService.SetToolTip(
-            PromptButton,
-            state.IsEnhancementEnabled
-                ? $"Prompt: {state.PromptTitle}"
-                : "Prompt chooser");
+        AutomationProperties.SetName(PromptButton, state.PromptButtonAccessibleName);
+        AutomationProperties.SetHelpText(PromptButton, state.PromptButtonHelpText);
+        ToolTipService.SetToolTip(PromptButton, state.PromptButtonHelpText);
 
         suppressPromptEnhancementChanged = true;
         PromptEnhancementCheckBox.Content = state.PromptHeaderTitle;
@@ -130,11 +128,9 @@ public sealed partial class FloatingRecorderWindow : Window
         var powerModeLabel = state.PowerModeButtonLabel;
         PowerModeButtonTextBlock.Text = powerModeLabel;
         PowerModeButton.IsEnabled = canUseControls;
-        ToolTipService.SetToolTip(
-            PowerModeButton,
-            state.CanOpenPowerModeControls
-                ? $"Power Mode: {powerModeLabel}"
-                : "No Power Modes available");
+        AutomationProperties.SetName(PowerModeButton, state.PowerModeButtonAccessibleName);
+        AutomationProperties.SetHelpText(PowerModeButton, state.PowerModeButtonHelpText);
+        ToolTipService.SetToolTip(PowerModeButton, state.PowerModeButtonHelpText);
 
         PowerModePopoverHeaderTextBlock.Text = state.PowerModeHeaderTitle;
         RenderPowerModeChoices(state, canUseControls);

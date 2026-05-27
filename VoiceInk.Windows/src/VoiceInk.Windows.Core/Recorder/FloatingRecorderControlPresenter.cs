@@ -19,6 +19,8 @@ public sealed record FloatingRecorderPowerModeChoice(
 public sealed record FloatingRecorderControlState(
     string PromptHeaderTitle,
     string PromptTitle,
+    string PromptButtonAccessibleName,
+    string PromptButtonHelpText,
     bool IsEnhancementEnabled,
     bool CanToggleEnhancement,
     bool CanOpenPromptControls,
@@ -27,6 +29,8 @@ public sealed record FloatingRecorderControlState(
     string PowerModeTitle,
     string PowerModeEmoji,
     string PowerModeButtonLabel,
+    string PowerModeButtonAccessibleName,
+    string PowerModeButtonHelpText,
     string PowerModeEmptyTitle,
     bool CanOpenPowerModeControls,
     IReadOnlyList<FloatingRecorderPowerModeChoice> PowerModeChoices);
@@ -80,19 +84,25 @@ public static class FloatingRecorderControlPresenter
                 selectedRule?.Id == rule.Id)))
             .ToArray();
 
+        var powerModeTitle = selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule);
+        var powerModeEmoji = selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule);
+        var powerModeButtonLabel = PowerModeButtonLabel(powerModeTitle, powerModeEmoji);
+
         return new FloatingRecorderControlState(
             "AI Enhancement",
             selectedPrompt.Title,
+            PromptButtonAccessibleName(selectedPrompt.Title, settings.IsEnhancementEnabled),
+            PromptButtonHelpText(selectedPrompt.Title, settings.IsEnhancementEnabled),
             settings.IsEnhancementEnabled,
             CanToggleEnhancement: true,
             CanOpenPromptControls: promptChoices.Length > 0,
             promptChoices,
             "Select Power Mode",
-            selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
-            selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule),
-            PowerModeButtonLabel(
-                selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
-                selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule)),
+            powerModeTitle,
+            powerModeEmoji,
+            powerModeButtonLabel,
+            PowerModeButtonAccessibleName(powerModeButtonLabel, settings.IsPowerModeEnabled && enabledPowerModeRules.Length > 0),
+            PowerModeButtonHelpText(powerModeButtonLabel, settings.IsPowerModeEnabled && enabledPowerModeRules.Length > 0),
             "No Power Modes Available",
             CanOpenPowerModeControls: settings.IsPowerModeEnabled && enabledPowerModeRules.Length > 0,
             powerModeChoices);
@@ -108,4 +118,24 @@ public static class FloatingRecorderControlPresenter
         string.IsNullOrWhiteSpace(emoji)
             ? title
             : $"{emoji} {title}";
+
+    private static string PromptButtonAccessibleName(string promptTitle, bool isEnhancementEnabled) =>
+        isEnhancementEnabled
+            ? $"Recorder prompt: {promptTitle}"
+            : "Recorder prompt chooser";
+
+    private static string PromptButtonHelpText(string promptTitle, bool isEnhancementEnabled) =>
+        isEnhancementEnabled
+            ? $"Opens the recorder prompt chooser. Current prompt: {promptTitle}."
+            : "Opens the recorder prompt chooser and enables AI enhancement before selecting a prompt.";
+
+    private static string PowerModeButtonAccessibleName(string powerModeButtonLabel, bool hasPowerModeChoices) =>
+        hasPowerModeChoices
+            ? $"Recorder Power Mode: {powerModeButtonLabel}"
+            : "Recorder Power Mode unavailable";
+
+    private static string PowerModeButtonHelpText(string powerModeButtonLabel, bool hasPowerModeChoices) =>
+        hasPowerModeChoices
+            ? $"Opens the recorder Power Mode chooser. Current selection: {powerModeButtonLabel}."
+            : "No Power Modes are available in the recorder chooser.";
 }
