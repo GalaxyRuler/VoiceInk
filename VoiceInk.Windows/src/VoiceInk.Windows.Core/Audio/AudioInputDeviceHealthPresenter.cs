@@ -33,10 +33,20 @@ public static class AudioInputDeviceHealthPresenter
 
     private static IReadOnlyList<AudioInputDeviceHealthRow> BuildChoiceRows(
         IReadOnlyList<AudioInputDeviceChoice> choices,
-        AudioInputDeviceChoice? selectedChoice) =>
-        choices
+        AudioInputDeviceChoice? selectedChoice)
+    {
+        var rows = choices
             .Select(choice => BuildChoiceRow(choice, selectedChoice))
-            .ToArray();
+            .ToList();
+
+        if (selectedChoice?.DeviceNumber is null)
+        {
+            rows.Add(WindowsSoundSettingsRow());
+            rows.Add(MicrophonePrivacyRow());
+        }
+
+        return rows;
+    }
 
     private static IReadOnlyList<AudioInputDeviceHealthRow> BuildPrioritizedRows(
         IReadOnlyList<AudioInputDeviceChoice> choices,
@@ -68,20 +78,8 @@ public static class AudioInputDeviceHealthPresenter
                     AudioInputDeviceSelectionNoticeKind.Warning,
                     IsSelected: true,
                     IsAvailable: true),
-                new AudioInputDeviceHealthRow(
-                    "Windows Sound Settings",
-                    "Open ms-settings:sound to choose or test the Windows default input device.",
-                    "Open Settings",
-                    AudioInputDeviceSelectionNoticeKind.Info,
-                    IsSelected: false,
-                    IsAvailable: true),
-                new AudioInputDeviceHealthRow(
-                    "Microphone Privacy",
-                    "Open ms-settings:privacy-microphone and enable 'Let desktop apps access your microphone' if Windows blocks recording.",
-                    "Check Access",
-                    AudioInputDeviceSelectionNoticeKind.Info,
-                    IsSelected: false,
-                    IsAvailable: true)
+                WindowsSoundSettingsRow(),
+                MicrophonePrivacyRow()
             ];
         }
 
@@ -141,6 +139,24 @@ public static class AudioInputDeviceHealthPresenter
             AudioInputDeviceSelectionNoticeKind.Warning,
             IsSelected: false,
             IsAvailable: false);
+
+    private static AudioInputDeviceHealthRow WindowsSoundSettingsRow() =>
+        new(
+            "Windows Sound Settings",
+            "Open ms-settings:sound to choose or test the Windows default input device.",
+            "Open Settings",
+            AudioInputDeviceSelectionNoticeKind.Info,
+            IsSelected: false,
+            IsAvailable: true);
+
+    private static AudioInputDeviceHealthRow MicrophonePrivacyRow() =>
+        new(
+            "Microphone Privacy",
+            "Open ms-settings:privacy-microphone and enable 'Let desktop apps access your microphone' if Windows blocks recording.",
+            "Check Access",
+            AudioInputDeviceSelectionNoticeKind.Info,
+            IsSelected: false,
+            IsAvailable: true);
 
     private static bool DeviceMatches(
         AudioInputDeviceChoice choice,
