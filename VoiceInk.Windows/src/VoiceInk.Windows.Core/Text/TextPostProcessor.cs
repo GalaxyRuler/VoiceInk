@@ -65,14 +65,14 @@ public static class TextPostProcessor
             return string.Empty;
         }
 
-        if (options.WordReplacements is { Count: > 0 })
-        {
-            processed = DictionaryService.ApplyReplacements(processed, options.WordReplacements);
-        }
-
         if (options.ApplyTextFormatting)
         {
             processed = ApplyTextFormatting(processed);
+        }
+
+        if (options.WordReplacements is { Count: > 0 })
+        {
+            processed = DictionaryService.ApplyReplacements(processed, options.WordReplacements);
         }
 
         processed = ApplyPunctuationCleanup(processed, options.PunctuationCleanupMode);

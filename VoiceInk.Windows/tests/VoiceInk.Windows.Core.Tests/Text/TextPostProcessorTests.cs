@@ -182,6 +182,38 @@ public sealed class TextPostProcessorTests
     }
 
     [Fact]
+    public void Process_AppliesTextFormattingBeforeWordReplacements()
+    {
+        var replacements = new[]
+        {
+            new WordReplacement(
+                Guid.NewGuid(),
+                "First sentence has enough words. Second sentence has enough words. Third sentence has enough words. Fourth sentence has enough words.",
+                "First paragraph replaced.",
+                DateTimeOffset.UtcNow)
+        };
+
+        var result = TextPostProcessor.Process(
+            string.Join(
+                " ",
+                "First sentence has enough words.",
+                "Second sentence has enough words.",
+                "Third sentence has enough words.",
+                "Fourth sentence has enough words.",
+                "Fifth sentence has enough words."),
+            new TextPostProcessingOptions(
+                WordReplacements: replacements,
+                ApplyTextFormatting: true));
+
+        Assert.Equal(
+            string.Join(
+                "\n\n",
+                "First paragraph replaced.",
+                "Fifth sentence has enough words."),
+            result);
+    }
+
+    [Fact]
     public void Process_AppliesTextFormattingBeforePunctuationCleanup()
     {
         var result = TextPostProcessor.Process(

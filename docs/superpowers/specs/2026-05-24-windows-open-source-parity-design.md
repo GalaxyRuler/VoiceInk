@@ -280,12 +280,18 @@ macOS pipeline order:
 
 Implemented core:
 
-- Hallucination marker cleanup, filler-word filtering, whitespace normalization, word replacements, punctuation cleanup, lowercase output, trailing-space handling, and prompt trigger detection.
+- Hallucination marker cleanup, filler-word filtering, whitespace normalization, macOS-style text formatting, word replacements after formatting, punctuation cleanup, lowercase output, trailing-space handling, and prompt trigger detection.
 - History model/storage/export support for completed, failed, and canceled statuses.
 
 Windows gaps:
 
-- macOS-style formatting pass beyond cleanup preferences.
+- Deeper transcript polish and edge-case tuning.
+
+Transcript replacement order parity slice completed on 2026-05-27:
+
+- Matched the macOS post-processing order by running dictionary replacements after the optional text-formatting pass.
+- Kept user cleanup preferences after replacements so punctuation removal, lowercase output, and trailing-space behavior remain paste-ready finalization steps.
+- Added a focused Core regression test that fails when replacements run before formatting and passes only when formatted paragraph boundaries are available to replacement rules.
 
 Failed dictation history slice completed on 2026-05-25:
 
@@ -1195,7 +1201,7 @@ Status on 2026-05-24:
 - Completed commercial VoiceInk Pro replacement with neutral About / Open Source and local-only diagnostics actions.
 - Completed first-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
-- Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
+- Completed dictation pipeline wiring for cleanup settings and dictionary replacements, including macOS-aligned formatting-before-replacement order.
 - Completed shell controls for removing filler words, editing custom filler-word lists, punctuation cleanup, lowercase output, and trailing-space settings.
 - Remaining for this slice: dedicated Dictionary navigation page/richer layout, endpoint-ID backed audio input identity, waveform polish, and richer visual parity.
 - Add focused tests and docs.
