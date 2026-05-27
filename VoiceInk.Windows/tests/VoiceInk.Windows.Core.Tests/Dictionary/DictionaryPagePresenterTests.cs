@@ -97,6 +97,13 @@ public sealed class DictionaryPagePresenterTests
             },
             row =>
             {
+                Assert.Equal("Quick Add", row.Title);
+                Assert.Equal("Tray or shortcut", row.Value);
+                Assert.Equal("Use the notification-area menu or Quick Add shortcut to add vocabulary and replacements without opening the full Dictionary page.", row.Detail);
+                Assert.Equal("Fast path", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Import / Export", row.Title);
                 Assert.Equal("Local JSON", row.Value);
                 Assert.Equal("Dictionary import and export use local files and do not sync automatically.", row.Detail);
@@ -144,6 +151,19 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Kept locally but skipped during replacement cleanup.", row.DetailText);
                 Assert.False(row.IsEnabled);
             });
+    }
+
+    [Fact]
+    public void Present_ShowsQuickAddGuidance()
+    {
+        var presentation = DictionaryPagePresenter.Present([], []);
+
+        Assert.Contains(
+            presentation.RuleGuidanceRows,
+            row => row.Title == "Quick Add"
+                && row.Value == "Tray or shortcut"
+                && row.Detail == "Use the notification-area menu or Quick Add shortcut to add vocabulary and replacements without opening the full Dictionary page."
+                && row.StatusBadge == "Fast path");
     }
 
     [Fact]

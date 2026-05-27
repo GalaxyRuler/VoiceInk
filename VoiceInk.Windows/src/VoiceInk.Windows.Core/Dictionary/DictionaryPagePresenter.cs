@@ -150,6 +150,11 @@ public static class DictionaryPagePresenter
             "Disabled replacements stay in the local dictionary and are skipped until re-enabled.",
             "Paused"),
         new(
+            "Quick Add",
+            "Tray or shortcut",
+            "Use the notification-area menu or Quick Add shortcut to add vocabulary and replacements without opening the full Dictionary page.",
+            "Fast path"),
+        new(
             "Import / Export",
             "Local JSON",
             "Dictionary import and export use local files and do not sync automatically.",
