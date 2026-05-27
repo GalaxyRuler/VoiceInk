@@ -40,6 +40,16 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Fact]
+    public void MainWindow_ShellNavigation_UsesFooterMenuItemsForSettingsAndAbout()
+    {
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("RootNavigationView.FooterMenuItems.Clear()", code);
+        Assert.Contains("item.IsFooter", code);
+        Assert.Contains("RootNavigationView.FooterMenuItems.Add(navigationItem)", code);
+    }
+
+    [Fact]
     public void MainWindow_OnboardingDialogControls_SetAutomationNames()
     {
         var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));

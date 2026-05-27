@@ -8497,12 +8497,21 @@ public sealed partial class MainWindow : Window
     private void InitializeNavigationItems()
     {
         RootNavigationView.MenuItems.Clear();
+        RootNavigationView.FooterMenuItems.Clear();
         navigationItemsByTag.Clear();
 
         foreach (var item in ShellNavigationPresenter.BuildItems())
         {
             var navigationItem = CreateNavigationItem(item);
-            RootNavigationView.MenuItems.Add(navigationItem);
+            if (item.IsFooter)
+            {
+                RootNavigationView.FooterMenuItems.Add(navigationItem);
+            }
+            else
+            {
+                RootNavigationView.MenuItems.Add(navigationItem);
+            }
+
             navigationItemsByTag[item.Tag] = navigationItem;
         }
 

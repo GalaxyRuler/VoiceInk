@@ -14,7 +14,7 @@ public static class ShellNavigationPresenter
         new("Permissions", "Permissions", "Permissions"),
         new("Audio Input", "Audio Input", "Microphone"),
         new("Dictionary", "Dictionary", "Character"),
-        new("Settings", "Settings", "Setting"),
-        new("About", "About / Open Source", "Help")
+        new("Settings", "Settings", "Setting", IsFooter: true),
+        new("About", "About / Open Source", "Help", IsFooter: true)
     ];
 }

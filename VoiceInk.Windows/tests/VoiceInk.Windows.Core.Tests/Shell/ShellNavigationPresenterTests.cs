@@ -22,8 +22,9 @@ public sealed class ShellNavigationPresenterTests
             item => Assert.Equal(("Permissions", "Permissions", "Permissions", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Audio Input", "Audio Input", "Microphone", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
             item => Assert.Equal(("Dictionary", "Dictionary", "Character", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
-            item => Assert.Equal(("Settings", "Settings", "Setting", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)),
-            item => Assert.Equal(("About", "About / Open Source", "Help", true), (item.Tag, item.Label, item.Icon, item.IsEnabled)));
+            item => Assert.Equal(("Settings", "Settings", "Setting", true, true), (item.Tag, item.Label, item.Icon, item.IsEnabled, item.IsFooter)),
+            item => Assert.Equal(("About", "About / Open Source", "Help", true, true), (item.Tag, item.Label, item.Icon, item.IsEnabled, item.IsFooter)));
+        Assert.All(items.Take(10), item => Assert.False(item.IsFooter));
     }
 
     [Fact]

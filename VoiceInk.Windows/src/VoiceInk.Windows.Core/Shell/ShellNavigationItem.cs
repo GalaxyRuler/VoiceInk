@@ -4,4 +4,5 @@ public sealed record ShellNavigationItem(
     string Tag,
     string Label,
     string Icon,
-    bool IsEnabled = true);
+    bool IsEnabled = true,
+    bool IsFooter = false);
