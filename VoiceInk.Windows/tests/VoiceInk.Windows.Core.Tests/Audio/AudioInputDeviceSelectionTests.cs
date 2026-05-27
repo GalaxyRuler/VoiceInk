@@ -162,6 +162,15 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("Open ms-settings:sound to choose or test the Windows default input device.", row.Detail);
                 Assert.False(row.IsSelected);
                 Assert.True(row.IsAvailable);
+            },
+            row =>
+            {
+                Assert.Equal("Microphone Privacy", row.Name);
+                Assert.Equal("Check Access", row.BadgeText);
+                Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
+                Assert.Equal("Open ms-settings:privacy-microphone if Windows blocks desktop microphone access.", row.Detail);
+                Assert.False(row.IsSelected);
+                Assert.True(row.IsAvailable);
             });
     }
 

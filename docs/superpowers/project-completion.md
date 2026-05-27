@@ -27,22 +27,22 @@ VoiceInk Windows parity  [###################-] 95%
 | History | 94% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing, audio storage state, and export-scope privacy disclosure, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 90% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics, metric data/formula guidance rows, local-only model performance interpretation guidance, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 89% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
-| Audio input | 93% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and deeper Windows device diagnostics. |
+| Audio input | 94% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings and microphone privacy diagnostics guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and endpoint-native diagnostics polish. |
 | Onboarding | 89% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, manual Windows microphone settings fallback guidance, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 69% | `[##############------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, and a read-only release readiness report with signing/trust checklist plus WinApp CLI local signing and App Installer `.appinstaller` identity references exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Enhancement timeout retry guidance  [####################] 100%
+Audio input diagnostics guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows enhancement timeout/retry guidance spec and implementation plan.
-- Added a failing Context Awareness presenter assertion for bounded timeout/retry guidance.
-- Added a provider-adjacent `Timeout and Retry` privacy row when enhancement is enabled.
-- Ran the focused enhancement presenter test, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows audio input diagnostics guidance spec and implementation plan.
+- Added a failing prioritized-device fallback assertion for microphone privacy diagnostics.
+- Added a `Microphone Privacy` device health row beside Windows Sound Settings guidance when prioritized microphones are unavailable.
+- Ran the focused audio presenter test, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

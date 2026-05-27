@@ -67,6 +67,13 @@ public static class AudioInputDeviceHealthPresenter
                     "Open Settings",
                     AudioInputDeviceSelectionNoticeKind.Info,
                     IsSelected: false,
+                    IsAvailable: true),
+                new AudioInputDeviceHealthRow(
+                    "Microphone Privacy",
+                    "Open ms-settings:privacy-microphone if Windows blocks desktop microphone access.",
+                    "Check Access",
+                    AudioInputDeviceSelectionNoticeKind.Info,
+                    IsSelected: false,
                     IsAvailable: true)
             ];
         }
