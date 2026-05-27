@@ -171,6 +171,7 @@ public sealed class DictationController(
                     var textOptions = new TextPostProcessingOptions(
                             AppendTrailingSpace: false,
                             RemoveFillerWords: settings.RemoveFillerWords,
+                            FillerWords: FillerWordSettings.EffectiveList(settings.FillerWords),
                             WordReplacements: replacements,
                             PunctuationCleanupMode: settings.PunctuationCleanupMode,
                             LowercaseTranscription: settings.LowercaseTranscription,

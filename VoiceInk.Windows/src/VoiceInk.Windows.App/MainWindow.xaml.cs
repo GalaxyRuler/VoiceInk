@@ -2246,6 +2246,10 @@ public sealed partial class MainWindow : Window
         UpdateRecordingFeedbackSettingControlState();
         var startupWarning = await ApplyStartupStateToUiAsync(settings, cancellationToken);
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
+        FillerWordsTextBox.Text = FillerWordSettings.ToEditableText(
+            settings.FillerWords.Length == 0
+                ? TextPostProcessor.DefaultFillerWords
+                : settings.FillerWords);
         TextFormattingCheckBox.IsChecked = settings.IsTextFormattingEnabled;
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
         AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
@@ -7450,6 +7454,7 @@ public sealed partial class MainWindow : Window
             SkipShortEnhancement = SkipShortEnhancementCheckBox.IsChecked == true,
             ShortEnhancementWordThreshold = ParsedPositiveOrDefault(ShortEnhancementThresholdTextBox.Text, 3),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
+            FillerWords = FillerWordSettings.ParseList(FillerWordsTextBox.Text),
             IsTextFormattingEnabled = TextFormattingCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,

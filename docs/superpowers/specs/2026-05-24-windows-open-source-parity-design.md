@@ -1125,7 +1125,7 @@ Status on 2026-05-24:
 - Completed shell add/remove/sort controls for vocabulary and add/edit/remove/enable/disable/sort controls for word replacements.
 - Completed dictionary JSON import/export for vocabulary words and word replacements.
 - Completed vocabulary prompt pass-through to local Whisper transcription.
-- Completed cleanup options and processing, including macOS-style punctuation cleanup strings in JSON settings.
+- Completed cleanup options and processing, including macOS-style punctuation cleanup strings and custom filler-word lists in JSON settings.
 - Completed richer SQLite history metadata and MVP schema migration.
 - Completed history audio file path persistence and core CSV formatting for history export.
 - Completed shell recent-history list/detail and local CSV export.
@@ -1142,7 +1142,7 @@ Status on 2026-05-24:
 - Completed first-run setup dialog for local model path, microphone settings/input, primary shortcut, and basic usage.
 - Completed imported local Whisper `.bin` model references, shell default-model selection, `.bin` import picker, and open-source GGML model downloads link.
 - Completed dictation pipeline wiring for cleanup settings and dictionary replacements.
-- Completed basic shell controls for filler words, punctuation cleanup, lowercase output, and trailing-space settings.
+- Completed shell controls for removing filler words, editing custom filler-word lists, punctuation cleanup, lowercase output, and trailing-space settings.
 - Remaining for this slice: dedicated Dictionary navigation page/richer layout, endpoint-ID backed audio input identity, waveform polish, and richer visual parity.
 - Add focused tests and docs.
 

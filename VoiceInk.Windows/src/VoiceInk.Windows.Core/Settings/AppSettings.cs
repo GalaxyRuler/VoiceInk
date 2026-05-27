@@ -76,6 +76,7 @@ public sealed record AppSettings
     public int OcrCaptureRegionWidth { get; init; }
     public int OcrCaptureRegionHeight { get; init; }
     public bool RemoveFillerWords { get; init; } = true;
+    public string[] FillerWords { get; init; } = [];
     public bool IsTextFormattingEnabled { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
@@ -151,6 +152,7 @@ public sealed record AppSettings
             OcrCaptureRegionWidth == other.OcrCaptureRegionWidth &&
             OcrCaptureRegionHeight == other.OcrCaptureRegionHeight &&
             RemoveFillerWords == other.RemoveFillerWords &&
+            FillerWords.SequenceEqual(other.FillerWords) &&
             IsTextFormattingEnabled == other.IsTextFormattingEnabled &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
@@ -249,6 +251,11 @@ public sealed record AppSettings
         hash.Add(OcrCaptureRegionWidth);
         hash.Add(OcrCaptureRegionHeight);
         hash.Add(RemoveFillerWords);
+        foreach (var word in FillerWords)
+        {
+            hash.Add(word);
+        }
+
         hash.Add(IsTextFormattingEnabled);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);

@@ -113,6 +113,7 @@ public sealed class JsonSettingsStoreTests
             OcrCaptureRegionTop = 34,
             OcrCaptureRegionWidth = 640,
             OcrCaptureRegionHeight = 360,
+            FillerWords = ["um", "like", "you know"],
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(
@@ -135,6 +136,25 @@ public sealed class JsonSettingsStoreTests
         await store.SaveAsync(expected, CancellationToken.None);
         var actual = await store.LoadAsync(CancellationToken.None);
 
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async Task SaveAsync_PersistsCustomFillerWords()
+    {
+        using var temp = new TempDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var store = new JsonSettingsStore(path);
+        var expected = new AppSettings
+        {
+            FillerWords = ["um", "like", "you know"]
+        };
+
+        await store.SaveAsync(expected, CancellationToken.None);
+
+        var content = await File.ReadAllTextAsync(path);
+        Assert.Contains("\"FillerWords\": [", content);
+        var actual = await store.LoadAsync(CancellationToken.None);
         Assert.Equal(expected, actual);
     }
 

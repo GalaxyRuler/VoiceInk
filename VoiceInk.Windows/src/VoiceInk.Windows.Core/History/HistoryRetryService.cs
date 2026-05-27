@@ -59,6 +59,7 @@ public sealed class HistoryRetryService(
             new TextPostProcessingOptions(
                 AppendTrailingSpace: settings.AppendTrailingSpace,
                 RemoveFillerWords: settings.RemoveFillerWords,
+                FillerWords: FillerWordSettings.EffectiveList(settings.FillerWords),
                 WordReplacements: replacements,
                 PunctuationCleanupMode: settings.PunctuationCleanupMode,
                 LowercaseTranscription: settings.LowercaseTranscription,

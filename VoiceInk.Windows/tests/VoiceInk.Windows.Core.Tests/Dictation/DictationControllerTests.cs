@@ -487,6 +487,30 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_UsesCustomFillerWordsFromSettings()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("Like, ship the slice.", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "C:\\Models\\ggml-base.en.bin",
+            RemoveFillerWords = true,
+            FillerWords = ["like"]
+        });
+        var controller = new DictationController(capture, transcription, insertion, history, settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("ship the slice. ", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("ship the slice.", saved.Text);
+    }
+
+    [Fact]
     public async Task StopAsync_PassesVocabularyPromptToTranscriptionOptions()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
