@@ -103,6 +103,13 @@ public sealed class LocalWhisperModelHealthPresenterTests
             },
             row =>
             {
+                Assert.Equal("Repair Picker", row.Title);
+                Assert.Equal("User selected", row.Value);
+                Assert.Equal("Repair validates the .bin file you choose and does not scan folders automatically.", row.Detail);
+                Assert.Equal("Explicit", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Warmup", row.Title);
                 Assert.Equal("Blocked", row.Value);
                 Assert.Equal("Warmup is disabled until the selected model path is usable.", row.Detail);

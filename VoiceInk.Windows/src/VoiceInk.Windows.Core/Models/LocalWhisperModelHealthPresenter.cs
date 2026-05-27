@@ -118,6 +118,11 @@ public static class LocalWhisperModelHealthPresenter
             "Import a whisper.cpp GGML file such as ggml-base.en.bin.",
             "Expected"),
         new(
+            "Repair Picker",
+            "User selected",
+            "Repair validates the .bin file you choose and does not scan folders automatically.",
+            "Explicit"),
+        new(
             "Warmup",
             "Blocked",
             "Warmup is disabled until the selected model path is usable.",
