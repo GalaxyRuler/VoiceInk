@@ -43,6 +43,9 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("2 words", row.Value);
                 Assert.Equal("Helps prompts recognize names, terms, and product words.", row.Detail);
                 Assert.Equal("Active", row.StatusBadge);
+                Assert.Equal(
+                    "Vocabulary, 2 words, Active, Helps prompts recognize names, terms, and product words.",
+                    row.AccessibleName);
             },
             row =>
             {
@@ -73,6 +76,9 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Prompt support", row.Value);
                 Assert.Equal("Vocabulary words are included in enhancement and supported transcription prompts.", row.Detail);
                 Assert.Equal("Context", row.StatusBadge);
+                Assert.Equal(
+                    "Vocabulary, Prompt support, Context, Vocabulary words are included in enhancement and supported transcription prompts.",
+                    row.AccessibleName);
             },
             row =>
             {
@@ -146,6 +152,9 @@ public sealed class DictionaryPagePresenterTests
             {
                 Assert.Equal("Vocabulary", row.StatusBadge);
                 Assert.Equal("Used to help AI enhancement and supported transcription prompts recognize this term.", row.DetailText);
+                Assert.Equal(
+                    $"{row.Word}, Vocabulary, Used to help AI enhancement and supported transcription prompts recognize this term.",
+                    row.AccessibleName);
             });
         Assert.Collection(
             presentation.ReplacementRows,
@@ -156,6 +165,9 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Voice ink -> VoiceInk", row.DisplayText);
                 Assert.Equal("Enabled", row.StatusBadge);
                 Assert.Equal("Runs after transcription and before insertion.", row.DetailText);
+                Assert.Equal(
+                    "Voice ink -> VoiceInk, Enabled, Runs after transcription and before insertion.",
+                    row.AccessibleName);
                 Assert.True(row.IsEnabled);
             },
             row =>

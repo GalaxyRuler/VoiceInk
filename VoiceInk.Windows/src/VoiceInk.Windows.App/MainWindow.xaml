@@ -135,7 +135,10 @@
                             SelectionMode="None">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Padding="8" ColumnSpacing="12">
+                                    <Grid
+                                        Padding="8"
+                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                        ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
@@ -232,7 +235,10 @@
                             SelectionMode="None">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Padding="8" ColumnSpacing="12">
+                                    <Grid
+                                        Padding="8"
+                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                        ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
@@ -1196,7 +1202,10 @@
                                 SelectionMode="None">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnSpacing="12" Margin="0,4">
+                                        <Grid
+                                            Margin="0,4"
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
@@ -1242,7 +1251,10 @@
                                 SelectionMode="Single">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnSpacing="12" Margin="0,4">
+                                        <Grid
+                                            Margin="0,4"
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="40" />
                                                 <ColumnDefinition Width="*" />

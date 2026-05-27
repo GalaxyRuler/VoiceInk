@@ -23,19 +23,28 @@ public sealed record DictionaryVocabularyRow(
     string Word,
     string DisplayText,
     string DetailText,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => DictionaryRowAccessibleName.From(Word, StatusBadge, DetailText);
+}
 
 public sealed record DictionarySummaryRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => DictionaryRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record DictionaryRuleGuidanceRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => DictionaryRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record DictionaryReplacementRow(
     Guid Id,
@@ -44,7 +53,20 @@ public sealed record DictionaryReplacementRow(
     bool IsEnabled,
     string DisplayText,
     string DetailText,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => DictionaryRowAccessibleName.From(DisplayText, StatusBadge, DetailText);
+}
+
+internal static class DictionaryRowAccessibleName
+{
+    public static string From(params string?[] values) =>
+        string.Join(
+            ", ",
+            values
+                .Select(value => value?.Trim())
+                .Where(value => !string.IsNullOrEmpty(value)));
+}
 
 public static class DictionaryPagePresenter
 {
