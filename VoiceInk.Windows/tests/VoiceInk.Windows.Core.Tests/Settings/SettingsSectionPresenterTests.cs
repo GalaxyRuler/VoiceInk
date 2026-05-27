@@ -135,6 +135,13 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("OS controlled", row.Value);
                 Assert.Equal("Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.", row.Detail);
                 Assert.Equal("Windows", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Optional Diagnostic Data", row.Title);
+                Assert.Equal("Not required", row.Value);
+                Assert.Equal("VoiceInk diagnostics export does not enable Windows optional diagnostic data or upload logs.", row.Detail);
+                Assert.Equal("Manual export", row.StatusBadge);
             });
         Assert.Equal(
             [

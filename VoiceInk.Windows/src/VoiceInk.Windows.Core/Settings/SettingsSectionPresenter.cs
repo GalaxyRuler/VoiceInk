@@ -144,7 +144,12 @@ public static class SettingsSectionPresenter
             "Windows App Diagnostics",
             "OS controlled",
             "Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.",
-            "Windows")
+            "Windows"),
+        new(
+            "Optional Diagnostic Data",
+            "Not required",
+            "VoiceInk diagnostics export does not enable Windows optional diagnostic data or upload logs.",
+            "Manual export")
     ];
 
     private static SettingsPreferenceSummary PasteSummary(AppSettings settings) =>
