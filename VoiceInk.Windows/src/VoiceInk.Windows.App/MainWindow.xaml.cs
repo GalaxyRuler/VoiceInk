@@ -138,6 +138,7 @@ public sealed partial class MainWindow : Window
     private readonly TranscriptionServiceRouter transcriptionService;
     private readonly NAudioInputDeviceProvider audioInputDeviceProvider;
     private readonly ActiveWindowPowerModeTargetProvider powerModeTargetProvider = new();
+    private readonly IInstalledApplicationProvider installedApplicationProvider = new StartMenuInstalledApplicationProvider();
     private readonly FloatingRecorderControlUpdateCoordinator floatingRecorderControlUpdates = new();
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
@@ -171,6 +172,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<string> ollamaEnhancementModelChoices = [];
     private IReadOnlyList<string> openRouterEnhancementModelChoices = [];
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
+    private IReadOnlyList<PowerModeInstalledApplicationChoice> installedApplicationChoices = [];
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
     private IReadOnlyList<ScreenCaptureDisplay> ocrDisplays = [];
@@ -239,6 +241,7 @@ public sealed partial class MainWindow : Window
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
         PowerModeAutoSendComboBox.ItemsSource = PowerModeAutoSendKeyPresenter.Choices;
         PowerModeAutoSendComboBox.DisplayMemberPath = nameof(PowerModeAutoSendKeyChoice.DisplayName);
+        PowerModeInstalledAppComboBox.DisplayMemberPath = nameof(PowerModeInstalledApplicationChoice.DisplayLabel);
         MetricsTimeFilterComboBox.ItemsSource = SessionMetricsTimeFilter.AllChoices;
         MetricsTimeFilterComboBox.SelectedIndex = 0;
         HistoryPlaybackRateComboBox.ItemsSource = HistoryPlaybackRatePresenter.Choices;
@@ -382,6 +385,7 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += MainWindow_AppWindowClosing;
         Closed += MainWindow_Closed;
         RefreshUiFromControllerState("Loading settings");
+        _ = RefreshInstalledApplicationsAsync();
         _ = InitializeAsync();
     }
 
@@ -1583,6 +1587,26 @@ public sealed partial class MainWindow : Window
     private async void AddPowerModeTargetButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.Append);
+    }
+
+    private void AddPowerModeInstalledAppButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (PowerModeInstalledAppComboBox.SelectedItem is not PowerModeInstalledApplicationChoice choice)
+        {
+            RefreshUiFromControllerState("Select an installed app");
+            return;
+        }
+
+        var fields = PowerModeInstalledApplicationPresenter.AppendChoice(
+            new PowerModeTargetFields(
+                PowerModeProcessTextBox.Text,
+                PowerModeWindowTitleTextBox.Text,
+                PowerModeBrowserUrlTextBox.Text),
+            choice);
+        PowerModeProcessTextBox.Text = fields.ProcessNamePattern;
+        PowerModeWindowTitleTextBox.Text = fields.WindowTitlePattern;
+        PowerModeBrowserUrlTextBox.Text = fields.BrowserUrlPattern;
+        RefreshUiFromControllerState($"Added app target: {choice.DisplayName}");
     }
 
     private void PowerModeRulesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -7594,6 +7618,29 @@ public sealed partial class MainWindow : Window
         PowerModePromptOverrideComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex + 1 : 0;
     }
 
+    private async Task RefreshInstalledApplicationsAsync()
+    {
+        try
+        {
+            var choices = await installedApplicationProvider.GetInstalledApplicationsAsync(windowLifetime.Token);
+            installedApplicationChoices = PowerModeInstalledApplicationPresenter.Present(choices);
+            PowerModeInstalledAppComboBox.ItemsSource = installedApplicationChoices;
+            PowerModeInstalledAppComboBox.SelectedIndex = installedApplicationChoices.Count > 0 ? 0 : -1;
+            AddPowerModeInstalledAppButton.IsEnabled = installedApplicationChoices.Count > 0;
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            installedApplicationChoices = [];
+            PowerModeInstalledAppComboBox.ItemsSource = installedApplicationChoices;
+            PowerModeInstalledAppComboBox.SelectedIndex = -1;
+            AddPowerModeInstalledAppButton.IsEnabled = false;
+            RecordDiagnosticEvent($"Installed app picker unavailable: {ex.Message}");
+        }
+    }
+
     private enum PowerModeTargetApplyMode
     {
         None,
@@ -8736,6 +8783,8 @@ public sealed partial class MainWindow : Window
         RefreshPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
         UsePowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
         AddPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
+        PowerModeInstalledAppComboBox.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
+        AddPowerModeInstalledAppButton.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
         PowerModeRulesListView.IsEnabled = powerModeControlsEnabled;
         PowerModeNameTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;

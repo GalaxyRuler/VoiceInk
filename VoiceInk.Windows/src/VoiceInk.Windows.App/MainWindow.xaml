@@ -910,6 +910,23 @@
                                 Content="Add Active Window"
                                 Click="AddPowerModeTargetButton_Click" />
                         </StackPanel>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox
+                                x:Name="PowerModeInstalledAppComboBox"
+                                Grid.Column="0"
+                                Header="Installed app" />
+                            <Button
+                                x:Name="AddPowerModeInstalledAppButton"
+                                Grid.Column="1"
+                                MinWidth="120"
+                                Margin="0,28,0,0"
+                                Content="Add App"
+                                Click="AddPowerModeInstalledAppButton_Click" />
+                        </Grid>
                         <InfoBar
                             x:Name="PowerModeValidationInfoBar"
                             IsClosable="False"
