@@ -11,7 +11,7 @@ Improve Dictionary page polish by giving repeated summary, guidance, vocabulary,
 
 ## Online Grounding
 
-- Microsoft documents WinUI `AutomationProperties.Name` as the accessible name surface for UI Automation clients: https://learn.microsoft.com/en-us/windows/apps/design/accessibility/basic-accessibility-information
+- Microsoft documents WinUI `AutomationProperties.Name` as the accessible name surface for UI Automation clients: https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.automation.automationproperties
 
 ## Requirements
 
