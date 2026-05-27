@@ -75,6 +75,13 @@ public sealed class EnhancementContextReadinessPresenterTests
                 Assert.Equal("User controlled", row.Value);
                 Assert.Equal("Disabled context sources are not requested from the Windows integration layer.", row.Detail);
                 Assert.Equal("Opt in", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Unavailable Sources", row.Title);
+                Assert.Equal("Graceful skip", row.Value);
+                Assert.Equal("If Windows blocks a source or an app cannot expose context, VoiceInk omits that source and continues with available context.", row.Detail);
+                Assert.Equal("Best effort", row.StatusBadge);
             });
 
         Assert.Collection(

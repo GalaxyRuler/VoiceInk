@@ -215,7 +215,12 @@ public static class EnhancementContextReadinessPresenter
                 "Context Toggles",
                 "User controlled",
                 "Disabled context sources are not requested from the Windows integration layer.",
-                "Opt in")
+                "Opt in"),
+            new(
+                "Unavailable Sources",
+                "Graceful skip",
+                "If Windows blocks a source or an app cannot expose context, VoiceInk omits that source and continues with available context.",
+                "Best effort")
         };
 
         if (settings.IsEnhancementEnabled)
