@@ -51,6 +51,13 @@ public sealed class SessionMetricsDashboardPresenterTests
                 },
                 row =>
                 {
+                    Assert.Equal("Typing Baseline", row.Title);
+                    Assert.Equal("35 WPM / 5 keys", row.Value);
+                    Assert.Equal("Time saved compares dictated words against a 35 WPM typing estimate, then subtracts recorded audio duration; keystrokes saved use 5 keys per word.", row.Detail);
+                    Assert.Equal("Estimate", row.StatusBadge);
+                },
+                row =>
+                {
                     Assert.Equal("Export and Reset", row.Title);
                     Assert.Equal("Metrics only", row.Value);
                     Assert.Equal("CSV export writes a local file; reset clears metrics without deleting History or recordings.", row.Detail);
@@ -158,6 +165,19 @@ public sealed class SessionMetricsDashboardPresenterTests
                     Assert.Equal("fewer keystrokes", card.Detail);
                 });
         });
+    }
+
+    [Fact]
+    public void Present_ShowsTypingBaselineGuidance()
+    {
+        var presentation = SessionMetricsDashboardPresenter.Present("All time", SessionMetricsSummary.Empty);
+
+        Assert.Contains(
+            presentation.DataGuidanceRows,
+            row => row.Title == "Typing Baseline"
+                && row.Value == "35 WPM / 5 keys"
+                && row.Detail == "Time saved compares dictated words against a 35 WPM typing estimate, then subtracts recorded audio duration; keystrokes saved use 5 keys per word."
+                && row.StatusBadge == "Estimate");
     }
 
     [Fact]

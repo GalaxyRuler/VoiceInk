@@ -115,6 +115,11 @@ public static class SessionMetricsDashboardPresenter
             "Keystrokes and time saved are local productivity estimates, not telemetry.",
             "Local"),
         new(
+            "Typing Baseline",
+            "35 WPM / 5 keys",
+            "Time saved compares dictated words against a 35 WPM typing estimate, then subtracts recorded audio duration; keystrokes saved use 5 keys per word.",
+            "Estimate"),
+        new(
             "Export and Reset",
             "Metrics only",
             "CSV export writes a local file; reset clears metrics without deleting History or recordings.",
