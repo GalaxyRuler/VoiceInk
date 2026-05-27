@@ -86,6 +86,8 @@ function Write-SmokePlan {
     Write-Host "Trust troubleshooting: Add-AppxPackage error 0x800B0109 usually means the package signer is not trusted on the test machine."
     Write-Host "Trust location reference: import or deploy the signer certificate to TrustedPeople outside this script before running -Execute."
     Write-Host "Deployment log reference: inspect Microsoft-Windows-AppxDeployment-Server operational logs after failed install attempts."
+    Write-Host "ActivityID reference: when Add-AppxPackage or Remove-AppxPackage returns an ActivityID, run Get-AppxLog -ActivityID <activity-id>."
+    Write-Host "App Installer log reference: inspect Microsoft-Windows-AppInstaller/Operational if a .appinstaller launch fails before package deployment starts."
     Write-Host ""
     Write-Host "Commands:"
     Write-Host "  Add-AppxPackage -Path `"$ResolvedPackagePath`""

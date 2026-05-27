@@ -220,6 +220,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("0x800B0109", script);
         Assert.Contains("TrustedPeople", script);
         Assert.Contains("Microsoft-Windows-AppxDeployment-Server", script);
+        Assert.Contains("Get-AppxLog -ActivityID", script);
+        Assert.Contains("Microsoft-Windows-AppInstaller/Operational", script);
         Assert.Contains("Expected one installed package named", script);
         Assert.Contains("Refusing to choose a package to remove", script);
 
@@ -257,6 +259,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);
+        Assert.Contains("Get-AppxLog -ActivityID", script);
+        Assert.Contains("Microsoft-Windows-AppInstaller/Operational", script);
         Assert.Contains("This script does not create or import certificates", script);
         Assert.Contains("Release readiness report passed", script);
 

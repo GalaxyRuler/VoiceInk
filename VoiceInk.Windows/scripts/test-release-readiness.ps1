@@ -70,6 +70,8 @@ Write-Host "  [ ] Publisher/certificate subject match: Package.appxmanifest Publ
 Write-Host "  [ ] Timestamp signed packages with a trusted timestamp authority so the package remains verifiable after certificate expiry."
 Write-Host "  [ ] Trust prerequisite: signed MSIX install smoke must run only on a prepared test machine where the signing certificate is already trusted, for example in Trusted People."
 Write-Host "  [ ] Troubleshooting: inspect Microsoft-Windows-AppxDeployment-Server and AppxPackaging operational logs for deployment, signature, and manifest failures."
+Write-Host "  [ ] ActivityID diagnostics: if Add-AppxPackage or Remove-AppxPackage returns an ActivityID, run Get-AppxLog -ActivityID <activity-id>."
+Write-Host "  [ ] App Installer diagnostics: inspect Microsoft-Windows-AppInstaller/Operational when .appinstaller launch or update checks fail before package deployment starts."
 Write-Host ""
 Write-Host "WinApp CLI local signing reference:"
 Write-Host "  [ ] Optional local development certificate flow can use winapp cert generate against Package.appxmanifest on a disposable test machine."
