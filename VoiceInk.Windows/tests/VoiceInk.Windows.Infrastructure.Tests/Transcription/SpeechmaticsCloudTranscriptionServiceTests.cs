@@ -90,6 +90,32 @@ public sealed class SpeechmaticsCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsEndpointQueryOptionsToTranscriptionConfig()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.Created, """{"id":"job-123"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"job":{"status":"done"}}"""),
+            _ => TextResponse(HttpStatusCode.OK, "Advanced"),
+            _ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new SpeechmaticsCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "speechmatics-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://eu1.asr.api.speechmatics.com/v2/jobs?diarization=speaker&enable_entities=true"),
+            CancellationToken.None);
+
+        Assert.Equal("https://eu1.asr.api.speechmatics.com/v2/jobs", handler.Requests[0].RequestUri?.ToString());
+        using var config = JsonDocument.Parse(ExtractMultipartJson(handler.Bodies[0], "config"));
+        var transcriptionConfig = config.RootElement.GetProperty("transcription_config");
+        Assert.Equal("speaker", transcriptionConfig.GetProperty("diarization").GetString());
+        Assert.True(transcriptionConfig.GetProperty("enable_entities").GetBoolean());
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -103,6 +129,26 @@ public sealed class SpeechmaticsCloudTranscriptionServiceTests
             () => service.TranscribeAsync(Audio(audioFile.Path), Options(), CancellationToken.None));
 
         Assert.Contains("not configured", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_SecretBearingEndpointQueryFailsBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new SpeechmaticsCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "speechmatics-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://eu1.asr.api.speechmatics.com/v2/jobs?token=sk-query-secret"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
         Assert.Empty(handler.Requests);
     }
 
@@ -166,13 +212,15 @@ public sealed class SpeechmaticsCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://eu1.asr.api.speechmatics.com/v2/jobs") =>
         new(
             ModelPath: string.Empty,
             language,
             Prompt: string.Empty,
             TranscriptionProviderKind.OpenAICompatible,
-            "https://eu1.asr.api.speechmatics.com/v2/jobs",
+            endpoint,
             "speechmatics-enhanced",
             CloudProviderId: "speechmatics");
 

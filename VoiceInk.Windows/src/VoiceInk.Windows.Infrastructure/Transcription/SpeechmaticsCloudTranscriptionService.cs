@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -29,6 +30,14 @@ public sealed class SpeechmaticsCloudTranscriptionService(
             throw new InvalidOperationException("Cloud transcription endpoint and model are required.");
         }
 
+        if (!TranscriptionConfiguration.TryCreateCloudEndpoint(
+            options.CloudEndpoint,
+            out var endpoint,
+            out var endpointError))
+        {
+            throw new InvalidOperationException(endpointError);
+        }
+
         var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken)
             .ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -36,12 +45,12 @@ public sealed class SpeechmaticsCloudTranscriptionService(
             throw new InvalidOperationException("Speechmatics transcription provider is not configured.");
         }
 
-        var jobsUri = CreateJobsUri(options.CloudEndpoint);
+        var jobsUri = EndpointWithoutQuery(endpoint!);
         string? jobId = null;
         var startedAt = Stopwatch.GetTimestamp();
         try
         {
-            jobId = await CreateJobAsync(jobsUri, audio, options, apiKey, cancellationToken)
+            jobId = await CreateJobAsync(jobsUri, audio, options, endpoint!, apiKey, cancellationToken)
                 .ConfigureAwait(false);
             await WaitForCompletionAsync(jobsUri, jobId, apiKey, cancellationToken)
                 .ConfigureAwait(false);
@@ -71,12 +80,13 @@ public sealed class SpeechmaticsCloudTranscriptionService(
         Uri jobsUri,
         AudioCaptureResult audio,
         TranscriptionOptions options,
+        Uri endpoint,
         string apiKey,
         CancellationToken cancellationToken)
     {
         using var message = CreateRequest(HttpMethod.Post, jobsUri, apiKey);
         var content = new MultipartFormDataContent();
-        var configJson = JsonSerializer.Serialize(CreateJobConfig(options), JsonOptions);
+        var configJson = JsonSerializer.Serialize(CreateJobConfig(options, endpoint), JsonOptions);
         var configContent = new StringContent(configJson, Encoding.UTF8, "application/json");
         content.Add(configContent, "config");
         var fileStream = File.OpenRead(audio.FilePath);
@@ -91,7 +101,7 @@ public sealed class SpeechmaticsCloudTranscriptionService(
         return RequiredJobId(document.RootElement);
     }
 
-    private static object CreateJobConfig(TranscriptionOptions options)
+    private static object CreateJobConfig(TranscriptionOptions options, Uri endpoint)
     {
         var language = string.IsNullOrWhiteSpace(options.Language)
             ? "auto"
@@ -103,6 +113,11 @@ public sealed class SpeechmaticsCloudTranscriptionService(
         if (string.Equals(options.CloudModel, "speechmatics-enhanced", StringComparison.OrdinalIgnoreCase))
         {
             transcriptionConfig["operating_point"] = "enhanced";
+        }
+
+        foreach (var option in EndpointQueryOptions(endpoint))
+        {
+            transcriptionConfig.TryAdd(option.Name, option.Value);
         }
 
         return new Dictionary<string, object?>
@@ -192,15 +207,69 @@ public sealed class SpeechmaticsCloudTranscriptionService(
         return null;
     }
 
-    private static Uri CreateJobsUri(string endpoint)
+    private static Uri EndpointWithoutQuery(Uri endpoint)
     {
-        if (!Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out var uri))
+        var builder = new UriBuilder(endpoint)
         {
-            throw new InvalidOperationException("Cloud transcription endpoint is invalid.");
+            Query = string.Empty
+        };
+
+        return builder.Uri;
+    }
+
+    private static IEnumerable<(string Name, object Value)> EndpointQueryOptions(Uri endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            yield break;
         }
 
-        return uri;
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedTranscriptionConfigNames.Any(
+                    reservedName => string.Equals(reservedName, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, TypedQueryValue(value));
+        }
     }
+
+    private static object TypedQueryValue(string value)
+    {
+        if (bool.TryParse(value, out var booleanValue))
+        {
+            return booleanValue;
+        }
+
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue))
+        {
+            return integerValue;
+        }
+
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
+        {
+            return doubleValue;
+        }
+
+        return value;
+    }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " ", StringComparison.Ordinal));
+
+    private static readonly string[] ReservedTranscriptionConfigNames =
+    [
+        "language",
+        "operating_point"
+    ];
 
     private static Uri JobUri(Uri jobsUri, string jobId)
     {
