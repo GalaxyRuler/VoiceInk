@@ -205,7 +205,12 @@ public static class DictionaryPagePresenter
             "Replacement Examples",
             "Links and product names",
             "Use replacements for phrases such as 'my website link -> https://example.com' or 'Voice ink -> VoiceInk'.",
-            "Examples")
+            "Examples"),
+        new(
+            "Provider Boundary",
+            "Vocabulary may travel",
+            "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.",
+            "Privacy")
     ];
 
     private static string ReplacementDisplayText(WordReplacement replacement)

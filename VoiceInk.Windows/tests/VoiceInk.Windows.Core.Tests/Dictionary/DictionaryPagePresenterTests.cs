@@ -149,6 +149,13 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Links and product names", row.Value);
                 Assert.Equal("Use replacements for phrases such as 'my website link -> https://example.com' or 'Voice ink -> VoiceInk'.", row.Detail);
                 Assert.Equal("Examples", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Provider Boundary", row.Title);
+                Assert.Equal("Vocabulary may travel", row.Value);
+                Assert.Equal("Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.", row.Detail);
+                Assert.Equal("Privacy", row.StatusBadge);
             });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);
@@ -233,6 +240,20 @@ public sealed class DictionaryPagePresenterTests
                 && row.Value == "JSON, not CSV"
                 && row.Detail == "Dictionary backups preserve Unicode text without relying on spreadsheet CSV encoding or BOM handling."
                 && row.StatusBadge == "Unicode safe");
+    }
+
+    [Fact]
+    public void Present_ShowsProviderBoundaryGuidance()
+    {
+        var presentation = DictionaryPagePresenter.Present([], []);
+
+        Assert.Contains(
+            presentation.RuleGuidanceRows,
+            row => row.Title == "Provider Boundary"
+                && row.Value == "Vocabulary may travel"
+                && row.Detail == "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription."
+                && row.StatusBadge == "Privacy"
+                && row.AccessibleName == "Provider Boundary, Vocabulary may travel, Privacy, Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.");
     }
 
     [Fact]
