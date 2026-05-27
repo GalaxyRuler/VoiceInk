@@ -77,7 +77,12 @@ public static class ModelLibraryOverviewPresenter
             "Warmup",
             "After selection",
             "Prewarm loads the selected local model when available to reduce first-use delay.",
-            "Optional")
+            "Optional"),
+        new(
+            "Expected Filename",
+            "ggml-*.bin",
+            "Whisper.cpp GGML models commonly use filenames such as ggml-base.en.bin.",
+            "Check import")
     ];
 
     private static IReadOnlyList<ModelLibraryActionRow> ActionRows(

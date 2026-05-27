@@ -49,6 +49,13 @@ public sealed class ModelLibraryOverviewPresenterTests
                 Assert.Equal("After selection", row.Value);
                 Assert.Equal("Prewarm loads the selected local model when available to reduce first-use delay.", row.Detail);
                 Assert.Equal("Optional", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Expected Filename", row.Title);
+                Assert.Equal("ggml-*.bin", row.Value);
+                Assert.Equal("Whisper.cpp GGML models commonly use filenames such as ggml-base.en.bin.", row.Detail);
+                Assert.Equal("Check import", row.StatusBadge);
             });
         Assert.Collection(
             presentation.ActionRows,
