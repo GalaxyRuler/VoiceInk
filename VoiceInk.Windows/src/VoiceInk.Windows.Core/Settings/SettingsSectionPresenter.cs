@@ -17,25 +17,47 @@ public sealed record SettingsSectionPresentation(
 public sealed record SettingsActionSummary(
     string Title,
     string Description,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, StatusBadge, Description);
+}
 
 public sealed record SettingsPreferenceSummary(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record SettingsBackupGuidanceRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record SettingsDiagnosticsGuidanceRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
+
+internal static class SettingsRowAccessibleName
+{
+    public static string From(params string?[] values) =>
+        string.Join(
+            ", ",
+            values
+                .Select(value => value?.Trim())
+                .Where(value => !string.IsNullOrEmpty(value)));
+}
 
 public sealed record SettingsSectionCopy(
     string Key,

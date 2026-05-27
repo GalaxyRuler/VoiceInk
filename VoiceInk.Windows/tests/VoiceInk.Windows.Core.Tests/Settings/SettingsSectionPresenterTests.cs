@@ -27,6 +27,9 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Shortcuts", row.Title);
                 Assert.Equal("Record, paste, retry, cancel, history, dictionary, enhancement, and Power Mode actions.", row.Description);
                 Assert.Equal("Configure", row.StatusBadge);
+                Assert.Equal(
+                    "Shortcuts, Configure, Record, paste, retry, cancel, history, dictionary, enhancement, and Power Mode actions.",
+                    row.AccessibleName);
             },
             row =>
             {
@@ -60,6 +63,9 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Default", row.Value);
                 Assert.Equal("Uses the standard clipboard paste path.", row.Detail);
                 Assert.Equal("Default", row.StatusBadge);
+                Assert.Equal(
+                    "Paste Method, Default, Default, Uses the standard clipboard paste path.",
+                    row.AccessibleName);
             },
             row =>
             {
@@ -90,6 +96,9 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Included", row.Value);
                 Assert.Equal("General settings, custom prompts, and Power Mode rules travel in the local backup.", row.Detail);
                 Assert.Equal("Portable", row.StatusBadge);
+                Assert.Equal(
+                    "Settings and Prompts, Included, Portable, General settings, custom prompts, and Power Mode rules travel in the local backup.",
+                    row.AccessibleName);
             },
             row =>
             {
@@ -127,6 +136,9 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Local export", row.Value);
                 Assert.Equal("Logs are opened or exported from this Windows profile and are not sent automatically.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
+                Assert.Equal(
+                    "Diagnostic Logs, Local export, Local, Logs are opened or exported from this Windows profile and are not sent automatically.",
+                    row.AccessibleName);
             },
             row =>
             {
