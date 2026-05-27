@@ -162,7 +162,8 @@ public sealed class DictationController(
                             RemoveFillerWords: settings.RemoveFillerWords,
                             WordReplacements: replacements,
                             PunctuationCleanupMode: settings.PunctuationCleanupMode,
-                            LowercaseTranscription: settings.LowercaseTranscription));
+                            LowercaseTranscription: settings.LowercaseTranscription,
+                            ApplyTextFormatting: settings.IsTextFormattingEnabled));
 
                     if (finalText.Length == 0)
                     {

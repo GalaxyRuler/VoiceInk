@@ -19,6 +19,7 @@ public sealed record PowerModeRule
     public Guid? SelectedEnhancementPromptIdOverride { get; init; }
     public bool? AppendTrailingSpaceOverride { get; init; }
     public bool? RemoveFillerWordsOverride { get; init; }
+    public bool? IsTextFormattingEnabledOverride { get; init; }
     public PunctuationCleanupMode? PunctuationCleanupModeOverride { get; init; }
     public bool? LowercaseTranscriptionOverride { get; init; }
     public PowerModeAutoSendKey AutoSendKey { get; init; } = PowerModeAutoSendKey.None;

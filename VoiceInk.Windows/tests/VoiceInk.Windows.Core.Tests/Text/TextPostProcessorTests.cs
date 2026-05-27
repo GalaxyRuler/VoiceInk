@@ -143,4 +143,64 @@ public sealed class TextPostProcessorTests
 
         Assert.Equal("Cafe", result);
     }
+
+    [Fact]
+    public void Process_KeepsParagraphFormattingOffByDefault()
+    {
+        var input = string.Join(
+            " ",
+            "First sentence has enough words.",
+            "Second sentence has enough words.",
+            "Third sentence has enough words.",
+            "Fourth sentence has enough words.",
+            "Fifth sentence has enough words.");
+
+        var result = TextPostProcessor.Process(input, new TextPostProcessingOptions());
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void Process_AppliesMacStyleParagraphFormattingWhenEnabled()
+    {
+        var result = TextPostProcessor.Process(
+            string.Join(
+                " ",
+                "First sentence has enough words.",
+                "Second sentence has enough words.",
+                "Third sentence has enough words.",
+                "Fourth sentence has enough words.",
+                "Fifth sentence has enough words."),
+            new TextPostProcessingOptions(ApplyTextFormatting: true));
+
+        Assert.Equal(
+            string.Join(
+                "\n\n",
+                "First sentence has enough words. Second sentence has enough words. Third sentence has enough words. Fourth sentence has enough words.",
+                "Fifth sentence has enough words."),
+            result);
+    }
+
+    [Fact]
+    public void Process_AppliesTextFormattingBeforePunctuationCleanup()
+    {
+        var result = TextPostProcessor.Process(
+            string.Join(
+                " ",
+                "First sentence has enough words.",
+                "Second sentence has enough words.",
+                "Third sentence has enough words.",
+                "Fourth sentence has enough words.",
+                "Fifth sentence has enough words."),
+            new TextPostProcessingOptions(
+                ApplyTextFormatting: true,
+                PunctuationCleanupMode: PunctuationCleanupMode.RemoveAll));
+
+        Assert.Equal(
+            string.Join(
+                "\n\n",
+                "First sentence has enough words Second sentence has enough words Third sentence has enough words Fourth sentence has enough words",
+                "Fifth sentence has enough words"),
+            result);
+    }
 }

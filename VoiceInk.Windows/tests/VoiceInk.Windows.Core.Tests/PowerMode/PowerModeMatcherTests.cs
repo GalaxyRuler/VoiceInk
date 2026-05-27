@@ -28,6 +28,7 @@ public sealed class PowerModeMatcherTests
                     SelectedEnhancementPromptIdOverride = promptId,
                     AppendTrailingSpaceOverride = true,
                     RemoveFillerWordsOverride = false,
+                    IsTextFormattingEnabledOverride = true,
                     PunctuationCleanupModeOverride = PunctuationCleanupMode.RemoveTrailingPeriod,
                     LowercaseTranscriptionOverride = true,
                     AutoSendKey = PowerModeAutoSendKey.ShiftEnter
@@ -48,6 +49,7 @@ public sealed class PowerModeMatcherTests
         Assert.Equal(promptId, resolution.EffectiveSettings.SelectedEnhancementPromptId);
         Assert.True(resolution.EffectiveSettings.AppendTrailingSpace);
         Assert.False(resolution.EffectiveSettings.RemoveFillerWords);
+        Assert.True(resolution.EffectiveSettings.IsTextFormattingEnabled);
         Assert.Equal(PunctuationCleanupMode.RemoveTrailingPeriod, resolution.EffectiveSettings.PunctuationCleanupMode);
         Assert.True(resolution.EffectiveSettings.LowercaseTranscription);
         Assert.Equal(PowerModeAutoSendKey.ShiftEnter, resolution.AutoSendKey);

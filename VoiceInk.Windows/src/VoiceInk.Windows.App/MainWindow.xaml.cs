@@ -2122,6 +2122,7 @@ public sealed partial class MainWindow : Window
         UpdateRecordingFeedbackSettingControlState();
         var startupWarning = await ApplyStartupStateToUiAsync(settings, cancellationToken);
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
+        TextFormattingCheckBox.IsChecked = settings.IsTextFormattingEnabled;
         LowercaseTranscriptionCheckBox.IsChecked = settings.LowercaseTranscription;
         AppendTrailingSpaceCheckBox.IsChecked = settings.AppendTrailingSpace;
         PunctuationCleanupComboBox.SelectedIndex = PunctuationCleanupModeToSelectedIndex(settings.PunctuationCleanupMode);
@@ -6993,6 +6994,7 @@ public sealed partial class MainWindow : Window
             SkipShortEnhancement = SkipShortEnhancementCheckBox.IsChecked == true,
             ShortEnhancementWordThreshold = ParsedPositiveOrDefault(ShortEnhancementThresholdTextBox.Text, 3),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
+            IsTextFormattingEnabled = TextFormattingCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
             PunctuationCleanupMode = SelectedPunctuationCleanupMode(),
@@ -7543,6 +7545,7 @@ public sealed partial class MainWindow : Window
         RefreshPowerModePromptChoices(rule?.SelectedEnhancementPromptIdOverride);
         PowerModeAppendTrailingSpaceCheckBox.IsChecked = rule?.AppendTrailingSpaceOverride;
         PowerModeRemoveFillerWordsCheckBox.IsChecked = rule?.RemoveFillerWordsOverride;
+        PowerModeTextFormattingCheckBox.IsChecked = rule?.IsTextFormattingEnabledOverride;
         PowerModeLowercaseCheckBox.IsChecked = rule?.LowercaseTranscriptionOverride;
         PowerModePunctuationCleanupComboBox.SelectedIndex = rule?.PunctuationCleanupModeOverride switch
         {
@@ -7576,6 +7579,7 @@ public sealed partial class MainWindow : Window
             SelectedEnhancementPromptIdOverride = SelectedPowerModePromptOverrideId(),
             AppendTrailingSpaceOverride = PowerModeAppendTrailingSpaceCheckBox.IsChecked,
             RemoveFillerWordsOverride = PowerModeRemoveFillerWordsCheckBox.IsChecked,
+            IsTextFormattingEnabledOverride = PowerModeTextFormattingCheckBox.IsChecked,
             LowercaseTranscriptionOverride = PowerModeLowercaseCheckBox.IsChecked,
             PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode(),
             AutoSendKey = PowerModeAutoSendKeyPresenter.KeyForSelectedIndex(PowerModeAutoSendComboBox.SelectedIndex),
@@ -8491,6 +8495,7 @@ public sealed partial class MainWindow : Window
         PowerModePromptOverrideComboBox.IsEnabled = powerModeControlsEnabled;
         PowerModeAppendTrailingSpaceCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeRemoveFillerWordsCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeTextFormattingCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeLowercaseCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModePunctuationCleanupComboBox.IsEnabled = powerModeControlsEnabled;
         PowerModeAutoSendComboBox.IsEnabled = powerModeControlsEnabled;

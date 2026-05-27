@@ -8,4 +8,5 @@ public sealed record TextPostProcessingOptions(
     IReadOnlyList<string>? FillerWords = null,
     IReadOnlyList<WordReplacement>? WordReplacements = null,
     PunctuationCleanupMode PunctuationCleanupMode = PunctuationCleanupMode.Keep,
-    bool LowercaseTranscription = false);
+    bool LowercaseTranscription = false,
+    bool ApplyTextFormatting = false);

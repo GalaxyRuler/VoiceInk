@@ -93,6 +93,7 @@ public static class PowerModeMatcher
             SelectedEnhancementPromptId = rule.SelectedEnhancementPromptIdOverride ?? settings.SelectedEnhancementPromptId,
             AppendTrailingSpace = rule.AppendTrailingSpaceOverride ?? settings.AppendTrailingSpace,
             RemoveFillerWords = rule.RemoveFillerWordsOverride ?? settings.RemoveFillerWords,
+            IsTextFormattingEnabled = rule.IsTextFormattingEnabledOverride ?? settings.IsTextFormattingEnabled,
             PunctuationCleanupMode = rule.PunctuationCleanupModeOverride ?? settings.PunctuationCleanupMode,
             LowercaseTranscription = rule.LowercaseTranscriptionOverride ?? settings.LowercaseTranscription
         };

@@ -7,6 +7,10 @@ namespace VoiceInk.Windows.Core.Text;
 
 public static class TextPostProcessor
 {
+    private const int FormattingTargetWordCount = 50;
+    private const int FormattingMaxSignificantSentencesPerChunk = 4;
+    private const int FormattingMinWordsForSignificantSentence = 4;
+
     public static readonly IReadOnlyList<string> DefaultFillerWords =
     [
         "uh",
@@ -31,6 +35,7 @@ public static class TextPostProcessor
     private static readonly Regex HorizontalWhitespaceRegex = new(@"[^\S\r\n]{2,}", RegexOptions.Compiled);
     private static readonly Regex SpaceBeforeNewlineRegex = new(@"[ \t]+(\r?\n)", RegexOptions.Compiled);
     private static readonly Regex SpaceAfterNewlineRegex = new(@"(\r?\n)[ \t]+", RegexOptions.Compiled);
+    private static readonly Regex WordRegex = new(@"[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)?", RegexOptions.Compiled);
 
     private static readonly Regex[] HallucinationRegexes =
     [
@@ -63,6 +68,11 @@ public static class TextPostProcessor
         if (options.WordReplacements is { Count: > 0 })
         {
             processed = DictionaryService.ApplyReplacements(processed, options.WordReplacements);
+        }
+
+        if (options.ApplyTextFormatting)
+        {
+            processed = ApplyTextFormatting(processed);
         }
 
         processed = ApplyPunctuationCleanup(processed, options.PunctuationCleanupMode);
@@ -129,6 +139,128 @@ public static class TextPostProcessor
             PunctuationCleanupMode.RemoveTrailingPeriod => RemoveTrailingPeriod(text),
             _ => text
         };
+
+    private static string ApplyTextFormatting(string text)
+    {
+        var sentences = SplitSentences(text);
+        if (sentences.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        if (sentences.Count == 1)
+        {
+            return sentences[0];
+        }
+
+        var chunks = new List<string>();
+        var sentenceIndex = 0;
+        while (sentenceIndex < sentences.Count)
+        {
+            var tentativeSentences = new List<string>();
+            var tentativeWordCount = 0;
+            var tentativeSignificantSentenceCount = 0;
+
+            for (var index = sentenceIndex; index < sentences.Count; index++)
+            {
+                var sentence = sentences[index];
+                var wordCount = CountWords(sentence);
+                tentativeSentences.Add(sentence);
+                tentativeWordCount += wordCount;
+
+                if (wordCount >= FormattingMinWordsForSignificantSentence)
+                {
+                    tentativeSignificantSentenceCount++;
+                }
+
+                if (tentativeWordCount >= FormattingTargetWordCount)
+                {
+                    break;
+                }
+            }
+
+            var chunkSentences = tentativeSentences;
+            if (tentativeSignificantSentenceCount > FormattingMaxSignificantSentencesPerChunk)
+            {
+                chunkSentences = [];
+                var significantSentences = 0;
+                foreach (var sentence in tentativeSentences)
+                {
+                    chunkSentences.Add(sentence);
+                    if (CountWords(sentence) < FormattingMinWordsForSignificantSentence)
+                    {
+                        continue;
+                    }
+
+                    significantSentences++;
+                    if (significantSentences >= FormattingMaxSignificantSentencesPerChunk)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (chunkSentences.Count == 0)
+            {
+                break;
+            }
+
+            chunks.Add(string.Join(" ", chunkSentences));
+            sentenceIndex += chunkSentences.Count;
+        }
+
+        return string.Join("\n\n", chunks).Trim();
+    }
+
+    private static IReadOnlyList<string> SplitSentences(string text)
+    {
+        var sentences = new List<string>();
+        var startIndex = 0;
+        for (var index = 0; index < text.Length; index++)
+        {
+            if (!IsSentenceTerminal(text[index]))
+            {
+                continue;
+            }
+
+            if (index + 1 < text.Length && !char.IsWhiteSpace(text[index + 1]))
+            {
+                continue;
+            }
+
+            AddSentence(text, startIndex, index + 1, sentences);
+            startIndex = index + 1;
+            while (startIndex < text.Length && char.IsWhiteSpace(text[startIndex]))
+            {
+                startIndex++;
+            }
+
+            index = startIndex - 1;
+        }
+
+        AddSentence(text, startIndex, text.Length, sentences);
+        return sentences;
+    }
+
+    private static void AddSentence(string text, int startIndex, int endIndex, ICollection<string> sentences)
+    {
+        if (endIndex <= startIndex)
+        {
+            return;
+        }
+
+        var sentence = text[startIndex..endIndex].Trim();
+        if (sentence.Length > 0)
+        {
+            sentences.Add(sentence);
+        }
+    }
+
+    private static bool IsSentenceTerminal(char character) =>
+        character is '.' or '!' or '?';
+
+    private static int CountWords(string text) =>
+        WordRegex.Matches(text).Count;
 
     private static string RemoveTrailingPeriod(string text)
     {

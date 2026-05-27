@@ -73,6 +73,7 @@ public sealed record AppSettings
     public int OcrCaptureRegionWidth { get; init; }
     public int OcrCaptureRegionHeight { get; init; }
     public bool RemoveFillerWords { get; init; } = true;
+    public bool IsTextFormattingEnabled { get; init; }
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
     public Guid? SelectedPowerModeRuleId { get; init; }
@@ -144,6 +145,7 @@ public sealed record AppSettings
             OcrCaptureRegionWidth == other.OcrCaptureRegionWidth &&
             OcrCaptureRegionHeight == other.OcrCaptureRegionHeight &&
             RemoveFillerWords == other.RemoveFillerWords &&
+            IsTextFormattingEnabled == other.IsTextFormattingEnabled &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
             SelectedPowerModeRuleId == other.SelectedPowerModeRuleId &&
@@ -238,6 +240,7 @@ public sealed record AppSettings
         hash.Add(OcrCaptureRegionWidth);
         hash.Add(OcrCaptureRegionHeight);
         hash.Add(RemoveFillerWords);
+        hash.Add(IsTextFormattingEnabled);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);
         hash.Add(SelectedPowerModeRuleId);

@@ -1036,6 +1036,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <CheckBox
                                         x:Name="PowerModeAppendTrailingSpaceCheckBox"
@@ -1048,8 +1049,13 @@
                                         Content="Remove fillers"
                                         IsThreeState="True" />
                                     <CheckBox
-                                        x:Name="PowerModeLowercaseCheckBox"
+                                        x:Name="PowerModeTextFormattingCheckBox"
                                         Grid.Column="2"
+                                        Content="Paragraphs"
+                                        IsThreeState="True" />
+                                    <CheckBox
+                                        x:Name="PowerModeLowercaseCheckBox"
+                                        Grid.Column="3"
                                         Content="Lowercase"
                                         IsThreeState="True" />
                                 </Grid>
@@ -2410,6 +2416,7 @@
                             <TextBlock Text="Cleanup" FontWeight="SemiBold" />
                             <TextBlock x:Name="CleanupSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
+                            <CheckBox x:Name="TextFormattingCheckBox" Content="Format text into paragraphs" />
                             <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
                             <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
                             <ComboBox x:Name="PunctuationCleanupComboBox" Header="Punctuation cleanup" SelectedIndex="0">
