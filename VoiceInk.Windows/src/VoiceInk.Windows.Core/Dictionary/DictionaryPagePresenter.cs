@@ -237,8 +237,8 @@ public static class DictionaryPagePresenter
         count == 0
             ? "No active replacements"
             : count == 1
-                ? "1 active replacement runs after transcription"
-                : $"{count} active replacements run after transcription";
+                ? "1 active replacement runs after text formatting"
+                : $"{count} active replacements run after text formatting";
 
     private static string DisabledReplacementText(int count) =>
         count == 0

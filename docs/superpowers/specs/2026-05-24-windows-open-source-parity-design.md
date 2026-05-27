@@ -712,7 +712,7 @@ Implemented core:
 
 Dictionary overview guidance slice completed on 2026-05-26:
 
-- Added presenter-backed overview copy explaining that vocabulary helps AI enhancement and supported transcription prompts, while active replacements run after transcription.
+- Added presenter-backed overview copy explaining that vocabulary helps AI enhancement and supported transcription prompts, while active replacements run after text formatting.
 - Added disabled replacement count guidance so saved-but-disabled rules are visible without implying they affect output.
 - Added local dictionary JSON import/export guidance to keep the open-source Windows flow explicit and local-only.
 
@@ -738,6 +738,12 @@ Dictionary replacement order guidance slice completed on 2026-05-27:
 
 - Updated active replacement summary, replacement row detail, and rule guidance so users see that enabled replacements run after text formatting and before final cleanup/insertion.
 - Updated provider-boundary guidance to keep vocabulary prompt sharing separate from local-only replacements after formatting.
+- Kept dictionary storage, matching, import/export, quick add, sorting, and transcript processing behavior unchanged.
+
+Dictionary overview order guidance slice completed on 2026-05-27:
+
+- Updated singular and plural active replacement overview copy so the page summary also says replacements run after text formatting.
+- Added focused presenter coverage for plural overview wording.
 - Kept dictionary storage, matching, import/export, quick add, sorting, and transcript processing behavior unchanged.
 
 Windows gaps:

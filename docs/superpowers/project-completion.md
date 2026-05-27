@@ -34,15 +34,15 @@ VoiceInk Windows parity  [####################] 98%
 ## Current Slice
 
 ```text
-Dictionary Replacement Order Guidance  [####################] 100%
+Dictionary Overview Order Guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows Dictionary Replacement Order Guidance spec and implementation plan.
-- Grounded the slice in the already-verified formatting-before-replacement transcript pipeline.
-- Updated Dictionary presenter tests to fail on stale replacement-order wording.
-- Updated active replacement summary, replacement row detail, rule guidance, and provider-boundary wording to say replacements run locally after text formatting.
+- Wrote the Windows Dictionary Overview Order Guidance spec and implementation plan.
+- Grounded the slice in the same formatting-before-replacement transcript pipeline as the row-level guidance.
+- Added plural active-replacement overview coverage and updated the singular overview assertion.
+- Updated Dictionary overview copy so active replacements run after text formatting in the page summary.
 
 ## Near-Term Priority
 

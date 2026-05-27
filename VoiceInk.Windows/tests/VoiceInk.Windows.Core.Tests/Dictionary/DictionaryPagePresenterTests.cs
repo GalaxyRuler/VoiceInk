@@ -30,7 +30,7 @@ public sealed class DictionaryPagePresenterTests
         Assert.Equal("Vocabulary Words (2)", presentation.VocabularyCountLabel);
         Assert.Equal("Word Replacements (2)", presentation.ReplacementCountLabel);
         Assert.Equal(
-            "2 vocabulary words help AI enhancement and supported transcription prompts. 1 active replacement runs after transcription; 1 disabled replacement is kept for later.",
+            "2 vocabulary words help AI enhancement and supported transcription prompts. 1 active replacement runs after text formatting; 1 disabled replacement is kept for later.",
             presentation.OverviewSummary);
         Assert.Equal(
             "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
@@ -268,6 +268,22 @@ public sealed class DictionaryPagePresenterTests
 
         Assert.Equal(
             "0 vocabulary words help AI enhancement and supported transcription prompts. No active replacements; 1 disabled replacement is kept for later.",
+            presentation.OverviewSummary);
+    }
+
+    [Fact]
+    public void Present_MultipleActiveReplacements_DescribesOverviewFormattingOrder()
+    {
+        var replacements = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "Voice ink", "VoiceInk", Now, true),
+            new WordReplacement(Guid.NewGuid(), "open AI", "OpenAI", Now, true)
+        };
+
+        var presentation = DictionaryPagePresenter.Present([], replacements);
+
+        Assert.Equal(
+            "0 vocabulary words help AI enhancement and supported transcription prompts. 2 active replacements run after text formatting; no disabled replacements.",
             presentation.OverviewSummary);
     }
 }
