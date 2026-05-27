@@ -461,6 +461,11 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Release checksum readiness reference", script);
         Assert.Contains("SHA256SUMS.txt", script);
         Assert.Contains("Get-FileHash", script);
+        Assert.Contains("SBOM readiness reference", script);
+        Assert.Contains("SPDX 2.2", script);
+        Assert.Contains("Microsoft SBOM Tool", script);
+        Assert.Contains("sbom-tool", script);
+        Assert.Contains("publish the generated SBOM next to release artifacts", script);
         Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);

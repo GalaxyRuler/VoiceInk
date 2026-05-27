@@ -111,6 +111,13 @@ Write-Host "  [ ] The checksum helper uses Get-FileHash with SHA256 and artifact
 Write-Host "  [ ] Publish SHA256SUMS.txt next to release artifacts so users can verify downloaded files independently."
 Write-Host "  [ ] This readiness report does not hash files outside VoiceInk.Windows\artifacts, publish artifacts, install packages, sign packages, create certificates, import certificates, or trust certificates."
 Write-Host ""
+Write-Host "SBOM readiness reference:"
+Write-Host "  [ ] Generate an SPDX 2.2 SBOM after final signed MSIX, optional .appinstaller, optional WinGet YAML, and SHA256SUMS.txt artifacts are staged."
+Write-Host "  [ ] Microsoft SBOM Tool (sbom-tool) is an open-source option for generating SPDX 2.2-compatible SBOM artifacts from a staged release folder."
+Write-Host "  [ ] Review the generated SBOM for expected package identity, artifact paths, dependency inventory, and open-source license metadata before release publication."
+Write-Host "  [ ] publish the generated SBOM next to release artifacts so downstream users can audit the open-source Windows fork release."
+Write-Host "  [ ] This readiness report does not run sbom-tool, download tools, publish artifacts, install packages, sign packages, create certificates, import certificates, or trust certificates."
+Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
 if ($missingCount -gt 0) {
