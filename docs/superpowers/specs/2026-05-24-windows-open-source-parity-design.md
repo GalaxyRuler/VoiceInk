@@ -1100,9 +1100,9 @@ Implemented:
 - Windows microphone privacy settings link and audio input selection.
 - Source-built desktop-app microphone access boundary guidance for cases where VoiceInk is not listed by name in Windows privacy settings.
 - Recent desktop-app microphone activity guidance in the manual privacy fallback path.
-- Compact readiness summary rows for model, microphone, shortcut, and first dictation.
-- Action rows for model, microphone, shortcut, and first dictation.
-- Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
+- Compact readiness summary rows for model, microphone, Windows permission, text insertion, context awareness, shortcut, and first dictation.
+- Action rows for model, microphone, manual privacy, text insertion, context awareness, shortcut, and first dictation.
+- Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, text insertion, context awareness, and first dictation test.
 - Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
 Windows gaps:
@@ -1152,6 +1152,12 @@ Onboarding microphone activity guidance slice completed on 2026-05-27:
 - Extended the manual privacy fallback row with guidance that Windows may show recent desktop app microphone activity on the Microphone privacy settings page.
 - Kept onboarding action count, setup completion behavior, and microphone privacy mutation behavior unchanged.
 - Kept the guidance local, informational, and free/open-source with no registry edits, telemetry, or paid support flow.
+
+Onboarding text insertion readiness slice completed on 2026-05-27:
+
+- Added a Windows-native Text Insertion readiness row as the platform adaptation of macOS Accessibility Access onboarding.
+- Clarified that VoiceInk inserts through the focused field by using clipboard paste and keeps History available if the target app rejects paste or loses focus.
+- Preserved the no-fake-permission boundary: onboarding explains the Windows flow without adding registry changes, OS prompts, telemetry, or paid support.
 
 ### Packaging
 

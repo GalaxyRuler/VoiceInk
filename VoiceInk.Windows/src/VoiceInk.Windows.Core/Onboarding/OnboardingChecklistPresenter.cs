@@ -136,6 +136,10 @@ public static class OnboardingChecklistPresenter
                 "VoiceInk may not appear as a separate app entry while source-built; keep Microphone access and 'Let desktop apps access your microphone' enabled.",
                 OnboardingChecklistItemState.Advisory),
             new OnboardingChecklistItemPresentation(
+                "Text insertion",
+                "VoiceInk inserts through the focused field by using clipboard paste; History keeps the transcript available if the target app blocks paste or loses focus.",
+                OnboardingChecklistItemState.Advisory),
+            new OnboardingChecklistItemPresentation(
                 "Context awareness",
                 "Optional local context stays default-off during setup; Windows will ask before screen OCR captures a window or display.",
                 OnboardingChecklistItemState.Advisory),
@@ -168,6 +172,10 @@ public static class OnboardingChecklistPresenter
                     ? "Keep Microphone access and 'Let desktop apps access your microphone' enabled; source-built VoiceInk may not be listed by name."
                     : "Open Microphone privacy settings; VoiceInk may rely on 'Let desktop apps access your microphone' even when it is not listed by name.",
                 status.HasAudioInputChoices ? "Review" : "Check"),
+            new OnboardingSummaryRowPresentation(
+                "Text Insertion",
+                "Uses clipboard paste into the focused field; recover from History if the target app rejects insertion.",
+                "Review"),
             new OnboardingSummaryRowPresentation(
                 "Context Awareness",
                 "Windows asks for capture consent when screen OCR context is enabled and used.",
@@ -206,6 +214,11 @@ public static class OnboardingChecklistPresenter
                 "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed; Windows may show recent desktop app microphone activity there.",
                 "Open Manually",
                 "Fallback"),
+            new OnboardingSetupActionPresentation(
+                "Text Insertion",
+                "Click a target field before recording. VoiceInk pastes the transcript there and keeps a History copy for recovery.",
+                "Review Flow",
+                "Review"),
             new OnboardingSetupActionPresentation(
                 "Context Awareness",
                 "Optional local screen OCR and clipboard context are default-off. Enable them later when you want extra context for enhancement.",

@@ -24,7 +24,7 @@ public sealed class OnboardingChecklistPresenterTests
             ],
             presentation.HeroTaglines);
         Assert.Equal("Set up your local model, microphone, and shortcut once, then dictate anywhere from the tray or keyboard.", presentation.Description);
-        Assert.Equal("2 of 6 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("2 of 7 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
         Assert.False(presentation.CanSaveSetup);
         Assert.Collection(
@@ -89,6 +89,13 @@ public sealed class OnboardingChecklistPresenterTests
             },
             action =>
             {
+                Assert.Equal("Text Insertion", action.Title);
+                Assert.Equal("Click a target field before recording. VoiceInk pastes the transcript there and keeps a History copy for recovery.", action.Description);
+                Assert.Equal("Review Flow", action.CommandText);
+                Assert.Equal("Review", action.StatusBadge);
+            },
+            action =>
+            {
                 Assert.Equal("Context Awareness", action.Title);
                 Assert.Equal("Optional local screen OCR and clipboard context are default-off. Enable them later when you want extra context for enhancement.", action.Description);
                 Assert.Equal("Review Later", action.CommandText);
@@ -126,6 +133,12 @@ public sealed class OnboardingChecklistPresenterTests
             {
                 Assert.Equal("Windows Permission", row.Title);
                 Assert.Equal("Keep Microphone access and 'Let desktop apps access your microphone' enabled; source-built VoiceInk may not be listed by name.", row.Description);
+                Assert.Equal("Review", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Text Insertion", row.Title);
+                Assert.Equal("Uses clipboard paste into the focused field; recover from History if the target app rejects insertion.", row.Description);
                 Assert.Equal("Review", row.StatusBadge);
             },
             row =>
@@ -198,6 +211,11 @@ public sealed class OnboardingChecklistPresenterTests
             },
             item =>
             {
+                Assert.Equal("Text insertion", item.Title);
+                Assert.Equal(OnboardingChecklistItemState.Advisory, item.State);
+            },
+            item =>
+            {
                 Assert.Equal("Context awareness", item.Title);
                 Assert.Equal(OnboardingChecklistItemState.Advisory, item.State);
             },
@@ -222,11 +240,11 @@ public sealed class OnboardingChecklistPresenterTests
         var presentation = OnboardingChecklistPresenter.Present(status);
 
         Assert.True(presentation.CanSaveSetup);
-        Assert.Equal("4 of 6 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("4 of 7 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
-        Assert.Equal(["Ready", "Ready", "Review", "Optional", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal(["Ready", "Ready", "Fallback", "Optional", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal("Click Field and Speak", presentation.SetupActions[5].CommandText);
+        Assert.Equal(["Ready", "Ready", "Review", "Review", "Optional", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal(["Ready", "Ready", "Fallback", "Review", "Optional", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal("Click Field and Speak", presentation.SetupActions[6].CommandText);
         Assert.Equal(["Ready", "Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
         Assert.Equal("Press Ctrl+Alt+Space", presentation.TutorialSteps[1].Title);
         Assert.Equal("Press Ctrl+Alt+Space again", presentation.TutorialSteps[3].Title);
@@ -251,7 +269,7 @@ public sealed class OnboardingChecklistPresenterTests
         var microphoneItem = presentation.Items.Single(item => item.Title == "Microphone input");
 
         Assert.True(presentation.CanSaveSetup);
-        Assert.Equal("2 of 6 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("2 of 7 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal(OnboardingChecklistItemState.NeedsAttention, microphoneItem.State);
         Assert.Equal("No input is visible yet. Refresh devices or open Windows microphone privacy settings before your first recording.", microphoneItem.Description);
         Assert.Contains(
@@ -291,7 +309,7 @@ public sealed class OnboardingChecklistPresenterTests
             item => item.Title == "Context awareness"
                 && item.Description == "Optional local context stays default-off during setup; Windows will ask before screen OCR captures a window or display."
                 && item.State == OnboardingChecklistItemState.Advisory);
-        Assert.Equal("4 of 6 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("4 of 7 setup essentials ready", presentation.ProgressLabel);
         Assert.True(presentation.CanSaveSetup);
     }
 
@@ -320,6 +338,37 @@ public sealed class OnboardingChecklistPresenterTests
             presentation.SetupActions,
             action => action.Title == "Manual Privacy Path"
                 && action.Description == "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed; Windows may show recent desktop app microphone activity there.");
+    }
+
+    [Fact]
+    public void Present_ShowsWindowsTextInsertionReadinessGuidance()
+    {
+        var status = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Hotkey = "Ctrl+Alt+Space"
+            },
+            hasAudioInputChoices: true);
+
+        var presentation = OnboardingChecklistPresenter.Present(status);
+
+        Assert.Contains(
+            presentation.Items,
+            item => item.Title == "Text insertion"
+                && item.Description == "VoiceInk inserts through the focused field by using clipboard paste; History keeps the transcript available if the target app blocks paste or loses focus."
+                && item.State == OnboardingChecklistItemState.Advisory);
+        Assert.Contains(
+            presentation.SummaryRows,
+            row => row.Title == "Text Insertion"
+                && row.Description == "Uses clipboard paste into the focused field; recover from History if the target app rejects insertion."
+                && row.StatusBadge == "Review");
+        Assert.Contains(
+            presentation.SetupActions,
+            action => action.Title == "Text Insertion"
+                && action.Description == "Click a target field before recording. VoiceInk pastes the transcript there and keeps a History copy for recovery."
+                && action.CommandText == "Review Flow"
+                && action.StatusBadge == "Review");
     }
 
     [Fact]
