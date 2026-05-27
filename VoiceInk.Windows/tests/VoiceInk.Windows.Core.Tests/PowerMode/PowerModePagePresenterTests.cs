@@ -24,6 +24,9 @@ public sealed class PowerModePagePresenterTests
         Assert.Equal(
             "Specific process, title, and sanitized URL rules are checked in list order; the default fallback applies only when no specific rule matches.",
             presentation.MatchGuidance);
+        Assert.Equal(
+            "Rule overrides temporarily layer over Settings while the selected Power Mode is active; blank override fields keep the current Settings value.",
+            presentation.OverrideGuidance);
         Assert.Equal("2 Power Modes (1 enabled, 1 disabled)", presentation.CountLabel);
         Assert.False(presentation.IsEmpty);
         Assert.Equal(string.Empty, presentation.EmptyTitle);

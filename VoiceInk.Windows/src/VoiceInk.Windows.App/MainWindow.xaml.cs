@@ -7514,6 +7514,7 @@ public sealed partial class MainWindow : Window
         PowerModeDescriptionTextBlock.Text = presentation.Description;
         PowerModeManualSwitchingTextBlock.Text = presentation.ManualSwitchingSummary;
         PowerModeMatchGuidanceTextBlock.Text = presentation.MatchGuidance;
+        PowerModeOverrideGuidanceTextBlock.Text = presentation.OverrideGuidance;
         PowerModeCountTextBlock.Text = presentation.CountLabel;
         PowerModeEmptyTextBlock.Text = presentation.IsEmpty
             ? $"{presentation.EmptyTitle}. {presentation.EmptyDescription}"
