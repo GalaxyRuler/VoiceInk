@@ -2,25 +2,29 @@
 
 ## Goal
 
-Improve Dictionary page polish by giving repeated summary, guidance, vocabulary, and replacement rows stable accessibility names.
+Close a Dictionary accessibility polish gap by binding existing presenter-backed accessible names into the Dictionary row templates.
 
 ## Source Of Truth
 
-- `VoiceInk/Views/Dictionary/*` presents dense row-based dictionary management with vocabulary and replacement status visible at a glance.
-- Windows already uses presenter-backed row records for Dictionary content, making accessible names testable without UI automation.
+- The macOS Dictionary surfaces vocabulary, replacement, summary, and rule guidance rows as readable list entries.
+- The Windows Core Dictionary presenter already exposes `AccessibleName` on these row types; the WinUI templates should surface those names through UI Automation.
 
 ## Online Grounding
 
-- Microsoft documents WinUI `AutomationProperties.Name` as the accessible name surface for UI Automation clients: https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.automation.automationproperties
+- Microsoft Accessibility Insights guidance for XAML ListView items recommends setting `AutomationProperties.Name` on the DataTemplate root when the generated list item has no helpful accessible name: https://learn.microsoft.com/en-us/accessibility-tools-docs/items/uwpxaml/listitem_name
 
 ## Requirements
 
-- Add computed `AccessibleName` values to Dictionary summary, rule guidance, vocabulary, and replacement rows.
-- Include the row title/display text, value/status badge, and detail text in scan-friendly order.
-- Bind each Dictionary ListView row template root to `AutomationProperties.Name`.
-- Do not change dictionary persistence, sorting, import/export, replacement matching, or visible row text.
+- Add static XAML coverage for:
+  - `DictionarySummaryListView`
+  - `DictionaryRuleGuidanceListView`
+  - `VocabularyListView`
+  - `ReplacementListView`
+- Bind `AutomationProperties.Name="{Binding AccessibleName}"` on each Dictionary row template root.
+- Keep dictionary sorting, selection, edit/delete behavior, import/export, and presenter output unchanged.
 
 ## Acceptance
 
-- Core presenter tests assert representative accessible names for all four row types.
-- WinUI Dictionary row templates bind to `AccessibleName`.
+- Focused XAML accessibility tests fail before the bindings exist.
+- Focused tests pass after the bindings are added.
+- Full solution tests and Debug x64 build pass.

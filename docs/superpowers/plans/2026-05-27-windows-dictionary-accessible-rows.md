@@ -2,32 +2,36 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:test-driven-development`.
 
-**Goal:** Add presenter-backed accessibility names to Dictionary repeated row surfaces.
+**Goal:** Bind existing Dictionary row accessible names into WinUI templates.
 
 ---
 
-## Task 1: Red Presenter Tests
+## Task 1: Red XAML Accessibility Tests
 
-- [x] Add assertions for summary, rule guidance, vocabulary, and replacement row accessible names.
-- [x] Run focused Dictionary presenter tests and confirm they fail before implementation because the properties are missing.
+- [x] Add static coverage for `DictionarySummaryListView`.
+- [x] Add static coverage for `DictionaryRuleGuidanceListView`.
+- [x] Add static coverage for `VocabularyListView`.
+- [x] Add static coverage for `ReplacementListView`.
+- [x] Confirm focused tests fail before implementation.
 
-## Task 2: Presenter And XAML Binding
+## Task 2: Template Bindings
 
-- [x] Add computed `AccessibleName` values to Dictionary row records.
-- [x] Bind Dictionary Summary, Rule Guidance, Vocabulary, and Replacement templates to `AutomationProperties.Name`.
-- [x] Preserve existing visible text and dictionary behavior.
+- [x] Bind summary rows to `AccessibleName`.
+- [x] Bind rule guidance rows to `AccessibleName`.
+- [x] Bind vocabulary rows to `AccessibleName`.
+- [x] Bind replacement rows to `AccessibleName`.
+- [x] Run focused accessibility tests.
 
 ## Task 3: Verification And Commit
 
-- [x] Run focused Dictionary presenter tests.
-- [x] Run full Core/Infrastructure tests.
+- [x] Run full solution tests.
 - [x] Run Debug x64 solution build.
 - [x] Run whitespace check and commit the slice.
 
 ## Verification Notes
 
-- Red focused Dictionary presenter tests failed because accessible-name properties were missing.
-- Focused Dictionary presenter tests passed: 4 tests.
-- Full solution tests passed: 731 Core tests and 266 Infrastructure tests.
-- Full Debug x64 solution build passed: 0 warnings, 0 errors.
-- `git diff --check` passed with only LF-to-CRLF working-copy warnings.
+- Red: `dotnet test VoiceInk.Windows.Core.Tests.csproj --filter "AppXamlAccessibilityTests.MainWindow_DictionaryRows_BindAccessibleName"` failed for all four Dictionary lists because their templates did not bind `AutomationProperties.Name`.
+- Green: same focused command passed, 4 tests.
+- Full: `dotnet test VoiceInk.Windows.sln` passed, 760 Core tests and 266 Infrastructure tests.
+- Build: `dotnet build VoiceInk.Windows.sln -c Debug -p:Platform=x64` passed with 0 warnings and 0 errors.
+- Whitespace: `git diff --check` passed with only expected LF-to-CRLF working-copy warnings.
