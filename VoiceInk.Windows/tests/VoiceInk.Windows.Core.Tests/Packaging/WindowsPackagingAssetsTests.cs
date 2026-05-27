@@ -468,6 +468,30 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void InstallerSmokeEvidenceScript_ValidatesUploadedRunnerEvidenceWithoutMutation()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-installer-smoke-evidence.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("installer-smoke-summary.txt", script);
+        Assert.Contains("RequireInstallSmoke", script);
+        Assert.Contains("RequireWackReport", script);
+        Assert.Contains("Install smoke executed: true", script);
+        Assert.Contains("Windows App Certification Kit requested: true", script);
+        Assert.Contains("wack-report.xml", script);
+        Assert.Contains("[xml]", script);
+        Assert.Contains("Installer smoke evidence validation passed", script);
+        Assert.Contains("This script does not install", script);
+
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& appcert.exe", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ReleaseReadinessScript_PrintsNonMutatingPackagingChecklist()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-release-readiness.ps1");
@@ -483,6 +507,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("write-winget-manifest.ps1", script);
         Assert.Contains("test-winget-manifest.ps1", script);
         Assert.Contains("write-release-checksums.ps1", script);
+        Assert.Contains("test-installer-smoke-evidence.ps1", script);
         Assert.Contains("package-dev-zip.ps1", script);
         Assert.Contains("test-dev-zip.ps1", script);
         Assert.Contains("Publisher/certificate subject match", script);

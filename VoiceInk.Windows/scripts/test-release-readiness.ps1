@@ -51,6 +51,7 @@ Write-ReadinessCheck "App Installer manifest validator" (Join-Path $scriptRoot "
 Write-ReadinessCheck "WinGet manifest generator" (Join-Path $scriptRoot "write-winget-manifest.ps1")
 Write-ReadinessCheck "WinGet manifest validator" (Join-Path $scriptRoot "test-winget-manifest.ps1")
 Write-ReadinessCheck "Release checksum manifest generator" (Join-Path $scriptRoot "write-release-checksums.ps1")
+Write-ReadinessCheck "Installer smoke evidence validator" (Join-Path $scriptRoot "test-installer-smoke-evidence.ps1")
 Write-ReadinessCheck "Dev ZIP package script" (Join-Path $scriptRoot "package-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP smoke validator" (Join-Path $scriptRoot "test-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user install helper" (Join-Path $scriptRoot "install-dev-zip.ps1")
@@ -68,6 +69,7 @@ Write-Host '  .\VoiceInk.Windows\scripts\write-winget-manifest.ps1 -InstallerUrl
 Write-Host '  .\VoiceInk.Windows\scripts\test-winget-manifest.ps1 -ManifestDirectory <path-to-winget-manifest-directory>'
 Write-Host '  .\VoiceInk.Windows\scripts\write-release-checksums.ps1 -ArtifactPath <artifact1>,<artifact2>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
+Write-Host '  .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path-to-installer-smoke-evidence> -RequireInstallSmoke -RequireWackReport'
 
 Write-Host ""
 Write-Host "Maintainer-gated signed release commands:"
