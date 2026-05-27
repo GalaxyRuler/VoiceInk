@@ -351,6 +351,7 @@ public sealed class VoiceInkSettingsBackupTests
             SkipShortEnhancement = false,
             ShortEnhancementWordThreshold = 8,
             UseClipboardContext = true,
+            IsPowerModeEnabled = false,
             RemoveFillerWords = false,
             PunctuationCleanupMode = PunctuationCleanupMode.RemoveTrailingPeriod,
             LowercaseTranscription = true,

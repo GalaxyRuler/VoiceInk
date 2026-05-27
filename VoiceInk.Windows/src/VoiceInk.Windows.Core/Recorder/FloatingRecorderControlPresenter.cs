@@ -57,9 +57,11 @@ public static class FloatingRecorderControlPresenter
                 !settings.IsEnhancementEnabled))
             .ToArray();
 
-        var enabledPowerModeRules = powerModeRules
-            .Where(rule => rule.IsEnabled)
-            .ToArray();
+        var enabledPowerModeRules = settings.IsPowerModeEnabled
+            ? powerModeRules
+                .Where(rule => rule.IsEnabled)
+                .ToArray()
+            : [];
         var selectedRule = settings.SelectedPowerModeRuleId is { } selectedRuleId
             ? enabledPowerModeRules.FirstOrDefault(rule => rule.Id == selectedRuleId)
             : null;
@@ -92,7 +94,7 @@ public static class FloatingRecorderControlPresenter
                 selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
                 selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule)),
             "No Power Modes Available",
-            CanOpenPowerModeControls: enabledPowerModeRules.Length > 0,
+            CanOpenPowerModeControls: settings.IsPowerModeEnabled && enabledPowerModeRules.Length > 0,
             powerModeChoices);
     }
 

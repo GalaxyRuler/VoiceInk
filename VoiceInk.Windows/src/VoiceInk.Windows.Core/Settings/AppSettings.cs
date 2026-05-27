@@ -81,6 +81,7 @@ public sealed record AppSettings
     public bool IsTextFormattingEnabled { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
+    public bool IsPowerModeEnabled { get; init; } = true;
     public Guid? SelectedPowerModeRuleId { get; init; }
     public PowerModeRule[] PowerModeRules { get; init; } = [];
 
@@ -158,6 +159,7 @@ public sealed record AppSettings
             IsTextFormattingEnabled == other.IsTextFormattingEnabled &&
             PunctuationCleanupMode == other.PunctuationCleanupMode &&
             LowercaseTranscription == other.LowercaseTranscription &&
+            IsPowerModeEnabled == other.IsPowerModeEnabled &&
             SelectedPowerModeRuleId == other.SelectedPowerModeRuleId &&
             PowerModeRules.SequenceEqual(other.PowerModeRules);
     }
@@ -262,6 +264,7 @@ public sealed record AppSettings
         hash.Add(IsTextFormattingEnabled);
         hash.Add(PunctuationCleanupMode);
         hash.Add(LowercaseTranscription);
+        hash.Add(IsPowerModeEnabled);
         hash.Add(SelectedPowerModeRuleId);
         foreach (var rule in PowerModeRules)
         {

@@ -338,6 +338,46 @@ public sealed class PowerModeMatcherTests
     }
 
     [Fact]
+    public void Resolve_WhenPowerModeDisabled_IgnoresExplicitDefaultAndTargetRules()
+    {
+        var explicitRuleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var settings = BaseSettings() with
+        {
+            IsPowerModeEnabled = false,
+            SelectedPowerModeRuleId = explicitRuleId,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = explicitRuleId,
+                    Name = "Manual",
+                    IsEnabled = true,
+                    ModelPathOverride = "manual.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Default",
+                    IsEnabled = true,
+                    IsDefault = true,
+                    ModelPathOverride = "default.bin"
+                },
+                new PowerModeRule
+                {
+                    Name = "Target",
+                    IsEnabled = true,
+                    ProcessNamePattern = "code",
+                    ModelPathOverride = "target.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(settings, new PowerModeTarget("code", "Program.cs", 500));
+
+        Assert.Null(resolution.Rule);
+        Assert.Equal(settings.ModelPath, resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
     public void Resolve_IgnoresMissingOrDisabledExplicitRuleAndFallsBackToTargetMatch()
     {
         var disabledRuleId = Guid.Parse("11111111-1111-1111-1111-111111111111");

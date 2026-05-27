@@ -7,6 +7,11 @@ public static class PowerModeMatcher
 {
     public static PowerModeResolution Resolve(AppSettings settings, PowerModeTarget? target)
     {
+        if (!settings.IsPowerModeEnabled)
+        {
+            return new PowerModeResolution(null, settings, target);
+        }
+
         var explicitRule = settings.SelectedPowerModeRuleId is { } selectedRuleId
             ? settings.PowerModeRules.FirstOrDefault(rule => rule.IsEnabled && rule.Id == selectedRuleId)
             : null;

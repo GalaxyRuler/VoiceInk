@@ -622,6 +622,7 @@ Power Mode slice completed on 2026-05-25:
 - Added a WinUI Power Mode section for ordered rules, active-window quick fill, enabled/default toggles, and model/language/enhancement/prompt/cleanup overrides.
 - Added floating-recorder Power Mode chooser integration with Auto plus enabled rule selection.
 - Added macOS-style Power Mode page title/description, rule counts, and empty-state guidance.
+- Added a persisted master `Enable Power Mode` setting so users can disable all rule matching and recorder choices without deleting rules.
 
 Power Mode rule list polish slice completed on 2026-05-26:
 
@@ -637,9 +638,7 @@ Windows Win32 grounding:
 
 Windows gaps:
 
-- Browser URL matching.
-- Auto-send keys.
-- Power Mode shortcuts.
+- Optional macOS-style persist-config session restoration polish.
 
 ### Dictionary
 

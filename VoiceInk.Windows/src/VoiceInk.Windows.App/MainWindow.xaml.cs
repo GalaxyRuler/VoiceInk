@@ -1596,6 +1596,19 @@ public sealed partial class MainWindow : Window
         await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.None);
     }
 
+    private async void PowerModeMasterCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshUiFromControllerState(PowerModeMasterCheckBox.IsChecked == true
+            ? "Power Mode enabled"
+            : "Power Mode disabled");
+    }
+
     private async void UsePowerModeTargetButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.Replace);
@@ -2239,6 +2252,7 @@ public sealed partial class MainWindow : Window
         RefreshPromptEditorFields();
         powerModeRules = settings.PowerModeRules;
         selectedPowerModeRuleId = settings.SelectedPowerModeRuleId;
+        PowerModeMasterCheckBox.IsChecked = settings.IsPowerModeEnabled;
         RefreshPowerModePromptChoices(selectedPromptId: null);
         RefreshPowerModeRulesListView();
         RestoreClipboardCheckBox.IsChecked = settings.RestoreClipboard;
@@ -7494,6 +7508,7 @@ public sealed partial class MainWindow : Window
             TranscriptionRetentionMinutes = SelectedTranscriptionRetentionMinutes(),
             IsAudioCleanupEnabled = AudioCleanupCheckBox.IsChecked == true,
             AudioRetentionPeriod = SelectedAudioRetentionDays(),
+            IsPowerModeEnabled = PowerModeMasterCheckBox.IsChecked == true,
             SelectedPowerModeRuleId = SelectedPowerModeRuleId(),
             PowerModeRules = powerModeRules.ToArray()
         };
@@ -9092,6 +9107,7 @@ public sealed partial class MainWindow : Window
         AddPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
         PowerModeInstalledAppComboBox.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
         AddPowerModeInstalledAppButton.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
+        PowerModeMasterCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeRulesListView.IsEnabled = powerModeControlsEnabled;
         PowerModeNameTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;

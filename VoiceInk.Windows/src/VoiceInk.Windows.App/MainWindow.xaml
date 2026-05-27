@@ -923,6 +923,11 @@
                             x:Name="PowerModeSessionGuidanceTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <CheckBox
+                            x:Name="PowerModeMasterCheckBox"
+                            Content="Enable Power Mode"
+                            Checked="PowerModeMasterCheckBox_Changed"
+                            Unchecked="PowerModeMasterCheckBox_Changed" />
                         <TextBlock
                             x:Name="PowerModeCountTextBlock"
                             FontWeight="SemiBold"

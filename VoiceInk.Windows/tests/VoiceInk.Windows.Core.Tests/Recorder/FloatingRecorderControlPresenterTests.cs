@@ -114,4 +114,33 @@ public sealed class FloatingRecorderControlPresenterTests
         Assert.Null(automatic.Id);
         Assert.True(automatic.IsSelected);
     }
+
+    [Fact]
+    public void FromSettings_WhenPowerModeDisabled_ShowsAutomaticUnavailableState()
+    {
+        var selectedRuleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var state = FloatingRecorderControlPresenter.FromSettings(
+            new AppSettings
+            {
+                IsPowerModeEnabled = false,
+                SelectedPowerModeRuleId = selectedRuleId
+            },
+            EnhancementPromptCatalog.CreateDefaultPrompts(),
+            [
+                new PowerModeRule
+                {
+                    Id = selectedRuleId,
+                    Name = "Terminal",
+                    Emoji = ">",
+                    IsEnabled = true
+                }
+            ]);
+
+        Assert.False(state.CanOpenPowerModeControls);
+        Assert.Equal("Auto", state.PowerModeTitle);
+        Assert.Equal("* Auto", state.PowerModeButtonLabel);
+        var automatic = Assert.Single(state.PowerModeChoices);
+        Assert.Null(automatic.Id);
+        Assert.True(automatic.IsSelected);
+    }
 }
