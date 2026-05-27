@@ -78,7 +78,7 @@ public sealed class SettingsSectionPresenterTests
             {
                 Assert.Equal("Recording Feedback", row.Title);
                 Assert.Equal("Sounds on", row.Value);
-                Assert.Equal("Start/stop sounds use System Default cues.", row.Detail);
+                Assert.Equal("Start/stop sounds use System Default cues; mutes system audio.", row.Detail);
                 Assert.Equal("Audible", row.StatusBadge);
             },
             row =>
@@ -305,7 +305,8 @@ public sealed class SettingsSectionPresenterTests
             {
                 IsSoundFeedbackEnabled = true,
                 StartSoundMode = RecordingSoundModeSettings.Asterisk,
-                StopSoundMode = RecordingSoundModeSettings.Beep
+                StopSoundMode = RecordingSoundModeSettings.Beep,
+                IsSystemMuteEnabled = false
             });
 
         var row = Assert.Single(
@@ -313,6 +314,26 @@ public sealed class SettingsSectionPresenterTests
             row => row.Title == "Recording Feedback");
         Assert.Equal("Sounds on", row.Value);
         Assert.Equal("Start/stop sounds use selected Windows sound scheme cues.", row.Detail);
+        Assert.Equal("Audible", row.StatusBadge);
+    }
+
+    [Fact]
+    public void Present_WithMuteAndMediaPause_DescribesFullRecordingFeedbackState()
+    {
+        var presentation = SettingsSectionPresenter.Present(
+            new AppSettings
+            {
+                IsSoundFeedbackEnabled = true,
+                IsSystemMuteEnabled = true,
+                IsPauseMediaEnabled = true,
+                AudioResumptionDelaySeconds = 2
+            });
+
+        var row = Assert.Single(
+            presentation.PreferenceSummaries,
+            row => row.Title == "Recording Feedback");
+        Assert.Equal("Sounds on", row.Value);
+        Assert.Equal("Start/stop sounds use System Default cues; mutes system audio; pauses media and resumes after 2s.", row.Detail);
         Assert.Equal("Audible", row.StatusBadge);
     }
 }

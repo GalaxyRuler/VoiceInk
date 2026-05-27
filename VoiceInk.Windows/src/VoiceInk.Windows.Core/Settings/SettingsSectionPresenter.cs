@@ -253,18 +253,29 @@ public static class SettingsSectionPresenter
 
         var start = RecordingSoundModeSettings.Normalize(settings.StartSoundMode);
         var stop = RecordingSoundModeSettings.Normalize(settings.StopSoundMode);
-        var detail = start == RecordingSoundModeSettings.Custom
+        var details = new List<string>();
+        details.Add(start == RecordingSoundModeSettings.Custom
             || stop == RecordingSoundModeSettings.Custom
-                ? "Start/stop sounds include custom local cues."
+                ? "Start/stop sounds include custom local cues"
                 : RecordingSoundModeSettings.IsBuiltInWindowsSound(start)
                     || RecordingSoundModeSettings.IsBuiltInWindowsSound(stop)
-                        ? "Start/stop sounds use selected Windows sound scheme cues."
-                : "Start/stop sounds use System Default cues.";
+                        ? "Start/stop sounds use selected Windows sound scheme cues"
+                : "Start/stop sounds use System Default cues");
+
+        if (settings.IsSystemMuteEnabled)
+        {
+            details.Add("mutes system audio");
+        }
+
+        if (settings.IsPauseMediaEnabled)
+        {
+            details.Add($"pauses media and resumes after {FormatDelay(settings.AudioResumptionDelaySeconds)}");
+        }
 
         return new(
             "Recording Feedback",
             "Sounds on",
-            detail,
+            $"{string.Join("; ", details)}.",
             "Audible");
     }
 

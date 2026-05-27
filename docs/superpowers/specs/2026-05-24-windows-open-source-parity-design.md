@@ -1007,6 +1007,12 @@ Settings current-state summary slice completed on 2026-05-26:
 - Rendered the current-state summary below the Settings action summary so users can quickly confirm behavior before editing controls.
 - Kept settings persistence, backup import/export, cleanup, sound feedback, and paste behavior unchanged.
 
+Recording feedback summary parity slice completed on 2026-05-27:
+
+- Extended the Settings current-state Recording Feedback row to include system-audio mute and media pause/resume state.
+- Preserved existing recording feedback behavior and native Windows adapters; this slice only makes the scan-friendly summary match the macOS Settings controls more closely.
+- Kept settings persistence, backup import/export, and recording feedback execution unchanged.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.
