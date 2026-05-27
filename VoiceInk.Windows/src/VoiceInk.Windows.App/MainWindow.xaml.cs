@@ -5279,7 +5279,9 @@ public sealed partial class MainWindow : Window
     {
         selectedId ??= SelectedAudioFileQueueItem()?.Id;
         AudioFileQueueListView.ItemsSource = audioFileQueueItems
-            .Select(AudioFileQueueListItem)
+            .Select(item => new AudioFileQueueListRow(
+                AudioFileQueueListItem(item),
+                AudioFileQueueAccessibleName(item)))
             .ToArray();
 
         var selectedIndex = selectedId is null
@@ -5461,6 +5463,28 @@ public sealed partial class MainWindow : Window
     {
         var detail = item.ErrorMessage ?? item.StatusDetail;
         return $"{item.Status}: {item.FileName} - {detail}";
+    }
+
+    private static string AudioFileQueueAccessibleName(AudioFileQueueItem item)
+    {
+        var detail = item.ErrorMessage ?? item.StatusDetail;
+        var textStatus = item.HistoryItem is null
+            ? "No transcript text yet"
+            : "Transcript text available";
+        return string.Join(
+            ", ",
+            new[]
+            {
+                $"File {item.FileName}",
+                $"Status {item.Status}",
+                string.IsNullOrWhiteSpace(detail) ? null : $"Detail {detail}",
+                textStatus
+            }.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private sealed record AudioFileQueueListRow(string DisplayText, string AccessibleName)
+    {
+        public override string ToString() => DisplayText;
     }
 
     private bool CanEditAudioFileQueue() =>

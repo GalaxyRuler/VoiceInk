@@ -79,7 +79,16 @@
                                 Grid.Column="0"
                                 Height="260"
                                 SelectionChanged="AudioFileQueueListView_SelectionChanged"
-                                SelectionMode="Single" />
+                                SelectionMode="Single">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            Text="{Binding DisplayText}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                             <StackPanel Grid.Column="1" Spacing="8">
                                 <TextBlock
                                     x:Name="AudioFileQueueMetadataTextBlock"

@@ -141,6 +141,30 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
     }
 
+    [Fact]
+    public void MainWindow_AudioFileQueueRows_BindAccessibleName()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var listStart = xaml.IndexOf("x:Name=\"AudioFileQueueListView\"", StringComparison.Ordinal);
+        Assert.True(listStart >= 0);
+        var templateStart = xaml.IndexOf("<DataTemplate>", listStart, StringComparison.Ordinal);
+        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
+        Assert.True(templateStart >= 0);
+        Assert.True(templateEnd > templateStart);
+
+        var template = xaml[templateStart..templateEnd];
+        Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
+    }
+
+    [Fact]
+    public void MainWindow_AudioFileQueueRows_UseAccessibleNameModel()
+    {
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("AudioFileQueueListRow(string DisplayText, string AccessibleName)", code);
+        Assert.Contains("AudioFileQueueAccessibleName", code);
+    }
+
     [Theory]
     [InlineData("ModelLibraryActionListView")]
     [InlineData("ModelLibraryStorageGuidanceListView")]
