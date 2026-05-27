@@ -101,6 +101,11 @@ public static class ModelLibraryOverviewPresenter
             "Catalog downloads use open-source whisper.cpp GGML model files hosted on Hugging Face.",
             "Open source"),
         new(
+            "Integrity Check",
+            "Checksum when published",
+            "For imported or manually downloaded models, compare the file hash with the source release checksum when one is available.",
+            "User verified"),
+        new(
             "Compatibility Check",
             "GGML header",
             "VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.",

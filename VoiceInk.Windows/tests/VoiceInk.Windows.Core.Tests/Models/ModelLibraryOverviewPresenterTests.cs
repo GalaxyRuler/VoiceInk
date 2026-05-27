@@ -66,6 +66,13 @@ public sealed class ModelLibraryOverviewPresenterTests
             },
             row =>
             {
+                Assert.Equal("Integrity Check", row.Title);
+                Assert.Equal("Checksum when published", row.Value);
+                Assert.Equal("For imported or manually downloaded models, compare the file hash with the source release checksum when one is available.", row.Detail);
+                Assert.Equal("User verified", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Compatibility Check", row.Title);
                 Assert.Equal("GGML header", row.Value);
                 Assert.Equal("VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.", row.Detail);
@@ -139,6 +146,25 @@ public sealed class ModelLibraryOverviewPresenterTests
                 && row.Value == "whisper.cpp GGML"
                 && row.Detail == "Catalog downloads use open-source whisper.cpp GGML model files hosted on Hugging Face."
                 && row.StatusBadge == "Open source");
+    }
+
+    [Fact]
+    public void Present_ShowsModelIntegrityGuidance()
+    {
+        var items = LocalWhisperModelService.BuildCatalogItems([], currentModelPath: string.Empty);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [],
+            selectedModelPath: string.Empty,
+            unavailableImportedModelCount: 0);
+
+        Assert.Contains(
+            presentation.StorageGuidanceRows,
+            row => row.Title == "Integrity Check"
+                && row.Value == "Checksum when published"
+                && row.Detail == "For imported or manually downloaded models, compare the file hash with the source release checksum when one is available."
+                && row.StatusBadge == "User verified");
     }
 
     [Fact]
