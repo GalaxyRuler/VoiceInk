@@ -9,7 +9,7 @@
                        ],
     "preferredRoutes":  {
                             "container":  "container",
-                            "headless":  "container"
+                            "headless":  "headless"
                         },
     "profiles":  {
                      "windows-dotnet-cli":  {

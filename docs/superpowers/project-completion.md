@@ -29,21 +29,20 @@ VoiceInk Windows parity  [###################-] 96%
 | Settings | 92% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, default-on VAD toggle, default-off middle-click recording controls with activation delay, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, grouped-section find guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
 | Audio input | 94% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings and microphone privacy diagnostics guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and endpoint-native diagnostics polish. |
 | Onboarding | 90% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, manual Windows microphone settings fallback guidance in setup actions, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
-| Packaging | 81% | `[################----]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, App Installer `.appinstaller` manifest generation/validation with optional on-launch update settings, project-owned Homelab metadata for dry-run release route planning, and a manual self-hosted Windows installer-smoke workflow exist. The release readiness report includes signing/trust checklist plus WinApp CLI local signing, App Installer identity references, ActivityID diagnostics, and App Installer operational-log guidance. Actual signed MSIX install smoke remains gated on maintainer-owned signing/trust setup and disposable Windows runner execution. |
+| Packaging | 82% | `[################----]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, App Installer `.appinstaller` manifest generation/validation with optional on-launch update settings, project-owned Homelab metadata for dry-run release route planning with tested container/headless routing, and a manual self-hosted Windows installer-smoke workflow exist. The release readiness report includes signing/trust checklist plus WinApp CLI local signing, App Installer identity references, ActivityID diagnostics, and App Installer operational-log guidance. Actual signed MSIX install smoke remains gated on maintainer-owned signing/trust setup and disposable Windows runner execution. |
 
 ## Current Slice
 
 ```text
-Middle-click recording  [####################] 100%
+Homelab route hardening  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows middle-click recording spec and implementation plan.
-- Added persisted default-off middle-click recording settings with the macOS default 200 ms activation delay.
-- Added Shortcuts settings controls and backup/export coverage for the new settings.
-- Added an optional `WH_MOUSE_LL` middle-button hook that observes button down/up, waits the configured delay, routes through toggle recording, and never suppresses mouse input.
-- Ran focused JSON settings tests, backup export tests, app project build, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows Homelab route-hardening spec and implementation plan.
+- Added packaging asset coverage for `.codex/homelab-runner.json`, allowed classes, preferred routes, profile paths, dry-run-only mode, no-network mode, and disabled live execution.
+- Fixed the headless preferred route from `container` to `headless`.
+- Ran focused Homelab metadata tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

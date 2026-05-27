@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Xunit;
 
@@ -365,6 +366,56 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("Import-PfxCertificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("cert:\\", workflow, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void HomelabMetadata_DefinesDryRunContainerAndHeadlessRoutes()
+    {
+        var configPath = SourcePath(".codex", "homelab-runner.json");
+        var config = JsonNode.Parse(File.ReadAllText(configPath))!.AsObject();
+
+        Assert.Equal("VoiceInk Windows", (string?)config["projectName"]);
+        Assert.Equal(
+            ["container", "headless"],
+            config["allowedClasses"]!.AsArray().Select(item => item!.GetValue<string>()).ToArray());
+
+        var preferredRoutes = config["preferredRoutes"]!.AsObject();
+        Assert.Equal("container", (string?)preferredRoutes["container"]);
+        Assert.Equal("headless", (string?)preferredRoutes["headless"]);
+
+        AssertProfile(
+            config,
+            "windows-dotnet-cli",
+            expectedClass: "headless",
+            expectedPath: SourcePath("qa", "profiles", "windows-dotnet-cli.json"));
+        AssertProfile(
+            config,
+            "release-metadata",
+            expectedClass: "container",
+            expectedPath: SourcePath("qa", "profiles", "release-metadata.json"));
+    }
+
+    private static void AssertProfile(
+        JsonObject config,
+        string profileName,
+        string expectedClass,
+        string expectedPath)
+    {
+        var profile = config["profiles"]![profileName]!.AsObject();
+        Assert.Equal(expectedClass, (string?)profile["class"]);
+        Assert.False((bool?)profile["approvalRequired"]);
+        Assert.Equal(
+            expectedPath,
+            SourcePath(((string?)profile["profilePath"])!.Split('/')));
+
+        var profileConfig = JsonNode.Parse(File.ReadAllText(expectedPath))!.AsObject();
+        Assert.Equal(expectedClass, (string?)profileConfig["class"]);
+        Assert.True((bool?)profileConfig["dryRunOnly"]);
+        Assert.Equal("none", (string?)profileConfig["networkMode"]);
+
+        var liveExecution = profileConfig["liveExecution"]!.AsObject();
+        Assert.False((bool?)liveExecution["allowed"]);
+        Assert.False((bool?)liveExecution["requiresNetwork"]);
     }
 
     private static string SourcePath(params string[] parts)
