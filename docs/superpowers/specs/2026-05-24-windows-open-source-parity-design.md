@@ -1038,6 +1038,7 @@ Implemented:
 - Recommended local model download entry point.
 - Windows microphone privacy settings link and audio input selection.
 - Source-built desktop-app microphone access boundary guidance for cases where VoiceInk is not listed by name in Windows privacy settings.
+- Recent desktop-app microphone activity guidance in the manual privacy fallback path.
 - Compact readiness summary rows for model, microphone, shortcut, and first dictation.
 - Action rows for model, microphone, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
@@ -1084,6 +1085,12 @@ Onboarding desktop microphone boundary slice completed on 2026-05-27:
 - Clarified that source-built VoiceInk may rely on Windows desktop-app microphone access even when it is not listed by name.
 - Updated onboarding checklist, setup summary, and manual privacy action wording to point users at both Microphone access and desktop-app access.
 - Preserved the existing behavior that onboarding never changes Windows privacy settings automatically.
+
+Onboarding microphone activity guidance slice completed on 2026-05-27:
+
+- Extended the manual privacy fallback row with guidance that Windows may show recent desktop app microphone activity on the Microphone privacy settings page.
+- Kept onboarding action count, setup completion behavior, and microphone privacy mutation behavior unchanged.
+- Kept the guidance local, informational, and free/open-source with no registry edits, telemetry, or paid support flow.
 
 ### Packaging
 

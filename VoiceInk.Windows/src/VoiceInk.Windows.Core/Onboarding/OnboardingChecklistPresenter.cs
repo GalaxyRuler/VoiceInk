@@ -203,7 +203,7 @@ public static class OnboardingChecklistPresenter
                 status.HasAudioInputChoices ? "Ready" : "Check"),
             new OnboardingSetupActionPresentation(
                 "Manual Privacy Path",
-                "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed.",
+                "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed; Windows may show recent desktop app microphone activity there.",
                 "Open Manually",
                 "Fallback"),
             new OnboardingSetupActionPresentation(
