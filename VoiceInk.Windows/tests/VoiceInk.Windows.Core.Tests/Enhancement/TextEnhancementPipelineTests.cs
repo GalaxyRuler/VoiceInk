@@ -173,8 +173,9 @@ public sealed class TextEnhancementPipelineTests
                 IncludeBrowserUrl: true,
                 IncludeOcr: true),
             contextProvider.LastRequest);
-        Assert.Contains("<SCREEN_OCR_CONTEXT>", provider.LastRequest!.SystemMessage);
+        Assert.Contains("<CURRENT_WINDOW_CONTEXT>", provider.LastRequest!.SystemMessage);
         Assert.Contains("Screen text from dashboard", provider.LastRequest.SystemMessage);
+        Assert.DoesNotContain("<SCREEN_OCR_CONTEXT>", provider.LastRequest.SystemMessage);
     }
 
     [Fact]

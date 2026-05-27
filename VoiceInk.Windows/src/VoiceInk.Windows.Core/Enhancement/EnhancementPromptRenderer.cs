@@ -124,9 +124,9 @@ public static class EnhancementPromptRenderer
         return $"""
 
 
-            <SCREEN_OCR_CONTEXT>
+            <CURRENT_WINDOW_CONTEXT>
             {ocrText}
-            </SCREEN_OCR_CONTEXT>
+            </CURRENT_WINDOW_CONTEXT>
             """;
     }
 
