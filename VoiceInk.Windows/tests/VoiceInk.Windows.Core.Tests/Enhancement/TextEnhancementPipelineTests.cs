@@ -76,6 +76,29 @@ public sealed class TextEnhancementPipelineTests
         Assert.Equal("groq", result.EnhancementProviderName);
     }
 
+    [Theory]
+    [InlineData("openai", "gpt-5.4", 1.0)]
+    [InlineData("openai", "gpt-4.1", 0.3)]
+    [InlineData("custom", "gpt-5.4", 0.3)]
+    public async Task EnhanceAsync_UsesMacAlignedTemperatureForOpenAiGpt5Models(
+        string providerId,
+        string model,
+        double expectedTemperature)
+    {
+        var provider = new FakeTextEnhancementService("Enhanced note.");
+        var pipeline = new TextEnhancementPipeline(provider);
+        var settings = ConfiguredSettings() with
+        {
+            IsEnhancementEnabled = true,
+            EnhancementProviderId = providerId,
+            EnhancementModel = model
+        };
+
+        await pipeline.EnhanceAsync("clean this", settings, [], CancellationToken.None);
+
+        Assert.Equal(expectedTemperature, provider.LastRequest!.Temperature);
+    }
+
     [Fact]
     public async Task EnhanceAsync_UsesCurrentPromptSourceAfterPipelineConstruction()
     {

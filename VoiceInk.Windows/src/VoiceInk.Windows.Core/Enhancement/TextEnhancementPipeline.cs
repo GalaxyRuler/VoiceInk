@@ -89,7 +89,7 @@ public sealed class TextEnhancementPipeline
             rendered.SystemMessage,
             rendered.UserMessage,
             TimeSpan.FromSeconds(TimeoutSeconds(settings)),
-            DefaultTemperature,
+            TemperatureFor(settings.EnhancementProviderId, settings.EnhancementModel),
             settings.EnhancementRetryOnTimeout,
             DefaultMaxRetries,
             EnhancementProviderPresetCatalog.Resolve(settings.EnhancementProviderId).Id);
@@ -184,6 +184,15 @@ public sealed class TextEnhancementPipeline
         settings.ShortEnhancementWordThreshold > 0
             ? settings.ShortEnhancementWordThreshold
             : DefaultShortWordThreshold;
+
+    private static double TemperatureFor(string providerId, string modelName)
+    {
+        var provider = EnhancementProviderPresetCatalog.Resolve(providerId);
+        return provider.Id == EnhancementProviderPresetCatalog.OpenAI.Id
+            && modelName.Trim().StartsWith("gpt-5", StringComparison.OrdinalIgnoreCase)
+                ? 1.0
+                : DefaultTemperature;
+    }
 
     private static TextEnhancementPipelineResult OriginalOnly(
         string text,
