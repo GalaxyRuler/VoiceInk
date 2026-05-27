@@ -77,6 +77,37 @@ public sealed class GlobalShortcutTests
         Assert.Equal("F12 is reserved by Windows for debugger use.", error);
     }
 
+    [Fact]
+    public void RegistrationFailurePresenter_ExplainsShortcutOwnedByAnotherApp()
+    {
+        var shortcut = new GlobalShortcut(Control: true, Alt: true, Shift: false, VirtualKey: 0x20, KeyName: "Space");
+        var message = GlobalShortcutRegistrationFailurePresenter.Describe(
+            GlobalShortcutAction.ToggleRecording,
+            shortcut,
+            1409,
+            "Hot key is already registered.");
+
+        Assert.Contains("Ctrl+Alt+Space", message);
+        Assert.Contains("already registered by another app", message);
+        Assert.Contains("Windows does not expose which app owns it", message);
+        Assert.Contains("1409", message);
+    }
+
+    [Fact]
+    public void RegistrationFailurePresenter_KeepsUnknownWin32Details()
+    {
+        var shortcut = new GlobalShortcut(Control: true, Alt: false, Shift: true, VirtualKey: 0x48, KeyName: "H");
+        var message = GlobalShortcutRegistrationFailurePresenter.Describe(
+            GlobalShortcutAction.OpenHistoryWindow,
+            shortcut,
+            5,
+            "Access is denied.");
+
+        Assert.Contains("OpenHistoryWindow", message);
+        Assert.Contains("Ctrl+Shift+H", message);
+        Assert.Contains("5: Access is denied.", message);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("Space")]

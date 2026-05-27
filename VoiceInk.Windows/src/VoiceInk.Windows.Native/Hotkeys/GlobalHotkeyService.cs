@@ -82,7 +82,11 @@ public sealed class GlobalHotkeyService : IDisposable
                     var errorCode = Marshal.GetLastWin32Error();
                     var error = new Win32Exception(errorCode);
                     throw new InvalidOperationException(
-                        $"RegisterHotKey failed for {registration.Action} ({registration.Shortcut.DisplayText}) ({errorCode}: {error.Message}).",
+                        GlobalShortcutRegistrationFailurePresenter.Describe(
+                            registration.Action,
+                            registration.Shortcut,
+                            errorCode,
+                            error.Message),
                         error);
                 }
 
