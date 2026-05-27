@@ -5,6 +5,7 @@ public sealed record TrayQuickSettingsState(
     IReadOnlyList<TrayMenuOption> TranscriptionProviders,
     IReadOnlyList<TrayMenuOption> EnhancementPrompts,
     IReadOnlyList<TrayMenuOption> EnhancementProviders,
+    IReadOnlyList<TrayMenuOption> EnhancementModels,
     IReadOnlyList<TrayMenuOption> Languages,
     IReadOnlyList<TrayMenuOption> AudioInputs,
     IReadOnlyList<TrayMenuOption> PowerModes,
@@ -13,6 +14,7 @@ public sealed record TrayQuickSettingsState(
     bool UseOcrContext)
 {
     public static TrayQuickSettingsState Empty { get; } = new(
+        [],
         [],
         [],
         [],

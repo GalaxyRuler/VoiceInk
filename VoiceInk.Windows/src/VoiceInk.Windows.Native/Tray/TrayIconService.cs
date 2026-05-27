@@ -20,6 +20,7 @@ public sealed class TrayIconService : IDisposable
     private readonly ToolStripMenuItem enhancementEnabledItem;
     private readonly ToolStripMenuItem enhancementPromptMenu;
     private readonly ToolStripMenuItem enhancementProviderMenu;
+    private readonly ToolStripMenuItem enhancementModelMenu;
     private readonly ToolStripMenuItem languageMenu;
     private readonly ToolStripMenuItem audioInputMenu;
     private readonly ToolStripMenuItem powerModeMenu;
@@ -47,6 +48,7 @@ public sealed class TrayIconService : IDisposable
         enhancementEnabledItem = new ToolStripMenuItem("AI Enhancement", image: null, (_, _) => ToggleEnhancementRequested?.Invoke(this, EventArgs.Empty));
         enhancementPromptMenu = new ToolStripMenuItem("Prompt");
         enhancementProviderMenu = new ToolStripMenuItem("AI Provider");
+        enhancementModelMenu = new ToolStripMenuItem("AI Model");
         languageMenu = new ToolStripMenuItem("Language");
         audioInputMenu = new ToolStripMenuItem("Audio Input");
         powerModeMenu = new ToolStripMenuItem("Power Mode");
@@ -78,6 +80,7 @@ public sealed class TrayIconService : IDisposable
         trayContextMenu.Items.Add(enhancementEnabledItem);
         trayContextMenu.Items.Add(enhancementPromptMenu);
         trayContextMenu.Items.Add(enhancementProviderMenu);
+        trayContextMenu.Items.Add(enhancementModelMenu);
         trayContextMenu.Items.Add(contextAwarenessMenu);
         trayContextMenu.Items.Add(powerModeMenu);
         trayContextMenu.Items.Add(audioInputMenu);
@@ -110,6 +113,7 @@ public sealed class TrayIconService : IDisposable
     public event EventHandler? ToggleEnhancementRequested;
     public event EventHandler<TrayMenuOptionEventArgs>? SelectEnhancementPromptRequested;
     public event EventHandler<TrayMenuOptionEventArgs>? SelectEnhancementProviderRequested;
+    public event EventHandler<TrayMenuOptionEventArgs>? SelectEnhancementModelRequested;
     public event EventHandler<TrayMenuOptionEventArgs>? SelectLanguageRequested;
     public event EventHandler<TrayMenuOptionEventArgs>? SelectAudioInputRequested;
     public event EventHandler<TrayMenuOptionEventArgs>? SelectPowerModeRequested;
@@ -160,6 +164,11 @@ public sealed class TrayIconService : IDisposable
             state.EnhancementProviders,
             SelectEnhancementProviderRequested,
             "No providers available");
+        PopulateMenu(
+            enhancementModelMenu,
+            state.EnhancementModels,
+            SelectEnhancementModelRequested,
+            "No models available");
         PopulateMenu(
             languageMenu,
             state.Languages,
@@ -230,6 +239,7 @@ public sealed class TrayIconService : IDisposable
         enhancementEnabledItem.Enabled = isEnabled;
         enhancementPromptMenu.Enabled = isEnabled;
         enhancementProviderMenu.Enabled = isEnabled;
+        enhancementModelMenu.Enabled = isEnabled;
         languageMenu.Enabled = isEnabled;
         audioInputMenu.Enabled = isEnabled;
         powerModeMenu.Enabled = isEnabled;

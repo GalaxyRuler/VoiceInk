@@ -15,7 +15,7 @@ VoiceInk Windows parity  [###################-] 96%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 92% | `[##################--]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
-| Shell and tray | 89% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
+| Shell and tray | 90% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for transcription model/provider, enhancement prompt/provider/AI model, language, audio, context, and Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 93% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. More streaming providers and final visual polish remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; default-off middle-click recording with activation delay parity, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
 | Model management | 90% | `[##################--]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows including expected `ggml-*.bin` filename guidance, model path health checks with actionable repair and user-selected validation guidance, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -34,15 +34,16 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Current-window context tag parity  [####################] 100%
+Tray AI model menu  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows current-window context tag parity spec and implementation plan.
-- Updated renderer and pipeline tests to expect `<CURRENT_WINDOW_CONTEXT>` and reject the older Windows-only `<SCREEN_OCR_CONTEXT>` tag.
-- Changed OCR-derived context prompt rendering to match the macOS screen/window context tag while preserving source ordering.
-- Ran focused enhancement tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows tray AI model menu parity spec and implementation plan.
+- Added presenter tests for checked known models, selected custom models, blank selections, and trimmed/distinct choices.
+- Added the Core tray enhancement model presenter and quick-settings state field.
+- Added the native tray `AI Model` submenu after `AI Provider` and wired selection to the existing enhancement settings save flow.
+- Ran focused presenter tests, the WinUI app Debug x64 build, full solution tests, full Debug x64 solution build, and whitespace checking.
 
 ## Near-Term Priority
 

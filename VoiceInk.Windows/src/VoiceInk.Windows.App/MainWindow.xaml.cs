@@ -499,6 +499,13 @@ public sealed partial class MainWindow : Window
         await ApplyEnhancementSettingsAsync();
     }
 
+    private async void TrayIconService_SelectEnhancementModelRequested(object? sender, TrayMenuOptionEventArgs e)
+    {
+        EnhancementModelTextBox.Text = e.Id;
+        RefreshEnhancementModelChoices(e.Id);
+        await ApplyEnhancementSettingsAsync();
+    }
+
     private async void TrayIconService_SelectLanguageRequested(object? sender, TrayMenuOptionEventArgs e)
     {
         var selectedIndex = languageChoices
@@ -9022,6 +9029,8 @@ public sealed partial class MainWindow : Window
         var selectedModelPath = ModelPathTextBox.Text.Trim();
         var selectedCloudProviderId = SelectedCloudTranscriptionProviderId();
         var selectedEnhancementProviderId = SelectedEnhancementProviderId();
+        var selectedEnhancementModel = EnhancementModelTextBox.Text.Trim();
+        var selectedEnhancementPreset = EnhancementProviderPresetCatalog.Resolve(selectedEnhancementProviderId);
         var selectedPromptId = SelectedEnhancementPromptId();
         var selectedLanguage = SelectedLanguageCode();
         var selectedAudioDeviceNumber = SelectedAudioInputDeviceNumber();
@@ -9058,6 +9067,9 @@ public sealed partial class MainWindow : Window
                     provider.DisplayName,
                     string.Equals(provider.Id, selectedEnhancementProviderId, StringComparison.OrdinalIgnoreCase)))
                 .ToArray(),
+            EnhancementModels: TrayEnhancementModelOptionsPresenter.FromModels(
+                EnhancementModelChoicesForPreset(selectedEnhancementPreset),
+                selectedEnhancementModel),
             Languages: languageChoices
                 .Select(choice => new TrayMenuOption(
                     choice.Code,
@@ -9539,6 +9551,7 @@ public sealed partial class MainWindow : Window
         trayIconService.ToggleEnhancementRequested += TrayIconService_ToggleEnhancementRequested;
         trayIconService.SelectEnhancementPromptRequested += TrayIconService_SelectEnhancementPromptRequested;
         trayIconService.SelectEnhancementProviderRequested += TrayIconService_SelectEnhancementProviderRequested;
+        trayIconService.SelectEnhancementModelRequested += TrayIconService_SelectEnhancementModelRequested;
         trayIconService.SelectLanguageRequested += TrayIconService_SelectLanguageRequested;
         trayIconService.SelectAudioInputRequested += TrayIconService_SelectAudioInputRequested;
         trayIconService.SelectPowerModeRequested += TrayIconService_SelectPowerModeRequested;
@@ -9610,6 +9623,7 @@ public sealed partial class MainWindow : Window
         trayIconService.ToggleEnhancementRequested -= TrayIconService_ToggleEnhancementRequested;
         trayIconService.SelectEnhancementPromptRequested -= TrayIconService_SelectEnhancementPromptRequested;
         trayIconService.SelectEnhancementProviderRequested -= TrayIconService_SelectEnhancementProviderRequested;
+        trayIconService.SelectEnhancementModelRequested -= TrayIconService_SelectEnhancementModelRequested;
         trayIconService.SelectLanguageRequested -= TrayIconService_SelectLanguageRequested;
         trayIconService.SelectAudioInputRequested -= TrayIconService_SelectAudioInputRequested;
         trayIconService.SelectPowerModeRequested -= TrayIconService_SelectPowerModeRequested;
