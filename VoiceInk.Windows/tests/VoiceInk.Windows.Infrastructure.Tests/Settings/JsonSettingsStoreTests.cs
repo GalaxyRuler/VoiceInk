@@ -28,6 +28,7 @@ public sealed class JsonSettingsStoreTests
         Assert.True(reloaded.PrewarmModelOnWake);
         Assert.True(reloaded.IsTextFormattingEnabled);
         Assert.True(reloaded.AppendTrailingSpace);
+        Assert.Equal("en", reloaded.Language);
     }
 
     [Fact]
