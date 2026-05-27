@@ -107,6 +107,12 @@ public static class SessionMetricsDashboardPresenter
                     "VoiceInk vs. typing by hand",
                     "Yellow"),
                 new(
+                    "\uE823",
+                    "Time Saved",
+                    FormatDuration(summary.TimeSaved, culture),
+                    "estimated typing time saved",
+                    "Green"),
+                new(
                     "\uE765",
                     "Keystrokes Saved",
                     Math.Max(0, summary.KeystrokesSaved).ToString("N0", culture),

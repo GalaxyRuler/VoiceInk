@@ -167,6 +167,12 @@ public sealed class SessionMetricsDashboardPresenterTests
                 },
                 card =>
                 {
+                    Assert.Equal("Time Saved", card.Title);
+                    Assert.Equal("25m 0s", card.Value);
+                    Assert.Equal("estimated typing time saved", card.Detail);
+                },
+                card =>
+                {
                     Assert.Equal("Keystrokes Saved", card.Title);
                     Assert.Equal("6,170", card.Value);
                     Assert.Equal("fewer keystrokes", card.Detail);
@@ -229,6 +235,9 @@ public sealed class SessionMetricsDashboardPresenterTests
         Assert.Equal(
             "Sessions Recorded, 2, VoiceInk sessions completed",
             presentation.Cards[0].AccessibleName);
+        Assert.Equal(
+            "Time Saved, 25m 0s, estimated typing time saved",
+            presentation.Cards[3].AccessibleName);
         Assert.Equal(
             "Sessions and Words, Completed work, SQLite, Counts come from completed recorder, file transcription, and retry rows saved locally.",
             presentation.DataGuidanceRows[0].AccessibleName);

@@ -820,9 +820,15 @@ Metrics Reset slice completed on 2026-05-25:
 
 Metrics Dashboard Visual Parity slice completed on 2026-05-26:
 
-- Added a Core `SessionMetricsDashboardPresenter` that formats the macOS-style metrics hero, empty state, four dashboard cards, and duration metadata without WinUI dependencies.
+- Added a Core `SessionMetricsDashboardPresenter` that formats the macOS-style metrics hero, empty state, dashboard cards, and duration metadata without WinUI dependencies.
 - Updated the Windows Metrics page to show `No Recorder Sessions Yet` / `Start your first recording to unlock value insights.` for empty metrics.
 - Replaced the plain summary text blob with hero text and cards for Sessions Recorded, Words Dictated, Words Per Minute, and Keystrokes Saved.
+
+Metrics Time Saved card slice completed on 2026-05-27:
+
+- Added a presenter-backed `Time Saved` dashboard card using the same local summary value as the hero and CSV export.
+- Kept the empty-state card list empty until sessions exist.
+- Kept metrics persistence, aggregation, filtering, CSV export, reset, and model-performance behavior unchanged.
 
 Metrics model performance guidance slice completed on 2026-05-26:
 
