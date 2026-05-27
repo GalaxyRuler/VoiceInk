@@ -14,6 +14,6 @@ Make the Dictionary page explicit about the privacy boundary between vocabulary 
 
 - Add a presenter-backed Dictionary rule guidance row for provider privacy boundaries.
 - The row must explain that vocabulary may be included in prompts sent to the selected enhancement or transcription provider.
-- The row must explain that word replacements are applied locally after transcription.
+- The row must explain that word replacements are applied locally after text formatting.
 - Keep the behavior in Core presenter logic and existing WinUI bindings.
 - Do not add telemetry, accounts, paid gates, or commercial flows.

@@ -93,7 +93,7 @@ public static class DictionaryPagePresenter
                 item.IsEnabled,
                 ReplacementDisplayText(item),
                 item.IsEnabled
-                    ? "Runs after transcription and before insertion."
+                    ? "Runs after text formatting, before final cleanup and insertion."
                     : "Kept locally but skipped during replacement cleanup.",
                 item.IsEnabled ? "Enabled" : "Disabled"))
             .ToArray();
@@ -135,7 +135,7 @@ public static class DictionaryPagePresenter
         new(
             "Active Replacements",
             enabledReplacementCount.ToString(),
-            "Runs after transcription before insertion.",
+            "Runs after text formatting, before final cleanup and insertion.",
             enabledReplacementCount > 0 ? "Enabled" : "None"),
         new(
             "Disabled Replacements",
@@ -158,8 +158,8 @@ public static class DictionaryPagePresenter
             "Context"),
         new(
             "Enabled Replacements",
-            "After transcription",
-            "Enabled replacements run after transcription cleanup and before insertion.",
+            "After formatting",
+            "Enabled replacements run after text formatting and before final cleanup/insertion.",
             "Automatic"),
         new(
             "Processing Order",
@@ -209,7 +209,7 @@ public static class DictionaryPagePresenter
         new(
             "Provider Boundary",
             "Vocabulary may travel",
-            "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.",
+            "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after text formatting.",
             "Privacy")
     ];
 

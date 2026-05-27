@@ -734,6 +734,12 @@ Dictionary replacement examples slice completed on 2026-05-27:
 - Added concrete replacement examples for dictated links and VoiceInk name correction, matching the intent of the macOS `WordReplacementInfoPopover`.
 - Kept replacement matching, import/export, quick add, sorting, and cleanup behavior unchanged.
 
+Dictionary replacement order guidance slice completed on 2026-05-27:
+
+- Updated active replacement summary, replacement row detail, and rule guidance so users see that enabled replacements run after text formatting and before final cleanup/insertion.
+- Updated provider-boundary guidance to keep vocabulary prompt sharing separate from local-only replacements after formatting.
+- Kept dictionary storage, matching, import/export, quick add, sorting, and transcript processing behavior unchanged.
+
 Windows gaps:
 
 - Richer card/flow layout polish for vocabulary tokens and replacement rows.

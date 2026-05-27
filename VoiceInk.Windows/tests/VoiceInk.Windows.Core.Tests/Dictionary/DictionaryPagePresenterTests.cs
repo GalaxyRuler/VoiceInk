@@ -51,7 +51,7 @@ public sealed class DictionaryPagePresenterTests
             {
                 Assert.Equal("Active Replacements", row.Title);
                 Assert.Equal("1", row.Value);
-                Assert.Equal("Runs after transcription before insertion.", row.Detail);
+                Assert.Equal("Runs after text formatting, before final cleanup and insertion.", row.Detail);
                 Assert.Equal("Enabled", row.StatusBadge);
             },
             row =>
@@ -83,8 +83,8 @@ public sealed class DictionaryPagePresenterTests
             row =>
             {
                 Assert.Equal("Enabled Replacements", row.Title);
-                Assert.Equal("After transcription", row.Value);
-                Assert.Equal("Enabled replacements run after transcription cleanup and before insertion.", row.Detail);
+                Assert.Equal("After formatting", row.Value);
+                Assert.Equal("Enabled replacements run after text formatting and before final cleanup/insertion.", row.Detail);
                 Assert.Equal("Automatic", row.StatusBadge);
             },
             row =>
@@ -154,7 +154,7 @@ public sealed class DictionaryPagePresenterTests
             {
                 Assert.Equal("Provider Boundary", row.Title);
                 Assert.Equal("Vocabulary may travel", row.Value);
-                Assert.Equal("Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.", row.Detail);
+                Assert.Equal("Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after text formatting.", row.Detail);
                 Assert.Equal("Privacy", row.StatusBadge);
             });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
@@ -178,9 +178,9 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("VoiceInk", row.ReplacementText);
                 Assert.Equal("Voice ink -> VoiceInk", row.DisplayText);
                 Assert.Equal("Enabled", row.StatusBadge);
-                Assert.Equal("Runs after transcription and before insertion.", row.DetailText);
+                Assert.Equal("Runs after text formatting, before final cleanup and insertion.", row.DetailText);
                 Assert.Equal(
-                    "Voice ink -> VoiceInk, Enabled, Runs after transcription and before insertion.",
+                    "Voice ink -> VoiceInk, Enabled, Runs after text formatting, before final cleanup and insertion.",
                     row.AccessibleName);
                 Assert.True(row.IsEnabled);
             },
@@ -251,9 +251,9 @@ public sealed class DictionaryPagePresenterTests
             presentation.RuleGuidanceRows,
             row => row.Title == "Provider Boundary"
                 && row.Value == "Vocabulary may travel"
-                && row.Detail == "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription."
+                && row.Detail == "Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after text formatting."
                 && row.StatusBadge == "Privacy"
-                && row.AccessibleName == "Provider Boundary, Vocabulary may travel, Privacy, Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after transcription.");
+                && row.AccessibleName == "Provider Boundary, Vocabulary may travel, Privacy, Vocabulary can be included in prompts sent to the selected enhancement or transcription provider; replacements are applied locally after text formatting.");
     }
 
     [Fact]
