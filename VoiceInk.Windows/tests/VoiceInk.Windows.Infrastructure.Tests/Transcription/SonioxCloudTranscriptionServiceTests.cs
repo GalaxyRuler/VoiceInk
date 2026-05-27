@@ -93,6 +93,32 @@ public sealed class SonioxCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsEndpointQueryOptionsToCreatePayload()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"id":"file-123"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"id":"transcription-123"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"status":"completed"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"tokens":[{"text":"Advanced"}]}"""),
+            _ => JsonResponse(HttpStatusCode.OK, "{}"),
+            _ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new SonioxCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "soniox-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://api.soniox.com/v1/transcriptions?enable_speaker_diarization=true&num_speakers=2"),
+            CancellationToken.None);
+
+        using var createJson = JsonDocument.Parse(handler.Bodies[1]);
+        Assert.True(createJson.RootElement.GetProperty("enable_speaker_diarization").GetBoolean());
+        Assert.Equal(2, createJson.RootElement.GetProperty("num_speakers").GetInt32());
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -106,6 +132,26 @@ public sealed class SonioxCloudTranscriptionServiceTests
             () => service.TranscribeAsync(Audio(audioFile.Path), Options(), CancellationToken.None));
 
         Assert.Contains("not configured", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_SecretBearingEndpointQueryFailsBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new SonioxCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "soniox-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://api.soniox.com/v1/transcriptions?api_token=sk-query-secret"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
         Assert.Empty(handler.Requests);
     }
 
@@ -155,13 +201,15 @@ public sealed class SonioxCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://api.soniox.com/v1/transcriptions") =>
         new(
             ModelPath: string.Empty,
             language,
             Prompt: string.Empty,
             TranscriptionProviderKind.OpenAICompatible,
-            "https://api.soniox.com/v1/transcriptions",
+            endpoint,
             "stt-async-v4",
             CloudProviderId: "soniox");
 

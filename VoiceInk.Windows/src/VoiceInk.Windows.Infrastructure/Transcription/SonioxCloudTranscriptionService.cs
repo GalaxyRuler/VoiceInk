@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -29,6 +30,14 @@ public sealed class SonioxCloudTranscriptionService(
             throw new InvalidOperationException("Cloud transcription model is required.");
         }
 
+        if (!TranscriptionConfiguration.TryCreateCloudEndpoint(
+            options.CloudEndpoint,
+            out var endpoint,
+            out var endpointError))
+        {
+            throw new InvalidOperationException(endpointError);
+        }
+
         var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken)
             .ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -42,7 +51,7 @@ public sealed class SonioxCloudTranscriptionService(
         try
         {
             fileId = await UploadFileAsync(audio, apiKey, cancellationToken).ConfigureAwait(false);
-            transcriptionId = await CreateTranscriptionAsync(fileId, options, apiKey, cancellationToken)
+            transcriptionId = await CreateTranscriptionAsync(fileId, options, endpoint!, apiKey, cancellationToken)
                 .ConfigureAwait(false);
             await WaitForCompletionAsync(transcriptionId, apiKey, cancellationToken).ConfigureAwait(false);
             var text = await GetTranscriptTextAsync(transcriptionId, apiKey, cancellationToken)
@@ -95,6 +104,7 @@ public sealed class SonioxCloudTranscriptionService(
     private async Task<string> CreateTranscriptionAsync(
         string fileId,
         TranscriptionOptions options,
+        Uri endpoint,
         string apiKey,
         CancellationToken cancellationToken)
     {
@@ -108,6 +118,11 @@ public sealed class SonioxCloudTranscriptionService(
             && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase))
         {
             payload["language_hints"] = new[] { options.Language.Trim() };
+        }
+
+        foreach (var option in EndpointQueryOptions(endpoint))
+        {
+            payload.TryAdd(option.Name, option.Value);
         }
 
         message.Content = new StringContent(
@@ -219,6 +234,61 @@ public sealed class SonioxCloudTranscriptionService(
 
         return null;
     }
+
+    private static IEnumerable<(string Name, object Value)> EndpointQueryOptions(Uri endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            yield break;
+        }
+
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedTranscriptionPayloadNames.Any(
+                    reservedName => string.Equals(reservedName, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, TypedQueryValue(value));
+        }
+    }
+
+    private static object TypedQueryValue(string value)
+    {
+        if (bool.TryParse(value, out var booleanValue))
+        {
+            return booleanValue;
+        }
+
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue))
+        {
+            return integerValue;
+        }
+
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
+        {
+            return doubleValue;
+        }
+
+        return value;
+    }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " ", StringComparison.Ordinal));
+
+    private static readonly string[] ReservedTranscriptionPayloadNames =
+    [
+        "file_id",
+        "language_hints",
+        "model"
+    ];
 
     private static HttpRequestMessage CreateRequest(HttpMethod method, string relativePath, string apiKey)
     {
