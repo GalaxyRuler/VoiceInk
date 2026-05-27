@@ -928,6 +928,11 @@
                             Content="Enable Power Mode"
                             Checked="PowerModeMasterCheckBox_Changed"
                             Unchecked="PowerModeMasterCheckBox_Changed" />
+                        <CheckBox
+                            x:Name="PowerModePersistenceCheckBox"
+                            Content="Persist Configured Preferences"
+                            Checked="PowerModePersistenceCheckBox_Changed"
+                            Unchecked="PowerModePersistenceCheckBox_Changed" />
                         <TextBlock
                             x:Name="PowerModeCountTextBlock"
                             FontWeight="SemiBold"

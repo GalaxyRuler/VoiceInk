@@ -946,6 +946,7 @@ public sealed partial class MainWindow : Window
         {
             await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(stopToken);
             await controller.StopAsync(stopToken);
+            ClearTransientPowerModeSelectionAfterRecorderSession();
             shouldCompleteFeedback = controller.LastStopInsertedText;
             await CompleteRecordingFeedbackSessionAsync(playStopSound: shouldCompleteFeedback);
             await RefreshHistoryAsync(stopToken);
@@ -1033,6 +1034,7 @@ public sealed partial class MainWindow : Window
         {
             await floatingRecorderControlUpdates.WaitForPendingUpdateAsync(windowLifetime.Token);
             await controller.CancelAsync(windowLifetime.Token);
+            ClearTransientPowerModeSelectionAfterRecorderSession();
             await CancelRecordingFeedbackSessionAsync();
             await RefreshHistoryAsync(windowLifetime.Token);
             var metricsWarning = await RefreshMetricsBestEffortAsync(windowLifetime.Token);
@@ -1607,6 +1609,19 @@ public sealed partial class MainWindow : Window
         RefreshUiFromControllerState(PowerModeMasterCheckBox.IsChecked == true
             ? "Power Mode enabled"
             : "Power Mode disabled");
+    }
+
+    private async void PowerModePersistenceCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        await SaveSettingsAsync(windowLifetime.Token);
+        RefreshUiFromControllerState(PowerModePersistenceCheckBox.IsChecked == true
+            ? "Power Mode preferences persist"
+            : "Power Mode preferences reset after recording");
     }
 
     private async void UsePowerModeTargetButton_Click(object sender, RoutedEventArgs e)
@@ -2253,6 +2268,7 @@ public sealed partial class MainWindow : Window
         powerModeRules = settings.PowerModeRules;
         selectedPowerModeRuleId = settings.SelectedPowerModeRuleId;
         PowerModeMasterCheckBox.IsChecked = settings.IsPowerModeEnabled;
+        PowerModePersistenceCheckBox.IsChecked = settings.PersistPowerModeSelection;
         RefreshPowerModePromptChoices(selectedPromptId: null);
         RefreshPowerModeRulesListView();
         RestoreClipboardCheckBox.IsChecked = settings.RestoreClipboard;
@@ -7509,6 +7525,7 @@ public sealed partial class MainWindow : Window
             IsAudioCleanupEnabled = AudioCleanupCheckBox.IsChecked == true,
             AudioRetentionPeriod = SelectedAudioRetentionDays(),
             IsPowerModeEnabled = PowerModeMasterCheckBox.IsChecked == true,
+            PersistPowerModeSelection = PowerModePersistenceCheckBox.IsChecked == true,
             SelectedPowerModeRuleId = SelectedPowerModeRuleId(),
             PowerModeRules = powerModeRules.ToArray()
         };
@@ -7849,6 +7866,17 @@ public sealed partial class MainWindow : Window
         && powerModeRules.Any(rule => rule.IsEnabled && rule.Id == ruleId)
             ? ruleId
             : null;
+
+    private void ClearTransientPowerModeSelectionAfterRecorderSession()
+    {
+        if (PowerModePersistenceCheckBox.IsChecked == true || selectedPowerModeRuleId is null)
+        {
+            return;
+        }
+
+        selectedPowerModeRuleId = null;
+        RefreshPowerModeRulesListView();
+    }
 
     private EnhancementPrompt? PromptEditorPrompt() =>
         promptEditorPromptId is { } promptId
@@ -9108,6 +9136,7 @@ public sealed partial class MainWindow : Window
         PowerModeInstalledAppComboBox.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
         AddPowerModeInstalledAppButton.IsEnabled = powerModeControlsEnabled && installedApplicationChoices.Count > 0;
         PowerModeMasterCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModePersistenceCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeRulesListView.IsEnabled = powerModeControlsEnabled;
         PowerModeNameTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;

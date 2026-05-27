@@ -214,6 +214,72 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_WhenPowerModeSelectionIsTransient_ClearsSelectedRuleAfterSession()
+    {
+        var ruleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            SelectedPowerModeRuleId = ruleId,
+            PersistPowerModeSelection = false,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = ruleId,
+                    Name = "Coding",
+                    IsEnabled = true,
+                    ModelPathOverride = "ggml-coding.bin"
+                }
+            ]
+        });
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            new FakeTranscriptionService(new TranscriptionResult("hello", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Null(settings.CurrentSettings.SelectedPowerModeRuleId);
+    }
+
+    [Fact]
+    public async Task CancelAsync_WhenPowerModeSelectionPersists_KeepsSelectedRuleAfterSession()
+    {
+        var ruleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            SelectedPowerModeRuleId = ruleId,
+            PersistPowerModeSelection = true,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Id = ruleId,
+                    Name = "Coding",
+                    IsEnabled = true,
+                    ModelPathOverride = "ggml-coding.bin"
+                }
+            ]
+        });
+        var controller = new DictationController(
+            new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1)),
+            new FakeTranscriptionService(new TranscriptionResult("ignored", TimeSpan.Zero, "local-whisper")),
+            new FakeTextInjectionService(),
+            new FakeHistoryStore(),
+            settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.CancelAsync(CancellationToken.None);
+
+        Assert.Equal(ruleId, settings.CurrentSettings.SelectedPowerModeRuleId);
+    }
+
+    [Fact]
     public async Task CancelAsync_DoesNothingWhenNotRecording()
     {
         var capture = new FakeAudioCaptureService(new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1));
@@ -1942,7 +2008,11 @@ public sealed class DictationControllerTests
             return CurrentSettings;
         }
 
-        public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken)
+        {
+            CurrentSettings = settings;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeDictionaryStore : IDictionaryStore

@@ -623,6 +623,7 @@ Power Mode slice completed on 2026-05-25:
 - Added floating-recorder Power Mode chooser integration with Auto plus enabled rule selection.
 - Added macOS-style Power Mode page title/description, rule counts, and empty-state guidance.
 - Added a persisted master `Enable Power Mode` setting so users can disable all rule matching and recorder choices without deleting rules.
+- Added macOS-style `Persist Configured Preferences` behavior so manual Power Mode selections reset after recorder stop/cancel unless persistence is enabled.
 
 Power Mode rule list polish slice completed on 2026-05-26:
 
@@ -638,7 +639,7 @@ Windows Win32 grounding:
 
 Windows gaps:
 
-- Optional macOS-style persist-config session restoration polish.
+- Optional deeper WinUI layout polish for dense Power Mode rule editing.
 
 ### Dictionary
 

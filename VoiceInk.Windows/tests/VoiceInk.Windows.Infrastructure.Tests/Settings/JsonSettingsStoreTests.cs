@@ -116,6 +116,7 @@ public sealed class JsonSettingsStoreTests
             OcrCaptureRegionHeight = 360,
             FillerWords = ["um", "like", "you know"],
             IsPowerModeEnabled = false,
+            PersistPowerModeSelection = true,
             ImportedWhisperModels =
             [
                 new LocalWhisperModel(

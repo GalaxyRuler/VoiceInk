@@ -294,6 +294,7 @@ public sealed class DictationController(
             }
             finally
             {
+                await RestoreTransientPowerModeSelectionAsync(CancellationToken.None);
                 activePowerModeResolution = null;
             }
         }
@@ -378,6 +379,7 @@ public sealed class DictationController(
             }
             finally
             {
+                await RestoreTransientPowerModeSelectionAsync(CancellationToken.None);
                 activePowerModeResolution = null;
             }
         }
@@ -435,6 +437,28 @@ public sealed class DictationController(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LastWarning = $"Power Mode auto-send failed: {ex.Message}";
+        }
+    }
+
+    private async Task RestoreTransientPowerModeSelectionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var settings = await settingsStore.LoadAsync(cancellationToken);
+            if (settings.PersistPowerModeSelection || settings.SelectedPowerModeRuleId is null)
+            {
+                return;
+            }
+
+            await settingsStore.SaveAsync(settings with { SelectedPowerModeRuleId = null }, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LastWarning ??= $"Power Mode restore failed: {ex.Message}";
         }
     }
 
