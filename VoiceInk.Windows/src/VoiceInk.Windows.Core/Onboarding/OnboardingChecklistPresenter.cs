@@ -98,7 +98,7 @@ public static class OnboardingChecklistPresenter
                 StateFor(status.HasAudioInputChoices)),
             new OnboardingChecklistItemPresentation(
                 "Windows microphone privacy",
-                "VoiceInk may not appear as a separate app entry while source-built; keep Microphone access and desktop app access enabled.",
+                "VoiceInk may not appear as a separate app entry while source-built; keep Microphone access and 'Let desktop apps access your microphone' enabled.",
                 OnboardingChecklistItemState.Advisory),
             new OnboardingChecklistItemPresentation(
                 "Context awareness",
@@ -130,8 +130,8 @@ public static class OnboardingChecklistPresenter
             new OnboardingSummaryRowPresentation(
                 "Windows Permission",
                 status.HasAudioInputChoices
-                    ? "Keep Microphone access and desktop app access enabled; source-built VoiceInk may not be listed by name."
-                    : "Open Microphone privacy settings; VoiceInk may rely on the desktop app access switch even when it is not listed by name.",
+                    ? "Keep Microphone access and 'Let desktop apps access your microphone' enabled; source-built VoiceInk may not be listed by name."
+                    : "Open Microphone privacy settings; VoiceInk may rely on 'Let desktop apps access your microphone' even when it is not listed by name.",
                 status.HasAudioInputChoices ? "Review" : "Check"),
             new OnboardingSummaryRowPresentation(
                 "Context Awareness",
@@ -168,7 +168,7 @@ public static class OnboardingChecklistPresenter
                 status.HasAudioInputChoices ? "Ready" : "Check"),
             new OnboardingSetupActionPresentation(
                 "Manual Privacy Path",
-                "Use Settings > Privacy & security > Microphone, then check both Microphone access and desktop app access if VoiceInk is not listed.",
+                "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed.",
                 "Open Manually",
                 "Fallback"),
             new OnboardingSetupActionPresentation(

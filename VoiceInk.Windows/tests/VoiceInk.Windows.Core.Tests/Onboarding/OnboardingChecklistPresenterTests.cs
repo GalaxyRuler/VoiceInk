@@ -83,7 +83,7 @@ public sealed class OnboardingChecklistPresenterTests
             action =>
             {
                 Assert.Equal("Manual Privacy Path", action.Title);
-                Assert.Equal("Use Settings > Privacy & security > Microphone, then check both Microphone access and desktop app access if VoiceInk is not listed.", action.Description);
+                Assert.Equal("Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed.", action.Description);
                 Assert.Equal("Open Manually", action.CommandText);
                 Assert.Equal("Fallback", action.StatusBadge);
             },
@@ -125,7 +125,7 @@ public sealed class OnboardingChecklistPresenterTests
             row =>
             {
                 Assert.Equal("Windows Permission", row.Title);
-                Assert.Equal("Keep Microphone access and desktop app access enabled; source-built VoiceInk may not be listed by name.", row.Description);
+                Assert.Equal("Keep Microphone access and 'Let desktop apps access your microphone' enabled; source-built VoiceInk may not be listed by name.", row.Description);
                 Assert.Equal("Review", row.StatusBadge);
             },
             row =>
@@ -257,7 +257,7 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Contains(
             presentation.SummaryRows,
             row => row.Title == "Windows Permission"
-                && row.Description == "Open Microphone privacy settings; VoiceInk may rely on the desktop app access switch even when it is not listed by name."
+                && row.Description == "Open Microphone privacy settings; VoiceInk may rely on 'Let desktop apps access your microphone' even when it is not listed by name."
                 && row.StatusBadge == "Check");
         Assert.Equal("Save setup after checking your microphone, then run the first dictation test.", presentation.NextAction);
     }
@@ -311,14 +311,14 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Contains(
             presentation.Items,
             item => item.Title == "Windows microphone privacy"
-                && item.Description == "VoiceInk may not appear as a separate app entry while source-built; keep Microphone access and desktop app access enabled.");
+                && item.Description == "VoiceInk may not appear as a separate app entry while source-built; keep Microphone access and 'Let desktop apps access your microphone' enabled.");
         Assert.Contains(
             presentation.SummaryRows,
             row => row.Title == "Windows Permission"
-                && row.Description == "Open Microphone privacy settings; VoiceInk may rely on the desktop app access switch even when it is not listed by name.");
+                && row.Description == "Open Microphone privacy settings; VoiceInk may rely on 'Let desktop apps access your microphone' even when it is not listed by name.");
         Assert.Contains(
             presentation.SetupActions,
             action => action.Title == "Manual Privacy Path"
-                && action.Description == "Use Settings > Privacy & security > Microphone, then check both Microphone access and desktop app access if VoiceInk is not listed.");
+                && action.Description == "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed.");
     }
 }
