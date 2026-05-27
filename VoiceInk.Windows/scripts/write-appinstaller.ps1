@@ -4,6 +4,8 @@ param(
     [string]$OutputPath,
     [string]$AppInstallerUri,
     [string]$ProcessorArchitecture = "x64",
+    [switch]$EnableOnLaunchUpdateCheck,
+    [int]$HoursBetweenUpdateChecks = 24,
     [switch]$Help
 )
 
@@ -11,9 +13,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Show-Usage {
-    Write-Host "Usage: .\VoiceInk.Windows\scripts\write-appinstaller.ps1 -MainPackageUri uri [-OutputPath path] [-AppInstallerUri uri] [-ProcessorArchitecture x64]"
+    Write-Host "Usage: .\VoiceInk.Windows\scripts\write-appinstaller.ps1 -MainPackageUri uri [-OutputPath path] [-AppInstallerUri uri] [-ProcessorArchitecture x64] [-EnableOnLaunchUpdateCheck] [-HoursBetweenUpdateChecks 24]"
     Write-Host ""
     Write-Host "Generates a .appinstaller manifest whose MainPackage identity is read from Package.appxmanifest."
+    Write-Host "HoursBetweenUpdateChecks must be between 0 and 255 when on-launch update checks are enabled."
     Write-Host "OutputPath must stay inside VoiceInk.Windows\artifacts."
     Write-Host "This script does not publish, install, uninstall, sign, create certificates, import certificates, or trust certificates."
 }
@@ -52,6 +55,10 @@ if ($Help) {
 
 if ([string]::IsNullOrWhiteSpace($MainPackageUri)) {
     throw "MainPackageUri is required unless -Help is used."
+}
+
+if ($HoursBetweenUpdateChecks -lt 0 -or $HoursBetweenUpdateChecks -gt 255) {
+    throw "HoursBetweenUpdateChecks must be between 0 and 255."
 }
 
 Assert-AbsoluteUri -Value $MainPackageUri -Name "MainPackageUri"
@@ -128,6 +135,14 @@ $mainPackageElement.SetAttribute("ProcessorArchitecture", $ProcessorArchitecture
 $mainPackageElement.SetAttribute("Uri", $MainPackageUri)
 $rootElement.AppendChild($mainPackageElement) | Out-Null
 
+if ($EnableOnLaunchUpdateCheck) {
+    $updateSettingsElement = $document.CreateElement("UpdateSettings", $appInstallerNamespace)
+    $onLaunchElement = $document.CreateElement("OnLaunch", $appInstallerNamespace)
+    $onLaunchElement.SetAttribute("HoursBetweenUpdateChecks", $HoursBetweenUpdateChecks.ToString([System.Globalization.CultureInfo]::InvariantCulture))
+    $updateSettingsElement.AppendChild($onLaunchElement) | Out-Null
+    $rootElement.AppendChild($updateSettingsElement) | Out-Null
+}
+
 $document.Save($resolvedOutputPath)
 
 Write-Host "App Installer manifest written:"
@@ -137,3 +152,6 @@ Write-Host "  MainPackage Publisher: $packagePublisher"
 Write-Host "  MainPackage Version: $packageVersion"
 Write-Host "  MainPackage ProcessorArchitecture: $ProcessorArchitecture"
 Write-Host "  MainPackage Uri: $MainPackageUri"
+if ($EnableOnLaunchUpdateCheck) {
+    Write-Host "  OnLaunch HoursBetweenUpdateChecks: $HoursBetweenUpdateChecks"
+}

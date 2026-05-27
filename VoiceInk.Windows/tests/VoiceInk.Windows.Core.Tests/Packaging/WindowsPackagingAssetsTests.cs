@@ -214,6 +214,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Version", script);
         Assert.Contains("ProcessorArchitecture", script);
         Assert.Contains("Uri", script);
+        Assert.Contains("EnableOnLaunchUpdateCheck", script);
+        Assert.Contains("HoursBetweenUpdateChecks", script);
+        Assert.Contains("0 and 255", script);
         Assert.Contains("VoiceInk.Windows", script);
         Assert.Contains("CN=VoiceInkOpenSource", script);
         Assert.Contains("OutputPath must stay inside VoiceInk.Windows\\artifacts", script);
@@ -244,6 +247,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Version", script);
         Assert.Contains("ProcessorArchitecture", script);
         Assert.Contains("Uri", script);
+        Assert.Contains("UpdateSettings", script);
+        Assert.Contains("OnLaunch", script);
+        Assert.Contains("HoursBetweenUpdateChecks", script);
+        Assert.Contains("0 and 255", script);
         Assert.Contains("Refusing to inspect path outside artifact root", script);
         Assert.Contains("App Installer manifest validation passed", script);
 

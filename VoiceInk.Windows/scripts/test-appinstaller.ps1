@@ -103,6 +103,24 @@ if ([string]::IsNullOrWhiteSpace($mainPackage.ProcessorArchitecture)) {
 Assert-AbsoluteUri -Value $root.Uri -Name "AppInstaller Uri"
 Assert-AbsoluteUri -Value $mainPackage.Uri -Name "MainPackage Uri"
 
+$updateSettings = $appInstaller.SelectSingleNode("/ai:AppInstaller/ai:UpdateSettings", $appInstallerNamespaceManager)
+if ($null -ne $updateSettings) {
+    $onLaunch = $updateSettings.SelectSingleNode("ai:OnLaunch", $appInstallerNamespaceManager)
+    if ($null -eq $onLaunch) {
+        throw "UpdateSettings must include OnLaunch when present."
+    }
+
+    $hours = $onLaunch.HoursBetweenUpdateChecks
+    if ([string]::IsNullOrWhiteSpace($hours)) {
+        throw "OnLaunch HoursBetweenUpdateChecks is required when UpdateSettings is present."
+    }
+
+    $parsedHours = 0
+    if (![int]::TryParse($hours, [ref]$parsedHours) -or $parsedHours -lt 0 -or $parsedHours -gt 255) {
+        throw "OnLaunch HoursBetweenUpdateChecks must be between 0 and 255."
+    }
+}
+
 Write-Host "App Installer manifest validation passed:"
 Write-Host "  $resolvedAppInstallerPath"
 Write-Host "  Name: $($mainPackage.Name)"
@@ -110,3 +128,6 @@ Write-Host "  Publisher: $($mainPackage.Publisher)"
 Write-Host "  Version: $($mainPackage.Version)"
 Write-Host "  ProcessorArchitecture: $($mainPackage.ProcessorArchitecture)"
 Write-Host "  Uri: $($mainPackage.Uri)"
+if ($null -ne $updateSettings) {
+    Write-Host "  OnLaunch HoursBetweenUpdateChecks: $parsedHours"
+}
