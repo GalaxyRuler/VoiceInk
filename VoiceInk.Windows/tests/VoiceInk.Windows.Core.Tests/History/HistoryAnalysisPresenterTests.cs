@@ -56,6 +56,12 @@ public sealed class HistoryAnalysisPresenterTests
             },
             row =>
             {
+                Assert.Equal("Retry and Re-enhance", row.Title);
+                Assert.Equal("Original text", row.Value);
+                Assert.Equal("Retry needs saved audio; re-enhance uses the original transcript text for a fresh AI pass.", row.Detail);
+            },
+            row =>
+            {
                 Assert.Equal("Export Scope", row.Title);
                 Assert.Equal("User initiated", row.Value);
                 Assert.Equal("History text, metadata, and audio paths stay local unless you copy, paste, or export them.", row.Detail);
@@ -85,7 +91,10 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Local Whisper", rows[3].Value);
         Assert.Equal("Transcription duration unavailable.", rows[3].Detail);
         Assert.Equal("Text only", rows[4].Value);
-        Assert.Equal("Export Scope", rows[5].Title);
+        Assert.Equal("Retry and Re-enhance", rows[5].Title);
+        Assert.Equal("Unavailable", rows[5].Value);
+        Assert.Equal("Retry and re-enhance are available only for completed history items.", rows[5].Detail);
+        Assert.Equal("Export Scope", rows[6].Title);
     }
 
     [Fact]
@@ -108,7 +117,10 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Audio Storage", rows[4].Title);
         Assert.Equal("Audio saved", rows[4].Value);
         Assert.Equal("Audio can be opened or replayed while the file remains on disk.", rows[4].Detail);
-        Assert.Equal("Export Scope", rows[5].Title);
-        Assert.Equal("User initiated", rows[5].Value);
+        Assert.Equal("Retry and Re-enhance", rows[5].Title);
+        Assert.Equal("Audio and original text", rows[5].Value);
+        Assert.Equal("Retry uses the saved audio file; re-enhance uses the original transcript text for a fresh AI pass.", rows[5].Detail);
+        Assert.Equal("Export Scope", rows[6].Title);
+        Assert.Equal("User initiated", rows[6].Value);
     }
 }

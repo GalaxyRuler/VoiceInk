@@ -39,6 +39,7 @@ public static partial class HistoryAnalysisPresenter
                 string.IsNullOrWhiteSpace(item.AudioFilePath)
                     ? "No audio file is attached to this history item."
                     : "Audio can be opened or replayed while the file remains on disk."),
+            RetryAndReenhanceRow(item),
             new(
                 "Export Scope",
                 "User initiated",
@@ -104,6 +105,40 @@ public static partial class HistoryAnalysisPresenter
         item.TranscriptionDuration > TimeSpan.Zero
             ? $"Transcription completed in {FormatDuration(item.TranscriptionDuration)}."
             : "Transcription duration unavailable.";
+
+    private static HistoryAnalysisRow RetryAndReenhanceRow(TranscriptionHistoryItem item)
+    {
+        if (item.Status != TranscriptionHistoryStatus.Completed)
+        {
+            return new(
+                "Retry and Re-enhance",
+                "Unavailable",
+                "Retry and re-enhance are available only for completed history items.");
+        }
+
+        var hasAudio = !string.IsNullOrWhiteSpace(item.AudioFilePath);
+        var hasOriginal = !string.IsNullOrWhiteSpace(item.OriginalText);
+
+        return (hasAudio, hasOriginal) switch
+        {
+            (true, true) => new(
+                "Retry and Re-enhance",
+                "Audio and original text",
+                "Retry uses the saved audio file; re-enhance uses the original transcript text for a fresh AI pass."),
+            (true, false) => new(
+                "Retry and Re-enhance",
+                "Audio and final text",
+                "Retry uses the saved audio file; re-enhance uses the final transcript because no separate original text was saved."),
+            (false, true) => new(
+                "Retry and Re-enhance",
+                "Original text",
+                "Retry needs saved audio; re-enhance uses the original transcript text for a fresh AI pass."),
+            _ => new(
+                "Retry and Re-enhance",
+                "Final text",
+                "Retry needs saved audio; re-enhance uses the final transcript because no separate original text was saved.")
+        };
+    }
 
     private static string FormatDuration(TimeSpan duration) =>
         duration.TotalMinutes >= 1
