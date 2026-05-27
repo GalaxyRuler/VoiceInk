@@ -1128,7 +1128,7 @@ Implemented:
 Windows gaps:
 
 - Richer multi-step visual styling matching the macOS animated welcome, permissions, model, and tutorial pages.
-- Permission health checks beyond microphone privacy and device visibility.
+- Richer permission diagnostics beyond source manifest capability, microphone privacy, and device visibility.
 
 Onboarding slice completed on 2026-05-24:
 
@@ -1190,6 +1190,12 @@ Onboarding health summary slice completed on 2026-05-27:
 - Added health summary rows for the focused-field and clipboard paste insertion path.
 - Added a default-off context-awareness health summary row.
 - Kept both rows informational so setup completion rules and OS privacy boundaries remain unchanged.
+
+Permissions package capability slice completed on 2026-05-27:
+
+- Added a Permissions readiness row for the source-controlled packaged microphone `DeviceCapability`.
+- Kept runtime microphone privacy/device availability separate from packaged manifest capability readiness.
+- Added safe action handling for the informational package-manifest row.
 
 ### Packaging
 

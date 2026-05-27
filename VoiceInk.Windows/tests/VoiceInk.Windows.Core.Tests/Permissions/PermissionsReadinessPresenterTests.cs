@@ -42,6 +42,14 @@ public sealed class PermissionsReadinessPresenterTests
             },
             item =>
             {
+                Assert.Equal("App Microphone Capability", item.Title);
+                Assert.Equal("Declared", item.Status);
+                Assert.True(item.IsReady);
+                Assert.Equal("Package Manifest", item.ActionTarget);
+                Assert.Equal("Source check: Package.appxmanifest declares DeviceCapability Name=\"microphone\".", item.FallbackGuidance);
+            },
+            item =>
+            {
                 Assert.Equal("Text Insertion", item.Title);
                 Assert.Equal("Direct text", item.Status);
                 Assert.True(item.IsReady);
@@ -72,6 +80,7 @@ public sealed class PermissionsReadinessPresenterTests
         Assert.Contains(status.Items, item => item.Title == "Keyboard Shortcut" && !item.IsReady);
         Assert.Contains(status.Items, item => item.Title == "Microphone Access" && !item.IsReady);
         Assert.Contains(status.Items, item => item.Title == "Screen Context" && !item.IsReady);
+        Assert.Contains(status.Items, item => item.Title == "App Microphone Capability" && item.IsReady);
     }
 
     [Fact]
@@ -80,7 +89,7 @@ public sealed class PermissionsReadinessPresenterTests
         var status = PermissionsReadinessPresenter.Build(new AppSettings(), hasAudioInputChoices: false);
 
         Assert.Equal(
-            "Microphone Access, Check Windows microphone privacy, Allow Windows desktop apps to use your microphone for recording., Manual path: Settings > Privacy & security > Microphone.",
-            status.Items[1].AccessibleName);
+            "App Microphone Capability, Declared, VoiceInk's packaged manifest declares microphone capture capability for signed MSIX builds., Source check: Package.appxmanifest declares DeviceCapability Name=\"microphone\".",
+            status.Items[2].AccessibleName);
     }
 }

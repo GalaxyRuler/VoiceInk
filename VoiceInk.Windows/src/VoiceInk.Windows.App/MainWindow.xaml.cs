@@ -3693,6 +3693,12 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        if (string.Equals(actionTarget, "Package Manifest", StringComparison.OrdinalIgnoreCase))
+        {
+            RefreshUiFromControllerState("Package.appxmanifest declares microphone capability for packaged builds");
+            return;
+        }
+
         if (navigationItemsByTag.ContainsKey(actionTarget))
         {
             ShowShellSection(actionTarget);

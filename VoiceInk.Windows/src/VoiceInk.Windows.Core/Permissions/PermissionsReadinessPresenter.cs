@@ -35,6 +35,14 @@ public static class PermissionsReadinessPresenter
                 "ms-settings:privacy-microphone",
                 "Manual path: Settings > Privacy & security > Microphone."),
             new PermissionReadinessItem(
+                "App Microphone Capability",
+                "VoiceInk's packaged manifest declares microphone capture capability for signed MSIX builds.",
+                "Declared",
+                true,
+                "View Source Check",
+                "Package Manifest",
+                "Source check: Package.appxmanifest declares DeviceCapability Name=\"microphone\"."),
+            new PermissionReadinessItem(
                 "Text Insertion",
                 "Choose how VoiceInk inserts transcribed text at the cursor.",
                 usesDirectText ? "Direct text" : "Clipboard paste",
