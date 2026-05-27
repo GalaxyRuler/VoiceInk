@@ -48,6 +48,8 @@ Write-ReadinessCheck "MSIX artifact validator" (Join-Path $scriptRoot "test-msix
 Write-ReadinessCheck "MSIX install smoke helper" (Join-Path $scriptRoot "smoke-msix-install.ps1")
 Write-ReadinessCheck "App Installer manifest generator" (Join-Path $scriptRoot "write-appinstaller.ps1")
 Write-ReadinessCheck "App Installer manifest validator" (Join-Path $scriptRoot "test-appinstaller.ps1")
+Write-ReadinessCheck "WinGet manifest generator" (Join-Path $scriptRoot "write-winget-manifest.ps1")
+Write-ReadinessCheck "WinGet manifest validator" (Join-Path $scriptRoot "test-winget-manifest.ps1")
 Write-ReadinessCheck "Dev ZIP package script" (Join-Path $scriptRoot "package-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP smoke validator" (Join-Path $scriptRoot "test-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user install helper" (Join-Path $scriptRoot "install-dev-zip.ps1")
@@ -61,6 +63,8 @@ Write-Host '  .\VoiceInk.Windows\scripts\test-dev-zip.ps1 -PackagePath <path-to-
 Write-Host '  .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath <path-to-msix>'
 Write-Host '  .\VoiceInk.Windows\scripts\write-appinstaller.ps1 -MainPackageUri <absolute-msix-uri>'
 Write-Host '  .\VoiceInk.Windows\scripts\test-appinstaller.ps1 -AppInstallerPath <path-to-appinstaller>'
+Write-Host '  .\VoiceInk.Windows\scripts\write-winget-manifest.ps1 -InstallerUrl <absolute-msix-uri> -InstallerSha256 <sha256>'
+Write-Host '  .\VoiceInk.Windows\scripts\test-winget-manifest.ps1 -ManifestDirectory <path-to-winget-manifest-directory>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
 
 Write-Host ""
@@ -91,6 +95,13 @@ Write-Host "  [ ] MainPackage Name/Publisher/Version must match Package.appxmani
 Write-Host "  [ ] Generate the optional .appinstaller file with write-appinstaller.ps1 after choosing the final signed MSIX distribution URI."
 Write-Host "  [ ] Validate the optional .appinstaller file with test-appinstaller.ps1 before publishing it."
 Write-Host "  [ ] Use a maintainer-owned HTTPS, network share, or local file share distribution path; this report does not generate, publish, install, or update packages."
+Write-Host ""
+Write-Host "WinGet manifest readiness reference:"
+Write-Host "  [ ] Optional WinGet community distribution metadata can be generated with write-winget-manifest.ps1 after choosing the final signed MSIX distribution URI and InstallerSha256."
+Write-Host "  [ ] The WinGet installer manifest uses InstallerType: msix and must reference the signed .msix or .msixbundle artifact."
+Write-Host "  [ ] InstallerSha256 can be supplied from the maintainer release process or computed from a local package under VoiceInk.Windows\artifacts with Get-FileHash."
+Write-Host "  [ ] Validate generated WinGet YAML locally with test-winget-manifest.ps1, then optionally run winget validate on a maintainer machine where WinGet is installed."
+Write-Host "  [ ] This readiness report does not submit manifests, download installers, install packages, uninstall packages, sign packages, create certificates, import certificates, or trust certificates."
 Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 

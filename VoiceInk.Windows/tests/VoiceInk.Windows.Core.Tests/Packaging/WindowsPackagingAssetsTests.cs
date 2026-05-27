@@ -289,6 +289,62 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void WinGetManifestScript_GeneratesOpenSourceMsixManifestsWithoutPublishingOrInstalling()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "write-winget-manifest.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("PackageIdentifier", script);
+        Assert.Contains("PackageVersion", script);
+        Assert.Contains("DefaultLocale", script);
+        Assert.Contains("InstallerType: msix", script);
+        Assert.Contains("InstallerUrl", script);
+        Assert.Contains("InstallerSha256", script);
+        Assert.Contains("Package.appxmanifest", script);
+        Assert.Contains("VoiceInk.VoiceInkWindows", script);
+        Assert.Contains("VoiceInk for Windows", script);
+        Assert.Contains("License: MIT", script);
+        Assert.Contains("OutputRoot must stay inside VoiceInk.Windows\\artifacts", script);
+        Assert.Contains("Get-FileHash", script);
+        Assert.Contains("WinGet manifests written", script);
+
+        Assert.DoesNotContain("& winget", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Submit", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void WinGetManifestSmokeScript_ValidatesGeneratedManifestsWithoutInstalling()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-winget-manifest.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("PackageIdentifier", script);
+        Assert.Contains("PackageVersion", script);
+        Assert.Contains("InstallerType: msix", script);
+        Assert.Contains("InstallerUrl", script);
+        Assert.Contains("InstallerSha256", script);
+        Assert.Contains("ManifestType", script);
+        Assert.Contains("ManifestVersion", script);
+        Assert.Contains("Refusing to inspect path outside artifact root", script);
+        Assert.Contains("WinGet manifest validation passed", script);
+        Assert.Contains("winget validate", script);
+
+        Assert.DoesNotContain("& winget", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void MsixInstallSmokeScript_PrintsPlanByDefaultAndRequiresExecuteForMutation()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "smoke-msix-install.ps1");
@@ -352,6 +408,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("smoke-msix-install.ps1", script);
         Assert.Contains("write-appinstaller.ps1", script);
         Assert.Contains("test-appinstaller.ps1", script);
+        Assert.Contains("write-winget-manifest.ps1", script);
+        Assert.Contains("test-winget-manifest.ps1", script);
         Assert.Contains("package-dev-zip.ps1", script);
         Assert.Contains("test-dev-zip.ps1", script);
         Assert.Contains("Publisher/certificate subject match", script);
@@ -370,6 +428,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains(".appinstaller", script);
         Assert.Contains("MainPackage", script);
         Assert.Contains("Name/Publisher/Version", script);
+        Assert.Contains("WinGet manifest readiness reference", script);
+        Assert.Contains("InstallerType: msix", script);
+        Assert.Contains("InstallerSha256", script);
+        Assert.Contains("winget validate", script);
         Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);
