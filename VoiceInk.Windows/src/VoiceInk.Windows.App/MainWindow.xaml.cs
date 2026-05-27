@@ -1329,6 +1329,18 @@ public sealed partial class MainWindow : Window
         await UseSelectedLocalModelAsync();
     }
 
+    private async void RemoveSelectedModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedModel = SelectedLocalWhisperModelChoice();
+        if (selectedModel is null)
+        {
+            RefreshUiFromControllerState("Select an imported model to remove");
+            return;
+        }
+
+        await RemoveLocalModelAsync(selectedModel.Path, selectedModel.DisplayName);
+    }
+
     private async void RemoveUnavailableModelsButton_Click(object sender, RoutedEventArgs e)
     {
         await RemoveUnavailableImportedModelsAsync();
@@ -1352,6 +1364,18 @@ public sealed partial class MainWindow : Window
     private void ShowCatalogModelButton_Click(object sender, RoutedEventArgs e)
     {
         ShowSelectedCatalogModel();
+    }
+
+    private async void DeleteCatalogModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedModel = SelectedCatalogModelItem();
+        if (selectedModel?.LocalPath is not { Length: > 0 } localPath)
+        {
+            RefreshUiFromControllerState("Download a catalog model before deleting it");
+            return;
+        }
+
+        await RemoveLocalModelAsync(localPath, selectedModel.DisplayName);
     }
 
     private async void CancelModelDownloadButton_Click(object sender, RoutedEventArgs e)
@@ -3606,6 +3630,69 @@ public sealed partial class MainWindow : Window
             removedCount == 1
                 ? "Removed 1 unavailable imported model"
                 : $"Removed {removedCount} unavailable imported models");
+    }
+
+    private async Task RemoveLocalModelAsync(string modelPath, string displayName)
+    {
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        var removal = LocalWhisperModelService.RemoveModel(
+            localWhisperModels,
+            modelPath,
+            ModelPathTextBox.Text,
+            modelsDirectory);
+        if (!removal.Removed)
+        {
+            RefreshUiFromControllerState("Model is not in the local model list");
+            return;
+        }
+
+        var deletesAppFile = removal.FilePathToDelete is { Length: > 0 };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = deletesAppFile ? "Delete downloaded model?" : "Remove model reference?",
+            Content = deletesAppFile
+                ? $"Delete '{displayName}' from VoiceInk's local model storage? This removes the downloaded .bin file."
+                : $"Remove '{displayName}' from VoiceInk? The external .bin file remains on disk.",
+            PrimaryButtonText = deletesAppFile ? "Delete" : "Remove",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        var confirmation = await dialog.ShowAsync();
+        if (confirmation != ContentDialogResult.Primary)
+        {
+            RefreshUiFromControllerState("Model removal canceled");
+            return;
+        }
+
+        localWhisperModels = removal.ImportedModels;
+        ModelPathTextBox.Text = removal.ModelPath;
+        RefreshModelChoices(ModelPathTextBox.Text);
+        RefreshLanguageChoices(ModelPathTextBox.Text, selectedLanguage: SelectedLanguageCode());
+        await SaveSettingsAsync(windowLifetime.Token);
+
+        if (deletesAppFile)
+        {
+            try
+            {
+                File.Delete(removal.FilePathToDelete!);
+            }
+            catch (Exception ex)
+            {
+                RefreshUiFromControllerState($"Removed model reference; file delete failed: {ex.Message}");
+                return;
+            }
+        }
+
+        RefreshModelChoices(ModelPathTextBox.Text);
+        RefreshUiFromControllerState(deletesAppFile
+            ? $"Deleted model: {displayName}"
+            : $"Removed model reference: {displayName}");
     }
 
     private async Task UseSelectedCatalogModelAsync()
@@ -8463,6 +8550,8 @@ public sealed partial class MainWindow : Window
         ShowCatalogModelButton.IsEnabled = modelControlsEnabled
             && selectedCatalogModel?.IsDownloaded == true
             && CanUseModelPath(selectedCatalogModel.LocalPath);
+        DeleteCatalogModelButton.IsEnabled = modelControlsEnabled
+            && selectedCatalogModel?.IsDownloaded == true;
         CancelModelDownloadButton.IsEnabled = settingsLoaded && isDownloadingModel;
         PrewarmModelOnWakeCheckBox.IsEnabled = modelControlsEnabled;
         ShowLiveTranscriptPreviewCheckBox.IsEnabled = modelControlsEnabled;
@@ -8484,6 +8573,8 @@ public sealed partial class MainWindow : Window
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled
             && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
+        RemoveSelectedModelButton.IsEnabled = modelControlsEnabled
+            && SelectedLocalWhisperModelChoice() is not null;
         RemoveUnavailableModelsButton.IsEnabled = modelControlsEnabled
             && UnavailableImportedModelCount() > 0;
         OpenModelDownloadsButton.IsEnabled = modelControlsEnabled;

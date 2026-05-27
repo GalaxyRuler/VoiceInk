@@ -2,6 +2,12 @@ using VoiceInk.Windows.Core.Settings;
 
 namespace VoiceInk.Windows.Core.Models;
 
+public sealed record LocalWhisperModelRemovalResult(
+    LocalWhisperModel[] ImportedModels,
+    string ModelPath,
+    string? FilePathToDelete,
+    bool Removed);
+
 public static class LocalWhisperModelService
 {
     private const string ModelExtension = ".bin";
@@ -167,5 +173,72 @@ public static class LocalWhisperModelService
 
         models.Add(downloadedModel);
         return [.. models];
+    }
+
+    public static LocalWhisperModelRemovalResult RemoveModel(
+        IEnumerable<LocalWhisperModel> existing,
+        string pathToRemove,
+        string currentModelPath,
+        string appModelsDirectory)
+    {
+        var models = existing.ToList();
+        var trimmedPath = pathToRemove.Trim();
+        var index = models.FindIndex(model =>
+            string.Equals(model.Path, trimmedPath, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            if (string.Equals(currentModelPath.Trim(), trimmedPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return new LocalWhisperModelRemovalResult(
+                    [.. models],
+                    string.Empty,
+                    AppOwnsModelPath(trimmedPath, appModelsDirectory) ? trimmedPath : null,
+                    Removed: true);
+            }
+
+            return new LocalWhisperModelRemovalResult(
+                [.. models],
+                currentModelPath,
+                FilePathToDelete: null,
+                Removed: false);
+        }
+
+        var removedModel = models[index];
+        models.RemoveAt(index);
+        var nextModelPath = string.Equals(currentModelPath.Trim(), removedModel.Path, StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : currentModelPath;
+
+        return new LocalWhisperModelRemovalResult(
+            [.. models],
+            nextModelPath,
+            AppOwnsModelPath(removedModel.Path, appModelsDirectory) ? removedModel.Path : null,
+            Removed: true);
+    }
+
+    private static bool AppOwnsModelPath(string modelPath, string appModelsDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(modelPath) || string.IsNullOrWhiteSpace(appModelsDirectory))
+        {
+            return false;
+        }
+
+        try
+        {
+            var normalizedModelPath = System.IO.Path.GetFullPath(modelPath);
+            var normalizedModelsDirectory = System.IO.Path.GetFullPath(appModelsDirectory)
+                .TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            return normalizedModelPath.StartsWith(
+                    normalizedModelsDirectory + System.IO.Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase)
+                && string.Equals(
+                    System.IO.Path.GetExtension(normalizedModelPath),
+                    ModelExtension,
+                    StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }

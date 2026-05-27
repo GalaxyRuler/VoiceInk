@@ -324,6 +324,10 @@
                                 Content="Show in Explorer"
                                 Click="ShowCatalogModelButton_Click" />
                             <Button
+                                x:Name="DeleteCatalogModelButton"
+                                Content="Delete Downloaded Model"
+                                Click="DeleteCatalogModelButton_Click" />
+                            <Button
                                 x:Name="CancelModelDownloadButton"
                                 Content="Cancel Download"
                                 Click="CancelModelDownloadButton_Click" />
@@ -391,6 +395,10 @@
                                 x:Name="UseSelectedModelButton"
                                 Content="Use Selected Model"
                                 Click="UseSelectedModelButton_Click" />
+                            <Button
+                                x:Name="RemoveSelectedModelButton"
+                                Content="Remove Selected Model"
+                                Click="RemoveSelectedModelButton_Click" />
                             <Button
                                 x:Name="RemoveUnavailableModelsButton"
                                 Content="Remove Unavailable Models"

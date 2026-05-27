@@ -106,6 +106,89 @@ public sealed class LocalWhisperModelServiceTests
     }
 
     [Fact]
+    public void RemoveModel_AppLocalModelRemovesReferenceAndPlansFileDeletion()
+    {
+        var modelsDirectory = "C:\\Users\\Admin\\AppData\\Local\\VoiceInk.Windows\\Models";
+        var appLocalModel = new LocalWhisperModel(
+            Path.Combine(modelsDirectory, "ggml-base.en.bin"),
+            "ggml-base.en",
+            DateTimeOffset.UnixEpoch);
+        var externalModel = new LocalWhisperModel(
+            "D:\\Models\\custom-medical.bin",
+            "custom-medical",
+            DateTimeOffset.UnixEpoch);
+
+        var result = LocalWhisperModelService.RemoveModel(
+            [appLocalModel, externalModel],
+            appLocalModel.Path,
+            currentModelPath: appLocalModel.Path,
+            modelsDirectory);
+
+        Assert.True(result.Removed);
+        Assert.Equal([externalModel], result.ImportedModels);
+        Assert.Equal(string.Empty, result.ModelPath);
+        Assert.Equal(appLocalModel.Path, result.FilePathToDelete);
+    }
+
+    [Fact]
+    public void RemoveModel_ExternalModelRemovesReferenceWithoutDeletingFile()
+    {
+        var externalModel = new LocalWhisperModel(
+            "D:\\Models\\custom-medical.bin",
+            "custom-medical",
+            DateTimeOffset.UnixEpoch);
+
+        var result = LocalWhisperModelService.RemoveModel(
+            [externalModel],
+            externalModel.Path,
+            currentModelPath: "C:\\Models\\ggml-base.en.bin",
+            appModelsDirectory: "C:\\Users\\Admin\\AppData\\Local\\VoiceInk.Windows\\Models");
+
+        Assert.True(result.Removed);
+        Assert.Empty(result.ImportedModels);
+        Assert.Equal("C:\\Models\\ggml-base.en.bin", result.ModelPath);
+        Assert.Null(result.FilePathToDelete);
+    }
+
+    [Fact]
+    public void RemoveModel_MissingModelLeavesStateUnchanged()
+    {
+        var model = new LocalWhisperModel(
+            "D:\\Models\\custom-medical.bin",
+            "custom-medical",
+            DateTimeOffset.UnixEpoch);
+
+        var result = LocalWhisperModelService.RemoveModel(
+            [model],
+            "D:\\Models\\other.bin",
+            currentModelPath: model.Path,
+            appModelsDirectory: "C:\\Users\\Admin\\AppData\\Local\\VoiceInk.Windows\\Models");
+
+        Assert.False(result.Removed);
+        Assert.Equal([model], result.ImportedModels);
+        Assert.Equal(model.Path, result.ModelPath);
+        Assert.Null(result.FilePathToDelete);
+    }
+
+    [Fact]
+    public void RemoveModel_CurrentOnlyModelClearsModelPathAndPlansAppLocalFileDeletion()
+    {
+        var modelsDirectory = "C:\\Users\\Admin\\AppData\\Local\\VoiceInk.Windows\\Models";
+        var currentOnlyPath = Path.Combine(modelsDirectory, "ggml-large-v3-turbo-q5_0.bin");
+
+        var result = LocalWhisperModelService.RemoveModel(
+            [],
+            currentOnlyPath,
+            currentModelPath: currentOnlyPath,
+            modelsDirectory);
+
+        Assert.True(result.Removed);
+        Assert.Empty(result.ImportedModels);
+        Assert.Equal(string.Empty, result.ModelPath);
+        Assert.Equal(currentOnlyPath, result.FilePathToDelete);
+    }
+
+    [Fact]
     public void LanguageChoices_ForEnglishOnlyCatalogModel_ReturnsEnglishOnly()
     {
         var choices = WhisperLanguageCatalog.ChoicesForModelPath(
