@@ -4516,6 +4516,7 @@ public sealed partial class MainWindow : Window
         DictionaryHeroDescriptionTextBlock.Text = presentation.HeroDescription;
         DictionaryOverviewSummaryTextBlock.Text = presentation.OverviewSummary;
         DictionaryLocalBackupGuidanceTextBlock.Text = presentation.LocalBackupGuidance;
+        DictionaryWorkflowListView.ItemsSource = presentation.WorkflowRows;
         DictionarySummaryListView.ItemsSource = presentation.SummaryRows;
         DictionaryRuleGuidanceListView.ItemsSource = presentation.RuleGuidanceRows;
         VocabularySectionTitleTextBlock.Text = presentation.VocabularySectionTitle;

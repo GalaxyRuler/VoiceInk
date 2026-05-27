@@ -1445,6 +1445,42 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
                         <ListView
+                            x:Name="DictionaryWorkflowListView"
+                            IsItemClickEnabled="False"
+                            SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid
+                                        Padding="8,4"
+                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                        ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding Detail}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Border
+                                            Grid.Column="1"
+                                            MinWidth="72"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                            CornerRadius="4">
+                                            <TextBlock Text="{Binding StatusBadge}" FontWeight="SemiBold" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <ListView
                             x:Name="DictionarySummaryListView"
                             MaxHeight="230"
                             SelectionMode="None">

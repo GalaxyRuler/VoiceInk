@@ -36,6 +36,33 @@ public sealed class DictionaryPagePresenterTests
             "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
             presentation.LocalBackupGuidance);
         Assert.Collection(
+            presentation.WorkflowRows,
+            row =>
+            {
+                Assert.Equal("Add", row.Title);
+                Assert.Equal("Vocabulary first", row.Value);
+                Assert.Equal("Start with names, terms, products, and uncommon words that should be recognized consistently.", row.Detail);
+                Assert.Equal("Setup", row.StatusBadge);
+                Assert.Equal(
+                    "Add, Vocabulary first, Setup, Start with names, terms, products, and uncommon words that should be recognized consistently.",
+                    row.AccessibleName);
+            },
+            row =>
+            {
+                Assert.Equal("Replace", row.Title);
+                Assert.Equal("Then fix repeated phrases", row.Value);
+            },
+            row =>
+            {
+                Assert.Equal("Review", row.Title);
+                Assert.Equal("Keep disabled entries visible", row.Value);
+            },
+            row =>
+            {
+                Assert.Equal("Backup", row.Title);
+                Assert.Equal("Export before bulk edits", row.Value);
+            });
+        Assert.Collection(
             presentation.SummaryRows,
             row =>
             {

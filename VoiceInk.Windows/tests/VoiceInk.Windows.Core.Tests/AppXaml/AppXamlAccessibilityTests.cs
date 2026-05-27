@@ -156,6 +156,7 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Theory]
+    [InlineData("DictionaryWorkflowListView")]
     [InlineData("DictionarySummaryListView")]
     [InlineData("DictionaryRuleGuidanceListView")]
     [InlineData("VocabularyListView")]

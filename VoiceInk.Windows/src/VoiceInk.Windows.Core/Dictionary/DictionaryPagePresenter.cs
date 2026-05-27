@@ -5,6 +5,7 @@ public sealed record DictionaryPagePresentation(
     string HeroDescription,
     string OverviewSummary,
     string LocalBackupGuidance,
+    IReadOnlyList<DictionaryWorkflowRow> WorkflowRows,
     IReadOnlyList<DictionarySummaryRow> SummaryRows,
     IReadOnlyList<DictionaryRuleGuidanceRow> RuleGuidanceRows,
     string VocabularySectionTitle,
@@ -17,6 +18,15 @@ public sealed record DictionaryPagePresentation(
     string ReplacementCountLabel,
     string ReplacementEmptyText,
     IReadOnlyList<DictionaryReplacementRow> ReplacementRows);
+
+public sealed record DictionaryWorkflowRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge)
+{
+    public string AccessibleName => DictionaryRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record DictionaryVocabularyRow(
     Guid Id,
@@ -103,6 +113,7 @@ public static class DictionaryPagePresenter
             "Enhance VoiceInk's transcription accuracy by teaching it your vocabulary",
             OverviewSummary(vocabularyRows.Length, replacementRows.Count(item => item.IsEnabled), replacementRows.Count(item => !item.IsEnabled)),
             "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
+            WorkflowRows(),
             SummaryRows(
                 vocabularyRows.Length,
                 replacementRows.Count(item => item.IsEnabled),
@@ -121,6 +132,30 @@ public static class DictionaryPagePresenter
                 : string.Empty,
             replacementRows);
     }
+
+    private static IReadOnlyList<DictionaryWorkflowRow> WorkflowRows() =>
+    [
+        new(
+            "Add",
+            "Vocabulary first",
+            "Start with names, terms, products, and uncommon words that should be recognized consistently.",
+            "Setup"),
+        new(
+            "Replace",
+            "Then fix repeated phrases",
+            "Add replacements for predictable transcript text that should become a specific spelling, link, or phrase.",
+            "Cleanup"),
+        new(
+            "Review",
+            "Keep disabled entries visible",
+            "Disable entries while testing instead of deleting them when you may want the local rule later.",
+            "Control"),
+        new(
+            "Backup",
+            "Export before bulk edits",
+            "Use local JSON export before large changes so the dictionary can be reviewed or restored.",
+            "Local")
+    ];
 
     private static IReadOnlyList<DictionarySummaryRow> SummaryRows(
         int vocabularyCount,
