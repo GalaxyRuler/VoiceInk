@@ -83,6 +83,7 @@ public sealed partial class FloatingRecorderWindow : Window
         ElapsedTextBlock.Text = state.Elapsed;
         ShortcutHintTextBlock.Text = state.FooterHint;
         AutomationProperties.SetName(RecorderChrome, state.AccessibleName);
+        AutomationProperties.SetHelpText(RecorderChrome, state.AccessibleHelpText);
         StopRecordingButton.IsEnabled = state.CanStop;
         CancelRecordingButton.IsEnabled = state.CanCancel;
         var showLiveTranscript = state.HasLiveTranscript;

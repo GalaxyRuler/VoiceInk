@@ -234,6 +234,7 @@ Floating-recorder state accessibility slice completed on 2026-05-27:
 
 - Added a presenter-backed recorder chrome UI Automation name containing recorder state, detail, elapsed time, footer intent, and live-preview availability.
 - Bound the WinUI recorder chrome to the Core accessible name when state is applied.
+- Added presenter-backed UI Automation HelpText for longer state detail, controls, elapsed time, and live-preview disclosure.
 - Kept visual layout, no-activate behavior, Stop/Cancel commands, Prompt/Power controls, and live transcript gating unchanged.
 
 Windows gaps:

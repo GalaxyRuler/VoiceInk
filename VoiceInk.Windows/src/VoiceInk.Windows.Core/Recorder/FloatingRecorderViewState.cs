@@ -27,4 +27,18 @@ public sealed record FloatingRecorderViewState(
                 FooterHint,
                 HasLiveTranscript ? "Live preview available" : null
             }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    public string AccessibleHelpText =>
+        string.Join(
+            " ",
+            new[]
+            {
+                $"Recording state: {Title}.",
+                $"Status: {Detail}.",
+                $"Elapsed time: {Elapsed}.",
+                $"Controls: {FooterHint}",
+                HasLiveTranscript
+                    ? "Live transcript preview is interim and stays local until final insertion."
+                    : null
+            }.Where(part => !string.IsNullOrWhiteSpace(part)));
 }

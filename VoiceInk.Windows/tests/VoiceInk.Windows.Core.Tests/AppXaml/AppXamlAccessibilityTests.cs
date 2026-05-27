@@ -272,6 +272,15 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("HistoryListAccessibleName", code);
     }
 
+    [Fact]
+    public void FloatingRecorderWindow_AppliesRecorderHelpText()
+    {
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "FloatingRecorderWindow.xaml.cs"));
+
+        Assert.Contains("AutomationProperties.SetName(RecorderChrome, state.AccessibleName)", code);
+        Assert.Contains("AutomationProperties.SetHelpText(RecorderChrome, state.AccessibleHelpText)", code);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

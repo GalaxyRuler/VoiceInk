@@ -42,6 +42,22 @@ public sealed class FloatingRecorderPresenterTests
     }
 
     [Fact]
+    public void FromState_Recording_ExposesRecorderAccessibleHelpText()
+    {
+        var state = FloatingRecorderPresenter.FromState(
+            DictationState.Recording,
+            TimeSpan.FromSeconds(65),
+            "Recording",
+            isOperationActive: false,
+            partialTranscript: "hello from the live recorder",
+            showLiveTranscriptPreview: true);
+
+        Assert.Equal(
+            "Recording state: Recording. Status: Listening. Elapsed time: 01:05. Controls: Stop inserts, Cancel discards. Live transcript preview is interim and stays local until final insertion.",
+            state.AccessibleHelpText);
+    }
+
+    [Fact]
     public void FromState_Recording_CarriesInputLevel()
     {
         var state = FloatingRecorderPresenter.FromState(
