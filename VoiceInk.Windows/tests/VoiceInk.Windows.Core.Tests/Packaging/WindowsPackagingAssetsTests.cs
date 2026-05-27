@@ -290,6 +290,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Microsoft-Windows-AppInstaller/Operational", script);
         Assert.Contains("Expected one installed package named", script);
         Assert.Contains("Refusing to choose a package to remove", script);
+        Assert.Contains("Get-AppxPackageManifest -Package", script);
+        Assert.Contains("VoiceInk.Windows.App", script);
+        Assert.Contains("PackageFamilyName", script);
+        Assert.Contains("shell:AppsFolder", script);
 
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
@@ -329,6 +333,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("AppxPackaging", script);
         Assert.Contains("Get-AppxLog -ActivityID", script);
         Assert.Contains("Microsoft-Windows-AppInstaller/Operational", script);
+        Assert.Contains("Get-AppxPackageManifest -Package", script);
+        Assert.Contains("VoiceInk.Windows.App", script);
+        Assert.Contains("shell:AppsFolder", script);
         Assert.Contains("This script does not create or import certificates", script);
         Assert.Contains("Release readiness report passed", script);
 

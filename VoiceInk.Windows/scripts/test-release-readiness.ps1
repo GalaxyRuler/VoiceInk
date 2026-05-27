@@ -76,6 +76,8 @@ Write-Host "  [ ] Trust prerequisite: signed MSIX install smoke must run only on
 Write-Host "  [ ] Troubleshooting: inspect Microsoft-Windows-AppxDeployment-Server and AppxPackaging operational logs for deployment, signature, and manifest failures."
 Write-Host "  [ ] ActivityID diagnostics: if Add-AppxPackage or Remove-AppxPackage returns an ActivityID, run Get-AppxLog -ActivityID <activity-id>."
 Write-Host "  [ ] App Installer diagnostics: inspect Microsoft-Windows-AppInstaller/Operational when .appinstaller launch or update checks fail before package deployment starts."
+Write-Host "  [ ] Installed identity smoke: after Add-AppxPackage, use Get-AppxPackageManifest -Package to verify application id VoiceInk.Windows.App."
+Write-Host "  [ ] Launch identity reference: shell:AppsFolder\<PackageFamilyName>!VoiceInk.Windows.App can be used manually after install on the disposable runner."
 Write-Host ""
 Write-Host "WinApp CLI local signing reference:"
 Write-Host "  [ ] Optional local development certificate flow can use winapp cert generate against Package.appxmanifest on a disposable test machine."

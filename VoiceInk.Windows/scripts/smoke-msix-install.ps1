@@ -93,7 +93,12 @@ function Write-SmokePlan {
     Write-Host "  Add-AppxPackage -Path `"$ResolvedPackagePath`""
     Write-Host "  `$packages = @(Get-AppxPackage -Name `"$ResolvedPackageName`")"
     Write-Host "  Get-AppxPackage -Name `"$ResolvedPackageName`""
+    Write-Host "  Get-AppxPackageManifest -Package `$packages[0].PackageFullName"
+    Write-Host "  Verify application id VoiceInk.Windows.App"
     Write-Host "  Remove-AppxPackage -Package `$packages[0].PackageFullName"
+    Write-Host ""
+    Write-Host "Launch identity reference after install:"
+    Write-Host "  explorer.exe shell:AppsFolder\`$PackageFamilyName!VoiceInk.Windows.App"
     Write-Host ""
     Write-Host "Pass -Execute to run this smoke on a disposable test install."
 }
@@ -152,5 +157,18 @@ if ($installedPackages.Count -gt 1) {
 $installedPackage = $installedPackages[0]
 Write-Host "Installed package:"
 Write-Host "  $($installedPackage.PackageFullName)"
+$installedManifest = Get-AppxPackageManifest -Package $installedPackage.PackageFullName
+$installedApplications = @($installedManifest.Package.Applications.Application)
+$voiceInkApplication = $installedApplications |
+    Where-Object { [string]$_.Id -eq "VoiceInk.Windows.App" } |
+    Select-Object -First 1
+if ($null -eq $voiceInkApplication) {
+    throw "Installed package manifest does not contain application id VoiceInk.Windows.App."
+}
+
+Write-Host "Installed app identity:"
+Write-Host "  PackageFamilyName: $($installedPackage.PackageFamilyName)"
+Write-Host "  ApplicationId: $($voiceInkApplication.Id)"
+Write-Host "  Launch reference: shell:AppsFolder\$($installedPackage.PackageFamilyName)!$($voiceInkApplication.Id)"
 Remove-AppxPackage -Package $installedPackage.PackageFullName
 Write-Host "Signed MSIX install smoke passed and package was removed."
