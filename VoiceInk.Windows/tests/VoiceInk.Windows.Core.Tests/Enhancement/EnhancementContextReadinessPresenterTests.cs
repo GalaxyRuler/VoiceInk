@@ -273,5 +273,11 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "None automatic"
                 && row.Detail == "VoiceInk returns the original text if the selected enhancement provider fails instead of silently routing prompts to another provider."
                 && row.StatusBadge == "Explicit");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Timeout and Retry"
+                && row.Value == "Bounded"
+                && row.Detail == "Enhancement requests use the configured timeout and retry setting; failures keep the original text instead of changing providers."
+                && row.StatusBadge == "Resilient");
     }
 }

@@ -222,6 +222,7 @@ public static class EnhancementContextReadinessPresenter
         {
             rows.Add(ProviderBoundaryRow(settings));
             rows.Add(ProviderFallbackRow());
+            rows.Add(TimeoutRetryRow());
         }
 
         if (settings.UseOcrContext)
@@ -292,6 +293,13 @@ public static class EnhancementContextReadinessPresenter
             "None automatic",
             "VoiceInk returns the original text if the selected enhancement provider fails instead of silently routing prompts to another provider.",
             "Explicit");
+
+    private static EnhancementContextPrivacyRow TimeoutRetryRow() =>
+        new(
+            "Timeout and Retry",
+            "Bounded",
+            "Enhancement requests use the configured timeout and retry setting; failures keep the original text instead of changing providers.",
+            "Resilient");
 
     private static bool IsLocalProvider(EnhancementProviderPreset provider) =>
         string.Equals(provider.Id, EnhancementProviderPresetCatalog.Ollama.Id, StringComparison.OrdinalIgnoreCase)
