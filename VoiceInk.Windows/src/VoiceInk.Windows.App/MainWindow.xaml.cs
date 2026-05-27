@@ -1329,6 +1329,11 @@ public sealed partial class MainWindow : Window
         await UseSelectedLocalModelAsync();
     }
 
+    private void ShowSelectedModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowSelectedImportedModel();
+    }
+
     private async void RemoveSelectedModelButton_Click(object sender, RoutedEventArgs e)
     {
         var selectedModel = SelectedLocalWhisperModelChoice();
@@ -3948,15 +3953,46 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        ShowModelInExplorer(localPath);
+    }
+
+    private void ShowSelectedImportedModel()
+    {
+        var selectedModel = SelectedLocalWhisperModelChoice();
+        if (!CanEditModelLibrary() || selectedModel is null)
+        {
+            RefreshUiFromControllerState("Select an imported model to show in Explorer");
+            return;
+        }
+
+        var health = ModelPathHealth(selectedModel.Path);
+        if (!health.CanUse)
+        {
+            RefreshUiFromControllerState(health.Message);
+            return;
+        }
+
+        ShowModelInExplorer(selectedModel.Path);
+    }
+
+    private void ShowModelInExplorer(string modelPath)
+    {
+        var target = LocalWhisperModelExplorerTarget.Create(modelPath, File.Exists);
+        if (!target.CanOpen)
+        {
+            RefreshUiFromControllerState(target.StatusMessage);
+            return;
+        }
+
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "explorer.exe",
-                Arguments = $"/select,\"{localPath}\"",
+                FileName = target.FileName,
+                Arguments = target.Arguments,
                 UseShellExecute = true
             });
-            RefreshUiFromControllerState("Model file opened");
+            RefreshUiFromControllerState(target.StatusMessage);
         }
         catch (Exception ex)
         {
@@ -8588,6 +8624,8 @@ public sealed partial class MainWindow : Window
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled
+            && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
+        ShowSelectedModelButton.IsEnabled = modelControlsEnabled
             && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
         RemoveSelectedModelButton.IsEnabled = modelControlsEnabled
             && SelectedLocalWhisperModelChoice() is not null;

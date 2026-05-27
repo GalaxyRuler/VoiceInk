@@ -396,6 +396,10 @@
                                 Content="Use Selected Model"
                                 Click="UseSelectedModelButton_Click" />
                             <Button
+                                x:Name="ShowSelectedModelButton"
+                                Content="Show in Explorer"
+                                Click="ShowSelectedModelButton_Click" />
+                            <Button
                                 x:Name="RemoveSelectedModelButton"
                                 Content="Remove Selected Model"
                                 Click="RemoveSelectedModelButton_Click" />
