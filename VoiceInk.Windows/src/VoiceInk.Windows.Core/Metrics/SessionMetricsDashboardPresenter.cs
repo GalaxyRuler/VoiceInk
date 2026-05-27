@@ -146,6 +146,11 @@ public static class SessionMetricsDashboardPresenter
             "Model Performance",
             "Local averages",
             "Model rows summarize completed local records in the selected filter, not remote telemetry.",
+            "Interpretation"),
+        new(
+            "Accuracy Boundary",
+            "Usage, not WER",
+            "Metrics summarize usage, speed, and saved effort; they do not score transcription accuracy or replace checking History output.",
             "Interpretation")
     ];
 

@@ -69,6 +69,13 @@ public sealed class SessionMetricsDashboardPresenterTests
                     Assert.Equal("Local averages", row.Value);
                     Assert.Equal("Model rows summarize completed local records in the selected filter, not remote telemetry.", row.Detail);
                     Assert.Equal("Interpretation", row.StatusBadge);
+                },
+                row =>
+                {
+                    Assert.Equal("Accuracy Boundary", row.Title);
+                    Assert.Equal("Usage, not WER", row.Value);
+                    Assert.Equal("Metrics summarize usage, speed, and saved effort; they do not score transcription accuracy or replace checking History output.", row.Detail);
+                    Assert.Equal("Interpretation", row.StatusBadge);
                 });
             Assert.Collection(
                 presentation.ActionRows,
@@ -190,6 +197,20 @@ public sealed class SessionMetricsDashboardPresenterTests
             row => row.Title == "Windows Diagnostics"
                 && row.Detail == "VoiceInk metrics export is separate from Windows Diagnostic Data Viewer; Windows controls its own diagnostic data history and storage."
                 && row.StatusBadge == "Separate");
+    }
+
+    [Fact]
+    public void Present_ShowsAccuracyBoundaryGuidance()
+    {
+        var presentation = SessionMetricsDashboardPresenter.Present("All time", SessionMetricsSummary.Empty);
+
+        Assert.Contains(
+            presentation.DataGuidanceRows,
+            row => row.Title == "Accuracy Boundary"
+                && row.Value == "Usage, not WER"
+                && row.Detail == "Metrics summarize usage, speed, and saved effort; they do not score transcription accuracy or replace checking History output."
+                && row.StatusBadge == "Interpretation"
+                && row.AccessibleName == "Accuracy Boundary, Usage, not WER, Interpretation, Metrics summarize usage, speed, and saved effort; they do not score transcription accuracy or replace checking History output.");
     }
 
     [Fact]
