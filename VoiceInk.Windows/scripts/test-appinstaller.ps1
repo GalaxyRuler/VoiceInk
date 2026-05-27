@@ -40,6 +40,20 @@ function Assert-AbsoluteUri {
     }
 }
 
+function Assert-AppPackageUri {
+    param(
+        [string]$Value,
+        [string]$Name
+    )
+
+    $parsedPackageUri = [System.Uri]$Value
+    $packageExtension = [System.IO.Path]::GetExtension($parsedPackageUri.AbsolutePath)
+    if (![string]::Equals($packageExtension, ".msix", [System.StringComparison]::OrdinalIgnoreCase) -and
+        ![string]::Equals($packageExtension, ".msixbundle", [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "$Name must point to a .msix or .msixbundle file: $Value"
+    }
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -102,6 +116,7 @@ if ([string]::IsNullOrWhiteSpace($mainPackage.ProcessorArchitecture)) {
 
 Assert-AbsoluteUri -Value $root.Uri -Name "AppInstaller Uri"
 Assert-AbsoluteUri -Value $mainPackage.Uri -Name "MainPackage Uri"
+Assert-AppPackageUri -Value $mainPackage.Uri -Name "MainPackage Uri"
 
 $updateSettings = $appInstaller.SelectSingleNode("/ai:AppInstaller/ai:UpdateSettings", $appInstallerNamespaceManager)
 if ($null -ne $updateSettings) {

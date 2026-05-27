@@ -218,6 +218,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("EnableOnLaunchUpdateCheck", script);
         Assert.Contains("HoursBetweenUpdateChecks", script);
         Assert.Contains("0 and 255", script);
+        Assert.Contains("must point to a .msix or .msixbundle file", script);
+        Assert.Contains("Assert-AppPackageUri -Value $MainPackageUri -Name \"MainPackageUri\"", script);
         Assert.Contains("VoiceInk.Windows", script);
         Assert.Contains("CN=VoiceInkOpenSource", script);
         Assert.Contains("OutputPath must stay inside VoiceInk.Windows\\artifacts", script);
@@ -252,6 +254,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("OnLaunch", script);
         Assert.Contains("HoursBetweenUpdateChecks", script);
         Assert.Contains("0 and 255", script);
+        Assert.Contains("must point to a .msix or .msixbundle file", script);
+        Assert.Contains("Assert-AppPackageUri -Value $mainPackage.Uri -Name \"MainPackage Uri\"", script);
         Assert.Contains("Refusing to inspect path outside artifact root", script);
         Assert.Contains("App Installer manifest validation passed", script);
 

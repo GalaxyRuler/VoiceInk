@@ -48,6 +48,20 @@ function Assert-AbsoluteUri {
     }
 }
 
+function Assert-AppPackageUri {
+    param(
+        [string]$Value,
+        [string]$Name
+    )
+
+    $parsedPackageUri = [System.Uri]$Value
+    $packageExtension = [System.IO.Path]::GetExtension($parsedPackageUri.AbsolutePath)
+    if (![string]::Equals($packageExtension, ".msix", [System.StringComparison]::OrdinalIgnoreCase) -and
+        ![string]::Equals($packageExtension, ".msixbundle", [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "$Name must point to a .msix or .msixbundle file: $Value"
+    }
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -62,6 +76,7 @@ if ($HoursBetweenUpdateChecks -lt 0 -or $HoursBetweenUpdateChecks -gt 255) {
 }
 
 Assert-AbsoluteUri -Value $MainPackageUri -Name "MainPackageUri"
+Assert-AppPackageUri -Value $MainPackageUri -Name "MainPackageUri"
 
 $scriptRoot = $PSScriptRoot
 $windowsRoot = (Resolve-Path -LiteralPath (Join-Path $scriptRoot "..")).Path
