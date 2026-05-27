@@ -49,6 +49,7 @@ public sealed class JsonSettingsStoreTests
             ClipboardRestoreDelaySeconds = 3.0,
             PasteMethod = "directText",
             LaunchAtLogin = true,
+            StartHiddenToTray = true,
             PrewarmModelOnWake = false,
             IsVadEnabled = false,
             ShowLiveTranscriptPreview = true,

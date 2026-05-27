@@ -2139,12 +2139,13 @@ public sealed partial class MainWindow : Window
 
             RefreshUiFromControllerState(refreshWarning ?? cleanupStatus ?? queueRestoreStatus);
             ScheduleModelWarmup(settings, "startup", updateMainStatus: false);
-            if (startHiddenToTray)
+            var shouldStartHidden = ShellStartupVisibility.ShouldStartHidden(startHiddenToTray, settings);
+            if (shouldStartHidden)
             {
                 HideWindowToTray();
             }
 
-            if (!startHiddenToTray)
+            if (!shouldStartHidden)
             {
                 await ShowOnboardingIfNeededAsync(settings);
             }
@@ -2371,9 +2372,10 @@ public sealed partial class MainWindow : Window
         suppressLaunchAtLoginChanged = true;
         LaunchAtLoginCheckBox.IsChecked = settings.LaunchAtLogin;
         suppressLaunchAtLoginChanged = false;
+        StartHiddenToTrayCheckBox.IsChecked = settings.StartHiddenToTray;
         RepairLaunchAtLoginButton.Visibility = state.HasExternalValue
             || (settings.LaunchAtLogin != state.IsEnabled)
-                ? Visibility.Visible
+            ? Visibility.Visible
                 : Visibility.Collapsed;
         if (state.HasExternalValue)
         {
@@ -7448,6 +7450,7 @@ public sealed partial class MainWindow : Window
             ClipboardRestoreDelaySeconds = SelectedClipboardRestoreDelaySeconds(),
             PasteMethod = SelectedPasteMethod(),
             LaunchAtLogin = LaunchAtLoginCheckBox.IsChecked == true,
+            StartHiddenToTray = StartHiddenToTrayCheckBox.IsChecked == true,
             PrewarmModelOnWake = PrewarmModelOnWakeCheckBox.IsChecked == true,
             IsVadEnabled = VoiceActivityDetectionCheckBox.IsChecked == true,
             ShowLiveTranscriptPreview = ShowLiveTranscriptPreviewCheckBox.IsChecked == true,
@@ -8950,6 +8953,7 @@ public sealed partial class MainWindow : Window
         ApplyCleanupSettingsButton.IsEnabled = settingsLoaded && !operationActive;
         ResetOnboardingButton.IsEnabled = settingsLoaded && !operationActive;
         LaunchAtLoginCheckBox.IsEnabled = settingsLoaded && !operationActive;
+        StartHiddenToTrayCheckBox.IsEnabled = settingsLoaded && !operationActive;
         RepairLaunchAtLoginButton.IsEnabled = settingsLoaded && !operationActive;
         TranscriptionCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;
         AudioCleanupCheckBox.IsEnabled = settingsLoaded && !operationActive;

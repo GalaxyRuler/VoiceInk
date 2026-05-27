@@ -2702,6 +2702,9 @@
                                 Content="Launch at Login"
                                 Checked="LaunchAtLoginCheckBox_Changed"
                                 Unchecked="LaunchAtLoginCheckBox_Changed" />
+                            <CheckBox
+                                x:Name="StartHiddenToTrayCheckBox"
+                                Content="Start hidden to tray" />
                             <Button
                                 x:Name="RepairLaunchAtLoginButton"
                                 Content="Reapply Launch at Login"

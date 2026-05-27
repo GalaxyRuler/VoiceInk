@@ -18,6 +18,7 @@ public sealed record AppSettings
     public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;
     public bool LaunchAtLogin { get; init; }
+    public bool StartHiddenToTray { get; init; }
     public bool PrewarmModelOnWake { get; init; } = true;
     public bool IsVadEnabled { get; init; } = true;
     public bool ShowLiveTranscriptPreview { get; init; }
@@ -94,6 +95,7 @@ public sealed record AppSettings
             ClipboardRestoreDelaySeconds.Equals(other.ClipboardRestoreDelaySeconds) &&
             PasteMethod == other.PasteMethod &&
             LaunchAtLogin == other.LaunchAtLogin &&
+            StartHiddenToTray == other.StartHiddenToTray &&
             PrewarmModelOnWake == other.PrewarmModelOnWake &&
             IsVadEnabled == other.IsVadEnabled &&
             ShowLiveTranscriptPreview == other.ShowLiveTranscriptPreview &&
@@ -171,6 +173,7 @@ public sealed record AppSettings
         hash.Add(ClipboardRestoreDelaySeconds);
         hash.Add(PasteMethod);
         hash.Add(LaunchAtLogin);
+        hash.Add(StartHiddenToTray);
         hash.Add(PrewarmModelOnWake);
         hash.Add(IsVadEnabled);
         hash.Add(ShowLiveTranscriptPreview);

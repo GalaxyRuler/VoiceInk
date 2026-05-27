@@ -121,6 +121,7 @@ Tray-shell slice completed on 2026-05-24:
 
 - Native Windows tray icon with menu entries for Show VoiceInk, Hide VoiceInk, Start/Stop Recording, Quick Add to Dictionary, History, and Quit VoiceInk.
 - Menu state synchronized with dictation state so recording and busy states use correct labels/enabled states.
+- Windows adapts macOS menu-bar-only mode as a local `Start hidden to tray` setting that hides the shell after startup once onboarding has been completed.
 - macOS commercial updater/support items omitted. Future open-source replacements belong in About/Open Source and diagnostics export, not the tray shell.
 - Model/provider/enhancement/language/audio context submenus were deferred until those Windows subsystems and view-models existed.
 
@@ -901,6 +902,8 @@ Settings launch-at-login slice completed on 2026-05-25:
 - Added a native HKCU Run-key registration service for the current unpackaged source build.
 - Registered startup commands use a quoted executable path and `--voiceink-startup`.
 - Login-started launches hide the main shell to the tray after initialization, preserving tray and shortcut availability without taking focus.
+- Added `StartHiddenToTray` to Windows JSON settings and General Settings backup/import as the Windows adaptation of macOS `Hide Dock Icon` / menu-bar-only mode.
+- Normal launches with `StartHiddenToTray` hide to the tray only after onboarding has already been completed.
 
 Windows gaps:
 

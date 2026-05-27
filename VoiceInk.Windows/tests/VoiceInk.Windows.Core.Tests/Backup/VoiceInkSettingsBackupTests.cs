@@ -289,6 +289,7 @@ public sealed class VoiceInkSettingsBackupTests
             AppendTrailingSpace = true,
             RestoreClipboard = false,
             LaunchAtLogin = true,
+            StartHiddenToTray = true,
             PrewarmModelOnWake = false,
             ShowLiveTranscriptPreview = true,
             RecorderStyle = "notch",
