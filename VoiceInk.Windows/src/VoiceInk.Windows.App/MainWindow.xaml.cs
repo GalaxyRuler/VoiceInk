@@ -6325,6 +6325,11 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
+    internal void RestoreFromExternalActivation()
+    {
+        RestoreAndActivateWindow();
+    }
+
     private void RestoreAndShowSection(string sectionTag)
     {
         RestoreAndActivateWindow();

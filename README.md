@@ -168,6 +168,8 @@ On first launch, VoiceInk for Windows opens a setup dialog for the local whisper
 
 AI Models library action rows, storage guidance rows, and local Whisper catalog cards expose explicit UI Automation names so screen readers announce the same state, source, model metadata, speed, accuracy, and guidance shown visually.
 
+VoiceInk registers a single Windows App SDK app instance key at launch. A second normal launch redirects activation to the existing process, restores the hidden/minimized main window, and exits the duplicate process so the tray icon, recorder, and global shortcuts have one owner.
+
 The OpenAI enhancement preset follows the macOS request-temperature rule: `gpt-5` model names use `1.0`, while other OpenAI models and Custom OpenAI-compatible endpoints use the existing `0.3` default.
 
 The tray icon tooltip includes the current VoiceInk status plus concise taskbar corner overflow pinning guidance, while the tray menu keeps the longer visibility guidance row. Dictionary, Settings, diagnostics, and Metrics dashboard rows expose presenter-backed accessible names for screen readers.
