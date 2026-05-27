@@ -1153,6 +1153,12 @@ Windows App Certification Kit readiness slice completed on 2026-05-27:
 - The workflow uses WACK package-path validation for the signed MSIX and uploads `wack-report.xml` with installer-smoke evidence when explicitly requested.
 - Preserved existing safety boundaries: no local active-desktop WACK run, no signing, no certificate creation/import/trust, and no install/uninstall outside the manual disposable-runner gate.
 
+MSIX target family validation slice completed on 2026-05-27:
+
+- Extended non-installing MSIX artifact validation to require the extracted manifest's `TargetDeviceFamily` metadata.
+- Validated `Windows.Desktop`, `MinVersion="10.0.19041.0"`, and `MaxVersionTested="10.0.26100.0"` so compatibility metadata drift is caught before install smoke.
+- Preserved existing safety boundaries: no package install, uninstall, launch, signing, certificate creation/import/trust, or local active-desktop mutation.
+
 Windows gaps:
 
 - Actual signed MSIX build and install/WACK smoke with a maintainer-owned trusted certificate.

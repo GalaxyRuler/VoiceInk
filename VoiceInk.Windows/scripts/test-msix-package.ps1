@@ -178,6 +178,14 @@ if ($null -eq $identity -or $identity.Name -ne "VoiceInk.Windows" -or $identity.
     throw "MSIX manifest identity must be VoiceInk.Windows / CN=VoiceInkOpenSource."
 }
 
+$targetDeviceFamily = $manifest.SelectSingleNode("/appx:Package/appx:Dependencies/appx:TargetDeviceFamily", $namespaceManager)
+if ($null -eq $targetDeviceFamily -or
+    $targetDeviceFamily.Name -ne "Windows.Desktop" -or
+    $targetDeviceFamily.MinVersion -ne "10.0.19041.0" -or
+    $targetDeviceFamily.MaxVersionTested -ne "10.0.26100.0") {
+    throw "MSIX manifest TargetDeviceFamily must be Windows.Desktop with MinVersion 10.0.19041.0 and MaxVersionTested 10.0.26100.0."
+}
+
 $application = $manifest.SelectSingleNode("/appx:Package/appx:Applications/appx:Application", $namespaceManager)
 if ($null -eq $application -or $application.Executable -ne "VoiceInk.Windows.App.exe") {
     throw "MSIX manifest application executable must be VoiceInk.Windows.App.exe."

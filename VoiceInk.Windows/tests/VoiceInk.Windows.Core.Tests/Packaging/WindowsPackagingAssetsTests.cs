@@ -28,6 +28,14 @@ public sealed class WindowsPackagingAssetsTests
             .Value;
         Assert.Equal("VoiceInk for Windows", displayName);
 
+        var targetDeviceFamily = document.Root?
+            .Element(appx + "Dependencies")?
+            .Element(appx + "TargetDeviceFamily");
+        Assert.NotNull(targetDeviceFamily);
+        Assert.Equal("Windows.Desktop", targetDeviceFamily.Attribute("Name")?.Value);
+        Assert.Equal("10.0.19041.0", targetDeviceFamily.Attribute("MinVersion")?.Value);
+        Assert.Equal("10.0.26100.0", targetDeviceFamily.Attribute("MaxVersionTested")?.Value);
+
         var application = document.Descendants(appx + "Application").Single();
         Assert.Equal("VoiceInk.Windows.App", application.Attribute("Id")?.Value);
         Assert.Equal("VoiceInk.Windows.App.exe", application.Attribute("Executable")?.Value);
@@ -225,6 +233,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("GNU GENERAL PUBLIC LICENSE", script);
         Assert.Contains("VoiceInk.Windows", script);
         Assert.Contains("CN=VoiceInkOpenSource", script);
+        Assert.Contains("TargetDeviceFamily", script);
+        Assert.Contains("Windows.Desktop", script);
+        Assert.Contains("10.0.19041.0", script);
+        Assert.Contains("10.0.26100.0", script);
         Assert.Contains("runFullTrust", script);
         Assert.Contains("microphone", script);
         Assert.Contains("Refusing to inspect path outside artifact root", script);
