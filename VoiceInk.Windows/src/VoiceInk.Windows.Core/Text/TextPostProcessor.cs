@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using VoiceInk.Windows.Core.Dictionary;
 
@@ -49,7 +50,8 @@ public static class TextPostProcessor
 
     public static string Process(string text, TextPostProcessingOptions options)
     {
-        var processed = RemoveHallucinations(text);
+        var processed = text.Normalize(NormalizationForm.FormC);
+        processed = RemoveHallucinations(processed);
         processed = RemoveFillerWords(processed, options);
         processed = NormalizeWhitespace(processed);
 

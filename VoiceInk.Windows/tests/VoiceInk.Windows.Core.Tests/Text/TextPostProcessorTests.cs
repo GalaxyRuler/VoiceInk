@@ -128,4 +128,19 @@ public sealed class TextPostProcessorTests
 
         Assert.Equal("VoiceInk", result);
     }
+
+    [Fact]
+    public void Process_NormalizesUnicodeBeforeApplyingWordReplacements()
+    {
+        var replacements = new[]
+        {
+            new WordReplacement(Guid.NewGuid(), "café", "Cafe", DateTimeOffset.UtcNow)
+        };
+
+        var result = TextPostProcessor.Process(
+            "cafe\u0301",
+            new TextPostProcessingOptions(WordReplacements: replacements));
+
+        Assert.Equal("Cafe", result);
+    }
 }

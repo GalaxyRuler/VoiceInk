@@ -14,7 +14,7 @@ VoiceInk Windows parity  [###################-] 95%
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 88% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
+| Core dictation pipeline | 89% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting polish remains. |
 | Shell and tray | 88% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 92% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows installer smoke workflow  [####################] 100%
+Transcript unicode normalization  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows installer smoke workflow spec and implementation plan.
-- Added failing packaging asset coverage for a manual self-hosted Windows installer workflow.
-- Added a `workflow_dispatch` workflow that validates signed MSIX/App Installer artifacts by default and executes install/uninstall only behind `execute_install_smoke`.
-- Ran the focused packaging suite, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows transcript Unicode normalization spec and implementation plan.
+- Added a failing post-processor test for decomposed accent text matching a composed dictionary replacement.
+- Normalized transcript text to Unicode Form C before cleanup and dictionary replacement.
+- Ran the focused text suite, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
