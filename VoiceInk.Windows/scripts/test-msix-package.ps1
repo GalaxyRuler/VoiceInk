@@ -155,6 +155,12 @@ Assert-FileExists -RootPath $extractRoot -RelativePath "AppxManifest.xml"
 Assert-FileExists -RootPath $extractRoot -RelativePath "AppxBlockMap.xml"
 Assert-FileExists -RootPath $extractRoot -RelativePath "AppxSignature.p7x"
 Assert-FileExists -RootPath $extractRoot -RelativePath "VoiceInk.Windows.App.exe"
+Assert-FileExists -RootPath $extractRoot -RelativePath "LICENSE.txt"
+
+$licenseText = Get-Content -Raw -LiteralPath (Join-Path $extractRoot "LICENSE.txt")
+if ($licenseText -notmatch "GNU GENERAL PUBLIC LICENSE") {
+    throw "MSIX LICENSE.txt must include the GNU GPL license text."
+}
 
 $manifestPath = Join-Path $extractRoot "AppxManifest.xml"
 $manifestText = Get-Content -Raw -LiteralPath $manifestPath

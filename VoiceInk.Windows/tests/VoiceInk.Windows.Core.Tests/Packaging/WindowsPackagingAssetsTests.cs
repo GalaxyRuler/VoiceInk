@@ -10,6 +10,7 @@ public sealed class WindowsPackagingAssetsTests
     public void PackageManifest_DeclaresOpenSourceDesktopAppIdentityAndCapabilities()
     {
         var manifestPath = SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "Package.appxmanifest");
+        var projectPath = SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "VoiceInk.Windows.App.csproj");
 
         var document = XDocument.Load(manifestPath);
         XNamespace appx = "http://schemas.microsoft.com/appx/manifest/foundation/windows10";
@@ -51,6 +52,11 @@ public sealed class WindowsPackagingAssetsTests
 
         Assert.True(File.Exists(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "Assets", "Square44x44Logo.png")));
         Assert.True(File.Exists(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "Assets", "Square150x150Logo.png")));
+
+        var projectText = File.ReadAllText(projectPath);
+        Assert.Contains("..\\..\\..\\LICENSE", projectText);
+        Assert.Contains("LICENSE.txt", projectText);
+        Assert.Contains("CopyToOutputDirectory", projectText);
     }
 
     [Fact]
@@ -215,6 +221,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("AppxBlockMap.xml", script);
         Assert.Contains("AppxSignature.p7x", script);
         Assert.Contains("VoiceInk.Windows.App.exe", script);
+        Assert.Contains("LICENSE.txt", script);
+        Assert.Contains("GNU GENERAL PUBLIC LICENSE", script);
         Assert.Contains("VoiceInk.Windows", script);
         Assert.Contains("CN=VoiceInkOpenSource", script);
         Assert.Contains("runFullTrust", script);
