@@ -81,6 +81,7 @@ public sealed partial class FloatingRecorderWindow : Window
         TitleTextBlock.Text = state.Title;
         DetailTextBlock.Text = state.Detail;
         ElapsedTextBlock.Text = state.Elapsed;
+        ShortcutHintTextBlock.Text = state.FooterHint;
         StopRecordingButton.IsEnabled = state.CanStop;
         CancelRecordingButton.IsEnabled = state.CanCancel;
         var showLiveTranscript = state.HasLiveTranscript;

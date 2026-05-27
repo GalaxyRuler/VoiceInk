@@ -12,4 +12,5 @@ public sealed record FloatingRecorderViewState(
     string LiveTranscript = "",
     bool HasLiveTranscript = false,
     string LiveTranscriptDetail = "",
-    string RecorderStyle = RecorderStyleSettings.Mini);
+    string RecorderStyle = RecorderStyleSettings.Mini,
+    string FooterHint = "Shortcut, tray, or recorder controls");

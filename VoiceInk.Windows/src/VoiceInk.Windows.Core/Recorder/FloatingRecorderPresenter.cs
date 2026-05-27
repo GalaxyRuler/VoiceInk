@@ -35,7 +35,8 @@ public static class FloatingRecorderPresenter
                 LiveTranscript: liveTranscript,
                 HasLiveTranscript: hasLiveTranscript,
                 LiveTranscriptDetail: liveTranscriptDetail,
-                RecorderStyle: normalizedRecorderStyle),
+                RecorderStyle: normalizedRecorderStyle,
+                FooterHint: "Stop inserts, Cancel discards."),
             DictationState.Transcribing => new(
                 true,
                 "Transcribing",
@@ -44,7 +45,8 @@ public static class FloatingRecorderPresenter
                 CanStop: false,
                 CanCancel: false,
                 ShowPulse: true,
-                RecorderStyle: normalizedRecorderStyle),
+                RecorderStyle: normalizedRecorderStyle,
+                FooterHint: "Finishing transcription before insertion."),
             DictationState.Inserting => new(
                 true,
                 "Inserting",
@@ -53,7 +55,8 @@ public static class FloatingRecorderPresenter
                 CanStop: false,
                 CanCancel: false,
                 ShowPulse: true,
-                RecorderStyle: normalizedRecorderStyle),
+                RecorderStyle: normalizedRecorderStyle,
+                FooterHint: "Pasting final text into the active app."),
             DictationState.Error => new(
                 isOperationActive,
                 "Error",

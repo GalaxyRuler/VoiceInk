@@ -129,6 +129,11 @@ public sealed class FloatingRecorderPresenterTests
         Assert.False(state.CanCancel);
         Assert.True(state.ShowPulse);
         Assert.Equal(0, state.InputLevel);
+        Assert.Equal(
+            dictationState == DictationState.Transcribing
+                ? "Finishing transcription before insertion."
+                : "Pasting final text into the active app.",
+            state.FooterHint);
     }
 
     [Theory]
