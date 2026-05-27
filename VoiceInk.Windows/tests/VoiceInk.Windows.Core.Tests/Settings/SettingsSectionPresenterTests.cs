@@ -87,6 +87,13 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Manual cleanup", row.Value);
                 Assert.Equal("Transcript and audio retention are kept until you enable local cleanup.", row.Detail);
                 Assert.Equal("Manual", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Tray Startup", row.Title);
+                Assert.Equal("Show window", row.Value);
+                Assert.Equal("Normal launches show the main window unless Windows starts VoiceInk at login.", row.Detail);
+                Assert.Equal("Visible", row.StatusBadge);
             });
         Assert.Collection(
             presentation.BackupGuidanceRows,
@@ -247,7 +254,8 @@ public sealed class SettingsSectionPresenterTests
                 IsTranscriptionCleanupEnabled = true,
                 TranscriptionRetentionMinutes = 30,
                 IsAudioCleanupEnabled = true,
-                AudioRetentionPeriod = 2
+                AudioRetentionPeriod = 2,
+                StartHiddenToTray = true
             });
 
         Assert.Collection(
@@ -279,6 +287,13 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Transcript 30m; Audio 2d", row.Value);
                 Assert.Equal("Local transcript and audio cleanup run on this device.", row.Detail);
                 Assert.Equal("Auto", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Tray Startup", row.Title);
+                Assert.Equal("Start hidden", row.Value);
+                Assert.Equal("Normal launches hide the main shell to the notification area after onboarding.", row.Detail);
+                Assert.Equal("Tray-first", row.StatusBadge);
             });
     }
 

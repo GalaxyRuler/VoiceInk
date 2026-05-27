@@ -133,7 +133,8 @@ public static class SettingsSectionPresenter
         PasteSummary(settings),
         ClipboardSummary(settings),
         RecordingFeedbackSummary(settings),
-        PrivacyCleanupSummary(settings)
+        PrivacyCleanupSummary(settings),
+        TrayStartupSummary(settings)
     ];
 
     private static IReadOnlyList<SettingsBackupGuidanceRow> BackupGuidanceRows() =>
@@ -284,6 +285,19 @@ public static class SettingsSectionPresenter
             "Local transcript and audio cleanup run on this device.",
             "Auto");
     }
+
+    private static SettingsPreferenceSummary TrayStartupSummary(AppSettings settings) =>
+        settings.StartHiddenToTray
+            ? new(
+                "Tray Startup",
+                "Start hidden",
+                "Normal launches hide the main shell to the notification area after onboarding.",
+                "Tray-first")
+            : new(
+                "Tray Startup",
+                "Show window",
+                "Normal launches show the main window unless Windows starts VoiceInk at login.",
+                "Visible");
 
     private static string FormatDelay(double seconds) =>
         seconds < 1
