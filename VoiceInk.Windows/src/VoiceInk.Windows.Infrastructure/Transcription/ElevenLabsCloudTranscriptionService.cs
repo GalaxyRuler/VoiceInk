@@ -36,9 +36,9 @@ public sealed class ElevenLabsCloudTranscriptionService(
             throw new InvalidOperationException("ElevenLabs transcription provider is not configured.");
         }
 
-        using var message = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        using var message = new HttpRequestMessage(HttpMethod.Post, EndpointWithoutQuery(endpoint!));
         message.Headers.Add("xi-api-key", apiKey);
-        message.Content = CreateMultipartContent(audio, options);
+        message.Content = CreateMultipartContent(audio, options, endpoint!);
 
         var startedAt = Stopwatch.GetTimestamp();
         using var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -79,7 +79,8 @@ public sealed class ElevenLabsCloudTranscriptionService(
 
     private static MultipartFormDataContent CreateMultipartContent(
         AudioCaptureResult audio,
-        TranscriptionOptions options)
+        TranscriptionOptions options,
+        Uri endpoint)
     {
         var content = new MultipartFormDataContent();
         var fileStream = File.OpenRead(audio.FilePath);
@@ -94,8 +95,55 @@ public sealed class ElevenLabsCloudTranscriptionService(
             content.Add(new StringContent(options.Language.Trim()), "language_code");
         }
 
+        foreach (var option in EndpointQueryOptions(endpoint))
+        {
+            content.Add(new StringContent(option.Value), option.Name);
+        }
+
         return content;
     }
+
+    private static Uri EndpointWithoutQuery(Uri endpoint)
+    {
+        var builder = new UriBuilder(endpoint)
+        {
+            Query = string.Empty
+        };
+
+        return builder.Uri;
+    }
+
+    private static IEnumerable<(string Name, string Value)> EndpointQueryOptions(Uri endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            yield break;
+        }
+
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = Uri.UnescapeDataString(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedMultipartFieldNames.Any(
+                    reservedName => string.Equals(reservedName, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? Uri.UnescapeDataString(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, value);
+        }
+    }
+
+    private static readonly string[] ReservedMultipartFieldNames =
+    [
+        "file",
+        "model_id",
+        "language_code"
+    ];
 
     private static string ExtractText(string json)
     {

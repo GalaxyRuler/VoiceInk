@@ -64,6 +64,28 @@ public sealed class ElevenLabsCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsEndpointQueryOptionsToMultipartFields()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"text":"Diarized transcript"}"""));
+        var service = new ElevenLabsCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "el-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://api.elevenlabs.io/v1/speech-to-text?diarize=true&tag_audio_events=false"),
+            CancellationToken.None);
+
+        Assert.Equal("https://api.elevenlabs.io/v1/speech-to-text", handler.Requests[0].RequestUri?.ToString());
+        Assert.Contains("name=diarize", handler.Bodies[0]);
+        Assert.Contains("true", handler.Bodies[0]);
+        Assert.Contains("name=tag_audio_events", handler.Bodies[0]);
+        Assert.Contains("false", handler.Bodies[0]);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -115,13 +137,15 @@ public sealed class ElevenLabsCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://api.elevenlabs.io/v1/speech-to-text") =>
         new(
             ModelPath: string.Empty,
             language,
             Prompt: string.Empty,
             TranscriptionProviderKind.OpenAICompatible,
-            "https://api.elevenlabs.io/v1/speech-to-text",
+            endpoint,
             "scribe_v2",
             CloudProviderId: "elevenlabs");
 
