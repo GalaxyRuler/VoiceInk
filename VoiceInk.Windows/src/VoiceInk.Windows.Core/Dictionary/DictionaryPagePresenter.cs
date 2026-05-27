@@ -102,7 +102,7 @@ public static class DictionaryPagePresenter
             "Dictionary Settings",
             "Enhance VoiceInk's transcription accuracy by teaching it your vocabulary",
             OverviewSummary(vocabularyRows.Length, replacementRows.Count(item => item.IsEnabled), replacementRows.Count(item => !item.IsEnabled)),
-            "Import and export use local VoiceInk dictionary JSON only.",
+            "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
             SummaryRows(
                 vocabularyRows.Length,
                 replacementRows.Count(item => item.IsEnabled),
@@ -181,6 +181,11 @@ public static class DictionaryPagePresenter
             "Local JSON",
             "Dictionary import and export use local files and do not sync automatically.",
             "Local"),
+        new(
+            "File Format",
+            "JSON, not CSV",
+            "Dictionary backups preserve Unicode text without relying on spreadsheet CSV encoding or BOM handling.",
+            "Unicode safe"),
         new(
             "Import Conflicts",
             "Skip duplicates",

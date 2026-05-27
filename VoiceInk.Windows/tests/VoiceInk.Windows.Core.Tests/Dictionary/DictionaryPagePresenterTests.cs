@@ -33,7 +33,7 @@ public sealed class DictionaryPagePresenterTests
             "2 vocabulary words help AI enhancement and supported transcription prompts. 1 active replacement runs after transcription; 1 disabled replacement is kept for later.",
             presentation.OverviewSummary);
         Assert.Equal(
-            "Import and export use local VoiceInk dictionary JSON only.",
+            "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
             presentation.LocalBackupGuidance);
         Assert.Collection(
             presentation.SummaryRows,
@@ -114,6 +114,13 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Local JSON", row.Value);
                 Assert.Equal("Dictionary import and export use local files and do not sync automatically.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("File Format", row.Title);
+                Assert.Equal("JSON, not CSV", row.Value);
+                Assert.Equal("Dictionary backups preserve Unicode text without relying on spreadsheet CSV encoding or BOM handling.", row.Detail);
+                Assert.Equal("Unicode safe", row.StatusBadge);
             },
             row =>
             {
@@ -203,7 +210,7 @@ public sealed class DictionaryPagePresenterTests
             "No dictionary entries yet. Add vocabulary for names, terms, and product words; add replacements for repeated misrecognitions.",
             presentation.OverviewSummary);
         Assert.Equal(
-            "Import and export use local VoiceInk dictionary JSON only.",
+            "Import and export use local VoiceInk dictionary JSON only, avoiding CSV encoding issues with names and non-English vocabulary.",
             presentation.LocalBackupGuidance);
         Assert.Equal("0 words", presentation.SummaryRows[0].Value);
         Assert.Equal("0", presentation.SummaryRows[1].Value);
@@ -213,6 +220,19 @@ public sealed class DictionaryPagePresenterTests
             presentation.ReplacementEmptyText);
         Assert.Empty(presentation.VocabularyRows);
         Assert.Empty(presentation.ReplacementRows);
+    }
+
+    [Fact]
+    public void Present_ShowsJsonUnicodeSafeImportExportGuidance()
+    {
+        var presentation = DictionaryPagePresenter.Present([], []);
+
+        Assert.Contains(
+            presentation.RuleGuidanceRows,
+            row => row.Title == "File Format"
+                && row.Value == "JSON, not CSV"
+                && row.Detail == "Dictionary backups preserve Unicode text without relying on spreadsheet CSV encoding or BOM handling."
+                && row.StatusBadge == "Unicode safe");
     }
 
     [Fact]
