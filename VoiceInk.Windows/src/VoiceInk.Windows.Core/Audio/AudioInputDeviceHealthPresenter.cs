@@ -8,7 +8,14 @@ public sealed record AudioInputDeviceHealthRow(
     string BadgeText,
     AudioInputDeviceSelectionNoticeKind BadgeKind,
     bool IsSelected,
-    bool IsAvailable);
+    bool IsAvailable)
+{
+    public string AccessibleName => string.Join(
+        ", ",
+        new[] { Name, BadgeText, Detail }
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part.Trim()));
+}
 
 public static class AudioInputDeviceHealthPresenter
 {
