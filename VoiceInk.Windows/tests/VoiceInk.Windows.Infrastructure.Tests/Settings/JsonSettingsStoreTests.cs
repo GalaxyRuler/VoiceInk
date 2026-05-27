@@ -27,6 +27,7 @@ public sealed class JsonSettingsStoreTests
         Assert.Equal(new AppSettings(), reloaded);
         Assert.True(reloaded.PrewarmModelOnWake);
         Assert.True(reloaded.IsTextFormattingEnabled);
+        Assert.True(reloaded.AppendTrailingSpace);
     }
 
     [Fact]

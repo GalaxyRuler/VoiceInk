@@ -13,7 +13,7 @@ public sealed record AppSettings
     public bool HasCompletedOnboarding { get; init; }
     public string ModelPath { get; init; } = string.Empty;
     public string Language { get; init; } = "auto";
-    public bool AppendTrailingSpace { get; init; }
+    public bool AppendTrailingSpace { get; init; } = true;
     public bool RestoreClipboard { get; init; } = true;
     public double ClipboardRestoreDelaySeconds { get; init; } = 2.0;
     public string PasteMethod { get; init; } = PasteMethodSettings.Default;

@@ -157,7 +157,7 @@ public sealed class HistoryRetryServiceTests
         Assert.NotNull(result.Item);
         Assert.Same(result.Item, Assert.Single(history.Items));
         Assert.NotEqual(source.Id, result.Item.Id);
-        Assert.Equal("hello world", result.Item.Text);
+        Assert.Equal("hello world ", result.Item.Text);
         Assert.Equal(" hello world ", result.Item.OriginalText);
         Assert.Equal("local-whisper", result.Item.ProviderName);
         Assert.Equal(TimeSpan.FromSeconds(4), result.Item.AudioDuration);
@@ -239,7 +239,7 @@ public sealed class HistoryRetryServiceTests
 
         Assert.True(result.Success);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("voiceink", saved.Text);
+        Assert.Equal("voiceink ", saved.Text);
         Assert.Equal("Voice ink!", saved.OriginalText);
         Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions?.Prompt);
     }
@@ -283,7 +283,7 @@ public sealed class HistoryRetryServiceTests
         Assert.True(result.Success);
         Assert.Equal("Retry transcription saved", result.Message);
         Assert.NotNull(result.Item);
-        Assert.Equal("retried text", result.Item.Text);
+        Assert.Equal("retried text ", result.Item.Text);
         Assert.Equal(audio.Path, result.Item.AudioFilePath);
         Assert.Equal(TimeSpan.FromSeconds(7), transcription.LastAudio?.Duration);
     }

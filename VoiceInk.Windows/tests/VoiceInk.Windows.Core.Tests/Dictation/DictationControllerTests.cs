@@ -452,10 +452,10 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("um voiceink", insertion.InsertedText);
+        Assert.Equal("um voiceink ", insertion.InsertedText);
         var saved = Assert.Single(history.Items);
         Assert.Equal("Um, voice ink!", saved.OriginalText);
-        Assert.Equal("um voiceink", saved.Text);
+        Assert.Equal("um voiceink ", saved.Text);
         Assert.Equal(TranscriptionHistoryStatus.Completed, saved.Status);
         Assert.Equal("en", saved.Language);
         Assert.Equal("C:\\Models\\ggml-base.en.bin", saved.ModelPath);
@@ -571,7 +571,7 @@ public sealed class DictationControllerTests
 
         Assert.Equal("Hello, world.", insertion.InsertedText);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("hello world", saved.Text);
+        Assert.Equal("hello world ", saved.Text);
         Assert.Equal("hello world", saved.OriginalText);
         Assert.Equal("Hello, world.", saved.EnhancedText);
         Assert.Equal("Default", saved.PromptName);
@@ -678,7 +678,7 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal("hello ", insertion.InsertedText);
         Assert.Equal(PowerModeAutoSendKey.CommandEnter, autoSend.LastKey);
         Assert.Equal(1, autoSend.CallCount);
     }
@@ -875,10 +875,10 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal("hello ", insertion.InsertedText);
         Assert.Contains("Enhancement failed: provider unavailable", controller.LastWarning);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("hello", saved.Text);
+        Assert.Equal("hello ", saved.Text);
         Assert.Null(saved.EnhancedText);
         Assert.Contains("Enhancement failed: provider unavailable", saved.ErrorMessage);
     }
@@ -1169,7 +1169,7 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal("hello ", insertion.InsertedText);
         Assert.Equal(DictationState.Idle, controller.State);
         Assert.Equal("History save failed: database unavailable", controller.LastWarning);
     }
@@ -1483,7 +1483,7 @@ public sealed class DictationControllerTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stop);
 
-        Assert.Equal("hello", insertion.InsertedText);
+        Assert.Equal("hello ", insertion.InsertedText);
         Assert.Equal(DictationState.Idle, controller.State);
         Assert.Empty(history.Items);
     }

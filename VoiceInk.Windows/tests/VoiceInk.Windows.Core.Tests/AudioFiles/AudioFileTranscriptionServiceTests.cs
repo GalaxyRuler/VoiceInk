@@ -137,7 +137,7 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Equal("File transcription saved", result.Message);
         Assert.NotNull(result.Item);
         Assert.Same(result.Item, Assert.Single(history.Items));
-        Assert.Equal("voiceink", result.Item.Text);
+        Assert.Equal("voiceink ", result.Item.Text);
         Assert.Equal("Voice ink!", result.Item.OriginalText);
         Assert.Equal("local-whisper", result.Item.ProviderName);
         Assert.Equal(TimeSpan.FromSeconds(12), result.Item.AudioDuration);
@@ -242,7 +242,7 @@ public sealed class AudioFileTranscriptionServiceTests
 
         Assert.True(result.Success);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("file text", saved.Text);
+        Assert.Equal("file text ", saved.Text);
         Assert.Equal("Enhanced file text.", saved.EnhancedText);
         Assert.Equal("Default", saved.PromptName);
         Assert.Equal("openai-compatible", saved.EnhancementProviderName);
