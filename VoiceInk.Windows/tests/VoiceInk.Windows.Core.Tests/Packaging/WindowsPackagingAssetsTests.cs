@@ -303,6 +303,18 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void MsixInstallSmokeScript_VerifiesUninstallRemovesPackage()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "smoke-msix-install.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("Verifying uninstall cleanup", script);
+        Assert.Contains("remainingPackages", script);
+        Assert.Contains("Package still resolves after Remove-AppxPackage", script);
+        Assert.Contains("Uninstall cleanup verified", script);
+    }
+
+    [Fact]
     public void ReleaseReadinessScript_PrintsNonMutatingPackagingChecklist()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-release-readiness.ps1");

@@ -96,6 +96,8 @@ function Write-SmokePlan {
     Write-Host "  Get-AppxPackageManifest -Package `$packages[0].PackageFullName"
     Write-Host "  Verify application id VoiceInk.Windows.App"
     Write-Host "  Remove-AppxPackage -Package `$packages[0].PackageFullName"
+    Write-Host "  `$remainingPackages = @(Get-AppxPackage -Name `"$ResolvedPackageName`")"
+    Write-Host "  Verify no package remains after Remove-AppxPackage"
     Write-Host ""
     Write-Host "Launch identity reference after install:"
     Write-Host "  explorer.exe shell:AppsFolder\`$PackageFamilyName!VoiceInk.Windows.App"
@@ -171,4 +173,11 @@ Write-Host "  PackageFamilyName: $($installedPackage.PackageFamilyName)"
 Write-Host "  ApplicationId: $($voiceInkApplication.Id)"
 Write-Host "  Launch reference: shell:AppsFolder\$($installedPackage.PackageFamilyName)!$($voiceInkApplication.Id)"
 Remove-AppxPackage -Package $installedPackage.PackageFullName
+Write-Host "Verifying uninstall cleanup..."
+$remainingPackages = @(Get-AppxPackage -Name $PackageName)
+if ($remainingPackages.Count -gt 0) {
+    throw "Package still resolves after Remove-AppxPackage: $($remainingPackages.PackageFullName -join ', ')"
+}
+
+Write-Host "Uninstall cleanup verified."
 Write-Host "Signed MSIX install smoke passed and package was removed."
