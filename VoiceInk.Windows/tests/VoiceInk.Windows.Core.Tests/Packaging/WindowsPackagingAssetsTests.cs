@@ -333,6 +333,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("CN=VoiceInkOpenSource", script);
         Assert.Contains("Timestamp signed packages", script);
         Assert.Contains("Trusted People", script);
+        Assert.Contains(@"Cert:\LocalMachine\TrustedPeople", script);
+        Assert.Contains("0x800B0109", script);
         Assert.Contains("WinApp CLI local signing reference", script);
         Assert.Contains("winapp cert generate", script);
         Assert.Contains("winapp sign", script);
@@ -357,7 +359,6 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
