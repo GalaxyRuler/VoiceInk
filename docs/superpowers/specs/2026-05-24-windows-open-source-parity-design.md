@@ -481,6 +481,12 @@ AI enhancement provider preset slice completed on 2026-05-25:
 - Added native Ollama chat enhancement through the local `/api/chat` endpoint with `stream: false`, keyless localhost HTTP, native `message.content` parsing, and existing retry/timeout/output-filtering behavior.
 - Added assistant prompt parity: the predefined Assistant prompt now wraps context in `<CONTEXT_INFORMATION>`, while Default, Chat, Email, and Rewrite prompt text is aligned with the richer macOS Swift templates.
 
+Enhancement behavior guidance slice completed on 2026-05-27:
+
+- Added presenter-backed Enhancement behavior rows for the macOS-default short-phrase guard, effective threshold, trigger-word bypass, timeout, and retry policy.
+- Renamed the Windows list heading from `Context Actions` to `Enhancement Behavior` so the rows cover both prompt context and enhancement execution behavior.
+- Kept the enhancement pipeline, provider request construction, prompt rendering, settings persistence, and secret storage unchanged.
+
 Windows gaps:
 
 - Visual polish and advanced assistant niceties.

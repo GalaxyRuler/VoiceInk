@@ -102,6 +102,20 @@ public sealed class EnhancementContextReadinessPresenterTests
             },
             row =>
             {
+                Assert.Equal("Short Phrase Guard", row.Title);
+                Assert.Equal("3 words", row.Value);
+                Assert.Equal("Short transcripts are inserted unchanged unless a trigger word explicitly selects an enhancement prompt.", row.Detail);
+                Assert.Equal("Default on", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Timeout Policy", row.Title);
+                Assert.Equal("7s + retry", row.Value);
+                Assert.Equal("Timeouts can retry before keeping the original transcript.", row.Detail);
+                Assert.Equal("Retry on", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Selected Text", row.Title);
                 Assert.Equal("Automatic", row.Value);
                 Assert.Equal("Reads the current selection with a temporary clipboard fallback when Windows and the target app allow it.", row.Detail);
@@ -307,6 +321,55 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Region ready"
                 && row.Detail == "OCR uses the configured screen region."
                 && row.StatusBadge == "Ready");
+    }
+
+    [Fact]
+    public void Present_WithDefaultSettings_ShowsMacAlignedShortPhraseGuard()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Short Phrase Guard"
+                && row.Value == "3 words"
+                && row.Detail == "Short transcripts are inserted unchanged unless a trigger word explicitly selects an enhancement prompt."
+                && row.StatusBadge == "Default on");
+    }
+
+    [Fact]
+    public void Present_WithShortPhraseGuardDisabled_ShowsEveryTranscriptEnhanced()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                SkipShortEnhancement = false,
+                ShortEnhancementWordThreshold = 12
+            });
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Short Phrase Guard"
+                && row.Value == "Off"
+                && row.Detail == "Every transcript can run enhancement when the provider is configured."
+                && row.StatusBadge == "Always enhance");
+    }
+
+    [Fact]
+    public void Present_WithRetryDisabled_ShowsSingleAttemptTimeoutPolicy()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                EnhancementTimeoutSeconds = 11,
+                EnhancementRetryOnTimeout = false
+            });
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Timeout Policy"
+                && row.Value == "11s"
+                && row.Detail == "Timeouts stop after the first attempt and keep the original transcript."
+                && row.StatusBadge == "Single attempt");
     }
 
     [Fact]

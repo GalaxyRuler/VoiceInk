@@ -131,6 +131,8 @@ public static class EnhancementContextReadinessPresenter
         var rows = new List<EnhancementContextActionRow>
         {
             EnhancementActionRow(settings),
+            ShortPhraseGuardRow(settings),
+            TimeoutPolicyRow(settings),
             SelectedTextActionRow(),
             ClipboardActionRow(settings)
         };
@@ -157,6 +159,43 @@ public static class EnhancementContextReadinessPresenter
                 "Off",
                 "Enable Enhancement before context is appended to prompts.",
                 "Enable");
+
+    private static EnhancementContextActionRow ShortPhraseGuardRow(AppSettings settings)
+    {
+        if (!settings.SkipShortEnhancement)
+        {
+            return new(
+                "Short Phrase Guard",
+                "Off",
+                "Every transcript can run enhancement when the provider is configured.",
+                "Always enhance");
+        }
+
+        return new(
+            "Short Phrase Guard",
+            $"{ShortThreshold(settings)} words",
+            "Short transcripts are inserted unchanged unless a trigger word explicitly selects an enhancement prompt.",
+            "Default on");
+    }
+
+    private static EnhancementContextActionRow TimeoutPolicyRow(AppSettings settings)
+    {
+        var timeout = $"{TimeoutSeconds(settings)}s";
+        if (!settings.EnhancementRetryOnTimeout)
+        {
+            return new(
+                "Timeout Policy",
+                timeout,
+                "Timeouts stop after the first attempt and keep the original transcript.",
+                "Single attempt");
+        }
+
+        return new(
+            "Timeout Policy",
+            $"{timeout} + retry",
+            "Timeouts can retry before keeping the original transcript.",
+            "Retry on");
+    }
 
     private static EnhancementContextActionRow SelectedTextActionRow() =>
         new(
@@ -347,4 +386,14 @@ public static class EnhancementContextReadinessPresenter
     private static bool IsLocalProvider(EnhancementProviderPreset provider) =>
         string.Equals(provider.Id, EnhancementProviderPresetCatalog.Ollama.Id, StringComparison.OrdinalIgnoreCase)
         || string.Equals(provider.Id, EnhancementProviderPresetCatalog.LocalCli.Id, StringComparison.OrdinalIgnoreCase);
+
+    private static int TimeoutSeconds(AppSettings settings) =>
+        settings.EnhancementTimeoutSeconds > 0
+            ? settings.EnhancementTimeoutSeconds
+            : 7;
+
+    private static int ShortThreshold(AppSettings settings) =>
+        settings.ShortEnhancementWordThreshold > 0
+            ? settings.ShortEnhancementWordThreshold
+            : 3;
 }

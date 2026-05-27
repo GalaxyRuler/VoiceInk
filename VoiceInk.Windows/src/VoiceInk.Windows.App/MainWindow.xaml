@@ -645,7 +645,7 @@
                         <TextBlock
                             x:Name="EnhancementContextActionsTitleTextBlock"
                             FontWeight="SemiBold"
-                            Text="Context Actions" />
+                            Text="Enhancement Behavior" />
                         <ListView
                             x:Name="EnhancementContextActionsListView"
                             MaxHeight="220"
