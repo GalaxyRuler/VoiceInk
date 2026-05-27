@@ -14,7 +14,7 @@ VoiceInk Windows parity  [###################-] 97%
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 94% | `[###################-]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow with macOS-supported audio extension intake and Windows decoder fallback, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting settings, macOS-aligned paste-only trailing-space behavior, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
+| Core dictation pipeline | 95% | `[###################-]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow with macOS-supported audio extension intake and Windows decoder fallback, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting settings, macOS-aligned paste-only trailing-space behavior, macOS-aligned enhancement-before-user-cleanup ordering for recorder and audio-file transcripts, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
 | Shell and tray | 92% | `[##################--]` | Navigation shell, macOS-order Permissions route, notification-area tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible notification-area/taskbar-corner-overflow menu guidance, open-source About/diagnostics, dedicated History window routing, rich tray quick-setting submenus for transcription model/provider, enhancement prompt/provider/AI model, language, audio, context, and Power Mode, and best-effort `TaskbarCreated` tray icon recovery after Explorer/taskbar recreation are in place. Remaining work is visual polish and rare native shell lifecycle edge cases. |
 | Floating recorder | 95% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Mistral, ElevenLabs, Soniox, Speechmatics, and Cartesia interim results. Final visual polish remains. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; default-off middle-click recording with activation delay parity, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut, and WTS session-boundary cleanup for stuck pressed shortcut state after lock/unlock/desktop-ready transitions. Remaining work is only rare native registration edge-case polish that requires device-level/manual lifecycle evidence. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 97%
 ## Current Slice
 
 ```text
-Trailing space parity  [####################] 100%
+Enhancement cleanup order  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows trailing-space parity spec and implementation plan.
-- Added red recorder and audio-file tests for macOS-aligned paste-only trailing-space behavior.
-- Moved recorder trailing-space application to insertion time while keeping history and enhancement input trimmed.
-- Stopped audio-file transcription history from applying the paste-only trailing-space setting.
+- Wrote the Windows enhancement cleanup order spec and implementation plan.
+- Added red recorder and audio-file tests proving enhancement sees punctuation/casing before cleanup preferences.
+- Added a Core post-processing helper for enhancement input that skips punctuation/lowercase/trailing-space cleanup.
+- Routed recorder and audio-file enhancement through the pre-cleanup text while keeping saved history cleaned.
 
 ## Near-Term Priority
 

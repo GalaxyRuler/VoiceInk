@@ -100,6 +100,16 @@ public static class TextPostProcessor
             : trimmed;
     }
 
+    public static string ProcessForEnhancementInput(string text, TextPostProcessingOptions options) =>
+        Process(
+            text,
+            options with
+            {
+                AppendTrailingSpace = false,
+                PunctuationCleanupMode = PunctuationCleanupMode.Keep,
+                LowercaseTranscription = false
+            });
+
     private static string RemoveHallucinations(string text)
     {
         var filtered = TagBlockRegex.Replace(text, string.Empty);

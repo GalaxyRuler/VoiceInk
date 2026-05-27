@@ -666,6 +666,44 @@ public sealed class DictationControllerTests
     }
 
     [Fact]
+    public async Task StopAsync_EnhancementReceivesTextBeforeUserCleanupPreferences()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult("Hello, VoiceInk!", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            EnhancementEndpoint = "https://example.test/v1/chat/completions",
+            EnhancementModel = "test-model",
+            IsEnhancementEnabled = true,
+            SkipShortEnhancement = false,
+            PunctuationCleanupMode = PunctuationCleanupMode.RemoveAll,
+            LowercaseTranscription = true
+        });
+        var enhancement = new FakeTextEnhancementService("Enhanced.");
+        var controller = new DictationController(
+            capture,
+            transcription,
+            insertion,
+            history,
+            settings,
+            enhancementPipeline: new TextEnhancementPipeline(enhancement));
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Contains("Hello, VoiceInk!", enhancement.LastRequest?.UserMessage);
+        Assert.DoesNotContain("hello voiceink", enhancement.LastRequest?.UserMessage);
+        Assert.Equal("Enhanced. ", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("hello voiceink", saved.Text);
+        Assert.Equal("Enhanced.", saved.EnhancedText);
+    }
+
+    [Fact]
     public async Task StopAsync_UsesRecordingStartTargetWithLatestSettingsAtStop()
     {
         var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
@@ -1910,11 +1948,14 @@ public sealed class DictationControllerTests
     private sealed class FakeTextEnhancementService(string text) : ITextEnhancementService
     {
         public Exception? Exception { get; init; }
+        public TextEnhancementRequest? LastRequest { get; private set; }
 
         public Task<TextEnhancementResult> EnhanceAsync(
             TextEnhancementRequest request,
             CancellationToken cancellationToken)
         {
+            LastRequest = request;
+
             if (Exception is not null)
             {
                 throw Exception;

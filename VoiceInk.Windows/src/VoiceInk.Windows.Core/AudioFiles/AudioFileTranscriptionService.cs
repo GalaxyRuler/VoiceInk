@@ -41,15 +41,17 @@ public sealed class AudioFileTranscriptionService(
                 audio,
                 TranscriptionConfiguration.BuildOptions(settings, vocabularyPrompt),
                 cancellationToken);
-            var finalText = TextPostProcessor.Process(
-                transcription.Text,
-                new TextPostProcessingOptions(
+            var textOptions = new TextPostProcessingOptions(
                     AppendTrailingSpace: false,
                     RemoveFillerWords: settings.RemoveFillerWords,
                     WordReplacements: replacements,
                     PunctuationCleanupMode: settings.PunctuationCleanupMode,
                     LowercaseTranscription: settings.LowercaseTranscription,
-                    ApplyTextFormatting: settings.IsTextFormattingEnabled));
+                    ApplyTextFormatting: settings.IsTextFormattingEnabled);
+            var enhancementInputText = TextPostProcessor.ProcessForEnhancementInput(
+                transcription.Text,
+                textOptions);
+            var finalText = TextPostProcessor.Process(transcription.Text, textOptions);
 
             if (finalText.Length == 0)
             {
@@ -58,7 +60,7 @@ public sealed class AudioFileTranscriptionService(
 
             var enhancement = enhancementPipeline is null
                 ? null
-                : await enhancementPipeline.EnhanceAsync(finalText, settings, vocabulary, cancellationToken);
+                : await enhancementPipeline.EnhanceAsync(enhancementInputText, settings, vocabulary, cancellationToken);
             var item = new TranscriptionHistoryItem(
                 Guid.NewGuid(),
                 DateTimeOffset.UtcNow,

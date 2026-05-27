@@ -279,6 +279,43 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Contains("<TRANSCRIPT>", saved.AiRequestUserMessage);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_EnhancementReceivesTextBeforeUserCleanupPreferences()
+    {
+        var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 44100, 2);
+        var importer = new FakeAudioFileImportService(importedAudio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            "Hello, VoiceInk!",
+            TimeSpan.FromMilliseconds(250),
+            "local-whisper"));
+        var history = new FakeHistoryStore();
+        var enhancement = new FakeTextEnhancementService("Enhanced file text.");
+        var service = new AudioFileTranscriptionService(
+            importer,
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                EnhancementEndpoint = "https://example.test/v1/chat/completions",
+                EnhancementModel = "test-model",
+                IsEnhancementEnabled = true,
+                SkipShortEnhancement = false,
+                PunctuationCleanupMode = PunctuationCleanupMode.RemoveAll,
+                LowercaseTranscription = true
+            }),
+            enhancementPipeline: new TextEnhancementPipeline(enhancement));
+
+        var result = await service.TranscribeAsync("source.mp3", "recordings", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Contains("Hello, VoiceInk!", enhancement.LastRequest?.UserMessage);
+        Assert.DoesNotContain("hello voiceink", enhancement.LastRequest?.UserMessage);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("hello voiceink", saved.Text);
+        Assert.Equal("Enhanced file text.", saved.EnhancedText);
+    }
+
     private sealed class FakeAudioFileImportService(
         AudioCaptureResult? result = null) : IAudioFileImportService
     {
@@ -449,13 +486,19 @@ public sealed class AudioFileTranscriptionServiceTests
 
     private sealed class FakeTextEnhancementService(string text) : ITextEnhancementService
     {
+        public TextEnhancementRequest? LastRequest { get; private set; }
+
         public Task<TextEnhancementResult> EnhanceAsync(
             TextEnhancementRequest request,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(new TextEnhancementResult(
+            CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+
+            return Task.FromResult(new TextEnhancementResult(
                 text,
                 "openai-compatible",
                 request.Model,
                 TimeSpan.FromMilliseconds(42)));
+        }
     }
 }
