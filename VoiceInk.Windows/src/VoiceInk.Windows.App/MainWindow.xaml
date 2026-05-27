@@ -1737,7 +1737,16 @@
                                 Grid.Column="0"
                                 Height="220"
                                 SelectionChanged="HistoryListView_SelectionChanged"
-                                SelectionMode="Single" />
+                                SelectionMode="Single">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            Text="{Binding DisplayText}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                             <StackPanel Grid.Column="1" Spacing="8">
                                 <TextBlock x:Name="HistoryMetadataTextBlock" Text="Select a transcription" TextWrapping="Wrap" />
                                 <ListView
@@ -1746,7 +1755,10 @@
                                     SelectionMode="None">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ColumnSpacing="12" Padding="0,4">
+                                            <Grid
+                                                Padding="0,4"
+                                                AutomationProperties.Name="{Binding AccessibleName}"
+                                                ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="120" />
                                                     <ColumnDefinition Width="*" />

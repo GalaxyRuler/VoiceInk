@@ -123,4 +123,22 @@ public sealed class HistoryAnalysisPresenterTests
         Assert.Equal("Export Scope", rows[6].Title);
         Assert.Equal("User initiated", rows[6].Value);
     }
+
+    [Fact]
+    public void Present_RowsExposeAccessibleNames()
+    {
+        var item = new TranscriptionHistoryItem(
+            Guid.NewGuid(),
+            DateTimeOffset.Parse("2026-05-26T12:00:00Z"),
+            "saved audio text",
+            "Deepgram",
+            TimeSpan.FromSeconds(10),
+            TimeSpan.FromSeconds(2));
+
+        var row = HistoryAnalysisPresenter.Present(item)[3];
+
+        Assert.Equal(
+            "Provider, Deepgram, Transcription completed in 2s.",
+            row.AccessibleName);
+    }
 }

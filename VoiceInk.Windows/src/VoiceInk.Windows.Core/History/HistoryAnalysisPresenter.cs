@@ -6,7 +6,13 @@ namespace VoiceInk.Windows.Core.History;
 public sealed record HistoryAnalysisRow(
     string Title,
     string Value,
-    string Detail);
+    string Detail)
+{
+    public string AccessibleName =>
+        string.Join(
+            ", ",
+            new[] { Title, Value, Detail }.Where(part => !string.IsNullOrWhiteSpace(part)));
+}
 
 public static partial class HistoryAnalysisPresenter
 {

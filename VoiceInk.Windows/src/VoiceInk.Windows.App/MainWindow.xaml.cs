@@ -5497,7 +5497,7 @@ public sealed partial class MainWindow : Window
             ? await historyStore.ListRecentAsync(50, cancellationToken)
             : await historyStore.SearchAsync(searchText, 50, cancellationToken);
         HistoryListView.ItemsSource = historyItems
-            .Select(HistoryListItem)
+            .Select(item => new MainHistoryListRow(HistoryListItem(item), HistoryListAccessibleName(item)))
             .ToArray();
 
         var selectedIndex = selectedId is null
@@ -6266,6 +6266,37 @@ public sealed partial class MainWindow : Window
         }
 
         return $"{item.CreatedAt.LocalDateTime:g}  [{item.Status}]  {preview}";
+    }
+
+    private static string HistoryListAccessibleName(TranscriptionHistoryItem item)
+    {
+        var text = item.EnhancedText ?? item.Text;
+        var preview = text.ReplaceLineEndings(" ").Trim();
+        if (preview.Length > 120)
+        {
+            preview = $"{preview[..120]}...";
+        }
+
+        var audio = item.AudioDuration > TimeSpan.Zero
+            ? $"Audio {Seconds(item.AudioDuration)} seconds"
+            : "Audio not recorded";
+
+        return string.Join(
+            ", ",
+            new[]
+            {
+                $"Recorded {item.CreatedAt.LocalDateTime:g}",
+                $"Status {item.Status}",
+                $"Provider {item.ProviderName}",
+                $"Language {item.Language}",
+                audio,
+                string.IsNullOrWhiteSpace(preview) ? "No transcript text" : preview
+            }.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private sealed record MainHistoryListRow(string DisplayText, string AccessibleName)
+    {
+        public override string ToString() => DisplayText;
     }
 
     private void SelectReplacementItem(Guid id)
