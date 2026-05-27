@@ -26,6 +26,7 @@ public sealed record FloatingRecorderControlState(
     string PowerModeHeaderTitle,
     string PowerModeTitle,
     string PowerModeEmoji,
+    string PowerModeButtonLabel,
     string PowerModeEmptyTitle,
     bool CanOpenPowerModeControls,
     IReadOnlyList<FloatingRecorderPowerModeChoice> PowerModeChoices);
@@ -87,6 +88,9 @@ public static class FloatingRecorderControlPresenter
             "Select Power Mode",
             selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
             selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule),
+            PowerModeButtonLabel(
+                selectedRule is null ? AutomaticPowerModeTitle : PowerModeTitle(selectedRule),
+                selectedRule is null ? AutomaticPowerModeEmoji : PowerModeEmoji(selectedRule)),
             "No Power Modes Available",
             CanOpenPowerModeControls: enabledPowerModeRules.Length > 0,
             powerModeChoices);
@@ -97,4 +101,9 @@ public static class FloatingRecorderControlPresenter
 
     private static string PowerModeEmoji(PowerModeRule rule) =>
         string.IsNullOrWhiteSpace(rule.Emoji) ? AutomaticPowerModeEmoji : rule.Emoji.Trim();
+
+    private static string PowerModeButtonLabel(string title, string emoji) =>
+        string.IsNullOrWhiteSpace(emoji)
+            ? title
+            : $"{emoji} {title}";
 }

@@ -217,9 +217,14 @@ Deepgram live preview slice completed on 2026-05-25:
 - Parses Deepgram interim/final messages into an in-memory recorder preview, clears preview text at recording boundaries, and keeps stopped-recording transcription as the final insertion/history source.
 - Keeps preview failures best-effort so recording and final transcription continue with sanitized warning text.
 
+Recorder Power label slice completed on 2026-05-27:
+
+- Added a presenter-backed Power Mode button label so the recorder shows the indicator plus `Auto` in the default automatic state and indicator plus rule name when a Power Mode is selected.
+- Bound the floating recorder window to that Core label instead of recomputing the text in WinUI.
+- Kept Power Mode matching, selected-rule persistence, no-activate recorder behavior, chooser panels, and Stop/Cancel behavior unchanged.
+
 Windows gaps:
 
-- Additional real streaming partial transcript sources beyond Deepgram.
 - Pixel-perfect macOS physical notch geometry is intentionally not implemented because Windows does not expose macOS safe-area notch metrics; the Windows equivalent is a top-center notch-style recorder.
 
 ### Shortcuts

@@ -125,9 +125,7 @@ public sealed partial class FloatingRecorderWindow : Window
         suppressPromptEnhancementChanged = false;
         RenderPromptChoices(state, canUseControls);
 
-        var powerModeLabel = state.PowerModeTitle == "Auto"
-            ? "Auto"
-            : $"{state.PowerModeEmoji} {state.PowerModeTitle}";
+        var powerModeLabel = state.PowerModeButtonLabel;
         PowerModeButtonTextBlock.Text = powerModeLabel;
         PowerModeButton.IsEnabled = canUseControls;
         ToolTipService.SetToolTip(

@@ -87,6 +87,7 @@ public sealed class FloatingRecorderControlPresenterTests
         Assert.Equal("No Power Modes Available", state.PowerModeEmptyTitle);
         Assert.Equal("Terminal", state.PowerModeTitle);
         Assert.Equal(">", state.PowerModeEmoji);
+        Assert.Equal("> Terminal", state.PowerModeButtonLabel);
         Assert.Equal(new Guid?[] { null, Guid.Parse("11111111-1111-1111-1111-111111111111"), selectedRuleId }, state.PowerModeChoices.Select(choice => choice.Id).ToArray());
         Assert.Equal(selectedRuleId, Assert.Single(state.PowerModeChoices, choice => choice.IsSelected).Id);
     }
@@ -108,6 +109,7 @@ public sealed class FloatingRecorderControlPresenterTests
         Assert.False(state.CanOpenPowerModeControls);
         Assert.Equal("Auto", state.PowerModeTitle);
         Assert.Equal("*", state.PowerModeEmoji);
+        Assert.Equal("* Auto", state.PowerModeButtonLabel);
         var automatic = Assert.Single(state.PowerModeChoices);
         Assert.Null(automatic.Id);
         Assert.True(automatic.IsSelected);
