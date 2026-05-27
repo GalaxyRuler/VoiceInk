@@ -18,8 +18,17 @@ on:
         description: Optional artifact-local .appinstaller output path.
         required: false
         default: VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.appinstaller
+      wack_report_path:
+        description: Optional artifact-local Windows App Certification Kit report path.
+        required: false
+        default: VoiceInk.Windows\artifacts\gha-installer-smoke\wack-report.xml
       execute_install_smoke:
         description: Run Add-AppxPackage/Get-AppxPackage/Remove-AppxPackage on the disposable runner.
+        required: true
+        type: boolean
+        default: false
+      run_wack:
+        description: Run Windows App Certification Kit against the signed package on the disposable runner.
         required: true
         type: boolean
         default: false
@@ -47,6 +56,8 @@ jobs:
             "Signed package path: ${{ inputs.signed_package_path }}"
             "App Installer path: ${{ inputs.appinstaller_path }}"
             "Install smoke executed: ${{ inputs.execute_install_smoke }}"
+            "Windows App Certification Kit requested: ${{ inputs.run_wack }}"
+            "WACK report path: ${{ inputs.wack_report_path }}"
             "No signing certificates are created or imported by this workflow."
           ) | Set-Content -LiteralPath (Join-Path $evidenceRoot "installer-smoke-summary.txt") -Encoding UTF8
 
@@ -54,6 +65,30 @@ jobs:
         shell: pwsh
         run: |
           .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath "${{ inputs.signed_package_path }}"
+
+      - name: Run Windows App Certification Kit
+        if: ${{ inputs.run_wack }}
+        shell: pwsh
+        run: |
+          $wackRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit"
+          $appCert = Join-Path $wackRoot "appcert.exe"
+          if (!(Test-Path -LiteralPath $appCert)) {
+            throw "Windows App Certification Kit appcert.exe was not found at $appCert."
+          }
+
+          $packagePath = (Resolve-Path -LiteralPath "${{ inputs.signed_package_path }}").Path
+          $reportPath = [System.IO.Path]::GetFullPath("${{ inputs.wack_report_path }}")
+          $reportDirectory = Split-Path -Parent $reportPath
+          New-Item -ItemType Directory -Force -Path $reportDirectory | Out-Null
+
+          Push-Location $wackRoot
+          try {
+            appcert.exe reset
+            appcert.exe test -appxpackagepath $packagePath -reportoutputpath $reportPath
+          }
+          finally {
+            Pop-Location
+          }
 
       - name: Generate optional App Installer manifest
         shell: pwsh
@@ -83,6 +118,7 @@ jobs:
         run: |
           Write-Host "No signing certificates are created or imported by this workflow."
           Write-Host "The install step runs only when execute_install_smoke is true on a disposable self-hosted Windows runner."
+          Write-Host "The Windows App Certification Kit step runs only when run_wack is true in an active user session."
 
       - name: Upload installer smoke evidence
         if: ${{ always() }}

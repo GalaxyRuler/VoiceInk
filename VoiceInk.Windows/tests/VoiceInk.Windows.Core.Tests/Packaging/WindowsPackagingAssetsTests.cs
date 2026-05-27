@@ -501,6 +501,12 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Microsoft SBOM Tool", script);
         Assert.Contains("sbom-tool", script);
         Assert.Contains("publish the generated SBOM next to release artifacts", script);
+        Assert.Contains("Windows App Certification Kit readiness reference", script);
+        Assert.Contains("appcert.exe reset", script);
+        Assert.Contains("appcert.exe test -packagefullname", script);
+        Assert.Contains("appcert.exe test -appxpackagepath", script);
+        Assert.Contains("active user session", script);
+        Assert.Contains("wack-report.xml", script);
         Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);
@@ -542,11 +548,20 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("No signing certificates are created or imported by this workflow", workflow);
         Assert.Contains("VoiceInk.Windows\\artifacts\\gha-installer-smoke", workflow);
         Assert.Contains("installer-smoke-summary.txt", workflow);
+        Assert.Contains("wack_report_path", workflow);
+        Assert.Contains("run_wack", workflow);
+        Assert.Contains("default: false", workflow);
+        Assert.Contains("appcert.exe reset", workflow);
+        Assert.Contains("appcert.exe test -appxpackagepath", workflow);
+        Assert.Contains("wack-report.xml", workflow);
+        Assert.Contains("Resolve-Path -LiteralPath", workflow);
+        Assert.Contains("GetFullPath", workflow);
         Assert.Contains("actions/upload-artifact@v4", workflow);
         Assert.Contains("installer-smoke-evidence", workflow);
         Assert.Contains("if: ${{ always() }}", workflow);
         Assert.Contains("include-hidden-files: false", workflow);
 
+        Assert.DoesNotContain("& appcert.exe", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("New-SelfSignedCertificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", workflow, StringComparison.OrdinalIgnoreCase);

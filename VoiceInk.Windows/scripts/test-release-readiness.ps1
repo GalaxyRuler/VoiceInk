@@ -118,6 +118,14 @@ Write-Host "  [ ] Review the generated SBOM for expected package identity, artif
 Write-Host "  [ ] publish the generated SBOM next to release artifacts so downstream users can audit the open-source Windows fork release."
 Write-Host "  [ ] This readiness report does not run sbom-tool, download tools, publish artifacts, install packages, sign packages, create certificates, import certificates, or trust certificates."
 Write-Host ""
+Write-Host "Windows App Certification Kit readiness reference:"
+Write-Host "  [ ] Run WACK only on a disposable or prepared Windows runner with an active user session after the signed package is installed."
+Write-Host "  [ ] From the Windows App Certification Kit directory, run appcert.exe reset before each certification pass."
+Write-Host "  [ ] Run appcert.exe test -packagefullname <package-full-name> -reportoutputpath <artifact-root>\wack-report.xml against the installed VoiceInk package."
+Write-Host "  [ ] If the package is not installed, run appcert.exe test -appxpackagepath <path-to-msix> -reportoutputpath <artifact-root>\wack-report.xml instead."
+Write-Host "  [ ] Upload wack-report.xml with installer smoke evidence and review deployment, launch, manifest, and capability failures before release."
+Write-Host "  [ ] This readiness report does not run appcert.exe, install packages, launch packages, sign packages, create certificates, import certificates, or trust certificates."
+Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
 if ($missingCount -gt 0) {

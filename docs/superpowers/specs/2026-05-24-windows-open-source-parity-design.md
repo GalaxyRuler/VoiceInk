@@ -1127,9 +1127,16 @@ App Installer package URI guard slice completed on 2026-05-27:
 - Prevented `.appinstaller` manifests from accidentally targeting ZIP, HTML, documentation, or other non-package URLs before release validation.
 - Preserved existing non-mutating behavior: no publish, install, launch, signing, certificate creation/import, or trust-store modification.
 
+Windows App Certification Kit readiness slice completed on 2026-05-27:
+
+- Added Windows App Certification Kit readiness guidance to the non-mutating release report.
+- Added default-off `run_wack` and `wack_report_path` inputs to the manual self-hosted Windows installer-smoke workflow.
+- The workflow uses WACK package-path validation for the signed MSIX and uploads `wack-report.xml` with installer-smoke evidence when explicitly requested.
+- Preserved existing safety boundaries: no local active-desktop WACK run, no signing, no certificate creation/import/trust, and no install/uninstall outside the manual disposable-runner gate.
+
 Windows gaps:
 
-- Actual signed MSIX build and install smoke with a maintainer-owned trusted certificate.
+- Actual signed MSIX build and install/WACK smoke with a maintainer-owned trusted certificate.
 - Deeper installer/update-channel polish if a store or winget path is chosen later.
 
 ## Milestone Order
