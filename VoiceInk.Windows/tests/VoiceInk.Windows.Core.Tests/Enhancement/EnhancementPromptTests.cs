@@ -359,6 +359,9 @@ public sealed class EnhancementPromptTests
                 OcrText: "Invoice total forty two dollars"));
 
         Assert.Contains("<CURRENT_WINDOW_CONTEXT>", rendered.SystemMessage);
+        Assert.Contains("Active Window: Dashboard", rendered.SystemMessage);
+        Assert.Contains("Application: msedge", rendered.SystemMessage);
+        Assert.Contains("Window Content:", rendered.SystemMessage);
         Assert.Contains("Invoice total forty two dollars", rendered.SystemMessage);
         Assert.Contains("</CURRENT_WINDOW_CONTEXT>", rendered.SystemMessage);
         Assert.DoesNotContain("<SCREEN_OCR_CONTEXT>", rendered.SystemMessage);

@@ -121,13 +121,39 @@ public static class EnhancementPromptRenderer
             return string.Empty;
         }
 
+        var contextBody = CurrentWindowContextBody(context!, ocrText);
         return $"""
 
 
             <CURRENT_WINDOW_CONTEXT>
-            {ocrText}
+            {contextBody}
             </CURRENT_WINDOW_CONTEXT>
             """;
+    }
+
+    private static string CurrentWindowContextBody(EnhancementContext context, string ocrText)
+    {
+        var lines = new List<string>();
+        var title = context.ActiveWindowTitle.Trim();
+        var processName = context.ActiveWindowProcessName.Trim();
+        if (!string.IsNullOrEmpty(title))
+        {
+            lines.Add($"Active Window: {title}");
+        }
+
+        if (!string.IsNullOrEmpty(processName))
+        {
+            lines.Add($"Application: {processName}");
+        }
+
+        if (lines.Count > 0)
+        {
+            lines.Add(string.Empty);
+        }
+
+        lines.Add("Window Content:");
+        lines.Add(ocrText);
+        return string.Join(Environment.NewLine, lines);
     }
 
     private static string SelectedTextContextSection(EnhancementContext? context)
