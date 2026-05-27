@@ -104,6 +104,13 @@ public sealed class DictionaryPagePresenterTests
             },
             row =>
             {
+                Assert.Equal("Import Conflicts", row.Title);
+                Assert.Equal("Skip duplicates", row.Value);
+                Assert.Equal("Duplicate vocabulary words and replacement keys are skipped so existing local entries stay in place.", row.Detail);
+                Assert.Equal("Review", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Backup Workflow", row.Title);
                 Assert.Equal("Edit or restore", row.Value);
                 Assert.Equal("Export before bulk edits so you can review, edit, or restore dictionary entries later.", row.Detail);

@@ -155,6 +155,11 @@ public static class DictionaryPagePresenter
             "Dictionary import and export use local files and do not sync automatically.",
             "Local"),
         new(
+            "Import Conflicts",
+            "Skip duplicates",
+            "Duplicate vocabulary words and replacement keys are skipped so existing local entries stay in place.",
+            "Review"),
+        new(
             "Backup Workflow",
             "Edit or restore",
             "Export before bulk edits so you can review, edit, or restore dictionary entries later.",

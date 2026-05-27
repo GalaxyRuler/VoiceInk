@@ -23,7 +23,7 @@ VoiceInk Windows parity  [###################-] 95%
 | AI enhancement | 92% | `[##################--]` | OpenAI-compatible enhancement, Anthropic Messages API enhancement, native Ollama chat enhancement, Local CLI hooks, macOS-aligned Default/Assistant/Chat/Email/Rewrite prompts, assistant context wrapping, custom prompts with icon/description metadata, trigger-word activation, context, retries/timeouts, secure keys, explicit no-automatic-provider-fallback privacy guidance, bounded timeout/retry readiness guidance, toggle-enhancement shortcut, and dynamic OpenRouter/Ollama model refresh exist. Remaining work is visual polish and advanced assistant niceties. |
 | Context features | 85% | `[#################---]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, display-targeted OCR region selection, Enhancement context readiness summary rows, provider-aware context privacy boundary rows, explicit OCR capture-scope privacy rows, Windows capture consent/border disclosure, and context action guidance rows exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 92% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, page-level match and override precedence guidance, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
-| Dictionary | 91% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows including processing-order and local backup workflow guidance, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
+| Dictionary | 92% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows including processing-order, import-conflict, and local backup workflow guidance, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
 | History | 95% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing, audio storage state, retry/re-enhance provenance, and export-scope privacy disclosure, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 91% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics and Windows Diagnostic Data Viewer separation guidance, metric data/formula guidance rows, local-only model performance interpretation guidance, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 90% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, grouped-section find guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Settings search/grouping guidance  [####################] 100%
+Dictionary import conflict guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows Settings grouping guidance spec and implementation plan.
-- Added a failing Settings presenter assertion for grouped-section find guidance.
-- Added a `Find Settings` action summary for section discoverability.
-- Ran the focused Settings presenter test, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows Dictionary import conflict guidance spec and implementation plan.
+- Added a failing Dictionary presenter assertion for duplicate import conflict guidance.
+- Added an `Import Conflicts` rule guidance row explaining duplicate vocabulary/replacement entries are skipped.
+- Ran the focused Dictionary presenter test, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
