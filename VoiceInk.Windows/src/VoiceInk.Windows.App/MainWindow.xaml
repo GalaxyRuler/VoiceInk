@@ -550,6 +550,11 @@
                             x:Name="EnhancementContextReadinessDescriptionTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="EnhancementAssistantSummaryTextBlock"
+                            AutomationProperties.Name="Enhancement assistant mode summary"
+                            FontWeight="SemiBold"
+                            TextWrapping="Wrap" />
                         <ListView
                             x:Name="EnhancementContextReadinessListView"
                             MaxHeight="240"

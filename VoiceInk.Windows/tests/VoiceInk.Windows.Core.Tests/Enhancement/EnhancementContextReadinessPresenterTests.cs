@@ -382,6 +382,9 @@ public sealed class EnhancementContextReadinessPresenterTests
     {
         var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
 
+        Assert.Equal(
+            "Assistant Mode available: select the Assistant prompt or use a trigger word for one-request answers.",
+            presentation.AssistantModeSummary);
         Assert.Contains(
             presentation.ActionRows,
             row => row.Title == "Assistant Mode"
@@ -399,6 +402,9 @@ public sealed class EnhancementContextReadinessPresenterTests
                 SelectedEnhancementPromptId = EnhancementPromptCatalog.AssistantPromptId
             });
 
+        Assert.Equal(
+            "Assistant Mode selected: spoken requests are answered directly instead of rewritten as dictation.",
+            presentation.AssistantModeSummary);
         Assert.Contains(
             presentation.ActionRows,
             row => row.Title == "Assistant Mode"

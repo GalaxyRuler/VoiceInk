@@ -5,6 +5,7 @@ namespace VoiceInk.Windows.Core.Enhancement;
 public sealed record EnhancementContextReadinessPresentation(
     string Title,
     string Description,
+    string AssistantModeSummary,
     IReadOnlyList<EnhancementContextReadinessRow> Rows,
     IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows,
     IReadOnlyList<EnhancementContextActionRow> ActionRows);
@@ -53,6 +54,7 @@ public static class EnhancementContextReadinessPresenter
         return new(
             "Context Awareness",
             "VoiceInk can add local app, selection, clipboard, and screen text context to enhancement prompts.",
+            AssistantModeSummary(settings),
             [
                 ClipboardRow(settings),
                 SelectedTextRow(),
@@ -62,6 +64,11 @@ public static class EnhancementContextReadinessPresenter
             PrivacyRows(settings),
             ActionRows(settings));
     }
+
+    private static string AssistantModeSummary(AppSettings settings) =>
+        settings.SelectedEnhancementPromptId == EnhancementPromptCatalog.AssistantPromptId
+            ? "Assistant Mode selected: spoken requests are answered directly instead of rewritten as dictation."
+            : "Assistant Mode available: select the Assistant prompt or use a trigger word for one-request answers.";
 
     private static EnhancementContextReadinessRow ClipboardRow(AppSettings settings) =>
         settings.UseClipboardContext

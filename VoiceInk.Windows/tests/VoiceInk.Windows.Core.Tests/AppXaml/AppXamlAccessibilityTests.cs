@@ -51,6 +51,17 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Fact]
+    public void MainWindow_EnhancementAssistantSummaryLine_HasAutomationName()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("x:Name=\"EnhancementAssistantSummaryTextBlock\"", xaml);
+        Assert.Contains("AutomationProperties.Name=\"Enhancement assistant mode summary\"", xaml);
+        Assert.Contains("EnhancementAssistantSummaryTextBlock.Text = presentation.AssistantModeSummary", code);
+    }
+
+    [Fact]
     public void MainWindow_ShellNavigation_UsesFooterMenuItemsForSettingsAndAbout()
     {
         var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
