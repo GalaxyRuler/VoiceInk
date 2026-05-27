@@ -173,6 +173,7 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<string> ollamaEnhancementModelChoices = [];
     private IReadOnlyList<string> openRouterEnhancementModelChoices = [];
     private IReadOnlyList<PowerModeRule> powerModeRules = [];
+    private IReadOnlyList<string> fillerWords = [];
     private IReadOnlyList<PowerModeInstalledApplicationChoice> installedApplicationChoices = [];
     private Guid? selectedPowerModeRuleId;
     private AudioInputDeviceChoice? activeAudioInputDeviceChoice;
@@ -2005,6 +2006,33 @@ public sealed partial class MainWindow : Window
         await ApplyCleanupSettingsAsync();
     }
 
+    private void AddFillerWordButton_Click(object sender, RoutedEventArgs e)
+    {
+        AddFillerWordFromInput();
+    }
+
+    private void NewFillerWordTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != global::Windows.System.VirtualKey.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        AddFillerWordFromInput();
+    }
+
+    private void RemoveFillerWordButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string word })
+        {
+            return;
+        }
+
+        SetFillerWords(FillerWordSettings.Remove(fillerWords, word));
+        RefreshUiFromControllerState("Removed filler word");
+    }
+
     private async void RunTranscriptCleanupButton_Click(object sender, RoutedEventArgs e)
     {
         await RunTranscriptCleanupAsync();
@@ -2246,7 +2274,7 @@ public sealed partial class MainWindow : Window
         UpdateRecordingFeedbackSettingControlState();
         var startupWarning = await ApplyStartupStateToUiAsync(settings, cancellationToken);
         RemoveFillerWordsCheckBox.IsChecked = settings.RemoveFillerWords;
-        FillerWordsTextBox.Text = FillerWordSettings.ToEditableText(
+        SetFillerWords(
             settings.FillerWords.Length == 0
                 ? TextPostProcessor.DefaultFillerWords
                 : settings.FillerWords);
@@ -7454,7 +7482,7 @@ public sealed partial class MainWindow : Window
             SkipShortEnhancement = SkipShortEnhancementCheckBox.IsChecked == true,
             ShortEnhancementWordThreshold = ParsedPositiveOrDefault(ShortEnhancementThresholdTextBox.Text, 3),
             RemoveFillerWords = RemoveFillerWordsCheckBox.IsChecked == true,
-            FillerWords = FillerWordSettings.ParseList(FillerWordsTextBox.Text),
+            FillerWords = fillerWords.ToArray(),
             IsTextFormattingEnabled = TextFormattingCheckBox.IsChecked == true,
             LowercaseTranscription = LowercaseTranscriptionCheckBox.IsChecked == true,
             AppendTrailingSpace = AppendTrailingSpaceCheckBox.IsChecked == true,
@@ -9639,6 +9667,25 @@ public sealed partial class MainWindow : Window
             2 => PunctuationCleanupMode.RemoveTrailingPeriod,
             _ => PunctuationCleanupMode.Keep
         };
+
+    private void AddFillerWordFromInput()
+    {
+        if (FillerWordSettings.TryAdd(fillerWords, NewFillerWordTextBox.Text, out var updatedWords))
+        {
+            SetFillerWords(updatedWords);
+            NewFillerWordTextBox.Text = string.Empty;
+            RefreshUiFromControllerState("Added filler word");
+            return;
+        }
+
+        RefreshUiFromControllerState("Filler word is empty or already exists");
+    }
+
+    private void SetFillerWords(IReadOnlyList<string> words)
+    {
+        fillerWords = words.ToArray();
+        FillerWordsItemsControl.ItemsSource = fillerWords;
+    }
 
     private double SelectedClipboardRestoreDelaySeconds() =>
         DoubleChoiceAtOrDefault(ClipboardRestoreDelayChoices, ClipboardRestoreDelayComboBox.SelectedIndex, 2.0);

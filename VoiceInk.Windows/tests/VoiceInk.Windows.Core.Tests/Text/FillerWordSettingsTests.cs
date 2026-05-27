@@ -20,4 +20,30 @@ public sealed class FillerWordSettingsTests
 
         Assert.Equal("um\r\nlike\r\nyou know", text);
     }
+
+    [Fact]
+    public void TryAdd_NormalizesNewWord()
+    {
+        var added = FillerWordSettings.TryAdd(["um"], " Like ", out var words);
+
+        Assert.True(added);
+        Assert.Equal(["um", "like"], words);
+    }
+
+    [Fact]
+    public void TryAdd_RejectsDuplicateWord()
+    {
+        var added = FillerWordSettings.TryAdd(["um"], "UM", out var words);
+
+        Assert.False(added);
+        Assert.Equal(["um"], words);
+    }
+
+    [Fact]
+    public void Remove_RemovesWordCaseInsensitively()
+    {
+        var words = FillerWordSettings.Remove(["um", "like"], "LIKE");
+
+        Assert.Equal(["um"], words);
+    }
 }

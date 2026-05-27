@@ -2587,13 +2587,54 @@
                             <TextBlock Text="Cleanup" FontWeight="SemiBold" />
                             <TextBlock x:Name="CleanupSectionDescriptionTextBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <CheckBox x:Name="RemoveFillerWordsCheckBox" Content="Remove filler words" />
-                            <TextBox
-                                x:Name="FillerWordsTextBox"
-                                Header="Filler words"
-                                AcceptsReturn="True"
-                                Height="96"
-                                PlaceholderText="um, uh, hmm"
-                                TextWrapping="Wrap" />
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Filler words" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBox
+                                        x:Name="NewFillerWordTextBox"
+                                        MinWidth="220"
+                                        PlaceholderText="Add filler word"
+                                        KeyDown="NewFillerWordTextBox_KeyDown" />
+                                    <Button
+                                        x:Name="AddFillerWordButton"
+                                        AutomationProperties.Name="Add filler word"
+                                        Click="AddFillerWordButton_Click"
+                                        ToolTipService.ToolTip="Add filler word">
+                                        <SymbolIcon Symbol="Add" />
+                                    </Button>
+                                </StackPanel>
+                                <ItemsControl x:Name="FillerWordsItemsControl">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <ItemsWrapGrid Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border
+                                                Margin="0,0,6,6"
+                                                Padding="8,4"
+                                                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="{Binding}" />
+                                                    <Button
+                                                        MinWidth="28"
+                                                        Padding="4,0"
+                                                        Tag="{Binding}"
+                                                        AutomationProperties.Name="Remove filler word"
+                                                        Click="RemoveFillerWordButton_Click"
+                                                        ToolTipService.ToolTip="Remove filler word">
+                                                        <SymbolIcon Symbol="Cancel" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                             <CheckBox x:Name="TextFormattingCheckBox" Content="Format text into paragraphs" />
                             <CheckBox x:Name="LowercaseTranscriptionCheckBox" Content="Lowercase transcription" />
                             <CheckBox x:Name="AppendTrailingSpaceCheckBox" Content="Append trailing space" />
