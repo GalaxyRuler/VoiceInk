@@ -76,6 +76,11 @@ Write-Host "  [ ] Optional local development certificate flow can use winapp cer
 Write-Host "  [ ] Optional local development signing can use winapp sign against a built MSIX after verifying the manifest publisher and certificate subject."
 Write-Host "  [ ] Certificate trust remains an external test-machine prerequisite; this readiness report only prints the reference and never creates or imports certificates."
 Write-Host ""
+Write-Host "App Installer readiness reference:"
+Write-Host "  [ ] Optional .appinstaller distribution must reference the signed MSIX with a MainPackage entry."
+Write-Host "  [ ] MainPackage Name/Publisher/Version must match Package.appxmanifest identity and the built MSIX package identity."
+Write-Host "  [ ] Use a maintainer-owned HTTPS, network share, or local file share distribution path; this report does not generate, publish, install, or update packages."
+Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
 if ($missingCount -gt 0) {

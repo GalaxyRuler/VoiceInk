@@ -250,6 +250,11 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("WinApp CLI local signing reference", script);
         Assert.Contains("winapp cert generate", script);
         Assert.Contains("winapp sign", script);
+        Assert.Contains("App Installer readiness reference", script);
+        Assert.Contains(".appinstaller", script);
+        Assert.Contains("MainPackage", script);
+        Assert.Contains("Name/Publisher/Version", script);
+        Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("AppxDeployment-Server", script);
         Assert.Contains("AppxPackaging", script);
         Assert.Contains("This script does not create or import certificates", script);
