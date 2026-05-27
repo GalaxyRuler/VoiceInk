@@ -129,7 +129,7 @@ public sealed class SessionMetricsDashboardPresenterTests
                 row =>
                 {
                     Assert.Equal("Windows Diagnostics", row.Title);
-                    Assert.Equal("VoiceInk metrics export is separate from Windows Diagnostic Data Viewer exports.", row.Detail);
+                    Assert.Equal("VoiceInk metrics export is separate from Windows Diagnostic Data Viewer; Windows controls its own diagnostic data history and storage.", row.Detail);
                     Assert.Equal("Separate", row.StatusBadge);
                 },
                 row =>
@@ -178,6 +178,18 @@ public sealed class SessionMetricsDashboardPresenterTests
                 && row.Value == "35 WPM / 5 keys"
                 && row.Detail == "Time saved compares dictated words against a 35 WPM typing estimate, then subtracts recorded audio duration; keystrokes saved use 5 keys per word."
                 && row.StatusBadge == "Estimate");
+    }
+
+    [Fact]
+    public void Present_ShowsWindowsDiagnosticViewerBoundary()
+    {
+        var presentation = SessionMetricsDashboardPresenter.Present("All time", SessionMetricsSummary.Empty);
+
+        Assert.Contains(
+            presentation.DiagnosticsRows,
+            row => row.Title == "Windows Diagnostics"
+                && row.Detail == "VoiceInk metrics export is separate from Windows Diagnostic Data Viewer; Windows controls its own diagnostic data history and storage."
+                && row.StatusBadge == "Separate");
     }
 
     [Fact]

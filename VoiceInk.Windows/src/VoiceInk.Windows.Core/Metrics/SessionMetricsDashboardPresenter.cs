@@ -198,7 +198,7 @@ public static class SessionMetricsDashboardPresenter
             "CSV"),
         new(
             "Windows Diagnostics",
-            "VoiceInk metrics export is separate from Windows Diagnostic Data Viewer exports.",
+            "VoiceInk metrics export is separate from Windows Diagnostic Data Viewer; Windows controls its own diagnostic data history and storage.",
             "Separate"),
         new(
             "Reset",
