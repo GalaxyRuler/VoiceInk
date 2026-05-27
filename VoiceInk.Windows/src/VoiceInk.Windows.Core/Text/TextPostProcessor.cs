@@ -36,8 +36,8 @@ public static class TextPostProcessor
     private static readonly Regex SpaceBeforeNewlineRegex = new(@"[ \t]+(\r?\n)", RegexOptions.Compiled);
     private static readonly Regex SpaceAfterNewlineRegex = new(@"(\r?\n)[ \t]+", RegexOptions.Compiled);
     private static readonly Regex WordRegex = new(@"[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)?", RegexOptions.Compiled);
-    private static readonly Regex NewParagraphCommandRegex = new(@"\bnew paragraph\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-    private static readonly Regex NewLineCommandRegex = new(@"\bnew line\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+    private static readonly Regex NewParagraphCommandRegex = new(@"\bnew paragraph\b\s*[,.!?;:]?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+    private static readonly Regex NewLineCommandRegex = new(@"\bnew line\b\s*[,.!?;:]?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex[] HallucinationRegexes =
     [

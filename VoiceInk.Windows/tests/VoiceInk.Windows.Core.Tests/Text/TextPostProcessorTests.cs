@@ -200,6 +200,24 @@ public sealed class TextPostProcessorTests
     }
 
     [Fact]
+    public void Process_AppliesDictationFormattingCommandsWithTrailingPunctuation()
+    {
+        var result = TextPostProcessor.Process(
+            "First item new line, second item new paragraph. final item",
+            new TextPostProcessingOptions(ApplyTextFormatting: true));
+
+        Assert.Equal(
+            string.Join(
+                "\n\n",
+                string.Join(
+                    "\n",
+                    "First item",
+                    "second item"),
+                "final item"),
+            result);
+    }
+
+    [Fact]
     public void Process_KeepsDictationLineAndParagraphCommandsWhenFormattingIsDisabled()
     {
         var input = "First item new line second item new paragraph final item";
