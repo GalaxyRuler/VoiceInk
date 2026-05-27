@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using VoiceInk.Windows.Core.Shell;
 
@@ -10,6 +11,7 @@ public sealed class TrayIconService : IDisposable
 
     private readonly Icon icon;
     private readonly NotifyIcon notifyIcon;
+    private readonly TaskbarCreatedMessageWindow taskbarCreatedMessageWindow;
     private readonly ContextMenuStrip trayContextMenu;
     private readonly ToolStripMenuItem showItem;
     private readonly ToolStripMenuItem hideItem;
@@ -103,6 +105,7 @@ public sealed class TrayIconService : IDisposable
             Visible = true
         };
         notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
+        taskbarCreatedMessageWindow = new TaskbarCreatedMessageWindow(RestoreNotifyIconAfterTaskbarCreated);
     }
 
     public event EventHandler? ShowRequested;
@@ -198,6 +201,7 @@ public sealed class TrayIconService : IDisposable
         }
 
         notifyIcon.DoubleClick -= NotifyIcon_DoubleClick;
+        taskbarCreatedMessageWindow.Dispose();
         notifyIcon.Visible = false;
         notifyIcon.Dispose();
         trayContextMenu.Dispose();
@@ -208,6 +212,19 @@ public sealed class TrayIconService : IDisposable
     private void NotifyIcon_DoubleClick(object? sender, EventArgs e)
     {
         ShowRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RestoreNotifyIconAfterTaskbarCreated()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        notifyIcon.Visible = false;
+        notifyIcon.Icon = icon;
+        notifyIcon.ContextMenuStrip = trayContextMenu;
+        notifyIcon.Visible = true;
     }
 
     private static Icon LoadIcon()
@@ -270,6 +287,45 @@ public sealed class TrayIconService : IDisposable
             menu.DropDownItems.Add(item);
         }
     }
+}
+
+internal sealed class TaskbarCreatedMessageWindow : NativeWindow, IDisposable
+{
+    private readonly int taskbarCreatedMessage;
+    private readonly Action recoverTrayIcon;
+    private bool disposed;
+
+    public TaskbarCreatedMessageWindow(Action recoverTrayIcon)
+    {
+        this.recoverTrayIcon = recoverTrayIcon;
+        taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
+        CreateHandle(new CreateParams());
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        DestroyHandle();
+        disposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (TrayIconRecoveryPolicy.ShouldRecover(m.Msg, taskbarCreatedMessage))
+        {
+            recoverTrayIcon();
+        }
+
+        base.WndProc(ref m);
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int RegisterWindowMessage(string lpString);
 }
 
 public sealed class TrayMenuOptionEventArgs(string id) : EventArgs

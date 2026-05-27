@@ -15,7 +15,7 @@ VoiceInk Windows parity  [###################-] 97%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 93% | `[###################-]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow with macOS-supported audio extension intake and Windows decoder fallback, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
-| Shell and tray | 91% | `[##################--]` | Navigation shell, macOS-order Permissions route, notification-area tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible notification-area/taskbar-corner-overflow menu guidance, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for transcription model/provider, enhancement prompt/provider/AI model, language, audio, context, and Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
+| Shell and tray | 92% | `[##################--]` | Navigation shell, macOS-order Permissions route, notification-area tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible notification-area/taskbar-corner-overflow menu guidance, open-source About/diagnostics, dedicated History window routing, rich tray quick-setting submenus for transcription model/provider, enhancement prompt/provider/AI model, language, audio, context, and Power Mode, and best-effort `TaskbarCreated` tray icon recovery after Explorer/taskbar recreation are in place. Remaining work is visual polish and rare native shell lifecycle edge cases. |
 | Floating recorder | 95% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Mistral, ElevenLabs, Soniox, Speechmatics, and Cartesia interim results. Final visual polish remains. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; default-off middle-click recording with activation delay parity, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
 | Model management | 95% | `[###################-]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, top-level folder import for existing `.bin` model libraries, app-local model storage, safe model removal for downloaded app-local GGML files and external imported references, Windows Explorer reveal actions for downloaded and imported model files, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows including expected `ggml-*.bin` filename and GGML compatibility-check guidance, model path health checks with actionable repair and user-selected validation guidance, optional GGML magic-header validation for large `.bin` files, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 97%
 ## Current Slice
 
 ```text
-Model folder import  [####################] 100%
+Tray taskbar recovery  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows model folder import spec and implementation plan.
-- Added a red Core test for importing multiple `.bin` model paths while reporting duplicate and unsupported skips.
-- Added import-many merge metadata to `LocalWhisperModelService`.
-- Added an `Import Folder` model-library action that scans top-level `.bin` files, saves merged references, and keeps user model files in place.
+- Wrote the Windows tray taskbar recovery spec and implementation plan.
+- Added a red Core test for accepting only the registered `TaskbarCreated` message.
+- Added a native hidden WinForms message window that registers the shell broadcast.
+- Re-adds the existing `NotifyIcon` after taskbar recreation while keeping the current tray menu, tooltip, and state.
 
 ## Near-Term Priority
 
