@@ -47,6 +47,7 @@ Write-ReadinessCheck "MSIX package script" (Join-Path $scriptRoot "package-msix.
 Write-ReadinessCheck "MSIX artifact validator" (Join-Path $scriptRoot "test-msix-package.ps1")
 Write-ReadinessCheck "MSIX install smoke helper" (Join-Path $scriptRoot "smoke-msix-install.ps1")
 Write-ReadinessCheck "App Installer manifest generator" (Join-Path $scriptRoot "write-appinstaller.ps1")
+Write-ReadinessCheck "App Installer manifest validator" (Join-Path $scriptRoot "test-appinstaller.ps1")
 Write-ReadinessCheck "Dev ZIP package script" (Join-Path $scriptRoot "package-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP smoke validator" (Join-Path $scriptRoot "test-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user install helper" (Join-Path $scriptRoot "install-dev-zip.ps1")
@@ -59,6 +60,7 @@ Write-Host '  .\VoiceInk.Windows\scripts\package-dev-zip.ps1 -DotNetPath "..\.do
 Write-Host '  .\VoiceInk.Windows\scripts\test-dev-zip.ps1 -PackagePath <path-to-dev-zip>'
 Write-Host '  .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath <path-to-msix>'
 Write-Host '  .\VoiceInk.Windows\scripts\write-appinstaller.ps1 -MainPackageUri <absolute-msix-uri>'
+Write-Host '  .\VoiceInk.Windows\scripts\test-appinstaller.ps1 -AppInstallerPath <path-to-appinstaller>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
 
 Write-Host ""
@@ -84,6 +86,7 @@ Write-Host "App Installer readiness reference:"
 Write-Host "  [ ] Optional .appinstaller distribution must reference the signed MSIX with a MainPackage entry."
 Write-Host "  [ ] MainPackage Name/Publisher/Version must match Package.appxmanifest identity and the built MSIX package identity."
 Write-Host "  [ ] Generate the optional .appinstaller file with write-appinstaller.ps1 after choosing the final signed MSIX distribution URI."
+Write-Host "  [ ] Validate the optional .appinstaller file with test-appinstaller.ps1 before publishing it."
 Write-Host "  [ ] Use a maintainer-owned HTTPS, network share, or local file share distribution path; this report does not generate, publish, install, or update packages."
 Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
