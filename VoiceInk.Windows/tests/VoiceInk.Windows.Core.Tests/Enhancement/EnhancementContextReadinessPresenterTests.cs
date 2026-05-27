@@ -216,10 +216,10 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.StatusBadge == "Local OCR");
         Assert.Contains(
             presentation.PrivacyRows,
-            row => row.Title == "Windows Capture Consent"
-                && row.Value == "System controlled"
-                && row.Detail == "Windows may show capture consent UI or a visible capture border; VoiceInk only uses the captured image for local OCR during enhancement."
-                && row.StatusBadge == "Visible");
+            row => row.Title == "Desktop Screenshot Capture"
+                && row.Value == "Transient"
+                && row.Detail == "Screen OCR takes a one-time desktop screenshot through the Windows desktop capture path, runs local OCR, then discards the image bytes."
+                && row.StatusBadge == "Image local");
     }
 
     [Fact]
@@ -253,6 +253,23 @@ public sealed class EnhancementContextReadinessPresenterTests
             row => row.Title == "Screenshot Lifetime"
                 && row.Value == "One-time"
                 && row.Detail == "The captured image is used only for local OCR during enhancement, then discarded; VoiceInk sends extracted text, not the image, when a cloud provider is selected."
+                && row.StatusBadge == "Image local");
+    }
+
+    [Fact]
+    public void Present_WithOcrContext_ShowsDesktopScreenshotCaptureBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                UseOcrContext = true
+            });
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Desktop Screenshot Capture"
+                && row.Value == "Transient"
+                && row.Detail == "Screen OCR takes a one-time desktop screenshot through the Windows desktop capture path, runs local OCR, then discards the image bytes."
                 && row.StatusBadge == "Image local");
     }
 

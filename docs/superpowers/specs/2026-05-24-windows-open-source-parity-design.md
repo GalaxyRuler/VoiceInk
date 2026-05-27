@@ -651,6 +651,12 @@ Screenshot lifetime guidance slice completed on 2026-05-27:
 - Clarified that VoiceInk sends extracted text, not the captured image, when a cloud enhancement provider is selected.
 - Kept OCR capture, prompt rendering, provider selection, fallback, and history behavior unchanged.
 
+Context desktop screenshot boundary slice completed on 2026-05-27:
+
+- Corrected Enhancement privacy guidance to describe the implemented Windows desktop screenshot OCR path instead of implying current use of Windows Graphics Capture consent/border UI.
+- Clarified that Screen OCR takes a transient desktop screenshot, runs local OCR, and discards image bytes.
+- Kept OCR capture implementation, prompt rendering, provider selection, graceful degradation, fallback, and history behavior unchanged.
+
 Context prompt spelling-priority slice completed on 2026-05-27:
 
 - Aligned the Windows enhancement system instructions with the macOS prompt rule that similar phonetic terms should prefer spellings from context sources.

@@ -317,7 +317,7 @@ public static class EnhancementContextReadinessPresenter
         {
             rows.Add(OcrCaptureScopeRow(settings));
             rows.Add(ScreenshotLifetimeRow());
-            rows.Add(OcrCaptureConsentRow());
+            rows.Add(DesktopScreenshotCaptureBoundaryRow());
             rows.Add(OcrLanguageSupportRow());
         }
 
@@ -338,12 +338,12 @@ public static class EnhancementContextReadinessPresenter
             "The captured image is used only for local OCR during enhancement, then discarded; VoiceInk sends extracted text, not the image, when a cloud provider is selected.",
             "Image local");
 
-    private static EnhancementContextPrivacyRow OcrCaptureConsentRow() =>
+    private static EnhancementContextPrivacyRow DesktopScreenshotCaptureBoundaryRow() =>
         new(
-            "Windows Capture Consent",
-            "System controlled",
-            "Windows may show capture consent UI or a visible capture border; VoiceInk only uses the captured image for local OCR during enhancement.",
-            "Visible");
+            "Desktop Screenshot Capture",
+            "Transient",
+            "Screen OCR takes a one-time desktop screenshot through the Windows desktop capture path, runs local OCR, then discards the image bytes.",
+            "Image local");
 
     private static EnhancementContextPrivacyRow OcrCaptureScopeRow(AppSettings settings)
     {
