@@ -24,7 +24,15 @@ public sealed class GeminiCloudTranscriptionService(
         if (string.IsNullOrWhiteSpace(options.CloudEndpoint)
             || string.IsNullOrWhiteSpace(options.CloudModel))
         {
-            throw new InvalidOperationException("Cloud transcription endpoint and model are required.");
+            throw new InvalidOperationException(TranscriptionConfiguration.CloudProviderRequiredMessage);
+        }
+
+        if (!TranscriptionConfiguration.TryCreateCloudEndpoint(
+            options.CloudEndpoint,
+            out var endpoint,
+            out var endpointError))
+        {
+            throw new InvalidOperationException(endpointError);
         }
 
         var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken)
@@ -37,9 +45,9 @@ public sealed class GeminiCloudTranscriptionService(
         var startedAt = Stopwatch.GetTimestamp();
         using var message = new HttpRequestMessage(
             HttpMethod.Post,
-            GenerateContentUri(options.CloudEndpoint, options.CloudModel));
+            GenerateContentUri(endpoint!, options.CloudModel));
         message.Headers.Add("x-goog-api-key", apiKey);
-        message.Content = JsonContent.Create(await CreatePayloadAsync(audio, options, apiKey, cancellationToken)
+        message.Content = JsonContent.Create(await CreatePayloadAsync(audio, options, endpoint!, apiKey, cancellationToken)
             .ConfigureAwait(false), options: JsonOptions);
 
         using var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -59,6 +67,7 @@ public sealed class GeminiCloudTranscriptionService(
     private async Task<object> CreatePayloadAsync(
         AudioCaptureResult audio,
         TranscriptionOptions options,
+        Uri endpoint,
         string apiKey,
         CancellationToken cancellationToken)
     {
@@ -66,53 +75,62 @@ public sealed class GeminiCloudTranscriptionService(
         if (audioFile.Length > InlineAudioLimitBytes)
         {
             var file = await UploadFileAsync(audioFile, apiKey, cancellationToken).ConfigureAwait(false);
-            return new
-            {
-                contents = new[]
+            return CreateGenerateContentPayload(
+                endpoint,
+                new object[]
                 {
+                    new { text = PromptText(options) },
                     new
                     {
-                        role = "user",
-                        parts = new object[]
+                        file_data = new
                         {
-                            new { text = PromptText(options) },
-                            new
-                            {
-                                file_data = new
-                                {
-                                    mime_type = file.MimeType,
-                                    file_uri = file.Uri
-                                }
-                            }
+                            mime_type = file.MimeType,
+                            file_uri = file.Uri
                         }
                     }
-                }
-            };
+                });
         }
 
         var bytes = await File.ReadAllBytesAsync(audio.FilePath, cancellationToken).ConfigureAwait(false);
-        return new
+        return CreateGenerateContentPayload(
+            endpoint,
+            new object[]
+            {
+                new { text = PromptText(options) },
+                new
+                {
+                    inline_data = new
+                    {
+                        mime_type = "audio/wav",
+                        data = Convert.ToBase64String(bytes)
+                    }
+                }
+            });
+    }
+
+    private static Dictionary<string, object> CreateGenerateContentPayload(
+        Uri endpoint,
+        object[] parts)
+    {
+        var payload = new Dictionary<string, object>
         {
-            contents = new[]
+            ["contents"] = new[]
             {
                 new
                 {
                     role = "user",
-                    parts = new object[]
-                    {
-                        new { text = PromptText(options) },
-                        new
-                        {
-                            inline_data = new
-                            {
-                                mime_type = "audio/wav",
-                                data = Convert.ToBase64String(bytes)
-                            }
-                        }
-                    }
+                    parts
                 }
             }
         };
+
+        var generationConfig = GenerationConfig(endpoint);
+        if (generationConfig.Count > 0)
+        {
+            payload["generationConfig"] = generationConfig;
+        }
+
+        return payload;
     }
 
     private async Task<UploadedGeminiFile> UploadFileAsync(
@@ -184,16 +202,84 @@ public sealed class GeminiCloudTranscriptionService(
         return prompt;
     }
 
-    private static Uri GenerateContentUri(string endpoint, string model)
+    private static Uri GenerateContentUri(Uri endpoint, string model)
     {
-        if (!Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out var baseUri))
-        {
-            throw new InvalidOperationException("Cloud transcription endpoint is invalid.");
-        }
-
-        var baseText = baseUri.ToString().TrimEnd('/');
+        var baseText = EndpointWithoutQuery(endpoint).ToString().TrimEnd('/');
         return new Uri($"{baseText}/{Uri.EscapeDataString(model.Trim())}:generateContent");
     }
+
+    private static Uri EndpointWithoutQuery(Uri endpoint)
+    {
+        var builder = new UriBuilder(endpoint)
+        {
+            Query = string.Empty
+        };
+        return builder.Uri;
+    }
+
+    private static Dictionary<string, object> GenerationConfig(Uri endpoint)
+    {
+        var config = new Dictionary<string, object>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            return config;
+        }
+
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (!GenerationConfigNames.Contains(name))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            config[name] = TypedQueryValue(value);
+        }
+
+        return config;
+    }
+
+    private static object TypedQueryValue(string value)
+    {
+        if (bool.TryParse(value, out var boolValue))
+        {
+            return boolValue;
+        }
+
+        if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var intValue))
+        {
+            return intValue;
+        }
+
+        if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var doubleValue))
+        {
+            return doubleValue;
+        }
+
+        return value;
+    }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " "));
+
+    private static readonly HashSet<string> GenerationConfigNames =
+    [
+        "candidateCount",
+        "frequencyPenalty",
+        "logprobs",
+        "maxOutputTokens",
+        "presencePenalty",
+        "responseLogprobs",
+        "responseMimeType",
+        "seed",
+        "temperature",
+        "topK",
+        "topP"
+    ];
 
     private async Task<string?> ReadApiKeyAsync(
         string providerId,

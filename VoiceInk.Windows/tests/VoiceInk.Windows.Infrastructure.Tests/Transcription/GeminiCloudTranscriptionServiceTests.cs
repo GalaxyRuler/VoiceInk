@@ -141,6 +141,54 @@ public sealed class GeminiCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsSafeEndpointQueryOptionsToGenerationConfig()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(
+            HttpStatusCode.OK,
+            """{"candidates":[{"content":{"parts":[{"text":"Tuned Gemini"}]}}]}"""));
+        var service = new GeminiCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "gemini-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://generativelanguage.googleapis.com/v1beta/models?temperature=0.2&topK=12&maxOutputTokens=800&model=ignored"),
+            CancellationToken.None);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+            request.RequestUri?.ToString());
+        using var payload = JsonDocument.Parse(handler.Bodies[0]);
+        var config = payload.RootElement.GetProperty("generationConfig");
+        Assert.Equal(0.2, config.GetProperty("temperature").GetDouble());
+        Assert.Equal(12, config.GetProperty("topK").GetInt32());
+        Assert.Equal(800, config.GetProperty("maxOutputTokens").GetInt32());
+        Assert.False(config.TryGetProperty("model", out _));
+        Assert.DoesNotContain("ignored", handler.Bodies[0]);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_RejectsSecretEndpointQueryBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new GeminiCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "gemini-test-secret" });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://generativelanguage.googleapis.com/v1beta/models?token=leaked"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_FileUploadStartErrorDoesNotLeakResponseBodyOrApiKey()
     {
         using var audioFile = TempAudioFile.Large(InlineAudioLimitBytes + 1);
@@ -214,13 +262,15 @@ public sealed class GeminiCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://generativelanguage.googleapis.com/v1beta/models") =>
         new(
             ModelPath: string.Empty,
             language,
             Prompt: string.Empty,
             TranscriptionProviderKind.OpenAICompatible,
-            "https://generativelanguage.googleapis.com/v1beta/models",
+            endpoint,
             "gemini-2.5-flash",
             CloudProviderId: "gemini");
 
