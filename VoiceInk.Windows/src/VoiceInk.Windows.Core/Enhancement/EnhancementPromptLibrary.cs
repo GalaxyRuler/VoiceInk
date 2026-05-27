@@ -106,6 +106,41 @@ public static class EnhancementPromptLibrary
             ? prompts
             : prompts.Where(prompt => prompt.Id != promptId).ToArray();
 
+    public static IReadOnlyList<EnhancementPrompt> MovePrompt(
+        IReadOnlyList<EnhancementPrompt> prompts,
+        Guid promptId,
+        int offset)
+    {
+        if (offset == 0 || prompts.Count == 0)
+        {
+            return prompts.ToArray();
+        }
+
+        var customPrompts = prompts.Where(prompt => !prompt.IsPredefined).ToList();
+        var customIndex = customPrompts.FindIndex(prompt => prompt.Id == promptId);
+        if (customIndex < 0)
+        {
+            return prompts.ToArray();
+        }
+
+        var targetIndex = Math.Clamp(customIndex + offset, 0, customPrompts.Count - 1);
+        if (targetIndex == customIndex)
+        {
+            return prompts.ToArray();
+        }
+
+        var movedPrompt = customPrompts[customIndex];
+        customPrompts.RemoveAt(customIndex);
+        customPrompts.Insert(targetIndex, movedPrompt);
+
+        var nextCustomPromptIndex = 0;
+        return prompts
+            .Select(prompt => prompt.IsPredefined
+                ? prompt
+                : customPrompts[nextCustomPromptIndex++])
+            .ToArray();
+    }
+
     public static IReadOnlyList<EnhancementPrompt> PersistentPrompts(
         IReadOnlyList<EnhancementPrompt> prompts)
     {

@@ -149,6 +149,61 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void PromptLibrary_MovePromptReordersCustomPromptsWithoutMovingDefaults()
+    {
+        var firstCustomPrompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            "Standup",
+            "Format as a standup update.",
+            "list.bullet",
+            null,
+            "",
+            useSystemInstructions: true);
+        var secondCustomPrompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("44444444-4444-4444-4444-444444444444"),
+            "Email",
+            "Format as a short email.",
+            "envelope",
+            null,
+            "",
+            useSystemInstructions: true);
+        var prompts = EnhancementPromptLibrary.BuildPrompts([firstCustomPrompt, secondCustomPrompt]);
+
+        var moved = EnhancementPromptLibrary.MovePrompt(prompts, secondCustomPrompt.Id, -1);
+
+        Assert.Equal(EnhancementPromptCatalog.DefaultPromptId, moved[0].Id);
+        Assert.Equal(EnhancementPromptCatalog.AssistantPromptId, moved[1].Id);
+        Assert.True(moved.Take(5).All(prompt => prompt.IsPredefined));
+        Assert.Equal(secondCustomPrompt.Id, moved[5].Id);
+        Assert.Equal(firstCustomPrompt.Id, moved[6].Id);
+    }
+
+    [Fact]
+    public void PromptLibrary_MovePromptIgnoresPredefinedAndBoundaryMoves()
+    {
+        var customPrompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            "Custom",
+            "Custom instructions.",
+            "note",
+            null,
+            "",
+            useSystemInstructions: true);
+        var prompts = EnhancementPromptLibrary.BuildPrompts([customPrompt]);
+
+        var afterMovingDefault = EnhancementPromptLibrary.MovePrompt(
+            prompts,
+            EnhancementPromptCatalog.DefaultPromptId,
+            1);
+        var afterMovingOnlyCustomUp = EnhancementPromptLibrary.MovePrompt(prompts, customPrompt.Id, -1);
+        var afterMovingOnlyCustomDown = EnhancementPromptLibrary.MovePrompt(prompts, customPrompt.Id, 1);
+
+        Assert.Equal(prompts.Select(prompt => prompt.Id), afterMovingDefault.Select(prompt => prompt.Id));
+        Assert.Equal(prompts.Select(prompt => prompt.Id), afterMovingOnlyCustomUp.Select(prompt => prompt.Id));
+        Assert.Equal(prompts.Select(prompt => prompt.Id), afterMovingOnlyCustomDown.Select(prompt => prompt.Id));
+    }
+
+    [Fact]
     public void PromptLibrary_PersistentPromptsKeepsCustomPromptsAndPredefinedTriggerOverrides()
     {
         var prompts = EnhancementPromptLibrary.BuildPrompts(

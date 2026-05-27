@@ -38,6 +38,21 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.SetName(onboardingTutorialListView", code);
     }
 
+    [Fact]
+    public void MainWindow_EnhancementPromptEditor_ExposesMoveControls()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("MovePromptUpButton", xaml);
+        Assert.Contains("MovePromptDownButton", xaml);
+        Assert.Contains("Move Up", xaml);
+        Assert.Contains("Move Down", xaml);
+        Assert.Contains("MovePromptUpButton_Click", code);
+        Assert.Contains("MovePromptDownButton_Click", code);
+        Assert.Contains("MovePromptAsync", code);
+    }
+
     [Theory]
     [InlineData("MetricsDashboardCardsListView")]
     [InlineData("MetricsDataGuidanceListView")]

@@ -862,6 +862,14 @@
                                 x:Name="DeletePromptButton"
                                 Content="Delete Prompt"
                                 Click="DeletePromptButton_Click" />
+                            <Button
+                                x:Name="MovePromptUpButton"
+                                Content="Move Up"
+                                Click="MovePromptUpButton_Click" />
+                            <Button
+                                x:Name="MovePromptDownButton"
+                                Content="Move Down"
+                                Click="MovePromptDownButton_Click" />
                         </StackPanel>
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>

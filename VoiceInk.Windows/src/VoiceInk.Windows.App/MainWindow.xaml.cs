@@ -1565,6 +1565,16 @@ public sealed partial class MainWindow : Window
         await DeletePromptAsync();
     }
 
+    private async void MovePromptUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        await MovePromptAsync(-1);
+    }
+
+    private async void MovePromptDownButton_Click(object sender, RoutedEventArgs e)
+    {
+        await MovePromptAsync(1);
+    }
+
     private async void SaveEnhancementKeyButton_Click(object sender, RoutedEventArgs e)
     {
         await SaveEnhancementKeyAsync();
@@ -6948,6 +6958,42 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task MovePromptAsync(int offset)
+    {
+        if (!settingsLoaded || IsOperationActive())
+        {
+            return;
+        }
+
+        var prompt = PromptEditorPrompt();
+        if (prompt is null || prompt.IsPredefined)
+        {
+            RefreshUiFromControllerState("Only custom prompts can be reordered");
+            return;
+        }
+
+        var nextPrompts = EnhancementPromptLibrary.MovePrompt(enhancementPrompts, prompt.Id, offset);
+        if (nextPrompts.Select(item => item.Id).SequenceEqual(enhancementPrompts.Select(item => item.Id)))
+        {
+            RefreshUiFromControllerState($"{prompt.Title} prompt is already at the edge");
+            return;
+        }
+
+        try
+        {
+            await PersistPromptLibraryAsync(nextPrompts, powerModeRules, prompt.Id);
+            RefreshUiFromControllerState($"{prompt.Title} prompt moved");
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            RefreshUiFromControllerState("Closing");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Prompt reorder failed: {ex.Message}");
+        }
+    }
+
     private async Task PersistPromptLibraryAsync(
         IReadOnlyList<EnhancementPrompt> nextPrompts,
         IReadOnlyList<PowerModeRule> nextPowerModeRules,
@@ -8960,6 +9006,18 @@ public sealed partial class MainWindow : Window
         DeletePromptButton.IsEnabled = enhancementControlsEnabled
             && promptEditorPrompt is not null
             && !promptEditorPrompt.IsPredefined;
+        var customPromptIndex = promptEditorPrompt is null || promptEditorPrompt.IsPredefined
+            ? -1
+            : enhancementPrompts
+                .Where(prompt => !prompt.IsPredefined)
+                .ToList()
+                .FindIndex(prompt => prompt.Id == promptEditorPrompt.Id);
+        var customPromptCount = enhancementPrompts.Count(prompt => !prompt.IsPredefined);
+        MovePromptUpButton.IsEnabled = enhancementControlsEnabled
+            && customPromptIndex > 0;
+        MovePromptDownButton.IsEnabled = enhancementControlsEnabled
+            && customPromptIndex >= 0
+            && customPromptIndex < customPromptCount - 1;
         EnhancementTimeoutTextBox.IsEnabled = enhancementControlsEnabled;
         ShortEnhancementThresholdTextBox.IsEnabled = enhancementControlsEnabled;
         SkipShortEnhancementCheckBox.IsEnabled = enhancementControlsEnabled;
