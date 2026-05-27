@@ -9,4 +9,5 @@ public sealed record TrayShellState(
     bool CanUseQuickSettings,
     string VisibilityGuidance,
     string VisibilityMenuText,
-    string TooltipText);
+    string TooltipText,
+    string StatusMenuText);

@@ -15,6 +15,7 @@ public sealed class TrayIconService : IDisposable
     private readonly ContextMenuStrip trayContextMenu;
     private readonly ToolStripMenuItem showItem;
     private readonly ToolStripMenuItem hideItem;
+    private readonly ToolStripMenuItem statusItem;
     private readonly ToolStripMenuItem visibilityGuidanceItem;
     private readonly ToolStripMenuItem toggleRecordingItem;
     private readonly ToolStripMenuItem transcriptionModelMenu;
@@ -43,6 +44,7 @@ public sealed class TrayIconService : IDisposable
         icon = LoadIcon();
         showItem = new ToolStripMenuItem("Show VoiceInk", image: null, (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty));
         hideItem = new ToolStripMenuItem("Hide VoiceInk", image: null, (_, _) => HideRequested?.Invoke(this, EventArgs.Empty));
+        statusItem = new ToolStripMenuItem("Status: Loading settings") { Enabled = false };
         visibilityGuidanceItem = new ToolStripMenuItem("Taskbar settings: Other system tray icons") { Enabled = false };
         toggleRecordingItem = new ToolStripMenuItem("Start Recording", image: null, (_, _) => ToggleRecordingRequested?.Invoke(this, EventArgs.Empty));
         transcriptionModelMenu = new ToolStripMenuItem("Transcription Model");
@@ -71,6 +73,7 @@ public sealed class TrayIconService : IDisposable
         trayContextMenu = new ContextMenuStrip();
         trayContextMenu.Items.Add(showItem);
         trayContextMenu.Items.Add(hideItem);
+        trayContextMenu.Items.Add(statusItem);
         trayContextMenu.Items.Add(visibilityGuidanceItem);
         trayContextMenu.Items.Add(new ToolStripSeparator());
         trayContextMenu.Items.Add(toggleRecordingItem);
@@ -139,6 +142,7 @@ public sealed class TrayIconService : IDisposable
         quickAddDictionaryItem.Enabled = state.CanQuickAddDictionary;
         historyItem.Enabled = state.CanOpenHistory;
         SetQuickSettingsEnabled(state.CanUseQuickSettings);
+        statusItem.Text = state.StatusMenuText;
         visibilityGuidanceItem.Text = state.VisibilityMenuText;
         notifyIcon.Text = Truncate(state.TooltipText, MaxTooltipLength);
     }

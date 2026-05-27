@@ -26,7 +26,8 @@ public static class TrayShellPresenter
             CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle,
             VisibilityGuidance: "If the VoiceInk notification-area icon is hidden, open Windows taskbar corner overflow and pin it; the main window can always be opened from the tray menu.",
             VisibilityMenuText: "Taskbar settings: Other system tray icons",
-            TooltipText: $"VoiceInk - {statusText} - Pin via taskbar corner overflow");
+            TooltipText: $"VoiceInk - {statusText} - Pin via taskbar corner overflow",
+            StatusMenuText: $"Status: {statusText}");
     }
 
     private static string StatusText(

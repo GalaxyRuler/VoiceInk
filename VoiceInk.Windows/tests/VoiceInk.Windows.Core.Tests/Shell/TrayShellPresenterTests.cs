@@ -26,6 +26,7 @@ public sealed class TrayShellPresenterTests
             state.VisibilityGuidance);
         Assert.Equal("Taskbar settings: Other system tray icons", state.VisibilityMenuText);
         Assert.Equal("VoiceInk - Idle - Pin via taskbar corner overflow", state.TooltipText);
+        Assert.Equal("Status: Idle", state.StatusMenuText);
     }
 
     [Fact]

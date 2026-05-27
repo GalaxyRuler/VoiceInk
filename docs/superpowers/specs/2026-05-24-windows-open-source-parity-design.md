@@ -132,6 +132,12 @@ Rich tray menu slice completed on 2026-05-26:
 - Added tray routes to Manage Models, Enhancement Settings, Audio Input Settings, and Settings.
 - Disabled quick-setting submenus while settings are loading, recording is active, or post-recording work is busy.
 
+Tray status menu row slice completed on 2026-05-27:
+
+- Added a disabled tray menu row that shows the current VoiceInk status, matching the notification-area role as a persistent status surface.
+- Kept tooltip status, command enablement, quick settings, and notification-area visibility guidance unchanged.
+- Kept the row local and non-interactive with no notifications, telemetry, network behavior, or commercial surfaces.
+
 Navigation-settings-shell slice completed on 2026-05-25:
 
 - Use WinUI `NavigationView` as the Windows-native adaptation of macOS `NavigationSplitView`.
