@@ -29,20 +29,20 @@ VoiceInk Windows parity  [###################-] 95%
 | Settings | 90% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, grouped-section find guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
 | Audio input | 94% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings and microphone privacy diagnostics guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and endpoint-native diagnostics polish. |
 | Onboarding | 90% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, manual Windows microphone settings fallback guidance in setup actions, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
-| Packaging | 70% | `[##############------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, and a read-only release readiness report with signing/trust checklist plus WinApp CLI local signing, App Installer `.appinstaller` identity references, ActivityID diagnostics, and App Installer operational-log guidance exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
+| Packaging | 74% | `[###############-----]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, an App Installer `.appinstaller` manifest generator that derives identity from `Package.appxmanifest`, and a read-only release readiness report with signing/trust checklist plus WinApp CLI local signing, App Installer identity references, ActivityID diagnostics, and App Installer operational-log guidance exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Native shortcut conflict diagnostics  [####################] 100%
+App Installer manifest generation  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows shortcut conflict diagnostics spec and implementation plan.
-- Added failing Core tests for `RegisterHotKey` conflict and unknown Win32 failure messages.
-- Added a Core presenter for registration failures and routed the native hotkey service through it.
-- Ran the focused shortcut suite, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows App Installer manifest generator spec and implementation plan.
+- Added failing packaging asset coverage for a non-mutating `write-appinstaller.ps1` generator.
+- Added the generator and wired it into the release readiness report.
+- Ran the focused packaging suite, generator smoke command, read-only readiness report, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
