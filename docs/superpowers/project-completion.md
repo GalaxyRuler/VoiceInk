@@ -15,7 +15,7 @@ VoiceInk Windows parity  [###################-] 96%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 90% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
-| Shell and tray | 88% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
+| Shell and tray | 89% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 92% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
 | Model management | 90% | `[##################--]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows including expected `ggml-*.bin` filename guidance, model path health checks with actionable repair and user-selected validation guidance, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -34,19 +34,16 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Language default parity  [####################] 100%
+In-app notification surface  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows transcript text formatting spec and implementation plan.
-- Added failing post-processor and Power Mode tests for opt-in paragraph formatting.
-- Added deterministic macOS-style sentence chunking with a default-off setting.
-- Wired the setting through dictation, audio-file transcription, history retry, Power Mode, and WinUI settings controls.
-- Corrected the persisted app setting to default on, matching macOS `AppDefaults`.
-- Corrected the persisted trailing-space setting to default on, matching macOS `AppDefaults`.
-- Corrected the persisted default language to `en`, matching macOS `AppDefaults`.
-- Ran focused text/Power Mode/settings tests, caller-path tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows in-app notification surface spec and implementation plan.
+- Added a Core notification presenter for passive-status suppression and info/success/warning/error classification.
+- Added focused presenter tests.
+- Added a Windows-native WinUI `InfoBar` surface connected to actionable status updates.
+- Ran focused presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

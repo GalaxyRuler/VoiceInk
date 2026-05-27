@@ -18,6 +18,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <ScrollViewer Grid.Row="0">
@@ -2578,9 +2579,18 @@
                 </Grid>
             </ScrollViewer>
 
+            <InfoBar
+                x:Name="AppNotificationInfoBar"
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                MaxWidth="760"
+                IsClosable="True"
+                IsOpen="False"
+                Margin="0,0,0,8" />
+
             <TextBlock
                 x:Name="StatusTextBlock"
-                Grid.Row="1"
+                Grid.Row="2"
                 Text="Idle"
                 TextWrapping="Wrap" />
         </Grid>

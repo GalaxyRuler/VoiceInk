@@ -22,6 +22,7 @@ using VoiceInk.Windows.Core.Enhancement;
 using VoiceInk.Windows.Core.History;
 using VoiceInk.Windows.Core.Metrics;
 using VoiceInk.Windows.Core.Models;
+using VoiceInk.Windows.Core.Notifications;
 using VoiceInk.Windows.Core.Onboarding;
 using VoiceInk.Windows.Core.Permissions;
 using VoiceInk.Windows.Core.PowerMode;
@@ -141,6 +142,7 @@ public sealed partial class MainWindow : Window
     private readonly CancellationTokenSource windowLifetime = new();
     private readonly DispatcherQueueTimer floatingRecorderRefreshTimer;
     private readonly DispatcherQueueTimer privacyCleanupTimer;
+    private readonly DispatcherQueueTimer appNotificationTimer;
     private GlobalHotkeyService? hotkeyService;
     private TrayIconService? trayIconService;
     private FloatingRecorderWindow? floatingRecorderWindow;
@@ -226,6 +228,7 @@ public sealed partial class MainWindow : Window
     private bool recordingShortcutHandsFree;
     private string activeSectionTag = DashboardSectionTag;
     private string? hotkeyRegistrationError;
+    private string? lastAppNotificationMessage;
 
     public MainWindow(bool startHiddenToTray = false)
     {
@@ -246,6 +249,8 @@ public sealed partial class MainWindow : Window
         privacyCleanupTimer = DispatcherQueue.CreateTimer();
         privacyCleanupTimer.Interval = TimeSpan.FromDays(1);
         privacyCleanupTimer.Tick += async (_, _) => await RunConfiguredPrivacyCleanupFromTimerAsync();
+        appNotificationTimer = DispatcherQueue.CreateTimer();
+        appNotificationTimer.Tick += (_, _) => HideAppNotification();
 
         InitializeNavigationItems();
         ShowShellSection(DashboardSectionTag);
@@ -8577,12 +8582,52 @@ public sealed partial class MainWindow : Window
             ?? controller.LastWarning
             ?? idleHotkeyWarning
             ?? stateStatus;
+        ShowAppNotification(statusOverride ?? controller.LastError ?? controller.LastWarning ?? idleHotkeyWarning);
         RecordDiagnosticEvent(displayStatus);
         StatusTextBlock.Text = displayStatus;
         UpdateFloatingRecorder(displayStatus, operationActive);
         UpdateTrayFromControllerState(displayStatus, operationActive);
         QueuePendingAudioInputDeviceChangeRefreshIfIdle();
     }
+
+    private void ShowAppNotification(string? status)
+    {
+        var presentation = AppNotificationPresenter.FromStatus(status);
+        if (presentation is null)
+        {
+            return;
+        }
+
+        if (AppNotificationInfoBar.IsOpen
+            && string.Equals(lastAppNotificationMessage, presentation.Message, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastAppNotificationMessage = presentation.Message;
+        AppNotificationInfoBar.Message = presentation.Message;
+        AppNotificationInfoBar.Severity = InfoBarSeverityFor(presentation.Kind);
+        AppNotificationInfoBar.IsOpen = true;
+        appNotificationTimer.Stop();
+        appNotificationTimer.Interval = presentation.Duration;
+        appNotificationTimer.Start();
+    }
+
+    private void HideAppNotification()
+    {
+        appNotificationTimer.Stop();
+        AppNotificationInfoBar.IsOpen = false;
+        lastAppNotificationMessage = null;
+    }
+
+    private static InfoBarSeverity InfoBarSeverityFor(AppNotificationKind kind) =>
+        kind switch
+        {
+            AppNotificationKind.Success => InfoBarSeverity.Success,
+            AppNotificationKind.Warning => InfoBarSeverity.Warning,
+            AppNotificationKind.Error => InfoBarSeverity.Error,
+            _ => InfoBarSeverity.Informational
+        };
 
     private void QueuePendingAudioInputDeviceChangeRefreshIfIdle()
     {
