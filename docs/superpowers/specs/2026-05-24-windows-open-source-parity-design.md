@@ -108,7 +108,7 @@ macOS also has a menu-bar utility shell through `MenuBarManager` and `MenuBarVie
 Implemented:
 
 - Sidebar navigation with Dashboard, Transcribe Audio, History, AI Models, Enhancement, Audio Input, Dictionary, Settings, and About / Open Source sections.
-- Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, model/provider/enhancement/language/audio/context/Power Mode quick-setting submenus, Quick Add to Dictionary, History, settings routes, and Quit VoiceInk commands.
+- Tray icon with Show VoiceInk, Hide VoiceInk, Start/Stop Recording, model/provider/enhancement/language/audio/context/Power Mode quick-setting submenus, Paste Last, Paste Last Enhanced, Retry Last Transcription, Quick Add to Dictionary, History, settings routes, and Quit VoiceInk commands.
 - Close-to-tray behavior for the main window, with explicit Quit from the tray.
 - Tray state presenter for recording/busy/loading labels and enabled states.
 - About / Open Source section with version/source information and local-only diagnostics folder/summary actions.
@@ -143,6 +143,12 @@ Tray taskbar settings action slice completed on 2026-05-27:
 - Made the tray visibility guidance row actionable so users can open Windows Taskbar settings for notification-area/system-tray icon visibility.
 - Routed the tray item through `OpenTaskbarSettingsRequested` and the WinUI shell's `ms-settings:taskbar` launcher.
 - Kept the action local-only with no notifications, telemetry, network behavior, or commercial surfaces.
+
+Tray last actions slice completed on 2026-05-27:
+
+- Added notification-area menu rows for Paste Last Transcription, Paste Last Enhanced, and Retry Last Transcription.
+- Routed those rows to the existing last-transcription paste/retry services instead of adding duplicate history logic.
+- Added Core tray state enablement for the new rows so recording, loading, and busy states are testable without GUI automation.
 
 Navigation-settings-shell slice completed on 2026-05-25:
 

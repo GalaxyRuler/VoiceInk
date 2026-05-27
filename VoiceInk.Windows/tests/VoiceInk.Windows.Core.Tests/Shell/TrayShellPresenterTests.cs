@@ -21,6 +21,9 @@ public sealed class TrayShellPresenterTests
         Assert.True(state.CanQuickAddDictionary);
         Assert.True(state.CanOpenHistory);
         Assert.True(state.CanUseQuickSettings);
+        Assert.True(state.CanPasteLastTranscription);
+        Assert.True(state.CanPasteLastEnhancedTranscription);
+        Assert.True(state.CanRetryLastTranscription);
         Assert.Equal(
             "If the VoiceInk notification-area icon is hidden, open Windows taskbar corner overflow and pin it; the main window can always be opened from the tray menu.",
             state.VisibilityGuidance);
@@ -59,6 +62,9 @@ public sealed class TrayShellPresenterTests
         Assert.False(state.CanQuickAddDictionary);
         Assert.True(state.CanOpenHistory);
         Assert.False(state.CanUseQuickSettings);
+        Assert.False(state.CanPasteLastTranscription);
+        Assert.False(state.CanPasteLastEnhancedTranscription);
+        Assert.False(state.CanRetryLastTranscription);
     }
 
     [Fact]
@@ -76,6 +82,9 @@ public sealed class TrayShellPresenterTests
         Assert.False(state.CanQuickAddDictionary);
         Assert.False(state.CanOpenHistory);
         Assert.False(state.CanUseQuickSettings);
+        Assert.False(state.CanPasteLastTranscription);
+        Assert.False(state.CanPasteLastEnhancedTranscription);
+        Assert.False(state.CanRetryLastTranscription);
     }
 
     [Fact]
@@ -89,6 +98,9 @@ public sealed class TrayShellPresenterTests
 
         Assert.Equal("Transcribing", state.StatusText);
         Assert.False(state.CanOpenHistory);
+        Assert.False(state.CanPasteLastTranscription);
+        Assert.False(state.CanPasteLastEnhancedTranscription);
+        Assert.False(state.CanRetryLastTranscription);
     }
 
     [Fact]
@@ -106,5 +118,8 @@ public sealed class TrayShellPresenterTests
         Assert.False(state.CanQuickAddDictionary);
         Assert.False(state.CanOpenHistory);
         Assert.False(state.CanUseQuickSettings);
+        Assert.False(state.CanPasteLastTranscription);
+        Assert.False(state.CanPasteLastEnhancedTranscription);
+        Assert.False(state.CanRetryLastTranscription);
     }
 }

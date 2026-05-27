@@ -34,6 +34,9 @@ public sealed class TrayIconService : IDisposable
     private readonly ToolStripMenuItem enhancementSettingsItem;
     private readonly ToolStripMenuItem audioInputSettingsItem;
     private readonly ToolStripMenuItem settingsItem;
+    private readonly ToolStripMenuItem pasteLastItem;
+    private readonly ToolStripMenuItem pasteLastEnhancedItem;
+    private readonly ToolStripMenuItem retryLastItem;
     private readonly ToolStripMenuItem quickAddDictionaryItem;
     private readonly ToolStripMenuItem historyItem;
     private readonly ToolStripMenuItem quitItem;
@@ -66,6 +69,9 @@ public sealed class TrayIconService : IDisposable
         enhancementSettingsItem = new ToolStripMenuItem("Enhancement Settings", image: null, (_, _) => OpenEnhancementRequested?.Invoke(this, EventArgs.Empty));
         audioInputSettingsItem = new ToolStripMenuItem("Audio Input Settings", image: null, (_, _) => OpenAudioInputRequested?.Invoke(this, EventArgs.Empty));
         settingsItem = new ToolStripMenuItem("Settings", image: null, (_, _) => OpenSettingsRequested?.Invoke(this, EventArgs.Empty));
+        pasteLastItem = new ToolStripMenuItem("Paste Last Transcription", image: null, (_, _) => PasteLastTranscriptionRequested?.Invoke(this, EventArgs.Empty));
+        pasteLastEnhancedItem = new ToolStripMenuItem("Paste Last Enhanced", image: null, (_, _) => PasteLastEnhancedTranscriptionRequested?.Invoke(this, EventArgs.Empty));
+        retryLastItem = new ToolStripMenuItem("Retry Last Transcription", image: null, (_, _) => RetryLastTranscriptionRequested?.Invoke(this, EventArgs.Empty));
         quickAddDictionaryItem = new ToolStripMenuItem("Quick Add to Dictionary", image: null, (_, _) => QuickAddDictionaryRequested?.Invoke(this, EventArgs.Empty));
         historyItem = new ToolStripMenuItem("History", image: null, (_, _) => OpenHistoryRequested?.Invoke(this, EventArgs.Empty));
         quitItem = new ToolStripMenuItem("Quit VoiceInk", image: null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
@@ -98,6 +104,9 @@ public sealed class TrayIconService : IDisposable
         trayContextMenu.Items.Add(audioInputSettingsItem);
         trayContextMenu.Items.Add(settingsItem);
         trayContextMenu.Items.Add(new ToolStripSeparator());
+        trayContextMenu.Items.Add(pasteLastItem);
+        trayContextMenu.Items.Add(pasteLastEnhancedItem);
+        trayContextMenu.Items.Add(retryLastItem);
         trayContextMenu.Items.Add(quickAddDictionaryItem);
         trayContextMenu.Items.Add(historyItem);
         trayContextMenu.Items.Add(new ToolStripSeparator());
@@ -133,6 +142,9 @@ public sealed class TrayIconService : IDisposable
     public event EventHandler? OpenAudioInputRequested;
     public event EventHandler? OpenSettingsRequested;
     public event EventHandler? OpenTaskbarSettingsRequested;
+    public event EventHandler? PasteLastTranscriptionRequested;
+    public event EventHandler? PasteLastEnhancedTranscriptionRequested;
+    public event EventHandler? RetryLastTranscriptionRequested;
     public event EventHandler? QuickAddDictionaryRequested;
     public event EventHandler? OpenHistoryRequested;
     public event EventHandler? ExitRequested;
@@ -143,6 +155,9 @@ public sealed class TrayIconService : IDisposable
 
         toggleRecordingItem.Text = state.ToggleRecordingLabel;
         toggleRecordingItem.Enabled = state.CanToggleRecording;
+        pasteLastItem.Enabled = state.CanPasteLastTranscription;
+        pasteLastEnhancedItem.Enabled = state.CanPasteLastEnhancedTranscription;
+        retryLastItem.Enabled = state.CanRetryLastTranscription;
         quickAddDictionaryItem.Enabled = state.CanQuickAddDictionary;
         historyItem.Enabled = state.CanOpenHistory;
         SetQuickSettingsEnabled(state.CanUseQuickSettings);

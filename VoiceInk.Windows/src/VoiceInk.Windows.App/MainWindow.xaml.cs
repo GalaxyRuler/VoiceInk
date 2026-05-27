@@ -450,6 +450,21 @@ public sealed partial class MainWindow : Window
         await ShowQuickAddDictionaryAsync();
     }
 
+    private async void TrayIconService_PasteLastTranscriptionRequested(object? sender, EventArgs e)
+    {
+        await PasteLastAsync(LastTranscriptionTextKind.Final);
+    }
+
+    private async void TrayIconService_PasteLastEnhancedTranscriptionRequested(object? sender, EventArgs e)
+    {
+        await PasteLastAsync(LastTranscriptionTextKind.EnhancedPreferred);
+    }
+
+    private async void TrayIconService_RetryLastTranscriptionRequested(object? sender, EventArgs e)
+    {
+        await RetryLastHistoryAsync();
+    }
+
     private async void TrayIconService_OpenHistoryRequested(object? sender, EventArgs e)
     {
         await OpenHistoryWindowAsync();
@@ -10224,6 +10239,9 @@ public sealed partial class MainWindow : Window
         trayIconService.OpenAudioInputRequested += TrayIconService_OpenAudioInputRequested;
         trayIconService.OpenSettingsRequested += TrayIconService_OpenSettingsRequested;
         trayIconService.OpenTaskbarSettingsRequested += TrayIconService_OpenTaskbarSettingsRequested;
+        trayIconService.PasteLastTranscriptionRequested += TrayIconService_PasteLastTranscriptionRequested;
+        trayIconService.PasteLastEnhancedTranscriptionRequested += TrayIconService_PasteLastEnhancedTranscriptionRequested;
+        trayIconService.RetryLastTranscriptionRequested += TrayIconService_RetryLastTranscriptionRequested;
         trayIconService.QuickAddDictionaryRequested += TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested += TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested += TrayIconService_ExitRequested;
@@ -10297,6 +10315,9 @@ public sealed partial class MainWindow : Window
         trayIconService.OpenAudioInputRequested -= TrayIconService_OpenAudioInputRequested;
         trayIconService.OpenSettingsRequested -= TrayIconService_OpenSettingsRequested;
         trayIconService.OpenTaskbarSettingsRequested -= TrayIconService_OpenTaskbarSettingsRequested;
+        trayIconService.PasteLastTranscriptionRequested -= TrayIconService_PasteLastTranscriptionRequested;
+        trayIconService.PasteLastEnhancedTranscriptionRequested -= TrayIconService_PasteLastEnhancedTranscriptionRequested;
+        trayIconService.RetryLastTranscriptionRequested -= TrayIconService_RetryLastTranscriptionRequested;
         trayIconService.QuickAddDictionaryRequested -= TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested -= TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested -= TrayIconService_ExitRequested;

@@ -14,6 +14,8 @@ public static class TrayShellPresenter
         var canUseOperationalCommands = settingsLoaded && !operationActive && !controllerBusy;
         var canToggleRecording = canUseOperationalCommands
             && dictationState is not DictationState.Transcribing and not DictationState.Inserting;
+        var canPasteLast = settingsLoaded && !operationActive && dictationState != DictationState.Recording && !controllerBusy;
+        var canRetryLast = canUseOperationalCommands && dictationState == DictationState.Idle;
 
         var statusText = StatusText(settingsLoaded, dictationState, statusOverride);
 
@@ -24,6 +26,9 @@ public static class TrayShellPresenter
             CanQuickAddDictionary: canUseOperationalCommands && dictationState == DictationState.Idle,
             CanOpenHistory: canUseOperationalCommands,
             CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle,
+            CanPasteLastTranscription: canPasteLast,
+            CanPasteLastEnhancedTranscription: canPasteLast,
+            CanRetryLastTranscription: canRetryLast,
             VisibilityGuidance: "If the VoiceInk notification-area icon is hidden, open Windows taskbar corner overflow and pin it; the main window can always be opened from the tray menu.",
             VisibilityMenuText: "Taskbar settings: Other system tray icons",
             TooltipText: $"VoiceInk - {statusText} - Pin via taskbar corner overflow",
