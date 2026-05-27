@@ -93,6 +93,10 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
             new StringContent(
                 QueryParameterValue(options.CloudEndpoint, "response_format") ?? "json"),
             "response_format");
+        foreach (var option in EndpointQueryOptions(options.CloudEndpoint))
+        {
+            content.Add(new StringContent(option.Value), option.Name);
+        }
 
         if (!string.IsNullOrWhiteSpace(options.Language)
             && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase))
@@ -154,4 +158,42 @@ public sealed class OpenAICompatibleCloudTranscriptionService(
 
         return null;
     }
+
+    private static IEnumerable<(string Name, string Value)> EndpointQueryOptions(string endpoint)
+    {
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri)
+            || string.IsNullOrWhiteSpace(uri.Query))
+        {
+            yield break;
+        }
+
+        foreach (var part in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedMultipartFieldNames.Any(
+                    reserved => string.Equals(reserved, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, value);
+        }
+    }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " "));
+
+    private static readonly string[] ReservedMultipartFieldNames =
+    [
+        "file",
+        "language",
+        "model",
+        "prompt",
+        "response_format"
+    ];
 }

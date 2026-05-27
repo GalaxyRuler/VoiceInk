@@ -89,6 +89,35 @@ public sealed class OpenAICompatibleCloudTranscriptionServiceTests
         Assert.Contains("verbose_json", body);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_MapsSafeEndpointQueryOptionsToMultipartFields()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"text":"Advanced text"}"""));
+        var service = new OpenAICompatibleCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "sk-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(
+                endpoint: "https://api.example.test/v1/audio/transcriptions?temperature=0.2&timestamp_granularities%5B%5D=word&file=ignored&model=ignored&language=ignored&prompt=ignored",
+                language: "en",
+                prompt: "Keep product names"),
+            CancellationToken.None);
+
+        var body = handler.Bodies[0];
+        Assert.Contains("name=temperature", body);
+        Assert.Contains("0.2", body);
+        Assert.Contains("timestamp_granularities[]", body);
+        Assert.Contains("word", body);
+        Assert.Contains("gpt-4o-transcribe", body);
+        Assert.Contains("Keep product names", body);
+        Assert.Contains("en", body);
+        Assert.DoesNotContain("ignored", body);
+    }
+
     [Theory]
     [InlineData("", "gpt-4o-transcribe", "Cloud transcription endpoint is invalid.")]
     [InlineData("https://api.example.test/v1/audio/transcriptions", "", "Cloud transcription model is required.")]
