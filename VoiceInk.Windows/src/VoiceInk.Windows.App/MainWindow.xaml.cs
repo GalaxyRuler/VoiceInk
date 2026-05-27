@@ -2088,6 +2088,8 @@ public sealed partial class MainWindow : Window
         SecondaryRecordingHotkeyTextBox.Text = settings.SecondaryRecordingHotkey;
         SecondaryRecordingShortcutModeComboBox.SelectedIndex = RecordingShortcutModeToSelectedIndex(
             settings.SecondaryRecordingShortcutMode);
+        MiddleClickRecordingCheckBox.IsChecked = settings.IsMiddleClickRecordingEnabled;
+        MiddleClickDelayNumberBox.Value = settings.MiddleClickActivationDelayMilliseconds;
         PasteLastHotkeyTextBox.Text = settings.PasteLastTranscriptionHotkey;
         PasteLastEnhancedHotkeyTextBox.Text = settings.PasteLastEnhancementHotkey;
         RetryLastHotkeyTextBox.Text = settings.RetryLastTranscriptionHotkey;
@@ -6963,6 +6965,12 @@ public sealed partial class MainWindow : Window
             SecondaryRecordingShortcutMode = includeShortcutFields
                 ? SelectedSecondaryRecordingShortcutMode()
                 : settings.SecondaryRecordingShortcutMode,
+            IsMiddleClickRecordingEnabled = includeShortcutFields
+                ? MiddleClickRecordingCheckBox.IsChecked == true
+                : settings.IsMiddleClickRecordingEnabled,
+            MiddleClickActivationDelayMilliseconds = includeShortcutFields
+                ? CheckedNumberBoxIntValue(MiddleClickDelayNumberBox)
+                : settings.MiddleClickActivationDelayMilliseconds,
             PasteLastTranscriptionHotkey = includeShortcutFields
                 ? PasteLastHotkeyTextBox.Text.Trim()
                 : settings.PasteLastTranscriptionHotkey,
@@ -8228,7 +8236,7 @@ public sealed partial class MainWindow : Window
                 return false;
             }
 
-            ReplaceGlobalHotkeyService(shortcutRegistration.Registrations);
+            ReplaceGlobalHotkeyService(shortcutRegistration.Registrations, settings);
             hotkeyRegistrationError = null;
             return true;
         }
@@ -8253,7 +8261,7 @@ public sealed partial class MainWindow : Window
             var shortcutRegistration = GlobalShortcutSettings.BuildRegistrations(settings);
             if (shortcutRegistration.Errors.Count == 0)
             {
-                ReplaceGlobalHotkeyService(shortcutRegistration.Registrations);
+                ReplaceGlobalHotkeyService(shortcutRegistration.Registrations, settings);
                 hotkeyRegistrationError = originalError;
                 return;
             }
@@ -8268,7 +8276,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void ReplaceGlobalHotkeyService(IReadOnlyList<GlobalShortcutRegistration> registrations)
+    private void ReplaceGlobalHotkeyService(
+        IReadOnlyList<GlobalShortcutRegistration> registrations,
+        AppSettings settings)
     {
         DisposeGlobalHotkeyService();
         var windowHandle = WindowNative.GetWindowHandle(this);
@@ -8278,7 +8288,10 @@ public sealed partial class MainWindow : Window
         {
             newHotkeyService.HotkeyPressed += HotkeyService_HotkeyPressed;
             newHotkeyService.MiniRecorderShortcutPressed += HotkeyService_MiniRecorderShortcutPressed;
-            newHotkeyService.RegisterHotkeys(registrations);
+            newHotkeyService.RegisterHotkeys(
+                registrations,
+                settings.IsMiddleClickRecordingEnabled,
+                settings.MiddleClickActivationDelayMilliseconds);
             hotkeyService = newHotkeyService;
         }
         catch

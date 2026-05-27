@@ -57,6 +57,10 @@ public sealed class VoiceInkSettingsBackupTests
         Assert.Equal(settings.EnhancementEndpoint, backup.GeneralSettings.EnhancementEndpoint);
         Assert.Equal(settings.SelectedEnhancementPromptId, backup.GeneralSettings.SelectedEnhancementPromptId);
         Assert.Equal(settings.SelectedPowerModeRuleId, backup.GeneralSettings.SelectedPowerModeRuleId);
+        Assert.Equal(settings.IsMiddleClickRecordingEnabled, backup.GeneralSettings.IsMiddleClickRecordingEnabled);
+        Assert.Equal(
+            settings.MiddleClickActivationDelayMilliseconds,
+            backup.GeneralSettings.MiddleClickActivationDelayMilliseconds);
         var prompt = Assert.Single(backup.CustomPrompts);
         Assert.Equal(promptId, prompt.Id);
         Assert.Equal("Standup", prompt.Title);
@@ -305,6 +309,8 @@ public sealed class VoiceInkSettingsBackupTests
             OpenHistoryHotkey = "Ctrl+Alt+H",
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
             ToggleEnhancementHotkey = "Ctrl+Alt+X",
+            IsMiddleClickRecordingEnabled = true,
+            MiddleClickActivationDelayMilliseconds = 350,
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
             AudioInputEndpointId = "endpoint-usb",

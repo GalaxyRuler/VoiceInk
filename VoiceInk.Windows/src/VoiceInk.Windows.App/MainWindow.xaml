@@ -2211,6 +2211,17 @@
                                 <ComboBoxItem Content="Push to Talk" />
                                 <ComboBoxItem Content="Hybrid" />
                             </ComboBox>
+                            <CheckBox
+                                x:Name="MiddleClickRecordingCheckBox"
+                                Content="Middle-Click Recording" />
+                            <NumberBox
+                                x:Name="MiddleClickDelayNumberBox"
+                                Header="Middle-Click Activation Delay (ms)"
+                                Minimum="0"
+                                Maximum="5000"
+                                SmallChange="50"
+                                LargeChange="100"
+                                SpinButtonPlacementMode="Inline" />
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />

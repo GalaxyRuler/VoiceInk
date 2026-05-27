@@ -9,11 +9,14 @@ public sealed class GlobalHotkeyService : IDisposable
 {
     private const int HotkeyIdBase = 0x5649;
     private const int WhKeyboardLl = 13;
+    private const int WhMouseLl = 14;
     private const int WmHotkey = 0x0312;
     private const int WmKeydown = 0x0100;
     private const int WmKeyup = 0x0101;
     private const int WmSyskeydown = 0x0104;
     private const int WmSyskeyup = 0x0105;
+    private const int WmMbuttondown = 0x0207;
+    private const int WmMbuttonup = 0x0208;
     private const int VkShift = 0x10;
     private const int VkControl = 0x11;
     private const int VkMenu = 0x12;
@@ -27,8 +30,13 @@ public sealed class GlobalHotkeyService : IDisposable
     private readonly Dictionary<string, GlobalShortcutRegistration> pressedRecordingShortcuts = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> pressedMiniRecorderShortcuts = new(StringComparer.OrdinalIgnoreCase);
     private readonly LowLevelKeyboardProc keyboardProc;
+    private readonly LowLevelMouseProc mouseProc;
+    private readonly System.Windows.Forms.Timer middleClickTimer = new();
     private IReadOnlyList<GlobalShortcutRegistration> recordingRegistrations = [];
+    private GlobalShortcutRegistration? middleClickRegistration;
+    private int middleClickActivationDelayMilliseconds = 200;
     private IntPtr keyboardHook;
+    private IntPtr mouseHook;
     private bool disposed;
 
     public GlobalHotkeyService(IntPtr windowHandle)
@@ -41,12 +49,17 @@ public sealed class GlobalHotkeyService : IDisposable
         hotkeyWindow = new HotkeyWindow(this);
         hotkeyWindow.AssignHandle(windowHandle);
         keyboardProc = KeyboardHookCallback;
+        mouseProc = MouseHookCallback;
+        middleClickTimer.Tick += MiddleClickTimer_Tick;
     }
 
     public event EventHandler<GlobalHotkeyPressedEventArgs>? HotkeyPressed;
     public event EventHandler<MiniRecorderShortcutPressedEventArgs>? MiniRecorderShortcutPressed;
 
-    public void RegisterHotkeys(IEnumerable<GlobalShortcutRegistration> registrations)
+    public void RegisterHotkeys(
+        IEnumerable<GlobalShortcutRegistration> registrations,
+        bool isMiddleClickRecordingEnabled = false,
+        int middleClickActivationDelayMilliseconds = 200)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
@@ -97,6 +110,11 @@ public sealed class GlobalHotkeyService : IDisposable
             {
                 InstallKeyboardHook();
             }
+
+            if (isMiddleClickRecordingEnabled)
+            {
+                ConfigureMiddleClickRecording(middleClickActivationDelayMilliseconds);
+            }
         }
         catch
         {
@@ -114,6 +132,8 @@ public sealed class GlobalHotkeyService : IDisposable
 
         UnregisterHotkeys();
 
+        middleClickTimer.Tick -= MiddleClickTimer_Tick;
+        middleClickTimer.Dispose();
         hotkeyWindow.ReleaseHandle();
         disposed = true;
     }
@@ -133,6 +153,7 @@ public sealed class GlobalHotkeyService : IDisposable
 
     private void UnregisterHotkeys()
     {
+        UninstallMouseHook();
         UninstallKeyboardHook();
         recordingRegistrations = [];
         pressedRecordingShortcuts.Clear();
@@ -144,6 +165,26 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         registeredActions.Clear();
+    }
+
+    private void ConfigureMiddleClickRecording(int activationDelayMilliseconds)
+    {
+        middleClickRegistration = new GlobalShortcutRegistration(
+            GlobalShortcutAction.ToggleRecording,
+            new GlobalShortcut(
+                Control: false,
+                Alt: false,
+                Shift: false,
+                VirtualKey: 0,
+                KeyName: "Middle Click"),
+            RecordingShortcutMode: RecordingShortcutModeSettings.Toggle);
+        middleClickActivationDelayMilliseconds = Math.Clamp(activationDelayMilliseconds, 0, 5000);
+        if (middleClickActivationDelayMilliseconds > 0)
+        {
+            middleClickTimer.Interval = middleClickActivationDelayMilliseconds;
+        }
+
+        InstallMouseHook();
     }
 
     private static uint ModifierMask(GlobalShortcut shortcut)
@@ -196,6 +237,38 @@ public sealed class GlobalHotkeyService : IDisposable
         keyboardHook = IntPtr.Zero;
     }
 
+    private void InstallMouseHook()
+    {
+        if (mouseHook != IntPtr.Zero)
+        {
+            return;
+        }
+
+        mouseHook = SetWindowsHookEx(WhMouseLl, mouseProc, GetModuleHandle(null), 0);
+        if (mouseHook == IntPtr.Zero)
+        {
+            var errorCode = Marshal.GetLastWin32Error();
+            var error = new Win32Exception(errorCode);
+            throw new InvalidOperationException(
+                $"SetWindowsHookEx failed for middle-click recording ({errorCode}: {error.Message}).",
+                error);
+        }
+    }
+
+    private void UninstallMouseHook()
+    {
+        middleClickTimer.Stop();
+        middleClickRegistration = null;
+
+        if (mouseHook == IntPtr.Zero)
+        {
+            return;
+        }
+
+        UnhookWindowsHookEx(mouseHook);
+        mouseHook = IntPtr.Zero;
+    }
+
     private IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
         if (nCode >= 0)
@@ -216,6 +289,41 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
+    }
+
+    private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= 0 && middleClickRegistration is not null)
+        {
+            var message = wParam.ToInt32();
+            if (message == WmMbuttondown)
+            {
+                middleClickTimer.Stop();
+                if (middleClickActivationDelayMilliseconds == 0)
+                {
+                    OnHotkeyPressed(middleClickRegistration);
+                }
+                else
+                {
+                    middleClickTimer.Start();
+                }
+            }
+            else if (message == WmMbuttonup)
+            {
+                middleClickTimer.Stop();
+            }
+        }
+
+        return CallNextHookEx(mouseHook, nCode, wParam, lParam);
+    }
+
+    private void MiddleClickTimer_Tick(object? sender, EventArgs e)
+    {
+        middleClickTimer.Stop();
+        if (middleClickRegistration is not null)
+        {
+            OnHotkeyPressed(middleClickRegistration);
+        }
     }
 
     private void HandleRecordingKeyDown(int virtualKey)
@@ -328,6 +436,9 @@ public sealed class GlobalHotkeyService : IDisposable
     private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
     [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
     private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
     [DllImport("user32.dll")]
@@ -340,6 +451,8 @@ public sealed class GlobalHotkeyService : IDisposable
     private static extern IntPtr GetModuleHandle(string? lpModuleName);
 
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]
     private readonly struct Kbdllhookstruct

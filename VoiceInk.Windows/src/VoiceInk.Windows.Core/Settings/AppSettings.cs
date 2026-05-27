@@ -46,6 +46,8 @@ public sealed record AppSettings
     public string QuickAddDictionaryHotkey { get; init; } = string.Empty;
     public string ToggleEnhancementHotkey { get; init; } = string.Empty;
     public string CyclePowerModeHotkey { get; init; } = string.Empty;
+    public bool IsMiddleClickRecordingEnabled { get; init; }
+    public int MiddleClickActivationDelayMilliseconds { get; init; } = 200;
     public int? AudioInputDeviceNumber { get; init; }
     public string AudioInputDeviceName { get; init; } = string.Empty;
     public string AudioInputEndpointId { get; init; } = string.Empty;
@@ -119,6 +121,8 @@ public sealed record AppSettings
             QuickAddDictionaryHotkey == other.QuickAddDictionaryHotkey &&
             ToggleEnhancementHotkey == other.ToggleEnhancementHotkey &&
             CyclePowerModeHotkey == other.CyclePowerModeHotkey &&
+            IsMiddleClickRecordingEnabled == other.IsMiddleClickRecordingEnabled &&
+            MiddleClickActivationDelayMilliseconds == other.MiddleClickActivationDelayMilliseconds &&
             AudioInputDeviceNumber == other.AudioInputDeviceNumber &&
             AudioInputDeviceName == other.AudioInputDeviceName &&
             AudioInputEndpointId == other.AudioInputEndpointId &&
@@ -193,6 +197,8 @@ public sealed record AppSettings
         hash.Add(QuickAddDictionaryHotkey);
         hash.Add(ToggleEnhancementHotkey);
         hash.Add(CyclePowerModeHotkey);
+        hash.Add(IsMiddleClickRecordingEnabled);
+        hash.Add(MiddleClickActivationDelayMilliseconds);
         hash.Add(AudioInputDeviceNumber);
         hash.Add(AudioInputDeviceName);
         hash.Add(AudioInputEndpointId);

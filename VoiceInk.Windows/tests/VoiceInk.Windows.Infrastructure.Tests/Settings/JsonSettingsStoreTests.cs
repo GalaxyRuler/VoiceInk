@@ -29,6 +29,8 @@ public sealed class JsonSettingsStoreTests
         Assert.True(reloaded.IsVadEnabled);
         Assert.True(reloaded.IsTextFormattingEnabled);
         Assert.True(reloaded.AppendTrailingSpace);
+        Assert.False(reloaded.IsMiddleClickRecordingEnabled);
+        Assert.Equal(200, reloaded.MiddleClickActivationDelayMilliseconds);
         Assert.Equal("en", reloaded.Language);
     }
 
@@ -69,6 +71,8 @@ public sealed class JsonSettingsStoreTests
             QuickAddDictionaryHotkey = "Ctrl+Alt+D",
             ToggleEnhancementHotkey = "Ctrl+Alt+X",
             CyclePowerModeHotkey = "Ctrl+Alt+P",
+            IsMiddleClickRecordingEnabled = true,
+            MiddleClickActivationDelayMilliseconds = 350,
             AudioInputDeviceNumber = 2,
             AudioInputDeviceName = "USB Microphone",
             AudioInputEndpointId = "endpoint-usb",
