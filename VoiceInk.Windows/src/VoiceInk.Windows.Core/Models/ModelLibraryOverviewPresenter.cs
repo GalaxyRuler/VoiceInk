@@ -82,7 +82,12 @@ public static class ModelLibraryOverviewPresenter
             "Expected Filename",
             "ggml-*.bin",
             "Whisper.cpp GGML models commonly use filenames such as ggml-base.en.bin.",
-            "Check import")
+            "Check import"),
+        new(
+            "Compatibility Check",
+            "GGML header",
+            "VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.",
+            "Preflight")
     ];
 
     private static IReadOnlyList<ModelLibraryActionRow> ActionRows(

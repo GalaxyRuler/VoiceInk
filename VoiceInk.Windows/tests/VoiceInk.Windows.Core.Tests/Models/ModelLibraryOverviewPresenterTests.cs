@@ -56,6 +56,13 @@ public sealed class ModelLibraryOverviewPresenterTests
                 Assert.Equal("ggml-*.bin", row.Value);
                 Assert.Equal("Whisper.cpp GGML models commonly use filenames such as ggml-base.en.bin.", row.Detail);
                 Assert.Equal("Check import", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Compatibility Check", row.Title);
+                Assert.Equal("GGML header", row.Value);
+                Assert.Equal("VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.", row.Detail);
+                Assert.Equal("Preflight", row.StatusBadge);
             });
         Assert.Collection(
             presentation.ActionRows,
@@ -87,6 +94,25 @@ public sealed class ModelLibraryOverviewPresenterTests
                 Assert.Equal("Warmup becomes available once the default model path is usable.", row.Detail);
                 Assert.Equal("Waiting", row.StatusBadge);
             });
+    }
+
+    [Fact]
+    public void Present_ShowsCompatibilityCheckGuidance()
+    {
+        var items = LocalWhisperModelService.BuildCatalogItems([], currentModelPath: string.Empty);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [],
+            selectedModelPath: string.Empty,
+            unavailableImportedModelCount: 0);
+
+        Assert.Contains(
+            presentation.StorageGuidanceRows,
+            row => row.Title == "Compatibility Check"
+                && row.Value == "GGML header"
+                && row.Detail == "VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models."
+                && row.StatusBadge == "Preflight");
     }
 
     [Fact]
