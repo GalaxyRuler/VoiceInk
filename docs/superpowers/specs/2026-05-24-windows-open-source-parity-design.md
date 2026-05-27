@@ -925,10 +925,11 @@ Implemented:
 - Missing saved device fallback to System Default with a status warning.
 - Live Core Audio endpoint-change refresh while idle, with deferred refresh during recording/processing.
 - Endpoint-ID backed custom and prioritized matching while retaining WaveIn device numbers for capture.
+- Device Health rows show readable endpoint IDs for current physical microphones so users can distinguish renamed or same-named Windows input endpoints.
 
 Windows gaps:
 
-- Richer active/unavailable device health badges.
+- Richer visual polish and potential future WASAPI capture polish.
 
 Audio endpoint identity slice completed on 2026-05-26:
 
@@ -941,6 +942,12 @@ Audio input device health slice completed on 2026-05-26:
 - Added Core `AudioInputDeviceHealthPresenter` rows for System Default, active microphones, available microphones, and unavailable prioritized devices.
 - Added an Audio Input `Device Health` list so Windows users can see `Active`, `Available`, `Unavailable`, and `Default` badges without changing capture behavior.
 - Kept device-health logic local and deterministic; no telemetry, cloud probing, commercial support flow, or audio probing was added.
+
+Audio endpoint health details slice completed on 2026-05-27:
+
+- Appended readable Windows endpoint IDs to Device Health rows for physical Custom and Prioritized microphone rows.
+- Shortened long Core Audio endpoint IDs in the presenter so compact rows retain a recognizable prefix/suffix without overwhelming the UI.
+- Kept System Default, unavailable-priority, matching, recording, fallback, and persistence behavior unchanged.
 
 ### Onboarding
 

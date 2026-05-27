@@ -12,8 +12,8 @@ public sealed class AudioInputDeviceSelectionTests
         var choices = new[]
         {
             new AudioInputDeviceChoice(null, "System Default", 0),
-            new AudioInputDeviceChoice(0, "Built-in Microphone", 2),
-            new AudioInputDeviceChoice(2, "USB Microphone", 1)
+            new AudioInputDeviceChoice(0, "Built-in Microphone", 2, "endpoint-built-in"),
+            new AudioInputDeviceChoice(2, "USB Microphone", 1, "endpoint-usb")
         };
 
         var rows = AudioInputDeviceHealthPresenter.BuildRows(
@@ -37,7 +37,7 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("Built-in Microphone", row.Name);
                 Assert.Equal("Available", row.BadgeText);
                 Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
-                Assert.Equal("2 channels - Device 0", row.Detail);
+                Assert.Equal("2 channels - Device 0 - Endpoint endpoint-built-in", row.Detail);
                 Assert.False(row.IsSelected);
                 Assert.True(row.IsAvailable);
             },
@@ -46,7 +46,7 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("USB Microphone", row.Name);
                 Assert.Equal("Active", row.BadgeText);
                 Assert.Equal(AudioInputDeviceSelectionNoticeKind.Success, row.BadgeKind);
-                Assert.Equal("Selected for recordings - 1 channel - Device 2", row.Detail);
+                Assert.Equal("Selected for recordings - 1 channel - Device 2 - Endpoint endpoint-usb", row.Detail);
                 Assert.True(row.IsSelected);
                 Assert.True(row.IsAvailable);
             });
@@ -88,7 +88,7 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("USB Microphone", row.Name);
                 Assert.Equal("Active", row.BadgeText);
                 Assert.Equal(AudioInputDeviceSelectionNoticeKind.Success, row.BadgeKind);
-                Assert.Equal("Priority 2 - Selected fallback microphone - 1 channel - Device 1", row.Detail);
+                Assert.Equal("Priority 2 - Selected fallback microphone - 1 channel - Device 1 - Endpoint endpoint-usb", row.Detail);
                 Assert.True(row.IsSelected);
                 Assert.True(row.IsAvailable);
             });
@@ -115,7 +115,31 @@ public sealed class AudioInputDeviceSelectionTests
 
         var row = Assert.Single(rows);
         Assert.Equal("Active", row.BadgeText);
-        Assert.Equal("Priority 1 - Selected microphone - 1 channel - Device 2", row.Detail);
+        Assert.Equal("Priority 1 - Selected microphone - 1 channel - Device 2 - Endpoint endpoint-dock", row.Detail);
+    }
+
+    [Fact]
+    public void DeviceHealthRows_TruncateLongEndpointIdentifiers()
+    {
+        var choices = new[]
+        {
+            new AudioInputDeviceChoice(null, "System Default", 0),
+            new AudioInputDeviceChoice(
+                3,
+                "Conference Microphone",
+                1,
+                "{0.0.1.00000000}.{a3b9fba0-1e2f-4c21-a123-123456789abc}")
+        };
+
+        var rows = AudioInputDeviceHealthPresenter.BuildRows(
+            choices,
+            choices[1],
+            [],
+            AudioInputModeSettings.Custom);
+
+        Assert.Equal(
+            "Selected for recordings - 1 channel - Device 3 - Endpoint {0.0.1.0...789abc}",
+            rows[1].Detail);
     }
 
     [Fact]

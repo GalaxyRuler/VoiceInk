@@ -99,7 +99,7 @@ public static class AudioInputDeviceHealthPresenter
 
         return new AudioInputDeviceHealthRow(
             choice.Name,
-            $"{(isSelected ? "Selected for recordings - " : string.Empty)}{ChannelText(choice.Channels)} - Device {choice.DeviceNumber}",
+            $"{(isSelected ? "Selected for recordings - " : string.Empty)}{ChannelText(choice.Channels)} - Device {choice.DeviceNumber}{EndpointText(choice.EndpointId)}",
             isSelected ? "Active" : "Available",
             isSelected ? AudioInputDeviceSelectionNoticeKind.Success : AudioInputDeviceSelectionNoticeKind.Info,
             isSelected,
@@ -117,7 +117,7 @@ public static class AudioInputDeviceHealthPresenter
             : "Selected fallback microphone";
         return new AudioInputDeviceHealthRow(
             choice.Name,
-            $"Priority {priorityNumber} - {(isSelected ? selectedDescription : "Available microphone")} - {ChannelText(choice.Channels)} - Device {choice.DeviceNumber}",
+            $"Priority {priorityNumber} - {(isSelected ? selectedDescription : "Available microphone")} - {ChannelText(choice.Channels)} - Device {choice.DeviceNumber}{EndpointText(choice.EndpointId)}",
             isSelected ? "Active" : "Available",
             isSelected ? AudioInputDeviceSelectionNoticeKind.Success : AudioInputDeviceSelectionNoticeKind.Info,
             isSelected,
@@ -150,4 +150,22 @@ public static class AudioInputDeviceHealthPresenter
 
     private static string ChannelText(int channels) =>
         $"{channels} channel{(channels == 1 ? string.Empty : "s")}";
+
+    private static string EndpointText(string? endpointId)
+    {
+        if (string.IsNullOrWhiteSpace(endpointId))
+        {
+            return string.Empty;
+        }
+
+        return $" - Endpoint {ShortEndpointId(endpointId)}";
+    }
+
+    private static string ShortEndpointId(string endpointId)
+    {
+        var trimmedEndpointId = endpointId.Trim();
+        return trimmedEndpointId.Length <= 18
+            ? trimmedEndpointId
+            : $"{trimmedEndpointId[..8]}...{trimmedEndpointId[^7..]}";
+    }
 }
