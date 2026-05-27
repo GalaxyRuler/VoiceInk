@@ -7,11 +7,24 @@ public sealed record PowerModePagePresentation(
     string MatchGuidance,
     string OverrideGuidance,
     string SessionGuidance,
+    IReadOnlyList<PowerModeSetupRowPresentation> SetupRows,
     string CountLabel,
     bool IsEmpty,
     string EmptyTitle,
     string EmptyDescription,
     IReadOnlyList<PowerModeRuleRowPresentation> RuleRows);
+
+public sealed record PowerModeSetupRowPresentation(
+    string Title,
+    string Value,
+    string Detail)
+{
+    public string AccessibleName =>
+        string.Join(
+            ", ",
+            new[] { Title, Value, Detail }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
+}
 
 public sealed record PowerModeRuleRowPresentation(
     Guid Id,
@@ -46,12 +59,33 @@ public static class PowerModePagePresenter
             "Specific process, title, and sanitized URL rules are checked in list order; separate multiple app, title, or URL alternatives with semicolons or new lines.",
             "Rule overrides temporarily layer over Settings while the selected Power Mode is active; blank override fields keep the current Settings value.",
             "Automatic matches and manual selections are resolved for each recording, so rule overrides do not rewrite your base Settings.",
+            SetupRows(),
             isEmpty ? "0 Power Modes" : $"{total} {Pluralize(total, "Power Mode", "Power Modes")} ({enabled} enabled, {disabled} disabled)",
             isEmpty,
             isEmpty ? "No Power Modes Yet" : string.Empty,
             isEmpty ? "Create your first power mode to automate your VoiceInk workflow based on apps and websites." : string.Empty,
             rules.Select(PresentRuleRow).ToArray());
     }
+
+    private static PowerModeSetupRowPresentation[] SetupRows() =>
+    [
+        new(
+            "Targets",
+            "Process, title, URL",
+            "Rules match active app, window title, or sanitized browser URL in list order."),
+        new(
+            "Overrides",
+            "Model, language, prompt, cleanup",
+            "Blank fields keep current Settings; filled fields apply only while the rule is selected or matched."),
+        new(
+            "Shortcuts",
+            "Global cycle and direct rule slots",
+            "Use the cycle shortcut, tray menu, recorder picker, or direct rule shortcut to switch modes."),
+        new(
+            "Session",
+            "Temporary per-recording preferences",
+            "Automatic and manual selections are resolved at recording time and do not rewrite base Settings.")
+    ];
 
     private static PowerModeRuleRowPresentation PresentRuleRow(PowerModeRule rule) =>
         new(

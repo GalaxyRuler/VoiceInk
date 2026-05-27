@@ -923,6 +923,25 @@
                             x:Name="PowerModeSessionGuidanceTextBlock"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />
+                        <ListView
+                            x:Name="PowerModeSetupListView"
+                            IsItemClickEnabled="False"
+                            SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        Padding="0,4"
+                                        AutomationProperties.Name="{Binding AccessibleName}">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                                        <TextBlock
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Detail}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
                         <CheckBox
                             x:Name="PowerModeMasterCheckBox"
                             Content="Enable Power Mode"

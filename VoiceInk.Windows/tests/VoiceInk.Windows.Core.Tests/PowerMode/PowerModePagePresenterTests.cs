@@ -30,6 +30,31 @@ public sealed class PowerModePagePresenterTests
         Assert.Equal(
             "Automatic matches and manual selections are resolved for each recording, so rule overrides do not rewrite your base Settings.",
             presentation.SessionGuidance);
+        Assert.Collection(
+            presentation.SetupRows,
+            row =>
+            {
+                Assert.Equal("Targets", row.Title);
+                Assert.Equal("Process, title, URL", row.Value);
+                Assert.Equal(
+                    "Targets, Process, title, URL, Rules match active app, window title, or sanitized browser URL in list order.",
+                    row.AccessibleName);
+            },
+            row =>
+            {
+                Assert.Equal("Overrides", row.Title);
+                Assert.Equal("Model, language, prompt, cleanup", row.Value);
+            },
+            row =>
+            {
+                Assert.Equal("Shortcuts", row.Title);
+                Assert.Equal("Global cycle and direct rule slots", row.Value);
+            },
+            row =>
+            {
+                Assert.Equal("Session", row.Title);
+                Assert.Equal("Temporary per-recording preferences", row.Value);
+            });
         Assert.Equal("2 Power Modes (1 enabled, 1 disabled)", presentation.CountLabel);
         Assert.False(presentation.IsEmpty);
         Assert.Equal(string.Empty, presentation.EmptyTitle);

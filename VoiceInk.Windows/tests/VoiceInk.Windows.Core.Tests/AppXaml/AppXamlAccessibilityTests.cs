@@ -101,6 +101,7 @@ public sealed class AppXamlAccessibilityTests
     [InlineData("SettingsActionSummaryListView")]
     [InlineData("SettingsPreferenceSummaryListView")]
     [InlineData("SettingsBackupGuidanceListView")]
+    [InlineData("PowerModeSetupListView")]
     [InlineData("MetricsDashboardCardsListView")]
     [InlineData("MetricsDataGuidanceListView")]
     [InlineData("MetricsActionListView")]

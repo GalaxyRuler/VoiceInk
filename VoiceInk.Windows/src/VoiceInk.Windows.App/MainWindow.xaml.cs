@@ -8176,6 +8176,7 @@ public sealed partial class MainWindow : Window
         PowerModeMatchGuidanceTextBlock.Text = presentation.MatchGuidance;
         PowerModeOverrideGuidanceTextBlock.Text = presentation.OverrideGuidance;
         PowerModeSessionGuidanceTextBlock.Text = presentation.SessionGuidance;
+        PowerModeSetupListView.ItemsSource = presentation.SetupRows;
         PowerModeCountTextBlock.Text = presentation.CountLabel;
         PowerModeEmptyTextBlock.Text = presentation.IsEmpty
             ? $"{presentation.EmptyTitle}. {presentation.EmptyDescription}"
