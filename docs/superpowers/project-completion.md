@@ -14,7 +14,7 @@ VoiceInk Windows parity  [###################-] 96%
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 91% | `[##################--]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
+| Core dictation pipeline | 92% | `[##################--]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
 | Shell and tray | 89% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 93% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. More streaming providers and final visual polish remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; default-off middle-click recording with activation delay parity, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Homelab route hardening  [####################] 100%
+VAD threshold parity  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows Homelab route-hardening spec and implementation plan.
-- Added packaging asset coverage for `.codex/homelab-runner.json`, allowed classes, preferred routes, profile paths, dry-run-only mode, no-network mode, and disabled live execution.
-- Fixed the headless preferred route from `container` to `headless`.
-- Ran focused Homelab metadata tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows VAD threshold parity spec and implementation plan.
+- Added synthetic WAV boundary tests showing that 200 ms voiced bursts are not enough by default, 250 ms bursts pass, and explicit shorter thresholds still work.
+- Changed the Windows WAV VAD default minimum speech duration from 150 ms to the macOS whisper.cpp value of 250 ms.
+- Ran focused VAD tests, dictation controller tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

@@ -8,7 +8,7 @@ public sealed class WavVoiceActivityDetector(
     int amplitudeThreshold = 500,
     TimeSpan? minimumSpeechDuration = null) : IVoiceActivityDetector
 {
-    private readonly TimeSpan minimumSpeechDuration = minimumSpeechDuration ?? TimeSpan.FromMilliseconds(150);
+    private readonly TimeSpan minimumSpeechDuration = minimumSpeechDuration ?? TimeSpan.FromMilliseconds(250);
 
     public Task<VoiceActivityResult> AnalyzeAsync(
         AudioCaptureResult audio,

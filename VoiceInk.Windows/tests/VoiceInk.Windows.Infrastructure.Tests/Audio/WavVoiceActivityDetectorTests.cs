@@ -35,7 +35,42 @@ public sealed class WavVoiceActivityDetectorTests
             CancellationToken.None);
 
         Assert.True(result.HasSpeech);
-        Assert.True(result.SpeechDuration >= TimeSpan.FromMilliseconds(200));
+        Assert.True(result.SpeechDuration >= TimeSpan.FromMilliseconds(250));
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_ReturnsNoSpeechForDefaultTwoHundredMillisecondBurst()
+    {
+        using var temp = new TempWavFile();
+        var samples = Enumerable.Range(0, 16000)
+            .Select(index => index < 3200 ? (short)3000 : (short)0);
+        temp.WritePcm16(samples);
+        var detector = new WavVoiceActivityDetector();
+
+        var result = await detector.AnalyzeAsync(
+            new AudioCaptureResult(temp.Path, TimeSpan.FromSeconds(1), 16000, 1),
+            CancellationToken.None);
+
+        Assert.False(result.HasSpeech);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), result.SpeechDuration);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_UsesExplicitMinimumSpeechDurationOverride()
+    {
+        using var temp = new TempWavFile();
+        var samples = Enumerable.Range(0, 16000)
+            .Select(index => index < 3200 ? (short)3000 : (short)0);
+        temp.WritePcm16(samples);
+        var detector = new WavVoiceActivityDetector(
+            minimumSpeechDuration: TimeSpan.FromMilliseconds(150));
+
+        var result = await detector.AnalyzeAsync(
+            new AudioCaptureResult(temp.Path, TimeSpan.FromSeconds(1), 16000, 1),
+            CancellationToken.None);
+
+        Assert.True(result.HasSpeech);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), result.SpeechDuration);
     }
 
     [Fact]
