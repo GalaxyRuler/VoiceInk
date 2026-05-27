@@ -953,6 +953,7 @@ Implemented:
 - Local whisper model path selection with `.bin` picker.
 - Recommended local model download entry point.
 - Windows microphone privacy settings link and audio input selection.
+- Source-built desktop-app microphone access boundary guidance for cases where VoiceInk is not listed by name in Windows privacy settings.
 - Compact readiness summary rows for model, microphone, shortcut, and first dictation.
 - Action rows for model, microphone, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, and first dictation test.
@@ -993,6 +994,12 @@ Onboarding setup actions slice completed on 2026-05-26:
 - Added Core onboarding setup action rows for choose/download model, check microphone, set shortcut, and try dictation.
 - Rendered the action rows inside the first-run setup dialog and refreshed them with model, shortcut, and microphone state changes.
 - Kept onboarding save, skip, recommended model download, microphone refresh, and shortcut behavior unchanged.
+
+Onboarding desktop microphone boundary slice completed on 2026-05-27:
+
+- Clarified that source-built VoiceInk may rely on Windows desktop-app microphone access even when it is not listed by name.
+- Updated onboarding checklist, setup summary, and manual privacy action wording to point users at both Microphone access and desktop-app access.
+- Preserved the existing behavior that onboarding never changes Windows privacy settings automatically.
 
 ### Packaging
 
