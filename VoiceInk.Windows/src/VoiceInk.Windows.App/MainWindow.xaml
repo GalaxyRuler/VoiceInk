@@ -1059,6 +1059,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <CheckBox
                                         x:Name="PowerModeAppendTrailingSpaceCheckBox"
@@ -1079,6 +1080,11 @@
                                         x:Name="PowerModeLowercaseCheckBox"
                                         Grid.Column="3"
                                         Content="Lowercase"
+                                        IsThreeState="True" />
+                                    <CheckBox
+                                        x:Name="PowerModeOcrContextCheckBox"
+                                        Grid.Column="4"
+                                        Content="Screen OCR"
                                         IsThreeState="True" />
                                 </Grid>
                                 <ComboBox

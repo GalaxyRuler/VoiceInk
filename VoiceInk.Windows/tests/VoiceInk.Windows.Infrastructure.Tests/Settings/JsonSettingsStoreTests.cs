@@ -126,6 +126,7 @@ public sealed class JsonSettingsStoreTests
                 {
                     Name = "Chat",
                     IsEnabled = true,
+                    UseOcrContextOverride = true,
                     Shortcut = "Ctrl+Alt+1"
                 }
             ]

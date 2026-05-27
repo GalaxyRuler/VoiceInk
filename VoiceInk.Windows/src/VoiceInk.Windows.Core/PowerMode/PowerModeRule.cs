@@ -17,6 +17,7 @@ public sealed record PowerModeRule
     public string? LanguageOverride { get; init; }
     public bool? IsEnhancementEnabledOverride { get; init; }
     public Guid? SelectedEnhancementPromptIdOverride { get; init; }
+    public bool? UseOcrContextOverride { get; init; }
     public bool? AppendTrailingSpaceOverride { get; init; }
     public bool? RemoveFillerWordsOverride { get; init; }
     public bool? IsTextFormattingEnabledOverride { get; init; }

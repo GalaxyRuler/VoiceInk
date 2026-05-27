@@ -7757,6 +7757,7 @@ public sealed partial class MainWindow : Window
         PowerModeRemoveFillerWordsCheckBox.IsChecked = rule?.RemoveFillerWordsOverride;
         PowerModeTextFormattingCheckBox.IsChecked = rule?.IsTextFormattingEnabledOverride;
         PowerModeLowercaseCheckBox.IsChecked = rule?.LowercaseTranscriptionOverride;
+        PowerModeOcrContextCheckBox.IsChecked = rule?.UseOcrContextOverride;
         PowerModePunctuationCleanupComboBox.SelectedIndex = rule?.PunctuationCleanupModeOverride switch
         {
             PunctuationCleanupMode.Keep => 1,
@@ -7791,6 +7792,7 @@ public sealed partial class MainWindow : Window
             RemoveFillerWordsOverride = PowerModeRemoveFillerWordsCheckBox.IsChecked,
             IsTextFormattingEnabledOverride = PowerModeTextFormattingCheckBox.IsChecked,
             LowercaseTranscriptionOverride = PowerModeLowercaseCheckBox.IsChecked,
+            UseOcrContextOverride = PowerModeOcrContextCheckBox.IsChecked,
             PunctuationCleanupModeOverride = SelectedPowerModePunctuationCleanupMode(),
             AutoSendKey = PowerModeAutoSendKeyPresenter.KeyForSelectedIndex(PowerModeAutoSendComboBox.SelectedIndex),
             Shortcut = PowerModeShortcutTextBox.Text.Trim()
@@ -8719,6 +8721,7 @@ public sealed partial class MainWindow : Window
         PowerModeRemoveFillerWordsCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeTextFormattingCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModeLowercaseCheckBox.IsEnabled = powerModeControlsEnabled;
+        PowerModeOcrContextCheckBox.IsEnabled = powerModeControlsEnabled;
         PowerModePunctuationCleanupComboBox.IsEnabled = powerModeControlsEnabled;
         PowerModeAutoSendComboBox.IsEnabled = powerModeControlsEnabled;
         PowerModeShortcutTextBox.IsEnabled = powerModeControlsEnabled;

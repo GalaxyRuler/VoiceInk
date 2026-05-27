@@ -100,6 +100,7 @@ public static class PowerModeMatcher
             Language = OverrideString(rule.LanguageOverride, settings.Language),
             IsEnhancementEnabled = rule.IsEnhancementEnabledOverride ?? settings.IsEnhancementEnabled,
             SelectedEnhancementPromptId = rule.SelectedEnhancementPromptIdOverride ?? settings.SelectedEnhancementPromptId,
+            UseOcrContext = rule.UseOcrContextOverride ?? settings.UseOcrContext,
             AppendTrailingSpace = rule.AppendTrailingSpaceOverride ?? settings.AppendTrailingSpace,
             RemoveFillerWords = rule.RemoveFillerWordsOverride ?? settings.RemoveFillerWords,
             IsTextFormattingEnabled = rule.IsTextFormattingEnabledOverride ?? settings.IsTextFormattingEnabled,

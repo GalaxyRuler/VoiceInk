@@ -108,6 +108,11 @@ public static class PowerModePagePresenter
             overrides.Add("prompt");
         }
 
+        if (rule.UseOcrContextOverride is not null)
+        {
+            overrides.Add("screen OCR");
+        }
+
         if (rule.AppendTrailingSpaceOverride is not null)
         {
             overrides.Add("trailing space");

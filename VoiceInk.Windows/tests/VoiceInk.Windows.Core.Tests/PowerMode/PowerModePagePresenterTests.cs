@@ -112,6 +112,7 @@ public sealed class PowerModePagePresenterTests
                 ModelPathOverride = @"C:\Models\ggml-base.en.bin",
                 LanguageOverride = "en",
                 IsEnhancementEnabledOverride = true,
+                UseOcrContextOverride = true,
                 AppendTrailingSpaceOverride = false,
                 AutoSendKey = PowerModeAutoSendKey.Enter,
                 Shortcut = "Ctrl+Alt+1"
@@ -121,7 +122,7 @@ public sealed class PowerModePagePresenterTests
         var row = Assert.Single(presentation.RuleRows);
         Assert.Equal("W Writing", row.Title);
         Assert.Equal("Process: WINWORD; URL: docs.example.com", row.TargetSummary);
-        Assert.Equal("5 overrides: model, language, enhancement, trailing space, auto-send", row.OverrideSummary);
+        Assert.Equal("6 overrides: model, language, enhancement, screen OCR, trailing space, auto-send", row.OverrideSummary);
         Assert.Equal("Shortcut: Ctrl+Alt+1", row.ShortcutSummary);
         Assert.Equal("Enabled", row.StatusBadge);
     }

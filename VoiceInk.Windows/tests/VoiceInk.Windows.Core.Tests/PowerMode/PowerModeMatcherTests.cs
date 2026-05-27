@@ -399,6 +399,35 @@ public sealed class PowerModeMatcherTests
         Assert.False(resolution.EffectiveSettings.IsEnhancementEnabled);
     }
 
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void Resolve_AppliesOcrContextOverrideWithoutChangingBaseSettings(
+        bool baseOcrContext,
+        bool ruleOcrContext)
+    {
+        var settings = BaseSettings() with
+        {
+            UseOcrContext = baseOcrContext,
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Visual Context",
+                    ProcessNamePattern = "code",
+                    UseOcrContextOverride = ruleOcrContext
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget("code", "Program.cs", 105));
+
+        Assert.Equal(ruleOcrContext, resolution.EffectiveSettings.UseOcrContext);
+        Assert.Equal(baseOcrContext, settings.UseOcrContext);
+    }
+
     [Fact]
     public void Resolve_WithMissingTargetFallsBackToBaseSettings()
     {
