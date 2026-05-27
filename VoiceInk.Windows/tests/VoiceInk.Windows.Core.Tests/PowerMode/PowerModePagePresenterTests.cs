@@ -126,4 +126,25 @@ public sealed class PowerModePagePresenterTests
         Assert.Equal("Shortcut: Ctrl+Alt+1", row.ShortcutSummary);
         Assert.Equal("Enabled", row.StatusBadge);
     }
+
+    [Fact]
+    public void Present_RuleRowsExposeAccessibleNames()
+    {
+        var presentation = PowerModePagePresenter.Present(
+        [
+            new PowerModeRule
+            {
+                Name = "Writing",
+                ProcessNamePattern = "WINWORD",
+                ModelPathOverride = @"C:\Models\ggml-base.en.bin",
+                Shortcut = "Ctrl+Alt+1",
+                IsEnabled = true
+            }
+        ]);
+
+        var row = Assert.Single(presentation.RuleRows);
+        Assert.Equal(
+            "Writing, Enabled, Process: WINWORD, 1 override: model, Shortcut: Ctrl+Alt+1",
+            row.AccessibleName);
+    }
 }

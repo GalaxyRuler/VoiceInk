@@ -19,7 +19,14 @@ public sealed record PowerModeRuleRowPresentation(
     string TargetSummary,
     string OverrideSummary,
     string ShortcutSummary,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName =>
+        string.Join(
+            ", ",
+            new[] { Title, StatusBadge, TargetSummary, OverrideSummary, ShortcutSummary }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
+}
 
 public static class PowerModePagePresenter
 {
