@@ -742,6 +742,12 @@ Metrics action summary slice completed on 2026-05-26:
 - Kept metrics storage, CSV export, model performance queries, reset confirmation, and privacy behavior unchanged.
 - Kept metrics persistence, aggregation, CSV export, reset, and model-performance queries unchanged.
 
+Metrics realtime status slice completed on 2026-05-27:
+
+- Updated Windows transcription model-performance rows to show the macOS-style `Faster than Real-time` or `Slower than Real-time` status from each model speed factor.
+- Added focused presenter coverage for both faster and slower transcription model rows.
+- Kept enhancement metrics, SQLite persistence, CSV export, reset, and diagnostics behavior unchanged.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.

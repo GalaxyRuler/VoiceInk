@@ -27,7 +27,7 @@ public static class ModelPerformancePresenter
                 $"{stat.SessionCount.ToString("N0", CultureInfo.CurrentCulture)} {Pluralize(stat.SessionCount, "session", "sessions")} - {stat.SpeedFactor:0.0}x realtime",
                 $"{SessionMetricsDashboardPresenter.FormatDuration(stat.AverageProcessingDuration)} avg processing; {SessionMetricsDashboardPresenter.FormatDuration(stat.AverageAudioDuration)} avg audio",
                 $"{stat.SpeedFactor:0.0}x",
-                "Transcription"))
+                stat.SpeedFactor >= 1 ? "Faster than Real-time" : "Slower than Real-time"))
             .ToArray();
 
         return rows.Length == 0

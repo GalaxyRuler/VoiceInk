@@ -26,8 +26,24 @@ public sealed class ModelPerformancePresenterTests
             Assert.Equal("3 sessions - 4.2x realtime", row.Subtitle);
             Assert.Equal("3s avg processing; 12s avg audio", row.Detail);
             Assert.Equal("4.2x", row.PrimaryValue);
-            Assert.Equal("Transcription", row.StatusBadge);
+            Assert.Equal("Faster than Real-time", row.StatusBadge);
         });
+    }
+
+    [Fact]
+    public void PresentTranscription_WithSlowStats_ShowsSlowerThanRealtimeStatus()
+    {
+        var stat = new ModelPerformanceStat(
+            "large-local",
+            SessionCount: 1,
+            TotalProcessingDuration: TimeSpan.FromSeconds(30),
+            AverageProcessingDuration: TimeSpan.FromSeconds(30),
+            AverageAudioDuration: TimeSpan.FromSeconds(12),
+            SpeedFactor: 0.4);
+
+        var row = Assert.Single(ModelPerformancePresenter.PresentTranscription([stat]));
+
+        Assert.Equal("Slower than Real-time", row.StatusBadge);
     }
 
     [Fact]
