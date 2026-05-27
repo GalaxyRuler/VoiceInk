@@ -37,6 +37,19 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Prepare evidence directory
+        shell: pwsh
+        run: |
+          $evidenceRoot = "VoiceInk.Windows\artifacts\gha-installer-smoke"
+          New-Item -ItemType Directory -Force -Path $evidenceRoot | Out-Null
+          @(
+            "VoiceInk Windows installer smoke evidence"
+            "Signed package path: ${{ inputs.signed_package_path }}"
+            "App Installer path: ${{ inputs.appinstaller_path }}"
+            "Install smoke executed: ${{ inputs.execute_install_smoke }}"
+            "No signing certificates are created or imported by this workflow."
+          ) | Set-Content -LiteralPath (Join-Path $evidenceRoot "installer-smoke-summary.txt") -Encoding UTF8
+
       - name: Validate signed MSIX package contents
         shell: pwsh
         run: |
@@ -70,3 +83,12 @@ jobs:
         run: |
           Write-Host "No signing certificates are created or imported by this workflow."
           Write-Host "The install step runs only when execute_install_smoke is true on a disposable self-hosted Windows runner."
+
+      - name: Upload installer smoke evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-smoke-evidence
+          path: VoiceInk.Windows\artifacts\gha-installer-smoke
+          if-no-files-found: warn
+          include-hidden-files: false

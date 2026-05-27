@@ -368,11 +368,18 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("signed_package_path", workflow);
         Assert.Contains("main_package_uri", workflow);
         Assert.Contains("No signing certificates are created or imported by this workflow", workflow);
+        Assert.Contains("VoiceInk.Windows\\artifacts\\gha-installer-smoke", workflow);
+        Assert.Contains("installer-smoke-summary.txt", workflow);
+        Assert.Contains("actions/upload-artifact@v4", workflow);
+        Assert.Contains("installer-smoke-evidence", workflow);
+        Assert.Contains("if: ${{ always() }}", workflow);
+        Assert.Contains("include-hidden-files: false", workflow);
 
         Assert.DoesNotContain("New-SelfSignedCertificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("cert:\\", workflow, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(".pfx", workflow, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
