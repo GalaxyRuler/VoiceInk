@@ -274,7 +274,7 @@ public static class EnhancementContextReadinessPresenter
         new(
             "OCR Language Support",
             "Windows recognizers",
-            "Screen text recognition uses local Windows OCR language support; unsupported languages may produce empty or partial context.",
+            "Screen text recognition uses installed Windows OCR language packs; add missing packs in Windows Settings if unsupported languages produce empty or partial context.",
             "Local");
 
     private static EnhancementContextPrivacyRow OcrCaptureConsentRow() =>

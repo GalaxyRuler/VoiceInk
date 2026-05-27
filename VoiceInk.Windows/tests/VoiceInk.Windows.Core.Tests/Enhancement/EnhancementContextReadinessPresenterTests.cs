@@ -214,7 +214,7 @@ public sealed class EnhancementContextReadinessPresenterTests
             presentation.PrivacyRows,
             row => row.Title == "OCR Language Support"
                 && row.Value == "Windows recognizers"
-                && row.Detail == "Screen text recognition uses local Windows OCR language support; unsupported languages may produce empty or partial context."
+                && row.Detail == "Screen text recognition uses installed Windows OCR language packs; add missing packs in Windows Settings if unsupported languages produce empty or partial context."
                 && row.StatusBadge == "Local");
     }
 
