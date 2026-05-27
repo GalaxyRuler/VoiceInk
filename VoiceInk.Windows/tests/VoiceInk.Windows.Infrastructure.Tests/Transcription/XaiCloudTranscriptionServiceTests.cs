@@ -51,6 +51,50 @@ public sealed class XaiCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsSafeEndpointQueryOptionsToMultipartFields()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"text":"Advanced"}"""));
+        var service = new XaiCloudTranscriptionService(new HttpClient(handler), new FakeSecretStore { Secret = "xai-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(
+                endpoint: "https://api.x.ai/v1/stt?temperature=0.2&diarize=true&file=ignored&model=ignored&language=ignored",
+                language: "en"),
+            CancellationToken.None);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("https://api.x.ai/v1/stt", request.RequestUri?.ToString());
+        Assert.Contains("name=temperature", handler.Bodies[0]);
+        Assert.Contains("0.2", handler.Bodies[0]);
+        Assert.Contains("name=diarize", handler.Bodies[0]);
+        Assert.Contains("true", handler.Bodies[0]);
+        Assert.Contains("name=model", handler.Bodies[0]);
+        Assert.Contains("grok-stt", handler.Bodies[0]);
+        Assert.Contains("name=language", handler.Bodies[0]);
+        Assert.Contains("en", handler.Bodies[0]);
+        Assert.DoesNotContain("ignored", handler.Bodies[0]);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_RejectsSecretEndpointQueryBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new XaiCloudTranscriptionService(new HttpClient(handler), new FakeSecretStore { Secret = "xai-test-secret" });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://api.x.ai/v1/stt?api_key=leaked"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -81,8 +125,10 @@ public sealed class XaiCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
-        new(string.Empty, language, string.Empty, TranscriptionProviderKind.OpenAICompatible, "https://api.x.ai/v1/stt", "grok-stt", "xai");
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://api.x.ai/v1/stt") =>
+        new(string.Empty, language, string.Empty, TranscriptionProviderKind.OpenAICompatible, endpoint, "grok-stt", "xai");
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json) =>
         new(statusCode) { Content = new StringContent(json) };
