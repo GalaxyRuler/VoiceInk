@@ -137,6 +137,13 @@ public sealed class SettingsSectionPresenterTests
             },
             row =>
             {
+                Assert.Equal("Recent Events", row.Title);
+                Assert.Equal("Bounded", row.Value);
+                Assert.Equal("Diagnostics summary includes recent sanitized VoiceInk status events, not an unlimited activity log.", row.Detail);
+                Assert.Equal("Recent only", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Windows App Diagnostics", row.Title);
                 Assert.Equal("OS controlled", row.Value);
                 Assert.Equal("Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.", row.Detail);
@@ -170,6 +177,19 @@ public sealed class SettingsSectionPresenterTests
             presentation.Sections,
             section => section.Title == "Diagnostics"
                 && section.Description == "Export local logs for troubleshooting without sending telemetry.");
+    }
+
+    [Fact]
+    public void Present_ShowsBoundedDiagnosticsSummaryGuidance()
+    {
+        var presentation = SettingsSectionPresenter.Present();
+
+        Assert.Contains(
+            presentation.DiagnosticsGuidanceRows,
+            row => row.Title == "Recent Events"
+                && row.Value == "Bounded"
+                && row.Detail == "Diagnostics summary includes recent sanitized VoiceInk status events, not an unlimited activity log."
+                && row.StatusBadge == "Recent only");
     }
 
     [Fact]

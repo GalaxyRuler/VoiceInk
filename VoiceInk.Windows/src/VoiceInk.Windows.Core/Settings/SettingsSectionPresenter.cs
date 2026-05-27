@@ -145,6 +145,11 @@ public static class SettingsSectionPresenter
             "Copied diagnostics exclude API keys and credential values.",
             "No secrets"),
         new(
+            "Recent Events",
+            "Bounded",
+            "Diagnostics summary includes recent sanitized VoiceInk status events, not an unlimited activity log.",
+            "Recent only"),
+        new(
             "Windows App Diagnostics",
             "OS controlled",
             "Windows privacy settings control app-diagnostics access outside VoiceInk's local logs.",
