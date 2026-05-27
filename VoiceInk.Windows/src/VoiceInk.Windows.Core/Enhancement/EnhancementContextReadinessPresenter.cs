@@ -227,10 +227,18 @@ public static class EnhancementContextReadinessPresenter
         if (settings.UseOcrContext)
         {
             rows.Add(OcrCaptureScopeRow(settings));
+            rows.Add(OcrCaptureConsentRow());
         }
 
         return rows;
     }
+
+    private static EnhancementContextPrivacyRow OcrCaptureConsentRow() =>
+        new(
+            "Windows Capture Consent",
+            "System controlled",
+            "Windows may show capture consent UI or a visible capture border; VoiceInk only uses the captured image for local OCR during enhancement.",
+            "Visible");
 
     private static EnhancementContextPrivacyRow OcrCaptureScopeRow(AppSettings settings)
     {

@@ -130,6 +130,12 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "Full screen"
                 && row.Detail == "Visible screen text can be captured locally before prompt rendering."
                 && row.StatusBadge == "Local OCR");
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Windows Capture Consent"
+                && row.Value == "System controlled"
+                && row.Detail == "Windows may show capture consent UI or a visible capture border; VoiceInk only uses the captured image for local OCR during enhancement."
+                && row.StatusBadge == "Visible");
     }
 
     [Fact]
