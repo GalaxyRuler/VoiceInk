@@ -23,7 +23,9 @@ public static class OnboardingSetupStatusService
                 $"Primary shortcut: {ReadyText(hasPrimaryShortcut)}",
                 $"Microphone device: {ReadyText(hasAudioInputChoices)}",
                 "Windows microphone privacy: review if recording fails",
-                "App microphone capability: declared"
+                "App microphone capability: declared",
+                "Text insertion: focused field and clipboard paste path explained",
+                "Context awareness: optional and off by default during setup"
             ]);
     }
 

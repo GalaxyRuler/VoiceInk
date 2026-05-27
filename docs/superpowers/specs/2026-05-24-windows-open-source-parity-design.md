@@ -1122,6 +1122,7 @@ Implemented:
 - Action rows for model, microphone, manual privacy, text insertion, context awareness, shortcut, and first dictation.
 - Progress-aware readiness checklist covering model, shortcut, microphone, microphone privacy, text insertion, context awareness, and first dictation test.
 - Presenter-backed current-step focus panel for the next required/advisory onboarding stage.
+- Health summary rows for text insertion and optional context awareness.
 - Primary shortcut setup, basic try-it instructions, Settings reset, and a post-onboarding Permissions page.
 
 Windows gaps:
@@ -1183,6 +1184,12 @@ Onboarding current-step focus slice completed on 2026-05-27:
 - Added presenter-backed current-step label, title, description, status, and UI Automation name derived from the first setup stage needing attention, then advisory, then ready.
 - Rendered the current-step summary near the top of the first-run dialog so the Windows flow is closer to the macOS guided welcome/permissions/model/tutorial sequence.
 - Kept onboarding completion rules, settings persistence, model selection/download, microphone refresh, shortcut editing, and tutorial steps unchanged.
+
+Onboarding health summary slice completed on 2026-05-27:
+
+- Added health summary rows for the focused-field and clipboard paste insertion path.
+- Added a default-off context-awareness health summary row.
+- Kept both rows informational so setup completion rules and OS privacy boundaries remain unchanged.
 
 ### Packaging
 

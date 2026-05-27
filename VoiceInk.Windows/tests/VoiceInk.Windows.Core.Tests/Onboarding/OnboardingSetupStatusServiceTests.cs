@@ -67,4 +67,19 @@ public sealed class OnboardingSetupStatusServiceTests
         Assert.False(status.CanCompleteSetup);
         Assert.Contains("Primary shortcut: needs attention", status.HealthSummary);
     }
+
+    [Fact]
+    public void Build_HealthSummaryIncludesInsertionAndContextReadiness()
+    {
+        var status = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Hotkey = "Ctrl+Alt+Space"
+            },
+            hasAudioInputChoices: true);
+
+        Assert.Contains("Text insertion: focused field and clipboard paste path explained", status.HealthSummary);
+        Assert.Contains("Context awareness: optional and off by default during setup", status.HealthSummary);
+    }
 }
