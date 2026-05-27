@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -30,6 +31,14 @@ public sealed class AssemblyAICloudTranscriptionService(
             throw new InvalidOperationException("Cloud transcription model is required.");
         }
 
+        if (!TranscriptionConfiguration.TryCreateCloudEndpoint(
+            options.CloudEndpoint,
+            out var endpoint,
+            out var endpointError))
+        {
+            throw new InvalidOperationException(endpointError);
+        }
+
         var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken)
             .ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -39,7 +48,7 @@ public sealed class AssemblyAICloudTranscriptionService(
 
         var startedAt = Stopwatch.GetTimestamp();
         var uploadUrl = await UploadAudioAsync(audio, apiKey, cancellationToken).ConfigureAwait(false);
-        var transcriptId = await SubmitTranscriptAsync(uploadUrl, options, apiKey, cancellationToken)
+        var transcriptId = await SubmitTranscriptAsync(uploadUrl, options, endpoint!, apiKey, cancellationToken)
             .ConfigureAwait(false);
         var text = await PollTranscriptAsync(transcriptId, apiKey, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(text))
@@ -79,6 +88,7 @@ public sealed class AssemblyAICloudTranscriptionService(
     private async Task<string> SubmitTranscriptAsync(
         string uploadUrl,
         TranscriptionOptions options,
+        Uri endpoint,
         string apiKey,
         CancellationToken cancellationToken)
     {
@@ -99,6 +109,11 @@ public sealed class AssemblyAICloudTranscriptionService(
         if (!string.IsNullOrWhiteSpace(options.Prompt))
         {
             payload["prompt"] = options.Prompt;
+        }
+
+        foreach (var option in EndpointQueryOptions(endpoint))
+        {
+            payload.TryAdd(option.Name, option.Value);
         }
 
         message.Content = new StringContent(
@@ -172,6 +187,63 @@ public sealed class AssemblyAICloudTranscriptionService(
 
         return null;
     }
+
+    private static IEnumerable<(string Name, object Value)> EndpointQueryOptions(Uri endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            yield break;
+        }
+
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedTranscriptPayloadNames.Any(
+                    reservedName => string.Equals(reservedName, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, TypedQueryValue(value));
+        }
+    }
+
+    private static object TypedQueryValue(string value)
+    {
+        if (bool.TryParse(value, out var booleanValue))
+        {
+            return booleanValue;
+        }
+
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue))
+        {
+            return integerValue;
+        }
+
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
+        {
+            return doubleValue;
+        }
+
+        return value;
+    }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " ", StringComparison.Ordinal));
+
+    private static readonly string[] ReservedTranscriptPayloadNames =
+    [
+        "audio_url",
+        "language_code",
+        "prompt",
+        "speech_model",
+        "speech_models"
+    ];
 
     private static async Task EnsureSuccessAsync(
         HttpResponseMessage response,

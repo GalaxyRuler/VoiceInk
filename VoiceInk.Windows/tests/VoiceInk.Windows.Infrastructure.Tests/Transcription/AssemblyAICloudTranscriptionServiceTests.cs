@@ -75,6 +75,30 @@ public sealed class AssemblyAICloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsEndpointQueryOptionsToTranscriptPayload()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"upload_url":"https://cdn.assemblyai.test/upload.wav"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"id":"transcript-123","status":"completed","text":"Diarized"}"""),
+            _ => JsonResponse(HttpStatusCode.OK, """{"id":"transcript-123","status":"completed","text":"Diarized"}"""));
+        var service = new AssemblyAICloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "aai-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://streaming.assemblyai.com/v3/ws?speaker_labels=true&format_text=false&speakers_expected=2"),
+            CancellationToken.None);
+
+        using var submitJson = JsonDocument.Parse(handler.Bodies[1]);
+        Assert.True(submitJson.RootElement.GetProperty("speaker_labels").GetBoolean());
+        Assert.False(submitJson.RootElement.GetProperty("format_text").GetBoolean());
+        Assert.Equal(2, submitJson.RootElement.GetProperty("speakers_expected").GetInt32());
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -89,6 +113,27 @@ public sealed class AssemblyAICloudTranscriptionServiceTests
             () => service.TranscribeAsync(Audio(audioFile.Path), Options(), CancellationToken.None));
 
         Assert.Contains("not configured", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_SecretBearingEndpointQueryFailsBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"upload_url":"unused"}"""));
+        var service = new AssemblyAICloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "aai-test-secret" },
+            pollDelay: TimeSpan.Zero);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://streaming.assemblyai.com/v3/ws?api_key=sk-query-secret"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
         Assert.Empty(handler.Requests);
     }
 
@@ -136,13 +181,14 @@ public sealed class AssemblyAICloudTranscriptionServiceTests
 
     private static TranscriptionOptions Options(
         string model = "universal-3-pro",
-        string language = "auto") =>
+        string language = "auto",
+        string endpoint = "https://streaming.assemblyai.com/v3/ws") =>
         new(
             ModelPath: string.Empty,
             language,
             Prompt: string.Empty,
             TranscriptionProviderKind.OpenAICompatible,
-            "https://streaming.assemblyai.com/v3/ws",
+            endpoint,
             model,
             CloudProviderId: "assemblyai");
 
