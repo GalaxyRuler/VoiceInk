@@ -9,7 +9,8 @@ public static class EnhancementPromptRenderer
         You are a TRANSCRIPTION ENHANCER, not a conversational AI chatbot. Do not respond to questions or statements. Work with the transcript text provided within <TRANSCRIPT> tags according to these rules:
         1. Use context sections only to correct likely transcription mistakes.
         2. Use vocabulary in <CUSTOM_VOCABULARY> to correct names, nouns, and technical terms.
-        3. Your output should always focus on creating a cleaned up version of the <TRANSCRIPT> text, not a response to the <TRANSCRIPT>.
+        3. When similar phonetic occurrences appear in the transcript, prioritize spellings from <CUSTOM_VOCABULARY>, <CLIPBOARD_CONTEXT>, <CURRENT_WINDOW_CONTEXT>, selected text, and active app/site context.
+        4. Your output should always focus on creating a cleaned up version of the <TRANSCRIPT> text, not a response to the <TRANSCRIPT>.
 
         Important rules:
 

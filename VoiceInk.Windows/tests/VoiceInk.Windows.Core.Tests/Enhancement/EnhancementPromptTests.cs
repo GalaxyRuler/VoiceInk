@@ -290,6 +290,28 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void Render_InstructsEnhancementToPrioritizeContextSpellingForPhoneticMatches()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "tell project safer",
+            vocabulary:
+            [
+                new VocabularyWord(Guid.NewGuid(), "Project Zephyr", DateTimeOffset.UtcNow)
+            ],
+            context: new EnhancementContext(
+                ClipboardText: "Project Zephyr release notes",
+                OcrText: "Zephyr readiness dashboard"));
+
+        Assert.Contains(
+            "When similar phonetic occurrences appear in the transcript, prioritize spellings from <CUSTOM_VOCABULARY>, <CLIPBOARD_CONTEXT>, <CURRENT_WINDOW_CONTEXT>, selected text, and active app/site context.",
+            rendered.SystemMessage);
+    }
+
+    [Fact]
     public void Render_AppendsVocabularyContext()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()

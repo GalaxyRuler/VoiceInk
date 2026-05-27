@@ -246,7 +246,7 @@ public sealed class TextEnhancementPipelineTests
 
         Assert.True(result.AttemptedEnhancement);
         Assert.Equal("Enhanced note.", result.FinalText);
-        Assert.DoesNotContain("<CLIPBOARD_CONTEXT>", provider.LastRequest!.SystemMessage);
+        Assert.DoesNotContain("</CLIPBOARD_CONTEXT>", provider.LastRequest!.SystemMessage);
     }
 
     [Fact]

@@ -602,6 +602,12 @@ Screenshot lifetime guidance slice completed on 2026-05-27:
 - Clarified that VoiceInk sends extracted text, not the captured image, when a cloud enhancement provider is selected.
 - Kept OCR capture, prompt rendering, provider selection, fallback, and history behavior unchanged.
 
+Context prompt spelling-priority slice completed on 2026-05-27:
+
+- Aligned the Windows enhancement system instructions with the macOS prompt rule that similar phonetic terms should prefer spellings from context sources.
+- Included custom vocabulary, clipboard context, current-window OCR context, selected text, and active app/site context in the priority guidance.
+- Kept Assistant Mode on its raw assistant instructions and did not add telemetry, provider fallback, or commercial behavior.
+
 Windows gaps:
 
 - Deeper context visual polish and permission diagnostics for edge-case Windows display/browser configurations.
