@@ -32,7 +32,8 @@ public static class PermissionsReadinessPresenter
                 hasAudioInputChoices ? "Audio input available" : "Check Windows microphone privacy",
                 hasAudioInputChoices,
                 "Open Windows Microphone Settings",
-                "ms-settings:privacy-microphone"),
+                "ms-settings:privacy-microphone",
+                "Manual path: Settings > Privacy & security > Microphone."),
             new PermissionReadinessItem(
                 "Text Insertion",
                 "Choose how VoiceInk inserts transcribed text at the cursor.",

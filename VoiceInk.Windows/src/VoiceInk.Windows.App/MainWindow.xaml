@@ -1274,6 +1274,10 @@
                                                 <TextBlock
                                                     Text="{Binding Status}"
                                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock
+                                                    Text="{Binding FallbackGuidance}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    TextWrapping="WrapWholeWords" />
                                             </StackPanel>
                                             <Button
                                                 Grid.Column="1"

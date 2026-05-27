@@ -6,4 +6,5 @@ public sealed record PermissionReadinessItem(
     string Status,
     bool IsReady,
     string ActionText,
-    string ActionTarget);
+    string ActionTarget,
+    string FallbackGuidance = "");

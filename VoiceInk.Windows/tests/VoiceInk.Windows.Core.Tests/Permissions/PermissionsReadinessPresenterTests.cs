@@ -38,6 +38,7 @@ public sealed class PermissionsReadinessPresenterTests
                 Assert.Equal("Audio input available", item.Status);
                 Assert.True(item.IsReady);
                 Assert.Equal("ms-settings:privacy-microphone", item.ActionTarget);
+                Assert.Equal("Manual path: Settings > Privacy & security > Microphone.", item.FallbackGuidance);
             },
             item =>
             {
