@@ -83,6 +83,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("Batch", TranscriptionProviderPresetCatalog.Groq.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Deepgram.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.AssemblyAI.StreamingDisplay);
+        Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.ElevenLabs.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Soniox.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Speechmatics.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Cartesia.StreamingDisplay);

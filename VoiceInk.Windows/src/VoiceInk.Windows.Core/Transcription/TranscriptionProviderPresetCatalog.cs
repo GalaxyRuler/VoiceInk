@@ -82,11 +82,11 @@ public static class TranscriptionProviderPresetCatalog
             "scribe_v2",
             "scribe_v1"
         ],
-        "ElevenLabs Scribe transcription with broad language coverage.",
+        "ElevenLabs Scribe transcription with broad language coverage and live recorder preview.",
         "Multilingual",
         "Very fast",
         "Very high",
-        "Batch");
+        "Realtime preview");
 
     public static TranscriptionProviderPreset Soniox { get; } = new(
         "soniox",

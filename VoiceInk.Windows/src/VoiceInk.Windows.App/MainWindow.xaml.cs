@@ -307,6 +307,9 @@ public sealed partial class MainWindow : Window
                 new AssemblyAILiveTranscriptionPreviewService(
                     secretStore,
                     () => new ClientStreamingWebSocket()),
+                new ElevenLabsLiveTranscriptionPreviewService(
+                    secretStore,
+                    () => new ClientStreamingWebSocket()),
                 new SonioxLiveTranscriptionPreviewService(
                     secretStore,
                     () => new ClientStreamingWebSocket()),
