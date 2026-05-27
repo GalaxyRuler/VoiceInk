@@ -48,6 +48,7 @@ public sealed record OnboardingTutorialStepPresentation(
 
 public sealed record OnboardingChecklistPresentation(
     string Title,
+    IReadOnlyList<string> HeroTaglines,
     string Description,
     string ProgressLabel,
     string NextAction,
@@ -228,6 +229,13 @@ public static class OnboardingChecklistPresenter
 
         return new OnboardingChecklistPresentation(
             "Welcome to VoiceInk",
+            [
+                "Welcome to the Future of Typing",
+                "A New Way to Type",
+                "Your Writing Assistant",
+                "Works everywhere on Windows with your shortcut",
+                "100% offline and private with local models"
+            ],
             "Set up your local model, microphone, and shortcut once, then dictate anywhere from the tray or keyboard.",
             $"{readyCount} of {items.Length} setup essentials ready",
             NextActionFor(status),

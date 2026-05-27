@@ -2390,6 +2390,11 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = TextWrapping.Wrap
         };
+        var onboardingHeroTextBlock = new TextBlock
+        {
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap
+        };
         var onboardingProgressTextBlock = new TextBlock
         {
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
@@ -2430,6 +2435,7 @@ public sealed partial class MainWindow : Window
         RefreshOnboardingStatus(
             statusTextBlock,
             onboardingDescriptionTextBlock,
+            onboardingHeroTextBlock,
             onboardingProgressTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
@@ -2450,6 +2456,7 @@ public sealed partial class MainWindow : Window
             audioInputComboBox,
             statusTextBlock,
             onboardingDescriptionTextBlock,
+            onboardingHeroTextBlock,
             onboardingProgressTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
@@ -2465,6 +2472,7 @@ public sealed partial class MainWindow : Window
         modelPathTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
             onboardingDescriptionTextBlock,
+            onboardingHeroTextBlock,
             onboardingProgressTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
@@ -2479,6 +2487,7 @@ public sealed partial class MainWindow : Window
         shortcutTextBox.TextChanged += (_, _) => RefreshOnboardingStatus(
             statusTextBlock,
             onboardingDescriptionTextBlock,
+            onboardingHeroTextBlock,
             onboardingProgressTextBlock,
             onboardingActionListView,
             onboardingSummaryListView,
@@ -2496,6 +2505,7 @@ public sealed partial class MainWindow : Window
             Spacing = 12
         };
         content.Children.Add(onboardingDescriptionTextBlock);
+        content.Children.Add(onboardingHeroTextBlock);
         content.Children.Add(onboardingProgressTextBlock);
         content.Children.Add(onboardingActionListView);
         content.Children.Add(onboardingSummaryListView);
@@ -3298,6 +3308,7 @@ public sealed partial class MainWindow : Window
         ComboBox audioInputComboBox,
         TextBlock statusTextBlock,
         TextBlock onboardingDescriptionTextBlock,
+        TextBlock onboardingHeroTextBlock,
         TextBlock onboardingProgressTextBlock,
         ListView onboardingActionListView,
         ListView onboardingSummaryListView,
@@ -3329,6 +3340,7 @@ public sealed partial class MainWindow : Window
             RefreshOnboardingStatus(
                 statusTextBlock,
                 onboardingDescriptionTextBlock,
+                onboardingHeroTextBlock,
                 onboardingProgressTextBlock,
                 onboardingActionListView,
                 onboardingSummaryListView,
@@ -3356,6 +3368,7 @@ public sealed partial class MainWindow : Window
     private void RefreshOnboardingStatus(
         TextBlock statusTextBlock,
         TextBlock? onboardingDescriptionTextBlock,
+        TextBlock? onboardingHeroTextBlock,
         TextBlock? onboardingProgressTextBlock,
         ListView? onboardingActionListView,
         ListView? onboardingSummaryListView,
@@ -3381,6 +3394,11 @@ public sealed partial class MainWindow : Window
         if (onboardingDescriptionTextBlock is not null)
         {
             onboardingDescriptionTextBlock.Text = presentation.Description;
+        }
+
+        if (onboardingHeroTextBlock is not null)
+        {
+            onboardingHeroTextBlock.Text = string.Join(Environment.NewLine, presentation.HeroTaglines);
         }
 
         if (onboardingProgressTextBlock is not null)

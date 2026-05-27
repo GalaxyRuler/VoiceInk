@@ -14,6 +14,15 @@ public sealed class OnboardingChecklistPresenterTests
         var presentation = OnboardingChecklistPresenter.Present(status);
 
         Assert.Equal("Welcome to VoiceInk", presentation.Title);
+        Assert.Equal(
+            [
+                "Welcome to the Future of Typing",
+                "A New Way to Type",
+                "Your Writing Assistant",
+                "Works everywhere on Windows with your shortcut",
+                "100% offline and private with local models"
+            ],
+            presentation.HeroTaglines);
         Assert.Equal("Set up your local model, microphone, and shortcut once, then dictate anywhere from the tray or keyboard.", presentation.Description);
         Assert.Equal("2 of 6 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
