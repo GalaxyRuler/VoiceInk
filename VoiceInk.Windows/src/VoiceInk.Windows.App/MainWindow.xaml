@@ -905,6 +905,10 @@
                                 x:Name="UsePowerModeTargetButton"
                                 Content="Use Active Window"
                                 Click="UsePowerModeTargetButton_Click" />
+                            <Button
+                                x:Name="AddPowerModeTargetButton"
+                                Content="Add Active Window"
+                                Click="AddPowerModeTargetButton_Click" />
                         </StackPanel>
                         <InfoBar
                             x:Name="PowerModeValidationInfoBar"

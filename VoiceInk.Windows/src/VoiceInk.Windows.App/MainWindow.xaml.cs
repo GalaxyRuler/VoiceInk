@@ -1569,12 +1569,17 @@ public sealed partial class MainWindow : Window
 
     private async void RefreshPowerModeTargetButton_Click(object sender, RoutedEventArgs e)
     {
-        await RefreshPowerModeActiveTargetAsync(fillRuleFields: false);
+        await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.None);
     }
 
     private async void UsePowerModeTargetButton_Click(object sender, RoutedEventArgs e)
     {
-        await RefreshPowerModeActiveTargetAsync(fillRuleFields: true);
+        await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.Replace);
+    }
+
+    private async void AddPowerModeTargetButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode.Append);
     }
 
     private void PowerModeRulesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -7586,7 +7591,14 @@ public sealed partial class MainWindow : Window
         PowerModePromptOverrideComboBox.SelectedIndex = selectedIndex >= 0 ? selectedIndex + 1 : 0;
     }
 
-    private async Task RefreshPowerModeActiveTargetAsync(bool fillRuleFields)
+    private enum PowerModeTargetApplyMode
+    {
+        None,
+        Replace,
+        Append
+    }
+
+    private async Task RefreshPowerModeActiveTargetAsync(PowerModeTargetApplyMode applyMode)
     {
         try
         {
@@ -7601,11 +7613,23 @@ public sealed partial class MainWindow : Window
             PowerModeActiveWindowTextBlock.Text = string.IsNullOrWhiteSpace(target.BrowserUrl)
                 ? $"Process: {target.ProcessName}; Title: {target.WindowTitle}"
                 : $"Process: {target.ProcessName}; Title: {target.WindowTitle}; URL: {target.BrowserUrl}";
-            if (fillRuleFields)
+            if (applyMode == PowerModeTargetApplyMode.Replace)
             {
                 PowerModeProcessTextBox.Text = target.ProcessName;
                 PowerModeWindowTitleTextBox.Text = target.WindowTitle;
                 PowerModeBrowserUrlTextBox.Text = target.BrowserUrl;
+            }
+            else if (applyMode == PowerModeTargetApplyMode.Append)
+            {
+                var fields = PowerModeTargetFieldComposer.AppendTarget(
+                    new PowerModeTargetFields(
+                        PowerModeProcessTextBox.Text,
+                        PowerModeWindowTitleTextBox.Text,
+                        PowerModeBrowserUrlTextBox.Text),
+                    target);
+                PowerModeProcessTextBox.Text = fields.ProcessNamePattern;
+                PowerModeWindowTitleTextBox.Text = fields.WindowTitlePattern;
+                PowerModeBrowserUrlTextBox.Text = fields.BrowserUrlPattern;
             }
 
             RefreshUiFromControllerState("Active window refreshed");
@@ -8708,6 +8732,7 @@ public sealed partial class MainWindow : Window
         ApplyEnhancementSettingsButton.IsEnabled = enhancementControlsEnabled;
         RefreshPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
         UsePowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
+        AddPowerModeTargetButton.IsEnabled = powerModeControlsEnabled;
         PowerModeRulesListView.IsEnabled = powerModeControlsEnabled;
         PowerModeNameTextBox.IsEnabled = powerModeControlsEnabled;
         PowerModeEmojiTextBox.IsEnabled = powerModeControlsEnabled;
