@@ -60,7 +60,7 @@ Run:
 
 Create a temporary evidence folder outside the repo, run the validator with both requirements, then remove the temporary folder.
 
-Result: Focused evidence-script test passed 1/1, temporary evidence validation passed, packaging asset tests passed 21/21, and release-readiness passed.
+Result: Focused evidence-script test passed 1/1, temporary evidence validation passed for default and custom WACK report filenames, packaging asset tests passed 21/21, and release-readiness passed.
 
 - [x] **Step 5: Full verification and commit**
 

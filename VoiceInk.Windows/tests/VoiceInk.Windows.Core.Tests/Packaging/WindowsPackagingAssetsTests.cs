@@ -479,6 +479,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Install smoke executed: true", script);
         Assert.Contains("Windows App Certification Kit requested: true", script);
         Assert.Contains("wack-report.xml", script);
+        Assert.Contains("Resolve-WackReportPath", script);
+        Assert.Contains("Split-Path -Leaf $summaryWackReportPath", script);
         Assert.Contains("[xml]", script);
         Assert.Contains("Installer smoke evidence validation passed", script);
         Assert.Contains("This script does not install", script);

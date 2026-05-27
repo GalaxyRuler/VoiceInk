@@ -19,6 +19,31 @@ if ([string]::IsNullOrWhiteSpace($EvidenceRoot)) {
     throw "EvidenceRoot is required unless -Help is used."
 }
 
+function Resolve-WackReportPath {
+    param(
+        [string]$EvidenceRootPath,
+        [string]$InstallerSummaryText
+    )
+
+    $summaryWackReportPath = ""
+    foreach ($summaryLine in ($InstallerSummaryText -split "\r?\n")) {
+        if ($summaryLine.StartsWith("WACK report path:", [StringComparison]::OrdinalIgnoreCase)) {
+            $summaryWackReportPath = $summaryLine.Substring("WACK report path:".Length).Trim()
+            break
+        }
+    }
+
+    $reportFileName = "wack-report.xml"
+    if (![string]::IsNullOrWhiteSpace($summaryWackReportPath)) {
+        $summaryReportFileName = Split-Path -Leaf $summaryWackReportPath
+        if (![string]::IsNullOrWhiteSpace($summaryReportFileName)) {
+            $reportFileName = $summaryReportFileName
+        }
+    }
+
+    Join-Path $EvidenceRootPath $reportFileName
+}
+
 $resolvedEvidenceRoot = (Resolve-Path -LiteralPath $EvidenceRoot).Path
 $summaryPath = Join-Path $resolvedEvidenceRoot "installer-smoke-summary.txt"
 if (!(Test-Path -LiteralPath $summaryPath -PathType Leaf)) {
@@ -48,7 +73,7 @@ if ($RequireWackReport) {
         throw "Installer smoke evidence does not show Windows App Certification Kit requested: true."
     }
 
-    $wackReportPath = Join-Path $resolvedEvidenceRoot "wack-report.xml"
+    $wackReportPath = Resolve-WackReportPath -EvidenceRootPath $resolvedEvidenceRoot -InstallerSummaryText $summaryText
     if (!(Test-Path -LiteralPath $wackReportPath -PathType Leaf)) {
         throw "Missing WACK report at $wackReportPath."
     }
