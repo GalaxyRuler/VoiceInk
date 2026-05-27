@@ -122,6 +122,20 @@ public sealed class DictionaryPagePresenterTests
                 Assert.Equal("Edit or restore", row.Value);
                 Assert.Equal("Export before bulk edits so you can review, edit, or restore dictionary entries later.", row.Detail);
                 Assert.Equal("Backup", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Multiple Originals", row.Title);
+                Assert.Equal("Comma-separated aliases", row.Value);
+                Assert.Equal("Add variants like 'Voicing, Voice ink, Voiceing' when several phrases should become the same replacement.", row.Detail);
+                Assert.Equal("Aliases", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Replacement Examples", row.Title);
+                Assert.Equal("Links and product names", row.Value);
+                Assert.Equal("Use replacements for phrases such as 'my website link -> https://example.com' or 'Voice ink -> VoiceInk'.", row.Detail);
+                Assert.Equal("Examples", row.StatusBadge);
             });
         Assert.Equal(string.Empty, presentation.VocabularyEmptyText);
         Assert.Equal(string.Empty, presentation.ReplacementEmptyText);

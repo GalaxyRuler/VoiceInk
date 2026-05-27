@@ -168,7 +168,17 @@ public static class DictionaryPagePresenter
             "Backup Workflow",
             "Edit or restore",
             "Export before bulk edits so you can review, edit, or restore dictionary entries later.",
-            "Backup")
+            "Backup"),
+        new(
+            "Multiple Originals",
+            "Comma-separated aliases",
+            "Add variants like 'Voicing, Voice ink, Voiceing' when several phrases should become the same replacement.",
+            "Aliases"),
+        new(
+            "Replacement Examples",
+            "Links and product names",
+            "Use replacements for phrases such as 'my website link -> https://example.com' or 'Voice ink -> VoiceInk'.",
+            "Examples")
     ];
 
     private static string ReplacementDisplayText(WordReplacement replacement)

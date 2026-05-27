@@ -627,6 +627,7 @@ Implemented core:
 - A Core `DictionaryPagePresenter` with macOS-style hero/section labels, count labels, empty-state guidance, and enabled/disabled replacement row display.
 - Windows Dictionary page presentation text for `Dictionary Settings`, `Vocabulary`, `Word Replacements`, list counts, overview guidance, local JSON import/export guidance, and empty guidance.
 - Dictionary usage summary rows for vocabulary count, active replacements, disabled replacements, and local JSON backup/import.
+- Dictionary rule guidance rows for comma-separated replacement aliases and concrete replacement examples.
 
 Dictionary overview guidance slice completed on 2026-05-26:
 
@@ -645,6 +646,12 @@ Dictionary usage summary slice completed on 2026-05-26:
 - Added Core Dictionary summary rows for vocabulary, active replacements, disabled replacements, and local JSON backup.
 - Rendered the usage summary under the Dictionary hero.
 - Kept dictionary persistence, replacement cleanup, quick add, import, and export behavior unchanged.
+
+Dictionary replacement examples slice completed on 2026-05-27:
+
+- Added presenter-backed guidance that multiple originals can be comma-separated aliases for one replacement.
+- Added concrete replacement examples for dictated links and VoiceInk name correction, matching the intent of the macOS `WordReplacementInfoPopover`.
+- Kept replacement matching, import/export, quick add, sorting, and cleanup behavior unchanged.
 
 Windows gaps:
 
