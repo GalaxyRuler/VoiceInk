@@ -283,6 +283,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Get-AuthenticodeSignature -FilePath", script);
         Assert.Contains("Signer certificate subject", script);
         Assert.Contains("Signer certificate thumbprint", script);
+        Assert.Contains("Assert-SignatureReadyForExecute", script);
+        Assert.Contains("Refusing to execute install smoke because Authenticode signature status is", script);
         Assert.Contains("0x800B0109", script);
         Assert.Contains("TrustedPeople", script);
         Assert.Contains("Microsoft-Windows-AppxDeployment-Server", script);

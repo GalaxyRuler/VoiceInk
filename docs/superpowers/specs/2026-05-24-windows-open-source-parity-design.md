@@ -1011,6 +1011,12 @@ Packaging safety and readiness slices completed on 2026-05-26:
 - Added certificate-free MSIX preflight, non-installing MSIX artifact validation, optional signed-build validation, and a gated signed install/query/uninstall smoke helper.
 - Added a read-only release readiness report that checks expected packaging assets and prints the ordered dev ZIP/MSIX release commands without publishing, installing, signing, trusting certificates, or reading certificate passwords.
 
+MSIX execute signature gate slice completed on 2026-05-27:
+
+- Added an execute-time Authenticode validity gate to `smoke-msix-install.ps1` before `Add-AppxPackage`.
+- The install smoke helper now refuses `-Execute` when `Get-AuthenticodeSignature` does not report `Valid`, giving maintainers a clear trust/signing message before any install/query/uninstall mutation.
+- Preserved the existing non-mutating default plan and the rule that the repo never creates/imports certificates, trusts certificates, signs packages, or runs install smoke without explicit maintainer action.
+
 Windows gaps:
 
 - Actual signed MSIX build and install smoke with a maintainer-owned trusted certificate.

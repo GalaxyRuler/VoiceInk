@@ -105,6 +105,17 @@ function Write-SmokePlan {
     Write-Host "Pass -Execute to run this smoke on a disposable test install."
 }
 
+function Assert-SignatureReadyForExecute {
+    param(
+        [string]$ResolvedPackagePath
+    )
+
+    $packageSignature = Get-AuthenticodeSignature -FilePath $ResolvedPackagePath
+    if ($packageSignature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+        throw "Refusing to execute install smoke because Authenticode signature status is $($packageSignature.Status). Sign the MSIX and trust the signing certificate on this test machine before passing -Execute."
+    }
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -146,6 +157,7 @@ if (!$Execute) {
 
 Write-Host ""
 Write-Host "Executing signed MSIX install smoke..."
+Assert-SignatureReadyForExecute -ResolvedPackagePath $resolvedPackagePath
 Add-AppxPackage -Path $resolvedPackagePath
 $installedPackages = @(Get-AppxPackage -Name $PackageName)
 if ($installedPackages.Count -eq 0) {
