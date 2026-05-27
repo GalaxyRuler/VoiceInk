@@ -1793,6 +1793,7 @@
                             <TextBox
                                 x:Name="HistorySearchTextBox"
                                 Grid.Column="0"
+                                AutomationProperties.Name="History search query"
                                 PlaceholderText="Search transcriptions..." />
                             <Button x:Name="SearchHistoryButton" Grid.Column="1" Content="Search" Click="SearchHistoryButton_Click" />
                             <Button x:Name="ClearHistorySearchButton" Grid.Column="2" Content="Clear" Click="ClearHistorySearchButton_Click" />
@@ -1864,6 +1865,7 @@
                                 </ListView>
                                 <TextBox
                                     x:Name="HistoryOriginalTextBox"
+                                    AutomationProperties.Name="History original transcript"
                                     Header="Original"
                                     AcceptsReturn="True"
                                     Height="80"
@@ -1871,6 +1873,7 @@
                                     TextWrapping="Wrap" />
                                 <TextBox
                                     x:Name="HistoryFinalTextBox"
+                                    AutomationProperties.Name="History final transcript"
                                     Header="Final"
                                     AcceptsReturn="True"
                                     Height="80"
@@ -1878,6 +1881,7 @@
                                     TextWrapping="Wrap" />
                                 <TextBox
                                     x:Name="HistoryEnhancedTextBox"
+                                    AutomationProperties.Name="History enhanced transcript"
                                     Header="Enhanced"
                                     AcceptsReturn="True"
                                     Height="80"
@@ -1904,11 +1908,13 @@
                                     </ItemsControl>
                                     <ComboBox
                                         x:Name="HistoryPlaybackRateComboBox"
+                                        AutomationProperties.Name="History audio playback rate"
                                         Header="Playback Rate"
                                         DisplayMemberPath="Label"
                                         SelectionChanged="HistoryPlaybackRateComboBox_SelectionChanged" />
                                     <MediaPlayerElement
                                         x:Name="HistoryAudioPlayer"
+                                        AutomationProperties.Name="History audio player"
                                         Height="72"
                                         AreTransportControlsEnabled="True" />
                                 </StackPanel>

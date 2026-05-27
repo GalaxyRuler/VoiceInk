@@ -302,6 +302,27 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("HistoryListAccessibleName", code);
     }
 
+    [Theory]
+    [InlineData("HistorySearchTextBox", "History search query")]
+    [InlineData("HistoryOriginalTextBox", "History original transcript")]
+    [InlineData("HistoryFinalTextBox", "History final transcript")]
+    [InlineData("HistoryEnhancedTextBox", "History enhanced transcript")]
+    [InlineData("HistoryPlaybackRateComboBox", "History audio playback rate")]
+    [InlineData("HistoryAudioPlayer", "History audio player")]
+    public void MainWindow_HistoryDetailControls_HaveAutomationNames(
+        string controlName,
+        string automationName)
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var controlStart = xaml.IndexOf($"x:Name=\"{controlName}\"", StringComparison.Ordinal);
+        Assert.True(controlStart >= 0);
+        var controlEnd = xaml.IndexOf("/>", controlStart, StringComparison.Ordinal);
+        Assert.True(controlEnd > controlStart);
+
+        var control = xaml[controlStart..controlEnd];
+        Assert.Contains($"AutomationProperties.Name=\"{automationName}\"", control);
+    }
+
     [Fact]
     public void FloatingRecorderWindow_AppliesRecorderHelpText()
     {
