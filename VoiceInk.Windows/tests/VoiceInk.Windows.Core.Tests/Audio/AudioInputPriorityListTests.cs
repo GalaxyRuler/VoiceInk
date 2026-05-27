@@ -93,4 +93,27 @@ public sealed class AudioInputPriorityListTests
             ],
             result);
     }
+
+    [Fact]
+    public void PriorityDevice_ExposesDisplayAndAccessibleNameWithEndpoint()
+    {
+        var device = new PrioritizedAudioInputDevice(
+            "USB Microphone",
+            1,
+            "{0.0.1.00000000}.{a3b9fba0-1e2f-4c21-a123-123456789abc}");
+
+        Assert.Equal("#2", device.PriorityDisplay);
+        Assert.Equal(
+            "#2, USB Microphone, Endpoint {0.0.1.0...789abc}",
+            device.AccessibleName);
+    }
+
+    [Fact]
+    public void PriorityDevice_ExposesAccessibleNameWithoutEndpoint()
+    {
+        var device = new PrioritizedAudioInputDevice("Dock Microphone", 0);
+
+        Assert.Equal("#1", device.PriorityDisplay);
+        Assert.Equal("#1, Dock Microphone", device.AccessibleName);
+    }
 }
