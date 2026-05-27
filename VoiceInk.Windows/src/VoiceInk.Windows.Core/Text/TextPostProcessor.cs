@@ -92,6 +92,14 @@ public static class TextPostProcessor
         return options.AppendTrailingSpace ? $"{trimmed} " : trimmed;
     }
 
+    public static string ApplyTrailingSpace(string text, bool appendTrailingSpace)
+    {
+        var trimmed = text.TrimEnd();
+        return appendTrailingSpace && trimmed.Length > 0
+            ? $"{trimmed} "
+            : trimmed;
+    }
+
     private static string RemoveHallucinations(string text)
     {
         var filtered = TagBlockRegex.Replace(text, string.Empty);

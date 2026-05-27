@@ -171,7 +171,7 @@ public sealed class DictationController(
                     var finalText = TextPostProcessor.Process(
                         transcription.Text,
                         new TextPostProcessingOptions(
-                            AppendTrailingSpace: settings.AppendTrailingSpace,
+                            AppendTrailingSpace: false,
                             RemoveFillerWords: settings.RemoveFillerWords,
                             WordReplacements: replacements,
                             PunctuationCleanupMode: settings.PunctuationCleanupMode,
@@ -194,7 +194,10 @@ public sealed class DictationController(
                     }
 
                     State = DictationState.Inserting;
-                    await textInjection.InsertAsync(enhancement?.FinalText ?? finalText, cancellationToken);
+                    var insertedText = TextPostProcessor.ApplyTrailingSpace(
+                        enhancement?.FinalText ?? finalText,
+                        settings.AppendTrailingSpace);
+                    await textInjection.InsertAsync(insertedText, cancellationToken);
                     LastStopInsertedText = true;
                     hasInsertedText = true;
                     await AutoSendPowerModeKeyAsync(powerModeResolution, cancellationToken);

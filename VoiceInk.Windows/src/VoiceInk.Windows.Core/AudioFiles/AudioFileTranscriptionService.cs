@@ -44,7 +44,7 @@ public sealed class AudioFileTranscriptionService(
             var finalText = TextPostProcessor.Process(
                 transcription.Text,
                 new TextPostProcessingOptions(
-                    AppendTrailingSpace: settings.AppendTrailingSpace,
+                    AppendTrailingSpace: false,
                     RemoveFillerWords: settings.RemoveFillerWords,
                     WordReplacements: replacements,
                     PunctuationCleanupMode: settings.PunctuationCleanupMode,

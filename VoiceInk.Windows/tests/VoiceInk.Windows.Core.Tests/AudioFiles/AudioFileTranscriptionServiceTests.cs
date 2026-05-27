@@ -137,7 +137,7 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Equal("File transcription saved", result.Message);
         Assert.NotNull(result.Item);
         Assert.Same(result.Item, Assert.Single(history.Items));
-        Assert.Equal("voiceink ", result.Item.Text);
+        Assert.Equal("voiceink", result.Item.Text);
         Assert.Equal("Voice ink!", result.Item.OriginalText);
         Assert.Equal("local-whisper", result.Item.ProviderName);
         Assert.Equal(TimeSpan.FromSeconds(12), result.Item.AudioDuration);
@@ -151,6 +151,34 @@ public sealed class AudioFileTranscriptionServiceTests
         Assert.Equal("Important Vocabulary: VoiceInk", transcription.LastOptions?.Prompt);
         Assert.Null(result.Item.PowerModeName);
         Assert.Null(result.Item.PowerModeEmoji);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_DoesNotAppendTrailingSpaceToSavedHistory()
+    {
+        var importedAudio = new AudioCaptureResult("recordings\\imported.wav", TimeSpan.FromSeconds(12), 44100, 2);
+        var importer = new FakeAudioFileImportService(importedAudio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(
+            "VoiceInk",
+            TimeSpan.FromMilliseconds(250),
+            "local-whisper"));
+        var history = new FakeHistoryStore();
+        var service = new AudioFileTranscriptionService(
+            importer,
+            transcription,
+            history,
+            new FakeSettingsStore(new AppSettings
+            {
+                ModelPath = "ggml-base.en.bin",
+                Language = "en",
+                AppendTrailingSpace = true
+            }));
+
+        var result = await service.TranscribeAsync("source.mp3", "recordings", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("VoiceInk", result.Item?.Text);
+        Assert.Equal("VoiceInk", Assert.Single(history.Items).Text);
     }
 
     [Fact]
@@ -242,7 +270,7 @@ public sealed class AudioFileTranscriptionServiceTests
 
         Assert.True(result.Success);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("file text ", saved.Text);
+        Assert.Equal("file text", saved.Text);
         Assert.Equal("Enhanced file text.", saved.EnhancedText);
         Assert.Equal("Default", saved.PromptName);
         Assert.Equal("openai-compatible", saved.EnhancementProviderName);

@@ -43,9 +43,34 @@ public sealed class DictationControllerTests
         Assert.Equal("ggml-base.en.bin", transcription.LastOptions.ModelPath);
         Assert.Equal("en", transcription.LastOptions.Language);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("hello world ", saved.Text);
+        Assert.Equal("hello world", saved.Text);
         Assert.Equal("local-whisper", saved.ProviderName);
         Assert.Equal(TimeSpan.FromSeconds(2), saved.AudioDuration);
+    }
+
+    [Fact]
+    public async Task StopAsync_AppendsTrailingSpaceOnlyWhenInsertingText()
+    {
+        var audio = new AudioCaptureResult("sample.wav", TimeSpan.FromSeconds(2), 16000, 1);
+        var capture = new FakeAudioCaptureService(audio);
+        var transcription = new FakeTranscriptionService(new TranscriptionResult(" hello world ", TimeSpan.FromMilliseconds(150), "local-whisper"));
+        var insertion = new FakeTextInjectionService();
+        var history = new FakeHistoryStore();
+        var settings = new FakeSettingsStore(new AppSettings
+        {
+            ModelPath = "ggml-base.en.bin",
+            Language = "en",
+            AppendTrailingSpace = true
+        });
+
+        var controller = new DictationController(capture, transcription, insertion, history, settings);
+
+        await controller.StartAsync(CancellationToken.None);
+        await controller.StopAsync(CancellationToken.None);
+
+        Assert.Equal("hello world ", insertion.InsertedText);
+        var saved = Assert.Single(history.Items);
+        Assert.Equal("hello world", saved.Text);
     }
 
     [Fact]
@@ -455,7 +480,7 @@ public sealed class DictationControllerTests
         Assert.Equal("um voiceink ", insertion.InsertedText);
         var saved = Assert.Single(history.Items);
         Assert.Equal("Um, voice ink!", saved.OriginalText);
-        Assert.Equal("um voiceink ", saved.Text);
+        Assert.Equal("um voiceink", saved.Text);
         Assert.Equal(TranscriptionHistoryStatus.Completed, saved.Status);
         Assert.Equal("en", saved.Language);
         Assert.Equal("C:\\Models\\ggml-base.en.bin", saved.ModelPath);
@@ -627,9 +652,9 @@ public sealed class DictationControllerTests
         await controller.StartAsync(CancellationToken.None);
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("Hello, world.", insertion.InsertedText);
+        Assert.Equal("Hello, world. ", insertion.InsertedText);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("hello world ", saved.Text);
+        Assert.Equal("hello world", saved.Text);
         Assert.Equal("hello world", saved.OriginalText);
         Assert.Equal("Hello, world.", saved.EnhancedText);
         Assert.Equal("Default", saved.PromptName);
@@ -824,7 +849,7 @@ public sealed class DictationControllerTests
         };
         await controller.StopAsync(CancellationToken.None);
 
-        Assert.Equal("standup text", insertion.InsertedText);
+        Assert.Equal("standup text ", insertion.InsertedText);
         var saved = Assert.Single(history.Items);
         Assert.Equal("Standup", saved.PromptName);
     }
@@ -936,7 +961,7 @@ public sealed class DictationControllerTests
         Assert.Equal("hello ", insertion.InsertedText);
         Assert.Contains("Enhancement failed: provider unavailable", controller.LastWarning);
         var saved = Assert.Single(history.Items);
-        Assert.Equal("hello ", saved.Text);
+        Assert.Equal("hello", saved.Text);
         Assert.Null(saved.EnhancedText);
         Assert.Contains("Enhancement failed: provider unavailable", saved.ErrorMessage);
     }
