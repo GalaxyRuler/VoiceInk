@@ -594,7 +594,7 @@ Selected-text clipboard fallback slice completed on 2026-05-25:
 Active-window enhancement context slice completed on 2026-05-25:
 
 - Added active-window process/title fields to Core enhancement context.
-- Prompt rendering now emits an `<ACTIVE_WINDOW_CONTEXT>` section before selected text, clipboard, and vocabulary sections.
+- Prompt rendering now emits an `<ACTIVE_WINDOW_CONTEXT>` section after selected text and clipboard context and before OCR/vocabulary sections.
 - Windows context capture reuses the existing foreground-window Power Mode provider and gracefully degrades to no active-window context on failure.
 
 Screen OCR context slices completed on 2026-05-26:
@@ -632,6 +632,12 @@ Context prompt spelling-priority slice completed on 2026-05-27:
 - Aligned the Windows enhancement system instructions with the macOS prompt rule that similar phonetic terms should prefer spellings from context sources.
 - Included custom vocabulary, clipboard context, current-window OCR context, selected text, and active app/site context in the priority guidance.
 - Kept Assistant Mode on its raw assistant instructions and did not add telemetry, provider fallback, or commercial behavior.
+
+Context render order parity slice completed on 2026-05-27:
+
+- Matched macOS context rendering order for selected text and clipboard by placing them before Windows active app/site metadata.
+- Kept Windows active-window and sanitized browser URL metadata before current-window OCR text so the OCR block remains the main `<CURRENT_WINDOW_CONTEXT>` source.
+- Updated the Enhancement Context Source Order guidance row so visible readiness guidance matches the actual prompt order.
 
 Windows gaps:
 

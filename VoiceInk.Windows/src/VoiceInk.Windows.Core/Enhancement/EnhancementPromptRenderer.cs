@@ -45,11 +45,11 @@ public static class EnhancementPromptRenderer
     }
 
     private static string ContextSections(EnhancementContext? context, IReadOnlyList<VocabularyWord> vocabulary) =>
-        ActiveWindowContextSection(context)
+        SelectedTextContextSection(context)
+        + ClipboardContextSection(context)
+        + ActiveWindowContextSection(context)
         + BrowserUrlContextSection(context)
         + OcrContextSection(context)
-        + SelectedTextContextSection(context)
-        + ClipboardContextSection(context)
         + VocabularySection(vocabulary);
 
     private static string AssistantContextInformationSection(string contextSections)

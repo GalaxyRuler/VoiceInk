@@ -138,8 +138,8 @@ public sealed class EnhancementContextReadinessPresenterTests
             row =>
             {
                 Assert.Equal("Context Source Order", row.Title);
-                Assert.Equal("App, OCR, selection, clipboard", row.Value);
-                Assert.Equal("Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.", row.Detail);
+                Assert.Equal("Selection, clipboard, app, OCR", row.Value);
+                Assert.Equal("Prompt rendering follows macOS context order first, then adds Windows app/site metadata before OCR and vocabulary.", row.Detail);
                 Assert.Equal("Local", row.StatusBadge);
             });
     }

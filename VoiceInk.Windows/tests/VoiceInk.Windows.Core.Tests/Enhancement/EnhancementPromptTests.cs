@@ -381,7 +381,49 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
-    public void Render_AppendsActiveWindowContextBeforeSelectedTextClipboardAndVocabulary()
+    public void Render_AppendsContextSectionsInMacAlignedOrderBeforeVocabulary()
+    {
+        var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
+            .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
+        var vocabulary = new[]
+        {
+            new VocabularyWord(Guid.NewGuid(), "VoiceInk", DateTimeOffset.UtcNow)
+        };
+
+        var rendered = EnhancementPromptRenderer.Render(
+            prompt,
+            "fix this",
+            vocabulary,
+            new EnhancementContext(
+                ClipboardText: "clipboard note",
+                SelectedText: "selected note",
+                ActiveWindowProcessName: "msedge",
+                ActiveWindowTitle: "Dashboard",
+                BrowserUrl: "https://example.com/dashboard?token=secret#part",
+                OcrText: "Screen text from dashboard"));
+
+        var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
+        var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
+        var activeWindowIndex = rendered.SystemMessage.LastIndexOf("<ACTIVE_WINDOW_CONTEXT>", StringComparison.Ordinal);
+        var browserUrlIndex = rendered.SystemMessage.LastIndexOf("<BROWSER_URL_CONTEXT>", StringComparison.Ordinal);
+        var currentWindowIndex = rendered.SystemMessage.LastIndexOf("<CURRENT_WINDOW_CONTEXT>", StringComparison.Ordinal);
+        var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
+
+        Assert.True(selectedTextIndex >= 0, "Selected text context should render.");
+        Assert.True(clipboardIndex >= 0, "Clipboard context should render.");
+        Assert.True(activeWindowIndex >= 0, "Active window context should render.");
+        Assert.True(browserUrlIndex >= 0, "Browser URL context should render.");
+        Assert.True(currentWindowIndex >= 0, "Current window OCR context should render.");
+        Assert.True(vocabularyIndex >= 0, "Vocabulary context should render.");
+        Assert.True(selectedTextIndex < clipboardIndex, "Selected text should render before clipboard context.");
+        Assert.True(clipboardIndex < activeWindowIndex, "Clipboard context should render before Windows active-window metadata.");
+        Assert.True(activeWindowIndex < browserUrlIndex, "Active window metadata should render before browser URL metadata.");
+        Assert.True(browserUrlIndex < currentWindowIndex, "Browser URL metadata should render before current-window OCR context.");
+        Assert.True(currentWindowIndex < vocabularyIndex, "Current-window OCR context should render before vocabulary.");
+    }
+
+    [Fact]
+    public void Render_AppendsActiveWindowContextAfterClipboardAndBeforeVocabulary()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
             .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
@@ -409,13 +451,13 @@ public sealed class EnhancementPromptTests
         var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
         var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
 
-        Assert.True(activeWindowIndex < selectedTextIndex, "Active window context should render before selected text.");
         Assert.True(selectedTextIndex < clipboardIndex, "Selected text context should render before clipboard context.");
-        Assert.True(clipboardIndex < vocabularyIndex, "Clipboard context should render before vocabulary context.");
+        Assert.True(clipboardIndex < activeWindowIndex, "Clipboard context should render before active window context.");
+        Assert.True(activeWindowIndex < vocabularyIndex, "Active window context should render before vocabulary context.");
     }
 
     [Fact]
-    public void Render_AppendsSanitizedBrowserUrlContextAfterActiveWindow()
+    public void Render_AppendsSanitizedBrowserUrlContextAfterClipboardAndActiveWindow()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
             .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
@@ -439,12 +481,12 @@ public sealed class EnhancementPromptTests
         var browserUrlIndex = rendered.SystemMessage.LastIndexOf("<BROWSER_URL_CONTEXT>", StringComparison.Ordinal);
         var selectedTextIndex = rendered.SystemMessage.LastIndexOf("<CURRENTLY_SELECTED_TEXT>", StringComparison.Ordinal);
 
+        Assert.True(selectedTextIndex < activeWindowIndex, "Selected text context should render before active window.");
         Assert.True(activeWindowIndex < browserUrlIndex, "Browser URL context should render after active window.");
-        Assert.True(browserUrlIndex < selectedTextIndex, "Browser URL context should render before selected text.");
     }
 
     [Fact]
-    public void Render_AppendsCurrentWindowContextBeforeSelectedTextClipboardAndVocabulary()
+    public void Render_AppendsCurrentWindowContextAfterClipboardAndBeforeVocabulary()
     {
         var prompt = EnhancementPromptCatalog.CreateDefaultPrompts()
             .Single(item => item.Id == EnhancementPromptCatalog.DefaultPromptId);
@@ -478,10 +520,10 @@ public sealed class EnhancementPromptTests
         var clipboardIndex = rendered.SystemMessage.LastIndexOf("<CLIPBOARD_CONTEXT>", StringComparison.Ordinal);
         var vocabularyIndex = rendered.SystemMessage.LastIndexOf("<CUSTOM_VOCABULARY>", StringComparison.Ordinal);
 
-        Assert.True(browserUrlIndex < currentWindowIndex, "Current window context should render after browser URL context.");
-        Assert.True(currentWindowIndex < selectedTextIndex, "Current window context should render before selected text.");
         Assert.True(selectedTextIndex < clipboardIndex, "Selected text context should render before clipboard context.");
-        Assert.True(clipboardIndex < vocabularyIndex, "Clipboard context should render before vocabulary context.");
+        Assert.True(clipboardIndex < browserUrlIndex, "Clipboard context should render before browser URL context.");
+        Assert.True(browserUrlIndex < currentWindowIndex, "Current window context should render after browser URL context.");
+        Assert.True(currentWindowIndex < vocabularyIndex, "Current window context should render before vocabulary context.");
     }
 
     [Fact]

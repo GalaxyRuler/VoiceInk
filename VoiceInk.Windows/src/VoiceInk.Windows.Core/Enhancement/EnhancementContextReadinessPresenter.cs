@@ -266,8 +266,8 @@ public static class EnhancementContextReadinessPresenter
     private static EnhancementContextActionRow SourceOrderRow() =>
         new(
             "Context Source Order",
-            "App, OCR, selection, clipboard",
-            "Prompt rendering keeps local app/site context before OCR, selected text, and clipboard text.",
+            "Selection, clipboard, app, OCR",
+            "Prompt rendering follows macOS context order first, then adds Windows app/site metadata before OCR and vocabulary.",
             "Local");
 
     private static IReadOnlyList<EnhancementContextPrivacyRow> PrivacyRows(AppSettings settings)
