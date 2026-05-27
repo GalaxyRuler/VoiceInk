@@ -222,6 +222,9 @@ public sealed class SettingsSectionPresenterTests
             presentation.Sections,
             section => section.Title == "Diagnostics"
                 && section.Description == "Export local logs for troubleshooting without sending telemetry.");
+        Assert.Equal(
+            "Backup, Export settings locally, or choose specific categories when importing a backup. API keys are never included.",
+            presentation.Sections.Single(section => section.Title == "Backup").AccessibleName);
     }
 
     [Fact]

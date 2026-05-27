@@ -1067,6 +1067,12 @@ Recording feedback summary parity slice completed on 2026-05-27:
 - Preserved existing recording feedback behavior and native Windows adapters; this slice only makes the scan-friendly summary match the macOS Settings controls more closely.
 - Kept settings persistence, backup import/export, and recording feedback execution unchanged.
 
+Settings section directory slice completed on 2026-05-28:
+
+- Added presenter-backed accessible names to Settings section copy rows.
+- Rendered a compact Settings section directory above the detailed form controls so users can scan shortcuts, recording feedback, interface, clipboard, cleanup, privacy, general, backup, and diagnostics before editing settings.
+- Kept existing section descriptions near the actual controls and left all settings persistence, backup/import, diagnostics, cleanup, and shortcut behavior unchanged.
+
 ### Audio Input
 
 macOS audio input supports `System Default`, `Custom Device`, and `Prioritized` modes, refresh, active/unavailable states, priority ordering, and fallback behavior.

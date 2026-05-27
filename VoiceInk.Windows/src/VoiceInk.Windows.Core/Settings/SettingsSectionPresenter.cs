@@ -72,7 +72,10 @@ internal static class SettingsRowAccessibleName
 public sealed record SettingsSectionCopy(
     string Key,
     string Title,
-    string Description);
+    string Description)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, Description);
+}
 
 public static class SettingsSectionPresenter
 {

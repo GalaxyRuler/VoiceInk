@@ -86,11 +86,15 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Theory]
+    [InlineData("SettingsSectionDirectoryListView")]
+    [InlineData("SettingsActionSummaryListView")]
+    [InlineData("SettingsPreferenceSummaryListView")]
+    [InlineData("SettingsBackupGuidanceListView")]
     [InlineData("MetricsDashboardCardsListView")]
     [InlineData("MetricsDataGuidanceListView")]
     [InlineData("MetricsActionListView")]
     [InlineData("MetricsDiagnosticsListView")]
-    public void MainWindow_MetricsRows_BindAccessibleName(string listViewName)
+    public void MainWindow_SummaryRows_BindAccessibleName(string listViewName)
     {
         var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
         var listStart = xaml.IndexOf($"x:Name=\"{listViewName}\"", StringComparison.Ordinal);

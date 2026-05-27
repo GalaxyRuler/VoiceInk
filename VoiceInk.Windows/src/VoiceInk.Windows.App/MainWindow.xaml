@@ -2243,6 +2243,25 @@
                             </ListView.ItemTemplate>
                         </ListView>
                         <ListView
+                            x:Name="SettingsSectionDirectoryListView"
+                            MaxHeight="240"
+                            SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        Padding="8,4"
+                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                        Spacing="2">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                        <TextBlock
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Description}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <ListView
                             x:Name="SettingsPreferenceSummaryListView"
                             MaxHeight="260"
                             SelectionMode="None">
