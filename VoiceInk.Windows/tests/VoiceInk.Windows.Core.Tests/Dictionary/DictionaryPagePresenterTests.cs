@@ -83,6 +83,13 @@ public sealed class DictionaryPagePresenterTests
             },
             row =>
             {
+                Assert.Equal("Processing Order", row.Title);
+                Assert.Equal("Vocabulary then replacements", row.Value);
+                Assert.Equal("Vocabulary guides recognition and prompts; replacements rewrite the final text after transcription.", row.Detail);
+                Assert.Equal("Deterministic", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Disabled Replacements", row.Title);
                 Assert.Equal("Saved only", row.Value);
                 Assert.Equal("Disabled replacements stay in the local dictionary and are skipped until re-enabled.", row.Detail);

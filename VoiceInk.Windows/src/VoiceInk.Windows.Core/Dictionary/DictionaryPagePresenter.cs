@@ -140,6 +140,11 @@ public static class DictionaryPagePresenter
             "Enabled replacements run after transcription cleanup and before insertion.",
             "Automatic"),
         new(
+            "Processing Order",
+            "Vocabulary then replacements",
+            "Vocabulary guides recognition and prompts; replacements rewrite the final text after transcription.",
+            "Deterministic"),
+        new(
             "Disabled Replacements",
             "Saved only",
             "Disabled replacements stay in the local dictionary and are skipped until re-enabled.",
