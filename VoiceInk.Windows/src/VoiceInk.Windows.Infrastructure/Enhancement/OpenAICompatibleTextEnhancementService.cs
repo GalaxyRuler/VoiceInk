@@ -23,6 +23,55 @@ public sealed class OpenAICompatibleTextEnhancementService(
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    private static readonly HashSet<string> GeminiNoneReasoningModels =
+    [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite"
+    ];
+
+    private static readonly HashSet<string> GeminiLowReasoningModels =
+    [
+        "gemini-3.1-pro-preview"
+    ];
+
+    private static readonly HashSet<string> GeminiMinimalReasoningModels =
+    [
+        "gemini-3.5-flash",
+        "gemini-2.5-pro",
+        "gemini-3-flash-preview",
+        "gemini-3.1-flash-lite"
+    ];
+
+    private static readonly HashSet<string> OpenAINoneReasoningModels =
+    [
+        "gpt-5.5",
+        "gpt-5.4",
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.2"
+    ];
+
+    private static readonly HashSet<string> CerebrasGPTOSSMinimumReasoningModels =
+    [
+        "gpt-oss-120b"
+    ];
+
+    private static readonly HashSet<string> CerebrasNoneReasoningModels =
+    [
+        "zai-glm-4.7"
+    ];
+
+    private static readonly HashSet<string> GroqGPTOSSMinimumReasoningModels =
+    [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+    ];
+
+    private static readonly HashSet<string> GroqQwenReasoningModels =
+    [
+        "qwen/qwen3-32b"
+    ];
+
     public async Task<TextEnhancementResult> EnhanceAsync(
         TextEnhancementRequest request,
         CancellationToken cancellationToken)
@@ -203,13 +252,7 @@ public sealed class OpenAICompatibleTextEnhancementService(
                             new OllamaOptions(request.Temperature)),
                         JsonOptions)
                 : JsonSerializer.Serialize(
-                    new ChatCompletionsRequest(
-                        request.Model,
-                        [
-                            new ChatMessage("system", request.SystemMessage),
-                            new ChatMessage("user", request.UserMessage)
-                        ],
-                        request.Temperature),
+                    ChatCompletionsRequest.From(request),
                     JsonOptions),
             Encoding.UTF8,
             "application/json");
@@ -368,7 +411,92 @@ public sealed class OpenAICompatibleTextEnhancementService(
     private sealed record ChatCompletionsRequest(
         [property: JsonPropertyName("model")] string Model,
         [property: JsonPropertyName("messages")] IReadOnlyList<ChatMessage> Messages,
-        [property: JsonPropertyName("temperature")] double Temperature);
+        [property: JsonPropertyName("temperature")] double Temperature,
+        [property: JsonPropertyName("reasoning_effort")] string? ReasoningEffort = null,
+        [property: JsonPropertyName("reasoning_format")] string? ReasoningFormat = null,
+        [property: JsonPropertyName("include_reasoning")] bool? IncludeReasoning = null)
+    {
+        public static ChatCompletionsRequest From(TextEnhancementRequest request)
+        {
+            var reasoning = ReasoningParameters.For(request.ProviderId, request.Model);
+            return new ChatCompletionsRequest(
+                request.Model,
+                [
+                    new ChatMessage("system", request.SystemMessage),
+                    new ChatMessage("user", request.UserMessage)
+                ],
+                request.Temperature,
+                reasoning.ReasoningEffort,
+                reasoning.ReasoningFormat,
+                reasoning.IncludeReasoning);
+        }
+    }
+
+    private sealed record ReasoningParameters(
+        string? ReasoningEffort = null,
+        string? ReasoningFormat = null,
+        bool? IncludeReasoning = null)
+    {
+        public static ReasoningParameters For(string providerId, string modelName)
+        {
+            var effort = ReasoningEffortFor(providerId, modelName);
+            var format = string.Equals(providerId, EnhancementProviderPresetCatalog.Cerebras.Id, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(modelName, "gpt-oss-120b", StringComparison.OrdinalIgnoreCase)
+                    ? "hidden"
+                    : null;
+            var includeReasoning = string.Equals(providerId, EnhancementProviderPresetCatalog.Groq.Id, StringComparison.OrdinalIgnoreCase)
+                && GroqGPTOSSMinimumReasoningModels.Contains(modelName)
+                    ? false
+                    : (bool?)null;
+
+            return new ReasoningParameters(effort, format, includeReasoning);
+        }
+
+        private static string? ReasoningEffortFor(string providerId, string modelName)
+        {
+            if (string.Equals(providerId, EnhancementProviderPresetCatalog.Gemini.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                if (GeminiNoneReasoningModels.Contains(modelName))
+                {
+                    return "none";
+                }
+
+                if (GeminiLowReasoningModels.Contains(modelName))
+                {
+                    return "low";
+                }
+
+                return GeminiMinimalReasoningModels.Contains(modelName) ? "minimal" : null;
+            }
+
+            if (string.Equals(providerId, EnhancementProviderPresetCatalog.OpenAI.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                return OpenAINoneReasoningModels.Contains(modelName) ? "none" : null;
+            }
+
+            if (string.Equals(providerId, EnhancementProviderPresetCatalog.Cerebras.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                if (CerebrasGPTOSSMinimumReasoningModels.Contains(modelName))
+                {
+                    return "low";
+                }
+
+                return CerebrasNoneReasoningModels.Contains(modelName) ? "none" : null;
+            }
+
+            if (string.Equals(providerId, EnhancementProviderPresetCatalog.Groq.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                if (GroqGPTOSSMinimumReasoningModels.Contains(modelName))
+                {
+                    return "low";
+                }
+
+                return GroqQwenReasoningModels.Contains(modelName) ? "none" : null;
+            }
+
+            return null;
+        }
+    }
 
     private sealed record ChatMessage(
         [property: JsonPropertyName("role")] string Role,

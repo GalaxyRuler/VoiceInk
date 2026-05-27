@@ -62,6 +62,53 @@ public sealed class OpenAICompatibleTextEnhancementServiceTests
         Assert.Equal("gsk-test-secret", handler.Requests[0].Headers.Authorization?.Parameter);
     }
 
+    [Theory]
+    [InlineData("openai", "gpt-5.4", "none", null, null)]
+    [InlineData("gemini", "gemini-3.1-pro-preview", "low", null, null)]
+    [InlineData("cerebras", "gpt-oss-120b", "low", "hidden", null)]
+    [InlineData("groq", "openai/gpt-oss-20b", "low", null, false)]
+    [InlineData("groq", "qwen/qwen3-32b", "none", null, null)]
+    public async Task EnhanceAsync_SendsProviderReasoningParameters(
+        string providerId,
+        string model,
+        string expectedReasoningEffort,
+        string? expectedReasoningFormat,
+        bool? expectedIncludeReasoning)
+    {
+        var handler = new QueueHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """{"choices":[{"message":{"content":"Enhanced text"}}]}"""));
+        var service = new OpenAICompatibleTextEnhancementService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "provider-secret" });
+
+        await service.EnhanceAsync(
+            Request(
+                endpoint: EnhancementProviderPresetCatalog.Resolve(providerId).Endpoint,
+                model: model,
+                providerId: providerId),
+            CancellationToken.None);
+
+        var body = JsonDocument.Parse(handler.Bodies[0]).RootElement;
+        Assert.Equal(expectedReasoningEffort, body.GetProperty("reasoning_effort").GetString());
+        if (expectedReasoningFormat is not null)
+        {
+            Assert.Equal(expectedReasoningFormat, body.GetProperty("reasoning_format").GetString());
+        }
+        else
+        {
+            Assert.False(body.TryGetProperty("reasoning_format", out _));
+        }
+
+        if (expectedIncludeReasoning is not null)
+        {
+            Assert.Equal(expectedIncludeReasoning, body.GetProperty("include_reasoning").GetBoolean());
+        }
+        else
+        {
+            Assert.False(body.TryGetProperty("include_reasoning", out _));
+        }
+    }
+
     [Fact]
     public async Task EnhanceAsync_CustomProviderFallsBackToLegacySecretName()
     {
