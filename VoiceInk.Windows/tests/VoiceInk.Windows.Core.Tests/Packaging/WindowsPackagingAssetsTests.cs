@@ -324,11 +324,12 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Package.appxmanifest", script);
         Assert.Contains("VoiceInk.VoiceInkWindows", script);
         Assert.Contains("VoiceInk for Windows", script);
-        Assert.Contains("License: MIT", script);
+        Assert.Contains("License: GPL-3.0", script);
         Assert.Contains("OutputRoot must stay inside VoiceInk.Windows\\artifacts", script);
         Assert.Contains("Get-FileHash", script);
         Assert.Contains("WinGet manifests written", script);
 
+        Assert.DoesNotContain("License: MIT", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& winget", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Submit", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
@@ -350,12 +351,14 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("InstallerType: msix", script);
         Assert.Contains("InstallerUrl", script);
         Assert.Contains("InstallerSha256", script);
+        Assert.Contains("License: GPL-3.0", script);
         Assert.Contains("ManifestType", script);
         Assert.Contains("ManifestVersion", script);
         Assert.Contains("Refusing to inspect path outside artifact root", script);
         Assert.Contains("WinGet manifest validation passed", script);
         Assert.Contains("winget validate", script);
 
+        Assert.DoesNotContain("License: MIT", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& winget", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);

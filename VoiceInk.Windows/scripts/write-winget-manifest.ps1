@@ -184,7 +184,7 @@ Publisher: VoiceInk Open Source
 PublisherUrl: https://github.com/Beingpax/VoiceInk
 PackageName: VoiceInk for Windows
 PackageUrl: https://github.com/Beingpax/VoiceInk
-License: MIT
+License: GPL-3.0
 LicenseUrl: https://github.com/Beingpax/VoiceInk/blob/main/LICENSE
 ShortDescription: Free open-source Windows dictation with local Whisper transcription and optional user-configured providers.
 Description: VoiceInk for Windows is a free open-source dictation app with local Whisper transcription, configurable shortcuts, history, dictionary, AI enhancement hooks, and privacy-first local settings.

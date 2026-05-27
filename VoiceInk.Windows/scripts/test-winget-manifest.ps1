@@ -94,7 +94,7 @@ Assert-ContainsText -Text $packageText -Needle "DefaultLocale:" -Name $packageFi
 Assert-ContainsText -Text $packageText -Needle "ManifestType: version" -Name $packageFile.Name
 Assert-ContainsText -Text $packageText -Needle "ManifestVersion:" -Name $packageFile.Name
 Assert-ContainsText -Text $localeText -Needle "PackageName: VoiceInk for Windows" -Name $localeFile.Name
-Assert-ContainsText -Text $localeText -Needle "License: MIT" -Name $localeFile.Name
+Assert-ContainsText -Text $localeText -Needle "License: GPL-3.0" -Name $localeFile.Name
 Assert-ContainsText -Text $localeText -Needle "ManifestType: defaultLocale" -Name $localeFile.Name
 Assert-ContainsText -Text $installerText -Needle "InstallerType: msix" -Name $installerFile.Name
 Assert-ContainsText -Text $installerText -Needle "InstallerUrl:" -Name $installerFile.Name
