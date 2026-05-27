@@ -158,6 +158,11 @@ public static class OnboardingChecklistPresenter
                 status.HasAudioInputChoices ? "Refresh Devices" : "Open Privacy",
                 status.HasAudioInputChoices ? "Ready" : "Check"),
             new OnboardingSetupActionPresentation(
+                "Manual Privacy Path",
+                "Use Settings > Privacy & security > Microphone if the Windows privacy link does not open.",
+                "Open Manually",
+                "Fallback"),
+            new OnboardingSetupActionPresentation(
                 "Set Shortcut",
                 status.HasPrimaryShortcut
                     ? "Primary shortcut is configured for system-wide recording."

@@ -73,6 +73,13 @@ public sealed class OnboardingChecklistPresenterTests
             },
             action =>
             {
+                Assert.Equal("Manual Privacy Path", action.Title);
+                Assert.Equal("Use Settings > Privacy & security > Microphone if the Windows privacy link does not open.", action.Description);
+                Assert.Equal("Open Manually", action.CommandText);
+                Assert.Equal("Fallback", action.StatusBadge);
+            },
+            action =>
+            {
                 Assert.Equal("Set Shortcut", action.Title);
                 Assert.Equal("Primary shortcut is configured for system-wide recording.", action.Description);
                 Assert.Equal("Edit Shortcut", action.CommandText);
@@ -191,8 +198,8 @@ public sealed class OnboardingChecklistPresenterTests
         Assert.Equal("4 of 5 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
         Assert.Equal(["Ready", "Ready", "Review", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal(["Ready", "Ready", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal("Click Field and Speak", presentation.SetupActions[3].CommandText);
+        Assert.Equal(["Ready", "Ready", "Fallback", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal("Click Field and Speak", presentation.SetupActions[4].CommandText);
         Assert.Equal(["Ready", "Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
         Assert.Equal("Press Ctrl+Alt+Space", presentation.TutorialSteps[1].Title);
         Assert.Equal("Press Ctrl+Alt+Space again", presentation.TutorialSteps[3].Title);

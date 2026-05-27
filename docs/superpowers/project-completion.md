@@ -28,21 +28,21 @@ VoiceInk Windows parity  [###################-] 95%
 | Metrics | 91% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics and Windows Diagnostic Data Viewer separation guidance, metric data/formula guidance rows, local-only model performance interpretation guidance, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 90% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, grouped-section find guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
 | Audio input | 94% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings and microphone privacy diagnostics guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and endpoint-native diagnostics polish. |
-| Onboarding | 89% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, manual Windows microphone settings fallback guidance, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
+| Onboarding | 90% | `[##################--]` | First-run setup covers model path, recommended local model download, microphone health, testable Windows microphone privacy action targets, manual Windows microphone settings fallback guidance in setup actions, microphone settings, compact readiness summary rows with Windows permission guidance, action rows, progress-aware readiness checklist, guided setup stages, macOS-style try-it-out tutorial steps with final insertion/History verification, in-dialog audio input refresh, audio input choice, shortcut, basic usage, Settings reset, and a post-onboarding Permissions page. Richer visual flow polish remains. |
 | Packaging | 69% | `[##############------]` | Source-run docs, runtime workaround, repeatable self-contained dev ZIP packaging, dev ZIP smoke validation, per-user Dev ZIP install/uninstall helpers with Start Menu shortcut creation, signed MSIX manifest/script foundation, certificate-free packaging preflight, non-installing MSIX artifact validation, optional signed-build artifact validation, a gated signed install/uninstall smoke helper with read-only signature/trust diagnostics, and a read-only release readiness report with signing/trust checklist plus WinApp CLI local signing and App Installer `.appinstaller` identity references exist. Actual signed MSIX install smoke and release signing flow remain gated on maintainer-owned signing/trust setup. |
 
 ## Current Slice
 
 ```text
-Model repair validation guidance  [####################] 100%
+Onboarding permission fallback guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows model repair validation guidance spec and implementation plan.
-- Added a failing local model health presenter assertion for user-selected repair validation guidance.
-- Added a `Repair Picker` repair row explaining repair validates the selected `.bin` file and does not scan folders.
-- Ran the focused model health presenter test, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows onboarding permission fallback guidance spec and implementation plan.
+- Added failing onboarding presenter assertions for a manual microphone privacy fallback action.
+- Added a `Manual Privacy Path` setup action that points to Settings > Privacy & security > Microphone.
+- Ran focused onboarding presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
