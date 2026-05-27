@@ -22,7 +22,7 @@ public sealed class PowerModePagePresenterTests
             "Switch modes from the recorder, tray, global shortcuts, or direct rule shortcuts. Enabled rules keep their list order for number-slot selection.",
             presentation.ManualSwitchingSummary);
         Assert.Equal(
-            "Specific process, title, and sanitized URL rules are checked in list order; the default fallback applies only when no specific rule matches.",
+            "Specific process, title, and sanitized URL rules are checked in list order; separate multiple app, title, or URL alternatives with semicolons or new lines.",
             presentation.MatchGuidance);
         Assert.Equal(
             "Rule overrides temporarily layer over Settings while the selected Power Mode is active; blank override fields keep the current Settings value.",
@@ -52,6 +52,26 @@ public sealed class PowerModePagePresenterTests
                 Assert.Equal("No direct shortcut", row.ShortcutSummary);
                 Assert.Equal("Disabled", row.StatusBadge);
             });
+    }
+
+    [Fact]
+    public void Present_ExplainsMultiTargetPatternSeparators()
+    {
+        var presentation = PowerModePagePresenter.Present(
+        [
+            new PowerModeRule
+            {
+                Name = "Writing",
+                ProcessNamePattern = "winword; notepad",
+                BrowserUrlPattern = "docs.example.com\r\nnotes.example.com"
+            }
+        ]);
+
+        Assert.Equal(
+            "Specific process, title, and sanitized URL rules are checked in list order; separate multiple app, title, or URL alternatives with semicolons or new lines.",
+            presentation.MatchGuidance);
+        var row = Assert.Single(presentation.RuleRows);
+        Assert.Equal("Processes: winword, notepad; URLs: docs.example.com, notes.example.com", row.TargetSummary);
     }
 
     [Fact]

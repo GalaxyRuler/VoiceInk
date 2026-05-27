@@ -36,7 +36,7 @@ public static class PowerModePagePresenter
             "Power Modes",
             "Automate your workflows with context-aware configurations.",
             "Switch modes from the recorder, tray, global shortcuts, or direct rule shortcuts. Enabled rules keep their list order for number-slot selection.",
-            "Specific process, title, and sanitized URL rules are checked in list order; the default fallback applies only when no specific rule matches.",
+            "Specific process, title, and sanitized URL rules are checked in list order; separate multiple app, title, or URL alternatives with semicolons or new lines.",
             "Rule overrides temporarily layer over Settings while the selected Power Mode is active; blank override fields keep the current Settings value.",
             "Automatic matches and manual selections are resolved for each recording, so rule overrides do not rewrite your base Settings.",
             isEmpty ? "0 Power Modes" : $"{total} {Pluralize(total, "Power Mode", "Power Modes")} ({enabled} enabled, {disabled} disabled)",
@@ -64,12 +64,25 @@ public static class PowerModePagePresenter
 
         var parts = new[]
         {
-            string.IsNullOrWhiteSpace(rule.ProcessNamePattern) ? null : $"Process: {rule.ProcessNamePattern.Trim()}",
-            string.IsNullOrWhiteSpace(rule.WindowTitlePattern) ? null : $"Title: {rule.WindowTitlePattern.Trim()}",
-            string.IsNullOrWhiteSpace(rule.BrowserUrlPattern) ? null : $"URL: {rule.BrowserUrlPattern.Trim()}"
+            SummaryPart("Process", "Processes", rule.ProcessNamePattern),
+            SummaryPart("Title", "Titles", rule.WindowTitlePattern),
+            SummaryPart("URL", "URLs", rule.BrowserUrlPattern)
         }.Where(part => part is not null);
         var summary = string.Join("; ", parts);
         return string.IsNullOrWhiteSpace(summary) ? "No target" : summary;
+    }
+
+    private static string? SummaryPart(string singularLabel, string pluralLabel, string value)
+    {
+        var patterns = SplitPatterns(value);
+        if (patterns.Length == 0)
+        {
+            return null;
+        }
+
+        return patterns.Length == 1
+            ? $"{singularLabel}: {patterns[0]}"
+            : $"{pluralLabel}: {string.Join(", ", patterns)}";
     }
 
     private static string OverrideSummary(PowerModeRule rule)
@@ -145,4 +158,7 @@ public static class PowerModePagePresenter
 
     private static string Pluralize(int count, string singular, string plural) =>
         count == 1 ? singular : plural;
+
+    private static string[] SplitPatterns(string value) =>
+        value.Split([';', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

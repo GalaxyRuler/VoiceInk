@@ -178,6 +178,58 @@ public sealed class PowerModeMatcherTests
     }
 
     [Fact]
+    public void Resolve_MatchesAnySemicolonSeparatedProcessPattern()
+    {
+        var settings = BaseSettings() with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Writing Apps",
+                    ProcessNamePattern = "winword; notepad; obsidian",
+                    ModelPathOverride = "writing.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget("Obsidian", "Daily Note", 103));
+
+        Assert.Equal("Writing Apps", resolution.Rule?.Name);
+        Assert.Equal("writing.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
+    public void Resolve_MatchesAnyNewlineSeparatedBrowserUrlPatternAfterSanitizing()
+    {
+        var settings = BaseSettings() with
+        {
+            PowerModeRules =
+            [
+                new PowerModeRule
+                {
+                    Name = "Docs Sites",
+                    BrowserUrlPattern = "internal.example/docs\r\nhttps://example.com/write",
+                    ModelPathOverride = "docs.bin"
+                }
+            ]
+        };
+
+        var resolution = PowerModeMatcher.Resolve(
+            settings,
+            new PowerModeTarget(
+                "msedge",
+                "Docs",
+                103,
+                BrowserUrl: "https://example.com/write?token=secret#top"));
+
+        Assert.Equal("Docs Sites", resolution.Rule?.Name);
+        Assert.Equal("docs.bin", resolution.EffectiveSettings.ModelPath);
+    }
+
+    [Fact]
     public void Resolve_DoesNotMatchBrowserUrlRulesWhenTargetHasNoUrl()
     {
         var settings = BaseSettings() with

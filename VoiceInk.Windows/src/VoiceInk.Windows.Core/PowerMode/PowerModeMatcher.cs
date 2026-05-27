@@ -33,22 +33,22 @@ public static class PowerModeMatcher
             return false;
         }
 
-        var processPattern = rule.ProcessNamePattern.Trim();
-        var titlePattern = rule.WindowTitlePattern.Trim();
-        var browserUrlPattern = rule.BrowserUrlPattern.Trim();
-        if (processPattern.Length == 0 && titlePattern.Length == 0 && browserUrlPattern.Length == 0)
+        var processPatterns = SplitPatterns(rule.ProcessNamePattern);
+        var titlePatterns = SplitPatterns(rule.WindowTitlePattern);
+        var browserUrlPatterns = SplitPatterns(rule.BrowserUrlPattern);
+        if (processPatterns.Length == 0 && titlePatterns.Length == 0 && browserUrlPatterns.Length == 0)
         {
             return false;
         }
 
-        return MatchesIfConfigured(target.ProcessName, processPattern, rule.MatchKind)
-            && MatchesIfConfigured(target.WindowTitle, titlePattern, rule.MatchKind)
-            && BrowserUrlMatchesIfConfigured(target.BrowserUrl, browserUrlPattern, rule.MatchKind);
+        return MatchesAnyIfConfigured(target.ProcessName, processPatterns, rule.MatchKind)
+            && MatchesAnyIfConfigured(target.WindowTitle, titlePatterns, rule.MatchKind)
+            && BrowserUrlMatchesAnyIfConfigured(target.BrowserUrl, browserUrlPatterns, rule.MatchKind);
     }
 
-    private static bool BrowserUrlMatchesIfConfigured(string value, string pattern, PowerModeMatchKind matchKind)
+    private static bool BrowserUrlMatchesAnyIfConfigured(string value, IReadOnlyList<string> patterns, PowerModeMatchKind matchKind)
     {
-        if (pattern.Length == 0)
+        if (patterns.Count == 0)
         {
             return true;
         }
@@ -59,24 +59,33 @@ public static class PowerModeMatcher
             return false;
         }
 
-        var sanitizedPattern = BrowserUrlContextSanitizer.Sanitize(pattern);
-        var effectivePattern = sanitizedPattern.Length == 0 ? pattern : sanitizedPattern;
-        return MatchesIfConfigured(sanitizedValue, effectivePattern, matchKind);
+        return patterns.Any(pattern =>
+        {
+            var sanitizedPattern = BrowserUrlContextSanitizer.Sanitize(pattern);
+            var effectivePattern = sanitizedPattern.Length == 0 ? pattern : sanitizedPattern;
+            return Matches(sanitizedValue, effectivePattern, matchKind);
+        });
     }
 
-    private static bool MatchesIfConfigured(string value, string pattern, PowerModeMatchKind matchKind)
+    private static bool MatchesAnyIfConfigured(string value, IReadOnlyList<string> patterns, PowerModeMatchKind matchKind)
     {
-        if (pattern.Length == 0)
+        if (patterns.Count == 0)
         {
             return true;
         }
 
-        return matchKind switch
+        return patterns.Any(pattern => Matches(value, pattern, matchKind));
+    }
+
+    private static bool Matches(string value, string pattern, PowerModeMatchKind matchKind) =>
+        matchKind switch
         {
             PowerModeMatchKind.Equals => string.Equals(value.Trim(), pattern, StringComparison.OrdinalIgnoreCase),
             _ => value.Contains(pattern, StringComparison.OrdinalIgnoreCase)
         };
-    }
+
+    private static string[] SplitPatterns(string value) =>
+        value.Split([';', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     private static AppSettings Apply(PowerModeRule? rule, AppSettings settings)
     {
