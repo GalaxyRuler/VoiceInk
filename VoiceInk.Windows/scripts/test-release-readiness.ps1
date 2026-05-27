@@ -50,6 +50,7 @@ Write-ReadinessCheck "App Installer manifest generator" (Join-Path $scriptRoot "
 Write-ReadinessCheck "App Installer manifest validator" (Join-Path $scriptRoot "test-appinstaller.ps1")
 Write-ReadinessCheck "WinGet manifest generator" (Join-Path $scriptRoot "write-winget-manifest.ps1")
 Write-ReadinessCheck "WinGet manifest validator" (Join-Path $scriptRoot "test-winget-manifest.ps1")
+Write-ReadinessCheck "Release checksum manifest generator" (Join-Path $scriptRoot "write-release-checksums.ps1")
 Write-ReadinessCheck "Dev ZIP package script" (Join-Path $scriptRoot "package-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP smoke validator" (Join-Path $scriptRoot "test-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user install helper" (Join-Path $scriptRoot "install-dev-zip.ps1")
@@ -65,6 +66,7 @@ Write-Host '  .\VoiceInk.Windows\scripts\write-appinstaller.ps1 -MainPackageUri 
 Write-Host '  .\VoiceInk.Windows\scripts\test-appinstaller.ps1 -AppInstallerPath <path-to-appinstaller>'
 Write-Host '  .\VoiceInk.Windows\scripts\write-winget-manifest.ps1 -InstallerUrl <absolute-msix-uri> -InstallerSha256 <sha256>'
 Write-Host '  .\VoiceInk.Windows\scripts\test-winget-manifest.ps1 -ManifestDirectory <path-to-winget-manifest-directory>'
+Write-Host '  .\VoiceInk.Windows\scripts\write-release-checksums.ps1 -ArtifactPath <artifact1>,<artifact2>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
 
 Write-Host ""
@@ -102,6 +104,12 @@ Write-Host "  [ ] The WinGet installer manifest uses InstallerType: msix and mus
 Write-Host "  [ ] InstallerSha256 can be supplied from the maintainer release process or computed from a local package under VoiceInk.Windows\artifacts with Get-FileHash."
 Write-Host "  [ ] Validate generated WinGet YAML locally with test-winget-manifest.ps1, then optionally run winget validate on a maintainer machine where WinGet is installed."
 Write-Host "  [ ] This readiness report does not submit manifests, download installers, install packages, uninstall packages, sign packages, create certificates, import certificates, or trust certificates."
+Write-Host ""
+Write-Host "Release checksum readiness reference:"
+Write-Host "  [ ] Generate SHA256SUMS.txt with write-release-checksums.ps1 after final release artifacts are staged under VoiceInk.Windows\artifacts."
+Write-Host "  [ ] The checksum helper uses Get-FileHash with SHA256 and artifact-root path containment."
+Write-Host "  [ ] Publish SHA256SUMS.txt next to release artifacts so users can verify downloaded files independently."
+Write-Host "  [ ] This readiness report does not hash files outside VoiceInk.Windows\artifacts, publish artifacts, install packages, sign packages, create certificates, import certificates, or trust certificates."
 Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 
