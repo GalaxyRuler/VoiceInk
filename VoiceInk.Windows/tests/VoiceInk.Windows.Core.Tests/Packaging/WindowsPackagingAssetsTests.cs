@@ -419,6 +419,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Get-AuthenticodeSignature -FilePath", script);
         Assert.Contains("Signer certificate subject", script);
         Assert.Contains("Signer certificate thumbprint", script);
+        Assert.Contains("Get-SignerTrustStatus", script);
+        Assert.Contains("Trust store status", script);
+        Assert.Contains(@"Cert:\LocalMachine\TrustedPeople", script);
+        Assert.Contains("Read-only trust check", script);
         Assert.Contains("Assert-SignatureReadyForExecute", script);
         Assert.Contains("Refusing to execute install smoke because Authenticode signature status is", script);
         Assert.Contains("0x800B0109", script);
@@ -436,7 +440,6 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
     }
 

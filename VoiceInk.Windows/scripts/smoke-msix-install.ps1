@@ -63,6 +63,36 @@ function Assert-NoReparsePointInPath {
     }
 }
 
+function Get-SignerTrustStatus {
+    param(
+        [object]$SignerCertificate
+    )
+
+    if ($null -eq $SignerCertificate) {
+        return "No signer certificate available for Trusted People lookup."
+    }
+
+    $signerThumbprint = [string]$SignerCertificate.Thumbprint
+    if ([string]::IsNullOrWhiteSpace($signerThumbprint)) {
+        return "Signer certificate thumbprint is unavailable."
+    }
+
+    $trustedPeoplePath = "Cert:\LocalMachine\TrustedPeople"
+    try {
+        $matchingCertificate = Get-ChildItem -LiteralPath $trustedPeoplePath -ErrorAction Stop |
+            Where-Object { [string]$_.Thumbprint -eq $signerThumbprint } |
+            Select-Object -First 1
+        if ($null -ne $matchingCertificate) {
+            return "Found signer thumbprint in $trustedPeoplePath."
+        }
+
+        return "Signer thumbprint not found in $trustedPeoplePath."
+    }
+    catch {
+        return "Unable to read $trustedPeoplePath: $($_.Exception.Message)"
+    }
+}
+
 function Write-SmokePlan {
     param(
         [string]$ResolvedPackagePath,
@@ -80,6 +110,8 @@ function Write-SmokePlan {
         Write-Host "  Signer certificate thumbprint: $($signature.SignerCertificate.Thumbprint)"
     }
 
+    Write-Host "  Trust store status: $(Get-SignerTrustStatus -SignerCertificate $signature.SignerCertificate)"
+    Write-Host "  Read-only trust check: Cert:\LocalMachine\TrustedPeople is inspected only when available."
     Write-Host ""
     Write-Host "Prerequisite: the package must already be signed and the signing certificate must already be trusted on this test machine."
     Write-Host "This script does not create or import certificates."

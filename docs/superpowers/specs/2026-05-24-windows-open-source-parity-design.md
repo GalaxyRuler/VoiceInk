@@ -1070,6 +1070,12 @@ MSIX execute signature gate slice completed on 2026-05-27:
 - The install smoke helper now refuses `-Execute` when `Get-AuthenticodeSignature` does not report `Valid`, giving maintainers a clear trust/signing message before any install/query/uninstall mutation.
 - Preserved the existing non-mutating default plan and the rule that the repo never creates/imports certificates, trusts certificates, signs packages, or runs install smoke without explicit maintainer action.
 
+MSIX trust status smoke slice completed on 2026-05-27:
+
+- Added a read-only signer trust-store status line to the signed MSIX smoke plan.
+- The helper checks for the signer thumbprint in `Cert:\LocalMachine\TrustedPeople` when a signer certificate is available and reports missing/unreadable trust state as diagnostic context.
+- Kept certificate creation/import/trust, install, uninstall, launch, publish, and signing behavior unchanged and gated.
+
 App Installer package URI guard slice completed on 2026-05-27:
 
 - Added `.msix`/`.msixbundle` extension guards to `write-appinstaller.ps1` and `test-appinstaller.ps1` for `MainPackage` URIs.
@@ -1079,7 +1085,6 @@ App Installer package URI guard slice completed on 2026-05-27:
 Windows gaps:
 
 - Actual signed MSIX build and install smoke with a maintainer-owned trusted certificate.
-- Release signing/trust documentation for the project maintainer's chosen certificate provider.
 - Deeper installer/update-channel polish if a store or winget path is chosen later.
 
 ## Milestone Order
