@@ -83,8 +83,15 @@ jobs:
 
           Push-Location $wackRoot
           try {
-            appcert.exe reset
-            appcert.exe test -appxpackagepath $packagePath -reportoutputpath $reportPath
+            & $appCert reset
+            if ($LASTEXITCODE -ne 0) {
+              throw "Windows App Certification Kit reset failed with exit code $LASTEXITCODE."
+            }
+
+            & $appCert test -appxpackagepath $packagePath -reportoutputpath $reportPath
+            if ($LASTEXITCODE -ne 0) {
+              throw "Windows App Certification Kit test failed with exit code $LASTEXITCODE."
+            }
           }
           finally {
             Pop-Location

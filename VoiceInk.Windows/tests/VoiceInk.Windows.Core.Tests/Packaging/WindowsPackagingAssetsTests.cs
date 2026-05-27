@@ -563,8 +563,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("wack_report_path", workflow);
         Assert.Contains("run_wack", workflow);
         Assert.Contains("default: false", workflow);
-        Assert.Contains("appcert.exe reset", workflow);
-        Assert.Contains("appcert.exe test -appxpackagepath", workflow);
+        Assert.Contains("& $appCert reset", workflow);
+        Assert.Contains("& $appCert test -appxpackagepath", workflow);
         Assert.Contains("wack-report.xml", workflow);
         Assert.Contains("Resolve-Path -LiteralPath", workflow);
         Assert.Contains("GetFullPath", workflow);
@@ -579,6 +579,19 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("Import-Certificate", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("cert:\\", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(".pfx", workflow, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void InstallerSmokeWorkflow_FailsWhenWackCommandsReturnNonZero()
+    {
+        var workflowPath = SourcePath(".github", "workflows", "windows-installer-smoke.yml");
+        var workflow = File.ReadAllText(workflowPath);
+
+        Assert.Contains("& $appCert reset", workflow);
+        Assert.Contains("if ($LASTEXITCODE -ne 0)", workflow);
+        Assert.Contains("Windows App Certification Kit reset failed", workflow);
+        Assert.Contains("& $appCert test -appxpackagepath", workflow);
+        Assert.Contains("Windows App Certification Kit test failed", workflow);
     }
 
     [Fact]
