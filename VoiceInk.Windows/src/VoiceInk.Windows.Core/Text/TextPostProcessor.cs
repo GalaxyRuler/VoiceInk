@@ -36,6 +36,8 @@ public static class TextPostProcessor
     private static readonly Regex SpaceBeforeNewlineRegex = new(@"[ \t]+(\r?\n)", RegexOptions.Compiled);
     private static readonly Regex SpaceAfterNewlineRegex = new(@"(\r?\n)[ \t]+", RegexOptions.Compiled);
     private static readonly Regex WordRegex = new(@"[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)?", RegexOptions.Compiled);
+    private static readonly Regex NewParagraphCommandRegex = new(@"\bnew paragraph\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+    private static readonly Regex NewLineCommandRegex = new(@"\bnew line\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex[] HallucinationRegexes =
     [
@@ -160,6 +162,7 @@ public static class TextPostProcessor
 
     private static string ApplyTextFormatting(string text)
     {
+        text = ApplyDictationFormattingCommands(text);
         var sentences = SplitSentences(text);
         if (sentences.Count == 0)
         {
@@ -228,6 +231,13 @@ public static class TextPostProcessor
         }
 
         return string.Join("\n\n", chunks).Trim();
+    }
+
+    private static string ApplyDictationFormattingCommands(string text)
+    {
+        var formatted = NewParagraphCommandRegex.Replace(text, "\n\n");
+        formatted = NewLineCommandRegex.Replace(formatted, "\n");
+        return NormalizePunctuationWhitespace(formatted);
     }
 
     private static IReadOnlyList<string> SplitSentences(string text)

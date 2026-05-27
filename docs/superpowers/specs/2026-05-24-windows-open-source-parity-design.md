@@ -293,6 +293,12 @@ Transcript replacement order parity slice completed on 2026-05-27:
 - Kept user cleanup preferences after replacements so punctuation removal, lowercase output, and trailing-space behavior remain paste-ready finalization steps.
 - Added a focused Core regression test that fails when replacements run before formatting and passes only when formatted paragraph boundaries are available to replacement rules.
 
+Transcript formatting commands slice completed on 2026-05-27:
+
+- Added local text-formatting support for spoken `new line` and `new paragraph` commands when transcript formatting is enabled.
+- Preserved literal command words when transcript formatting is disabled.
+- Kept dictionary replacement, punctuation cleanup, lowercase conversion, trailing-space handling, enhancement flow, and persistence behavior unchanged.
+
 Failed dictation history slice completed on 2026-05-25:
 
 - When audio capture has already stopped, post-capture dictation failures now save a best-effort `Failed` History row.

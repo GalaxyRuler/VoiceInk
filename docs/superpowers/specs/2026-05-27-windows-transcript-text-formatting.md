@@ -17,8 +17,9 @@ Port the original macOS VoiceInk transcript formatting behavior into the Windows
   - maximum significant sentences per paragraph: 4
   - significant sentence threshold: 4 words
 - Keep the low-level formatter explicit in `TextPostProcessingOptions`, but default the persisted app setting on for macOS parity.
-- Run dictionary replacements before formatting so replacement text participates in final output.
+- Run text formatting before dictionary replacements so replacements can match formatted paragraphs.
 - Run formatting before punctuation cleanup so sentence punctuation can still guide paragraph splitting.
+- Respect spoken `new line` and `new paragraph` commands when text formatting is enabled.
 - Keep the logic UI-independent and testable in Core.
 - Add a Power Mode override equivalent to the macOS `isTextFormattingEnabled` option.
 - Preserve line breaks if the user later chooses Remove All punctuation.
