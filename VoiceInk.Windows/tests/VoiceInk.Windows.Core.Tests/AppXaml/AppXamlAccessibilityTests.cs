@@ -20,6 +20,26 @@ public sealed class AppXamlAccessibilityTests
     }
 
     [Fact]
+    public void MainWindow_UpdateGuidanceRows_BindAccessibleNameAndOpenReleases()
+    {
+        var xaml = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+        var listStart = xaml.IndexOf("x:Name=\"UpdateGuidanceListView\"", StringComparison.Ordinal);
+        Assert.True(listStart >= 0);
+        var templateStart = xaml.IndexOf("<DataTemplate>", listStart, StringComparison.Ordinal);
+        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
+        Assert.True(templateStart >= 0);
+        Assert.True(templateEnd > templateStart);
+
+        var template = xaml[templateStart..templateEnd];
+        Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
+        Assert.Contains("OpenReleasesButton", xaml);
+        Assert.Contains("Check for Updates", xaml);
+        Assert.Contains("OpenReleasesButton_Click", code);
+        Assert.Contains("https://github.com/Beingpax/VoiceInk/releases", code);
+    }
+
+    [Fact]
     public void MainWindow_OnboardingDialogControls_SetAutomationNames()
     {
         var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));

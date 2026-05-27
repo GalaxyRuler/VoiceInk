@@ -2282,6 +2282,7 @@ public sealed partial class MainWindow : Window
         SettingsActionSummaryListView.ItemsSource = presentation.ActionSummaries;
         SettingsPreferenceSummaryListView.ItemsSource = presentation.PreferenceSummaries;
         SettingsBackupGuidanceListView.ItemsSource = presentation.BackupGuidanceRows;
+        UpdateGuidanceListView.ItemsSource = presentation.UpdateGuidanceRows;
         DiagnosticsGuidanceListView.ItemsSource = presentation.DiagnosticsGuidanceRows;
 
         foreach (var section in presentation.Sections)
@@ -8594,6 +8595,23 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Diagnostics folder failed: {ex.Message}");
+        }
+    }
+
+    private void OpenReleasesButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/Beingpax/VoiceInk/releases",
+                UseShellExecute = true
+            });
+            RefreshUiFromControllerState("VoiceInk releases opened");
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Open releases failed: {ex.Message}");
         }
     }
 

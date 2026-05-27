@@ -11,6 +11,7 @@ public sealed record SettingsSectionPresentation(
     IReadOnlyList<SettingsActionSummary> ActionSummaries,
     IReadOnlyList<SettingsPreferenceSummary> PreferenceSummaries,
     IReadOnlyList<SettingsBackupGuidanceRow> BackupGuidanceRows,
+    IReadOnlyList<SettingsUpdateGuidanceRow> UpdateGuidanceRows,
     IReadOnlyList<SettingsDiagnosticsGuidanceRow> DiagnosticsGuidanceRows,
     IReadOnlyList<SettingsSectionCopy> Sections);
 
@@ -32,6 +33,15 @@ public sealed record SettingsPreferenceSummary(
 }
 
 public sealed record SettingsBackupGuidanceRow(
+    string Title,
+    string Value,
+    string Detail,
+    string StatusBadge)
+{
+    public string AccessibleName => SettingsRowAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
+
+public sealed record SettingsUpdateGuidanceRow(
     string Title,
     string Value,
     string Detail,
@@ -103,6 +113,7 @@ public static class SettingsSectionPresenter
             ],
             PreferenceSummaries(settings),
             BackupGuidanceRows(),
+            UpdateGuidanceRows(),
             DiagnosticsGuidanceRows(),
             [
                 new("shortcuts", "Shortcuts", "Configure recording, paste, retry, cancel, history, dictionary, enhancement, and Power Mode shortcuts."),
@@ -152,6 +163,25 @@ public static class SettingsSectionPresenter
             "User-chosen file",
             "Backups are written only when you choose an export location; VoiceInk does not roam settings automatically.",
             "Manual")
+    ];
+
+    private static IReadOnlyList<SettingsUpdateGuidanceRow> UpdateGuidanceRows() =>
+    [
+        new(
+            "App Installer",
+            "Optional",
+            "Signed .appinstaller releases can check for updates on launch when a maintainer publishes them.",
+            "MSIX"),
+        new(
+            "WinGet",
+            "Manual command",
+            "Run winget upgrade --id VoiceInk.VoiceInkWindows from a terminal you control after a signed manifest is published.",
+            "Package manager"),
+        new(
+            "Source Builds",
+            "Repository",
+            "Source-built ZIP users rebuild or download release artifacts manually; VoiceInk has no private updater or commercial channel.",
+            "Open source")
     ];
 
     private static IReadOnlyList<SettingsDiagnosticsGuidanceRow> DiagnosticsGuidanceRows() =>

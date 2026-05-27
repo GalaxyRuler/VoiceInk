@@ -129,6 +129,32 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Manual", row.StatusBadge);
             });
         Assert.Collection(
+            presentation.UpdateGuidanceRows,
+            row =>
+            {
+                Assert.Equal("App Installer", row.Title);
+                Assert.Equal("Optional", row.Value);
+                Assert.Equal("Signed .appinstaller releases can check for updates on launch when a maintainer publishes them.", row.Detail);
+                Assert.Equal("MSIX", row.StatusBadge);
+                Assert.Equal(
+                    "App Installer, Optional, MSIX, Signed .appinstaller releases can check for updates on launch when a maintainer publishes them.",
+                    row.AccessibleName);
+            },
+            row =>
+            {
+                Assert.Equal("WinGet", row.Title);
+                Assert.Equal("Manual command", row.Value);
+                Assert.Equal("Run winget upgrade --id VoiceInk.VoiceInkWindows from a terminal you control after a signed manifest is published.", row.Detail);
+                Assert.Equal("Package manager", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Source Builds", row.Title);
+                Assert.Equal("Repository", row.Value);
+                Assert.Equal("Source-built ZIP users rebuild or download release artifacts manually; VoiceInk has no private updater or commercial channel.", row.Detail);
+                Assert.Equal("Open source", row.StatusBadge);
+            });
+        Assert.Collection(
             presentation.DiagnosticsGuidanceRows,
             row =>
             {
