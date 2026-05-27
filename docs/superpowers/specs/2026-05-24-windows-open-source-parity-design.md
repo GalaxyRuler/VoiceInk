@@ -881,6 +881,12 @@ Settings diagnostics slice completed on 2026-05-25:
 - Added About / Open Source `Export Diagnostic Logs` using a user-selected `.log` save picker.
 - Reused the safe diagnostic report for `Copy Diagnostics Summary` so copy/export share privacy boundaries.
 
+Diagnostics system-context slice completed on 2026-05-27:
+
+- Expanded copied/exported Windows diagnostic reports with safe local OS architecture and logical processor count.
+- Populated the new fields from .NET runtime APIs without reading environment variables, secrets, clipboard contents, transcripts, history text, or settings file contents.
+- Kept diagnostics as local open-source troubleshooting artifacts with existing redaction/privacy boundaries.
+
 Settings section copy parity slice completed on 2026-05-26:
 
 - Added a Core `SettingsSectionPresenter` for macOS-style Settings hero text and section descriptions.

@@ -5,8 +5,10 @@ public sealed record DiagnosticReportRequest
     public DateTimeOffset ExportedAtUtc { get; init; }
     public string AppVersion { get; init; } = "source build";
     public string OsDescription { get; init; } = string.Empty;
+    public string OsArchitecture { get; init; } = string.Empty;
     public string RuntimeDescription { get; init; } = string.Empty;
     public string ProcessArchitecture { get; init; } = string.Empty;
+    public int LogicalProcessorCount { get; init; }
     public string AppBaseDirectory { get; init; } = string.Empty;
     public string AppDataDirectory { get; init; } = string.Empty;
     public string RecordingsDirectory { get; init; } = string.Empty;

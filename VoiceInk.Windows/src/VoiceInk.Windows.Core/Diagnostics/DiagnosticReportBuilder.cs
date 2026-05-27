@@ -15,8 +15,10 @@ public static partial class DiagnosticReportBuilder
         builder.AppendLine("System");
         builder.AppendLine($"App Version: {Sanitize(request.AppVersion)}");
         builder.AppendLine($"OS: {Sanitize(request.OsDescription)}");
+        builder.AppendLine($"OS Architecture: {Sanitize(request.OsArchitecture)}");
         builder.AppendLine($"Runtime: {Sanitize(request.RuntimeDescription)}");
         builder.AppendLine($"Process Architecture: {Sanitize(request.ProcessArchitecture)}");
+        builder.AppendLine($"Logical Processors: {Math.Max(0, request.LogicalProcessorCount)}");
         builder.AppendLine();
 
         builder.AppendLine("Paths");

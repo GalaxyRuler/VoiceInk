@@ -13,8 +13,10 @@ public sealed class DiagnosticReportBuilderTests
             ExportedAtUtc = DateTimeOffset.Parse("2026-05-25T12:34:56Z"),
             AppVersion = "1.2.3",
             OsDescription = "Windows 11",
+            OsArchitecture = "X64",
             RuntimeDescription = ".NET 10",
             ProcessArchitecture = "X64",
+            LogicalProcessorCount = 16,
             AppBaseDirectory = @"C:\VoiceInk\App",
             AppDataDirectory = @"C:\Users\Admin\AppData\Local\VoiceInk.Windows",
             RecordingsDirectory = @"C:\Users\Admin\AppData\Local\VoiceInk.Windows\Recordings",
@@ -39,8 +41,10 @@ public sealed class DiagnosticReportBuilderTests
         Assert.Contains("Exported At UTC: 2026-05-25T12:34:56.0000000+00:00", report);
         Assert.Contains("App Version: 1.2.3", report);
         Assert.Contains("OS: Windows 11", report);
+        Assert.Contains("OS Architecture: X64", report);
         Assert.Contains("Runtime: .NET 10", report);
         Assert.Contains("Process Architecture: X64", report);
+        Assert.Contains("Logical Processors: 16", report);
         Assert.Contains(@"App Data: C:\Users\Admin\AppData\Local\VoiceInk.Windows", report);
         Assert.Contains(@"Recordings: C:\Users\Admin\AppData\Local\VoiceInk.Windows\Recordings", report);
         Assert.Contains("Settings: exists, 2048 bytes", report);
