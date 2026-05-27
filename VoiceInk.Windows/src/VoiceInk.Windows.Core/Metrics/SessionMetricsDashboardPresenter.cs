@@ -17,25 +17,43 @@ public sealed record SessionMetricsDataGuidanceRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SessionMetricsAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record SessionMetricsActionRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SessionMetricsAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record SessionMetricsDiagnosticsRow(
     string Title,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => SessionMetricsAccessibleName.From(Title, StatusBadge, Detail);
+}
 
 public sealed record SessionMetricsDashboardCard(
     string IconGlyph,
     string Title,
     string Value,
     string Detail,
-    string Accent);
+    string Accent)
+{
+    public string AccessibleName => SessionMetricsAccessibleName.From(Title, Value, Detail);
+}
+
+internal static class SessionMetricsAccessibleName
+{
+    public static string From(params string[] parts) =>
+        string.Join(", ", parts.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part.Trim()));
+}
 
 public static class SessionMetricsDashboardPresenter
 {

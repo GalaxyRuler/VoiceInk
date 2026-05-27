@@ -181,6 +181,33 @@ public sealed class SessionMetricsDashboardPresenterTests
     }
 
     [Fact]
+    public void Present_RowsAndCardsExposeAccessibleNames()
+    {
+        var presentation = SessionMetricsDashboardPresenter.Present(
+            "Last 7 days",
+            new SessionMetricsSummary(
+                TotalSessions: 2,
+                TotalWords: 1_234,
+                TotalAudioDuration: TimeSpan.FromMinutes(10),
+                WordsPerMinute: 123.4,
+                KeystrokesSaved: 6_170,
+                TimeSaved: TimeSpan.FromMinutes(25)));
+
+        Assert.Equal(
+            "Sessions Recorded, 2, VoiceInk sessions completed",
+            presentation.Cards[0].AccessibleName);
+        Assert.Equal(
+            "Sessions and Words, Completed work, SQLite, Counts come from completed recorder, file transcription, and retry rows saved locally.",
+            presentation.DataGuidanceRows[0].AccessibleName);
+        Assert.Equal(
+            "Export CSV, Ready, Local file, Exports dashboard totals and model performance summaries to a local file.",
+            presentation.ActionRows[1].AccessibleName);
+        Assert.Equal(
+            "Privacy, Local, Metrics stay local to this Windows profile unless you export CSV.",
+            presentation.DiagnosticsRows[1].AccessibleName);
+    }
+
+    [Fact]
     public void Present_BuildsMacStyleEmptyState()
     {
         WithCulture("en-US", () =>
