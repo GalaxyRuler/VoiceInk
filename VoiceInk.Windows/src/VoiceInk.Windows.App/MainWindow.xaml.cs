@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Win32;
@@ -2472,6 +2473,22 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = TextWrapping.Wrap
         };
+        AutomationProperties.SetName(modelPathTextBox, "Local whisper model path");
+        AutomationProperties.SetName(browseModelButton, "Browse for local whisper model");
+        AutomationProperties.SetName(recommendedModelComboBox, "Recommended local whisper model");
+        AutomationProperties.SetName(downloadRecommendedModelButton, "Download recommended local whisper model");
+        AutomationProperties.SetName(audioInputComboBox, "Microphone input for onboarding");
+        AutomationProperties.SetName(microphoneSettingsButton, "Open Windows microphone settings for onboarding");
+        AutomationProperties.SetName(refreshMicrophonesButton, "Refresh onboarding microphone list");
+        AutomationProperties.SetName(shortcutTextBox, "Primary recording shortcut for onboarding");
+        AutomationProperties.SetName(onboardingActionListView, "Onboarding setup actions");
+        AutomationProperties.SetName(onboardingSummaryListView, "Onboarding readiness summary");
+        AutomationProperties.SetName(onboardingStagesListView, "Onboarding setup stages");
+        AutomationProperties.SetName(onboardingTutorialListView, "Onboarding first dictation tutorial");
+        AutomationProperties.SetName(onboardingChecklistTextBlock, "Onboarding setup checklist");
+        AutomationProperties.SetName(statusTextBlock, "Onboarding next action");
+        AutomationProperties.SetName(microphoneStatusTextBlock, "Onboarding microphone status");
+        AutomationProperties.SetName(onboardingHealthTextBlock, "Onboarding setup health");
         RefreshOnboardingStatus(
             statusTextBlock,
             onboardingDescriptionTextBlock,

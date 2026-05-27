@@ -19,6 +19,25 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.Name=\"{Binding AccessibleName}\"", template);
     }
 
+    [Fact]
+    public void MainWindow_OnboardingDialogControls_SetAutomationNames()
+    {
+        var code = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("AutomationProperties.SetName(modelPathTextBox", code);
+        Assert.Contains("AutomationProperties.SetName(browseModelButton", code);
+        Assert.Contains("AutomationProperties.SetName(recommendedModelComboBox", code);
+        Assert.Contains("AutomationProperties.SetName(downloadRecommendedModelButton", code);
+        Assert.Contains("AutomationProperties.SetName(audioInputComboBox", code);
+        Assert.Contains("AutomationProperties.SetName(microphoneSettingsButton", code);
+        Assert.Contains("AutomationProperties.SetName(refreshMicrophonesButton", code);
+        Assert.Contains("AutomationProperties.SetName(shortcutTextBox", code);
+        Assert.Contains("AutomationProperties.SetName(onboardingActionListView", code);
+        Assert.Contains("AutomationProperties.SetName(onboardingSummaryListView", code);
+        Assert.Contains("AutomationProperties.SetName(onboardingStagesListView", code);
+        Assert.Contains("AutomationProperties.SetName(onboardingTutorialListView", code);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
