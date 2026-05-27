@@ -81,6 +81,7 @@ public sealed class TranscriptionProviderPresetCatalogTests
         Assert.Equal("Fast", TranscriptionProviderPresetCatalog.Groq.SpeedDisplay);
         Assert.Equal("High", TranscriptionProviderPresetCatalog.Groq.AccuracyDisplay);
         Assert.Equal("Batch", TranscriptionProviderPresetCatalog.Groq.StreamingDisplay);
+        Assert.Equal("Batch", TranscriptionProviderPresetCatalog.Mistral.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.Deepgram.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.AssemblyAI.StreamingDisplay);
         Assert.Equal("Realtime preview", TranscriptionProviderPresetCatalog.ElevenLabs.StreamingDisplay);
