@@ -34,6 +34,28 @@ public sealed class AudioFileQueueServiceTests
             });
     }
 
+    [Theory]
+    [InlineData(".aiff")]
+    [InlineData(".caf")]
+    [InlineData(".amr")]
+    [InlineData(".ogg")]
+    [InlineData(".oga")]
+    [InlineData(".opus")]
+    public void AddFiles_AcceptsMacOsSupportedAudioFormats(string extension)
+    {
+        using var media = new TempMediaFile(extension);
+        var service = new AudioFileQueueService(() => Guid.Parse("11111111-1111-1111-1111-111111111111"));
+
+        var update = service.AddFiles([], [media.Path]);
+
+        var item = Assert.Single(update.Items);
+        Assert.Equal(1, update.AddedCount);
+        Assert.Equal(0, update.SkippedCount);
+        Assert.Equal(media.Path, item.FilePath);
+        Assert.Equal(AudioFileQueueStatus.Pending, item.Status);
+        Assert.Contains(extension, AudioFileQueueService.SupportedExtensions, StringComparer.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void AddFiles_SkipsMissingUnsupportedAndDuplicateActiveFiles()
     {

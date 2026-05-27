@@ -14,7 +14,7 @@ VoiceInk Windows parity  [###################-] 96%
 
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
-| Core dictation pipeline | 92% | `[##################--]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
+| Core dictation pipeline | 93% | `[###################-]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings with macOS-aligned 250 ms minimum speech duration, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow with macOS-supported audio extension intake and Windows decoder fallback, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
 | Shell and tray | 91% | `[##################--]` | Navigation shell, macOS-order Permissions route, notification-area tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible notification-area/taskbar-corner-overflow menu guidance, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for transcription model/provider, enhancement prompt/provider/AI model, language, audio, context, and Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 93% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. More streaming providers and final visual polish remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; default-off middle-click recording with activation delay parity, paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Enhancement reasoning parameters  [####################] 100%
+Transcribe Audio format parity  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows enhancement reasoning-parameter spec and implementation plan.
-- Added red enhancement request-construction tests for OpenAI, Gemini, Cerebras, and Groq reasoning controls.
-- Added macOS-aligned provider/model reasoning parameter mapping for enhancement requests.
-- Ran focused enhancement tests, full solution tests, full Debug x64 solution build, and whitespace checking.
+- Wrote the Windows Transcribe Audio format parity spec and implementation plan.
+- Added red queue tests for macOS-supported `.aiff`, `.caf`, `.amr`, `.ogg`, `.oga`, and `.opus` intake.
+- Expanded the Windows queue/picker allow-list while keeping Media Foundation decode failures on the existing graceful error path.
+- Ran focused queue tests, full solution tests, full Debug x64 solution build, and whitespace checking.
 
 ## Near-Term Priority
 
