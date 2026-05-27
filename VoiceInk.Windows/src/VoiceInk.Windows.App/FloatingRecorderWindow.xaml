@@ -216,17 +216,25 @@
             BorderThickness="1"
             CornerRadius="14"
             Visibility="Collapsed">
-            <ScrollViewer
-                AutomationProperties.Name="Live transcript preview"
-                VerticalScrollBarVisibility="Hidden"
-                HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="4">
+                <ScrollViewer
+                    AutomationProperties.Name="Live transcript preview"
+                    VerticalScrollBarVisibility="Hidden"
+                    HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock
+                        x:Name="LiveTranscriptTextBlock"
+                        Foreground="#D8D8D8"
+                        FontSize="12"
+                        Text=""
+                        TextWrapping="WrapWholeWords" />
+                </ScrollViewer>
                 <TextBlock
-                    x:Name="LiveTranscriptTextBlock"
-                    Foreground="#D8D8D8"
-                    FontSize="12"
+                    x:Name="LiveTranscriptDetailTextBlock"
+                    Foreground="#8E8E8E"
+                    FontSize="10"
                     Text=""
                     TextWrapping="WrapWholeWords" />
-            </ScrollViewer>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

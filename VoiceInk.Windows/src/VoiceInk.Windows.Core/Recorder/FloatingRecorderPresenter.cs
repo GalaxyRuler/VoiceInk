@@ -17,6 +17,9 @@ public static class FloatingRecorderPresenter
         var safeInputLevel = double.IsFinite(inputLevel) ? Math.Clamp(inputLevel, 0, 1) : 0;
         var liveTranscript = LiveTranscriptForState(state, partialTranscript, showLiveTranscriptPreview);
         var hasLiveTranscript = liveTranscript.Length > 0;
+        var liveTranscriptDetail = hasLiveTranscript
+            ? "Live preview is interim and stays in the recorder until final insertion."
+            : string.Empty;
         var normalizedRecorderStyle = RecorderStyleSettings.Normalize(recorderStyle);
         return state switch
         {
@@ -31,6 +34,7 @@ public static class FloatingRecorderPresenter
                 InputLevel: safeInputLevel,
                 LiveTranscript: liveTranscript,
                 HasLiveTranscript: hasLiveTranscript,
+                LiveTranscriptDetail: liveTranscriptDetail,
                 RecorderStyle: normalizedRecorderStyle),
             DictationState.Transcribing => new(
                 true,

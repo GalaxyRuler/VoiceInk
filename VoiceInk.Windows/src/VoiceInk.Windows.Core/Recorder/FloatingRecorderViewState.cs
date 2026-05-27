@@ -11,4 +11,5 @@ public sealed record FloatingRecorderViewState(
     double InputLevel = 0,
     string LiveTranscript = "",
     bool HasLiveTranscript = false,
+    string LiveTranscriptDetail = "",
     string RecorderStyle = RecorderStyleSettings.Mini);

@@ -88,6 +88,7 @@ public sealed partial class FloatingRecorderWindow : Window
         recorderStyle = RecorderStyleSettings.Normalize(state.RecorderStyle);
         LiveTranscriptPanel.Visibility = showLiveTranscript ? Visibility.Visible : Visibility.Collapsed;
         LiveTranscriptTextBlock.Text = showLiveTranscript ? state.LiveTranscript : string.Empty;
+        LiveTranscriptDetailTextBlock.Text = showLiveTranscript ? state.LiveTranscriptDetail : string.Empty;
         inputLevel = double.IsFinite(state.InputLevel) ? Math.Clamp(state.InputLevel, 0, 1) : 0;
         SetPulseVisible(state.ShowPulse);
         ApplyMeter();

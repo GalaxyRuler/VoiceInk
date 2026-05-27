@@ -51,6 +51,9 @@ public sealed class FloatingRecorderPresenterTests
 
         Assert.True(state.HasLiveTranscript);
         Assert.Equal("hello from the live recorder", state.LiveTranscript);
+        Assert.Equal(
+            "Live preview is interim and stays in the recorder until final insertion.",
+            state.LiveTranscriptDetail);
     }
 
     [Fact]
@@ -102,6 +105,7 @@ public sealed class FloatingRecorderPresenterTests
 
         Assert.False(state.HasLiveTranscript);
         Assert.Equal(string.Empty, state.LiveTranscript);
+        Assert.Equal(string.Empty, state.LiveTranscriptDetail);
     }
 
     [Theory]
