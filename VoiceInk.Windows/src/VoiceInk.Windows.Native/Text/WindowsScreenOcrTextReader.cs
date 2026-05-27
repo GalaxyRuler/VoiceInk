@@ -40,6 +40,11 @@ public sealed class WindowsScreenOcrTextReader : IOcrTextReader
         }
 
         var text = (await recognizer.RecognizeTextAsync(imagePngBytes, cancellationToken)).Trim();
+        if (text.Length == 0)
+        {
+            return "No text detected via OCR";
+        }
+
         return text.Length <= maxCharacters
             ? text
             : text[..maxCharacters];

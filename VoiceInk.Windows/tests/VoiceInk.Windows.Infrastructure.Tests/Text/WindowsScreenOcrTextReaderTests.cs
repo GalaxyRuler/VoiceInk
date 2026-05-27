@@ -35,6 +35,19 @@ public sealed class WindowsScreenOcrTextReaderTests
     }
 
     [Fact]
+    public async Task GetOcrTextAsync_WhenRecognitionFindsNoText_ReturnsMacStyleEmptyOcrMessage()
+    {
+        var capture = new FakeScreenImageCapture([1, 2, 3]);
+        var recognizer = new FakeOcrTextRecognizer("   ");
+        var reader = new WindowsScreenOcrTextReader(capture, recognizer);
+
+        var text = await reader.GetOcrTextAsync(CancellationToken.None);
+
+        Assert.Equal("No text detected via OCR", text);
+        Assert.Equal(1, recognizer.CallCount);
+    }
+
+    [Fact]
     public async Task GetOcrTextAsync_CapsRecognizedText()
     {
         var capture = new FakeScreenImageCapture([1]);
