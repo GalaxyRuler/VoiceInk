@@ -25,6 +25,14 @@ public sealed class CartesiaCloudTranscriptionService(
             throw new InvalidOperationException("Cloud transcription endpoint and model are required.");
         }
 
+        if (!TranscriptionConfiguration.TryCreateCloudEndpoint(
+            options.CloudEndpoint,
+            out var endpoint,
+            out var endpointError))
+        {
+            throw new InvalidOperationException(endpointError);
+        }
+
         var apiKey = await ReadApiKeyAsync(options.CloudProviderId, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -32,7 +40,7 @@ public sealed class CartesiaCloudTranscriptionService(
         }
 
         var startedAt = Stopwatch.GetTimestamp();
-        using var message = new HttpRequestMessage(HttpMethod.Post, CreateEndpoint(options.CloudEndpoint));
+        using var message = new HttpRequestMessage(HttpMethod.Post, EndpointWithoutQuery(endpoint!));
         message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         message.Headers.Add("Cartesia-Version", CartesiaVersion);
         var content = new MultipartFormDataContent();
@@ -41,6 +49,11 @@ public sealed class CartesiaCloudTranscriptionService(
             && !string.Equals(options.Language.Trim(), "auto", StringComparison.OrdinalIgnoreCase))
         {
             content.Add(new StringContent(options.Language.Trim()), "language");
+        }
+
+        foreach (var option in EndpointQueryOptions(endpoint!))
+        {
+            content.Add(new StringContent(option.Value), option.Name);
         }
 
         var fileStream = File.OpenRead(audio.FilePath);
@@ -77,15 +90,50 @@ public sealed class CartesiaCloudTranscriptionService(
         return null;
     }
 
-    private static Uri CreateEndpoint(string endpoint)
+    private static Uri EndpointWithoutQuery(Uri endpoint)
     {
-        if (!Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out var uri))
+        var builder = new UriBuilder(endpoint)
         {
-            throw new InvalidOperationException("Cloud transcription endpoint is invalid.");
+            Query = string.Empty
+        };
+
+        return builder.Uri;
+    }
+
+    private static IEnumerable<(string Name, string Value)> EndpointQueryOptions(Uri endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint.Query))
+        {
+            yield break;
         }
 
-        return uri;
+        foreach (var part in endpoint.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = DecodeQueryComponent(pieces[0]).Trim();
+            if (string.IsNullOrWhiteSpace(name)
+                || ReservedMultipartFieldNames.Any(
+                    reservedName => string.Equals(reservedName, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var value = pieces.Length == 2
+                ? DecodeQueryComponent(pieces[1]).Trim()
+                : string.Empty;
+            yield return (name, value);
+        }
     }
+
+    private static string DecodeQueryComponent(string value) =>
+        Uri.UnescapeDataString(value.Replace("+", " ", StringComparison.Ordinal));
+
+    private static readonly string[] ReservedMultipartFieldNames =
+    [
+        "file",
+        "language",
+        "model"
+    ];
 
     private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

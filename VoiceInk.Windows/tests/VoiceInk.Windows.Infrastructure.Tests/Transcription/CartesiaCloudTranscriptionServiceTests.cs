@@ -51,6 +51,28 @@ public sealed class CartesiaCloudTranscriptionServiceTests
     }
 
     [Fact]
+    public async Task TranscribeAsync_MapsEndpointQueryOptionsToMultipartFields()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"text":"Words"}"""));
+        var service = new CartesiaCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "cartesia-test-secret" });
+
+        await service.TranscribeAsync(
+            Audio(audioFile.Path),
+            Options(endpoint: "https://api.cartesia.ai/stt?timestamp_granularities=word&diarize=true"),
+            CancellationToken.None);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("https://api.cartesia.ai/stt", request.RequestUri?.ToString());
+        Assert.Contains("name=timestamp_granularities", handler.Bodies[0]);
+        Assert.Contains("word", handler.Bodies[0]);
+        Assert.Contains("name=diarize", handler.Bodies[0]);
+        Assert.Contains("true", handler.Bodies[0]);
+    }
+
+    [Fact]
     public async Task TranscribeAsync_MissingApiKeyFailsBeforeHttp()
     {
         using var audioFile = new TempAudioFile();
@@ -61,6 +83,25 @@ public sealed class CartesiaCloudTranscriptionServiceTests
             () => service.TranscribeAsync(Audio(audioFile.Path), Options(), CancellationToken.None));
 
         Assert.Contains("not configured", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task TranscribeAsync_SecretBearingEndpointQueryFailsBeforeHttp()
+    {
+        using var audioFile = new TempAudioFile();
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, "{}"));
+        var service = new CartesiaCloudTranscriptionService(
+            new HttpClient(handler),
+            new FakeSecretStore { Secret = "cartesia-test-secret" });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.TranscribeAsync(
+                Audio(audioFile.Path),
+                Options(endpoint: "https://api.cartesia.ai/stt?token=sk-query-secret"),
+                CancellationToken.None));
+
+        Assert.Equal(TranscriptionConfiguration.CloudEndpointQuerySecretRejectedMessage, ex.Message);
         Assert.Empty(handler.Requests);
     }
 
@@ -83,8 +124,10 @@ public sealed class CartesiaCloudTranscriptionServiceTests
     private static AudioCaptureResult Audio(string filePath) =>
         new(filePath, TimeSpan.FromSeconds(2), SampleRate: 16000, ChannelCount: 1);
 
-    private static TranscriptionOptions Options(string language = "auto") =>
-        new(string.Empty, language, string.Empty, TranscriptionProviderKind.OpenAICompatible, "https://api.cartesia.ai/stt", "ink-whisper", "cartesia");
+    private static TranscriptionOptions Options(
+        string language = "auto",
+        string endpoint = "https://api.cartesia.ai/stt") =>
+        new(string.Empty, language, string.Empty, TranscriptionProviderKind.OpenAICompatible, endpoint, "ink-whisper", "cartesia");
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json) =>
         new(statusCode) { Content = new StringContent(json) };
