@@ -65,13 +65,13 @@ Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <pa
 
 Write-Host ""
 Write-Host "Maintainer-gated signed release commands:"
-Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe" -PackageCertificateKeyFile <maintainer-owned.pfx> -ValidateAfterBuild'
-Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -ValidateAfterBuild -PackageCertificateKeyFile <maintainer-owned.pfx>'
+Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe" -PackageCertificateKeyFile <maintainer-owned.pfx> -TimestampServerUrl "https://timestamp.acs.microsoft.com" -TimestampDigestAlgorithm SHA256 -ValidateAfterBuild'
+Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -ValidateAfterBuild -PackageCertificateKeyFile <maintainer-owned.pfx> -TimestampServerUrl "https://timestamp.acs.microsoft.com" -TimestampDigestAlgorithm SHA256'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix> -Execute'
 Write-Host ""
 Write-Host "Release signing checklist:"
 Write-Host "  [ ] Publisher/certificate subject match: Package.appxmanifest Publisher must match the signing certificate subject, currently CN=VoiceInkOpenSource."
-Write-Host "  [ ] Timestamp signed packages with a trusted timestamp authority so the package remains verifiable after certificate expiry."
+Write-Host "  [ ] Timestamp signed packages with a trusted timestamp authority so the package remains verifiable after certificate expiry; package-msix.ps1 defaults TimestampServerUrl to https://timestamp.acs.microsoft.com and TimestampDigestAlgorithm to SHA256."
 Write-Host "  [ ] Trust prerequisite: signed MSIX install smoke must run only on a prepared test machine where the signing certificate is already trusted, for example the Local Machine Trusted People store at Cert:\LocalMachine\TrustedPeople."
 Write-Host "  [ ] Trust troubleshooting: Add-AppxPackage error 0x800B0109 usually means the package signer is not trusted on the test machine."
 Write-Host "  [ ] Troubleshooting: inspect Microsoft-Windows-AppxDeployment-Server and AppxPackaging operational logs for deployment, signature, and manifest failures."

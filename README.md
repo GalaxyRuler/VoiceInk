@@ -143,10 +143,10 @@ To review the full open-source release packaging checklist without creating cert
 ```
 
 ```powershell
-.\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe" -PackageCertificateKeyFile "C:\Path\VoiceInk.Windows.Signing.pfx" -ValidateAfterBuild
+.\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe" -PackageCertificateKeyFile "C:\Path\VoiceInk.Windows.Signing.pfx" -TimestampServerUrl "https://timestamp.acs.microsoft.com" -TimestampDigestAlgorithm SHA256 -ValidateAfterBuild
 ```
 
-If the certificate has a password, add `-PackageCertificatePassword "<password>"` from a secure local shell. `-ValidateAfterBuild` runs the non-installing MSIX artifact validator after a successful signed publish and fails if the package is missing, ambiguous, or malformed. Artifacts are written under `VoiceInk.Windows\artifacts\msix`. On a test machine where the certificate is trusted, smoke the package with:
+If the certificate has a password, add `-PackageCertificatePassword "<password>"` from a secure local shell. `-TimestampServerUrl` defaults to `https://timestamp.acs.microsoft.com` and `-TimestampDigestAlgorithm` defaults to `SHA256`, matching the timestamped signing guidance for MSIX packages, and both can be overridden by maintainers. `-ValidateAfterBuild` runs the non-installing MSIX artifact validator after a successful signed publish and fails if the package is missing, ambiguous, or malformed. Artifacts are written under `VoiceInk.Windows\artifacts\msix`. On a test machine where the certificate is trusted, smoke the package with:
 
 ```powershell
 .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath <path-to-msix>

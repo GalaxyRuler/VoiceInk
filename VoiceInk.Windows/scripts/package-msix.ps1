@@ -9,6 +9,8 @@ param(
     [string]$PackageCertificateKeyFile,
     [Parameter(Mandatory = $false)]
     [string]$PackageCertificatePassword,
+    [string]$TimestampServerUrl = "https://timestamp.acs.microsoft.com",
+    [string]$TimestampDigestAlgorithm = "SHA256",
     [switch]$Preflight,
     [switch]$ValidateAfterBuild,
     [switch]$Help
@@ -18,13 +20,14 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Show-Usage {
-    Write-Host "Usage: .\VoiceInk.Windows\scripts\package-msix.ps1 -PackageCertificateKeyFile path [-PackageCertificatePassword value] [-ValidateAfterBuild] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
-    Write-Host "       .\VoiceInk.Windows\scripts\package-msix.ps1 -Preflight [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
+    Write-Host "Usage: .\VoiceInk.Windows\scripts\package-msix.ps1 -PackageCertificateKeyFile path [-PackageCertificatePassword value] [-TimestampServerUrl uri] [-TimestampDigestAlgorithm SHA256] [-ValidateAfterBuild] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
+    Write-Host "       .\VoiceInk.Windows\scripts\package-msix.ps1 -Preflight [-TimestampServerUrl uri] [-TimestampDigestAlgorithm SHA256] [-Configuration Release] [-RuntimeIdentifier win-x64] [-OutputRoot path] [-DotNetPath path]"
     Write-Host ""
     Write-Host "Creates a signed MSIX package under VoiceInk.Windows\artifacts\msix."
     Write-Host "Preflight validates paths, project files, publish properties, and manual smoke commands without requiring a certificate or running dotnet publish."
     Write-Host "Relative DotNetPath, OutputRoot, and PackageCertificateKeyFile values are resolved from the repository root."
     Write-Host "OutputRoot must be inside VoiceInk.Windows\artifacts."
+    Write-Host "TimestampServerUrl defaults to https://timestamp.acs.microsoft.com and TimestampDigestAlgorithm defaults to SHA256 for timestamped package signatures."
     Write-Host "This script does not create certificates or import certificates into Windows. Provide a maintainer-owned signing certificate."
 }
 
@@ -84,6 +87,22 @@ function Assert-OutputRootInsideArtifacts {
     }
 }
 
+function Assert-AbsoluteUri {
+    param(
+        [string]$Value,
+        [string]$Name
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        throw "$Name cannot be blank."
+    }
+
+    $parsedUri = $null
+    if (![System.Uri]::TryCreate($Value, [System.UriKind]::Absolute, [ref]$parsedUri) -or [string]::IsNullOrWhiteSpace($parsedUri.Scheme)) {
+        throw "$Name must be an absolute URI: $Value"
+    }
+}
+
 function Write-MsixPublishProperties {
     param(
         [string]$CertificatePath
@@ -97,6 +116,8 @@ function Write-MsixPublishProperties {
     Write-Host "  -p:AppxBundle=Never"
     Write-Host "  -p:UapAppxPackageBuildMode=SideloadOnly"
     Write-Host "  -p:AppxPackageSigningEnabled=true"
+    Write-Host "  -p:AppxPackageSigningTimestampServerUrl=`"$TimestampServerUrl`""
+    Write-Host "  -p:AppxPackageSigningTimestampDigestAlgorithm=$TimestampDigestAlgorithm"
     if ([string]::IsNullOrWhiteSpace($CertificatePath)) {
         Write-Host "  -p:PackageCertificateKeyFile=<maintainer-owned-pfx>"
     }
@@ -144,6 +165,10 @@ elseif (![System.IO.Path]::IsPathRooted($OutputRoot)) {
 
 $windowsArtifactsRoot = Join-Path $windowsRoot "artifacts"
 Assert-OutputRootInsideArtifacts -OutputPath $OutputRoot -ArtifactsRoot $windowsArtifactsRoot
+Assert-AbsoluteUri -Value $TimestampServerUrl -Name "TimestampServerUrl"
+if ([string]::IsNullOrWhiteSpace($TimestampDigestAlgorithm)) {
+    throw "TimestampDigestAlgorithm cannot be blank."
+}
 
 $artifactRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 $publishRoot = Join-Path $artifactRoot "publish"
@@ -168,11 +193,13 @@ if ($Preflight) {
     Write-Host "  Publish root: $publishRoot"
     Write-Host "  Configuration: $Configuration"
     Write-Host "  Runtime identifier: $RuntimeIdentifier"
+    Write-Host "  Timestamp server: $TimestampServerUrl"
+    Write-Host "  Timestamp digest algorithm: $TimestampDigestAlgorithm"
     Write-Host ""
     Write-MsixPublishProperties -CertificatePath $null
     Write-Host ""
     Write-Host "Signed package build command shape:"
-    Write-Host "  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath `"$dotnet`" -Configuration $Configuration -RuntimeIdentifier $RuntimeIdentifier -PackageCertificateKeyFile <path-to-maintainer-pfx>"
+    Write-Host "  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath `"$dotnet`" -Configuration $Configuration -RuntimeIdentifier $RuntimeIdentifier -TimestampServerUrl `"$TimestampServerUrl`" -TimestampDigestAlgorithm $TimestampDigestAlgorithm -PackageCertificateKeyFile <path-to-maintainer-pfx>"
     Write-Host ""
     Write-Host "Manual smoke commands after a signed package is produced and the signing certificate is trusted on a test machine:"
     Write-Host "  .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath <path-to-msix>"
@@ -221,6 +248,8 @@ Write-MsixPublishProperties -CertificatePath $PackageCertificateKeyFile
     -p:AppxBundle=Never `
     -p:UapAppxPackageBuildMode=SideloadOnly `
     -p:AppxPackageSigningEnabled=true `
+    -p:AppxPackageSigningTimestampServerUrl="$TimestampServerUrl" `
+    -p:AppxPackageSigningTimestampDigestAlgorithm=$TimestampDigestAlgorithm `
     -p:PackageCertificateKeyFile="$PackageCertificateKeyFile" `
     $packagePasswordProperty `
     -o $publishRoot
