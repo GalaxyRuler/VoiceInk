@@ -272,7 +272,7 @@ public sealed class AudioFileTranscriptionServiceTests
         var saved = Assert.Single(history.Items);
         Assert.Equal("file text", saved.Text);
         Assert.Equal("Enhanced file text.", saved.EnhancedText);
-        Assert.Equal("Default", saved.PromptName);
+        Assert.Equal("System Default", saved.PromptName);
         Assert.Equal("openai-compatible", saved.EnhancementProviderName);
         Assert.Equal("test-model", saved.EnhancementModelName);
         Assert.Equal(TimeSpan.FromMilliseconds(42), saved.EnhancementDuration);

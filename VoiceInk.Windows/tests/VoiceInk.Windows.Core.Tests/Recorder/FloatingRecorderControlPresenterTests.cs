@@ -45,7 +45,7 @@ public sealed class FloatingRecorderControlPresenterTests
             prompts,
             []);
 
-        Assert.Equal("Default", state.PromptTitle);
+        Assert.Equal("System Default", state.PromptTitle);
         Assert.Equal(EnhancementPromptCatalog.DefaultPromptId, Assert.Single(state.PromptChoices, choice => choice.IsSelected).Id);
         Assert.All(state.PromptChoices, choice => Assert.False(choice.IsDisabled));
     }

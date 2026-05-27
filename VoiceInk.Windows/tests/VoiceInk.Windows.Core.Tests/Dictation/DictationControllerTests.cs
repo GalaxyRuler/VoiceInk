@@ -747,7 +747,7 @@ public sealed class DictationControllerTests
         Assert.Equal("hello world", saved.Text);
         Assert.Equal("hello world", saved.OriginalText);
         Assert.Equal("Hello, world.", saved.EnhancedText);
-        Assert.Equal("Default", saved.PromptName);
+        Assert.Equal("System Default", saved.PromptName);
         Assert.Equal("openai-compatible", saved.EnhancementProviderName);
         Assert.Equal("test-model", saved.EnhancementModelName);
         Assert.Equal(TimeSpan.FromMilliseconds(42), saved.EnhancementDuration);

@@ -48,7 +48,7 @@ public sealed class TextEnhancementPipelineTests
         Assert.True(result.AttemptedEnhancement);
         Assert.Equal("Hello there.", result.FinalText);
         Assert.Equal("Hello there.", result.EnhancedText);
-        Assert.Equal("Default", result.PromptName);
+        Assert.Equal("System Default", result.PromptName);
         Assert.Equal("openai-compatible", result.EnhancementProviderName);
         Assert.Equal("test-model", result.EnhancementModelName);
         Assert.NotNull(result.EnhancementDuration);

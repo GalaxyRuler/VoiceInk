@@ -9,7 +9,7 @@ public static class EnhancementPromptCatalog
     [
         new(
             DefaultPromptId,
-            "Default",
+            "System Default",
             """
             - Clean up the <TRANSCRIPT> text for clarity and natural flow while preserving meaning and the original tone.
             - Use informal, plain language unless the <TRANSCRIPT> clearly uses a professional tone; in that case, match it.
@@ -25,7 +25,7 @@ public static class EnhancementPromptCatalog
             - Don't add any information not available in the <TRANSCRIPT> text ever.
             """,
             "checkmark.seal.fill",
-            "Default mode to improve clarity and accuracy of the transcription",
+            "Default system prompt",
             IsPredefined: true,
             TriggerWords: [],
             UseSystemInstructions: true),

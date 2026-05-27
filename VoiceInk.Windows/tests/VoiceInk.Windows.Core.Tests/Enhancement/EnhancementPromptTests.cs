@@ -13,7 +13,8 @@ public sealed class EnhancementPromptTests
 
         Assert.Contains(prompts, prompt =>
             prompt.Id == EnhancementPromptCatalog.DefaultPromptId &&
-            prompt.Title == "Default" &&
+            prompt.Title == "System Default" &&
+            prompt.Description == "Default system prompt" &&
             prompt.IsPredefined &&
             prompt.UseSystemInstructions);
         Assert.Contains(prompts, prompt =>
@@ -33,7 +34,7 @@ public sealed class EnhancementPromptTests
 
         Assert.Contains(
             "scratch that",
-            prompts.Single(prompt => prompt.Title == "Default").PromptText,
+            prompts.Single(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId).PromptText,
             StringComparison.OrdinalIgnoreCase);
         Assert.Contains(
             "Keep emotive markers and emojis if present",
@@ -97,7 +98,8 @@ public sealed class EnhancementPromptTests
         var prompts = EnhancementPromptLibrary.BuildPrompts([persistedDefault]);
         var actualDefault = prompts.Single(prompt => prompt.Id == EnhancementPromptCatalog.DefaultPromptId);
 
-        Assert.Equal("Default", actualDefault.Title);
+        Assert.Equal("System Default", actualDefault.Title);
+        Assert.Equal("Default system prompt", actualDefault.Description);
         Assert.Contains("Clean up the <TRANSCRIPT>", actualDefault.PromptText);
         Assert.Equal("checkmark.seal.fill", actualDefault.Icon);
         Assert.True(actualDefault.UseSystemInstructions);
@@ -281,7 +283,7 @@ public sealed class EnhancementPromptTests
             "um hello world",
             vocabulary: []);
 
-        Assert.Equal("Default", rendered.PromptName);
+        Assert.Equal("System Default", rendered.PromptName);
         Assert.Contains("TRANSCRIPTION ENHANCER", rendered.SystemMessage);
         Assert.Contains("Output only the cleaned text", rendered.SystemMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("<TRANSCRIPT>", rendered.UserMessage);
