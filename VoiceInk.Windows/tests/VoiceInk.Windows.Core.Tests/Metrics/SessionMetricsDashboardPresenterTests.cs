@@ -121,6 +121,12 @@ public sealed class SessionMetricsDashboardPresenterTests
                 },
                 row =>
                 {
+                    Assert.Equal("Windows Diagnostics", row.Title);
+                    Assert.Equal("VoiceInk metrics export is separate from Windows Diagnostic Data Viewer exports.", row.Detail);
+                    Assert.Equal("Separate", row.StatusBadge);
+                },
+                row =>
+                {
                     Assert.Equal("Reset", row.Title);
                     Assert.Equal("Reset deletes local metrics only; History and recordings stay unchanged.", row.Detail);
                     Assert.Equal("Metrics only", row.StatusBadge);

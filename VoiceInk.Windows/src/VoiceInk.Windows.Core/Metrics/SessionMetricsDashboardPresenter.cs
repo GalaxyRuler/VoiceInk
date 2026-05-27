@@ -174,6 +174,10 @@ public static class SessionMetricsDashboardPresenter
             "CSV export includes dashboard totals and model performance summaries.",
             "CSV"),
         new(
+            "Windows Diagnostics",
+            "VoiceInk metrics export is separate from Windows Diagnostic Data Viewer exports.",
+            "Separate"),
+        new(
             "Reset",
             "Reset deletes local metrics only; History and recordings stay unchanged.",
             "Metrics only")
