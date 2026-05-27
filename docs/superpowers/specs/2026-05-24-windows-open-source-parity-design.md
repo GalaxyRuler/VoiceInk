@@ -493,6 +493,12 @@ Enhancement behavior guidance slice completed on 2026-05-27:
 - Renamed the Windows list heading from `Context Actions` to `Enhancement Behavior` so the rows cover both prompt context and enhancement execution behavior.
 - Kept the enhancement pipeline, provider request construction, prompt rendering, settings persistence, and secret storage unchanged.
 
+Assistant Mode guidance slice completed on 2026-05-27:
+
+- Added presenter-backed Enhancement behavior guidance for Assistant Mode being selected or available through the prompt picker/trigger-word workflow.
+- Clarified that Assistant answers the spoken request directly instead of formatting it as dictation.
+- Kept Assistant prompt rendering, trigger detection, provider requests, settings persistence, and secret storage unchanged.
+
 Prompt trigger label slice completed on 2026-05-27:
 
 - Added Core prompt choice labels that show the first trigger word and additional trigger count, matching the macOS prompt-card affordance.

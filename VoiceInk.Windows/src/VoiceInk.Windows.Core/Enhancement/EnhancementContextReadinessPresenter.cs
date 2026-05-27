@@ -131,6 +131,7 @@ public static class EnhancementContextReadinessPresenter
         var rows = new List<EnhancementContextActionRow>
         {
             EnhancementActionRow(settings),
+            AssistantModeRow(settings),
             ShortPhraseGuardRow(settings),
             TimeoutPolicyRow(settings),
             SelectedTextActionRow(),
@@ -159,6 +160,19 @@ public static class EnhancementContextReadinessPresenter
                 "Off",
                 "Enable Enhancement before context is appended to prompts.",
                 "Enable");
+
+    private static EnhancementContextActionRow AssistantModeRow(AppSettings settings) =>
+        settings.SelectedEnhancementPromptId == EnhancementPromptCatalog.AssistantPromptId
+            ? new(
+                "Assistant Mode",
+                "Selected",
+                "Assistant answers the spoken request directly instead of formatting it as dictation.",
+                "Conversational")
+            : new(
+                "Assistant Mode",
+                "Available",
+                "Select the Assistant prompt, or use an Assistant trigger word, for one-request answers without changing apps.",
+                "Prompt");
 
     private static EnhancementContextActionRow ShortPhraseGuardRow(AppSettings settings)
     {

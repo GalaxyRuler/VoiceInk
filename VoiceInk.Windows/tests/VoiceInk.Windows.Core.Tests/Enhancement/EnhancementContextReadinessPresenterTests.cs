@@ -102,6 +102,13 @@ public sealed class EnhancementContextReadinessPresenterTests
             },
             row =>
             {
+                Assert.Equal("Assistant Mode", row.Title);
+                Assert.Equal("Available", row.Value);
+                Assert.Equal("Select the Assistant prompt, or use an Assistant trigger word, for one-request answers without changing apps.", row.Detail);
+                Assert.Equal("Prompt", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Short Phrase Guard", row.Title);
                 Assert.Equal("3 words", row.Value);
                 Assert.Equal("Short transcripts are inserted unchanged unless a trigger word explicitly selects an enhancement prompt.", row.Detail);
@@ -351,6 +358,36 @@ public sealed class EnhancementContextReadinessPresenterTests
                 && row.Value == "3 words"
                 && row.Detail == "Short transcripts are inserted unchanged unless a trigger word explicitly selects an enhancement prompt."
                 && row.StatusBadge == "Default on");
+    }
+
+    [Fact]
+    public void Present_WithDefaultPrompt_ShowsAssistantModeAvailableGuidance()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Assistant Mode"
+                && row.Value == "Available"
+                && row.Detail == "Select the Assistant prompt, or use an Assistant trigger word, for one-request answers without changing apps."
+                && row.StatusBadge == "Prompt");
+    }
+
+    [Fact]
+    public void Present_WithAssistantPromptSelected_ShowsAssistantModeActiveGuidance()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                SelectedEnhancementPromptId = EnhancementPromptCatalog.AssistantPromptId
+            });
+
+        Assert.Contains(
+            presentation.ActionRows,
+            row => row.Title == "Assistant Mode"
+                && row.Value == "Selected"
+                && row.Detail == "Assistant answers the spoken request directly instead of formatting it as dictation."
+                && row.StatusBadge == "Conversational");
     }
 
     [Fact]
