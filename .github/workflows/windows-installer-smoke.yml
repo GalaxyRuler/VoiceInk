@@ -1,0 +1,72 @@
+name: Windows Installer Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Self-hosted Windows runner label for disposable installer smoke.
+        required: true
+        default: voiceink-windows-qa
+      signed_package_path:
+        description: Path to a signed .msix already present on the runner or checked-out artifact workspace.
+        required: true
+      main_package_uri:
+        description: Absolute URI to write into the optional .appinstaller MainPackage entry.
+        required: false
+        default: https://example.invalid/VoiceInk.Windows_0.1.0.0_x64.msix
+      appinstaller_path:
+        description: Optional artifact-local .appinstaller output path.
+        required: false
+        default: VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.appinstaller
+      execute_install_smoke:
+        description: Run Add-AppxPackage/Get-AppxPackage/Remove-AppxPackage on the disposable runner.
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  installer-smoke:
+    name: Signed MSIX and App Installer smoke
+    runs-on:
+      - self-hosted
+      - windows
+      - ${{ inputs.runner_label }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate signed MSIX package contents
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath "${{ inputs.signed_package_path }}"
+
+      - name: Generate optional App Installer manifest
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\write-appinstaller.ps1 `
+            -MainPackageUri "${{ inputs.main_package_uri }}" `
+            -OutputPath "${{ inputs.appinstaller_path }}"
+
+      - name: Validate optional App Installer manifest
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\test-appinstaller.ps1 -AppInstallerPath "${{ inputs.appinstaller_path }}"
+
+      - name: Signed install smoke plan
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}"
+
+      - name: Execute signed install smoke
+        if: ${{ inputs.execute_install_smoke }}
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}" -Execute
+
+      - name: Safety boundary
+        shell: pwsh
+        run: |
+          Write-Host "No signing certificates are created or imported by this workflow."
+          Write-Host "The install step runs only when execute_install_smoke is true on a disposable self-hosted Windows runner."

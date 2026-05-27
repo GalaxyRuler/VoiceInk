@@ -340,6 +340,33 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void InstallerSmokeWorkflow_IsManualAndRequiresExplicitInstallExecution()
+    {
+        var workflowPath = SourcePath(".github", "workflows", "windows-installer-smoke.yml");
+        var workflow = File.ReadAllText(workflowPath);
+
+        Assert.Contains("workflow_dispatch", workflow);
+        Assert.Contains("self-hosted", workflow);
+        Assert.Contains("windows", workflow);
+        Assert.Contains("runner_label", workflow);
+        Assert.Contains("execute_install_smoke", workflow);
+        Assert.Contains("default: false", workflow);
+        Assert.Contains("test-msix-package.ps1", workflow);
+        Assert.Contains("write-appinstaller.ps1", workflow);
+        Assert.Contains("test-appinstaller.ps1", workflow);
+        Assert.Contains("smoke-msix-install.ps1", workflow);
+        Assert.Contains("if: ${{ inputs.execute_install_smoke }}", workflow);
+        Assert.Contains("signed_package_path", workflow);
+        Assert.Contains("main_package_uri", workflow);
+        Assert.Contains("No signing certificates are created or imported by this workflow", workflow);
+
+        Assert.DoesNotContain("New-SelfSignedCertificate", workflow, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", workflow, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", workflow, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", workflow, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
