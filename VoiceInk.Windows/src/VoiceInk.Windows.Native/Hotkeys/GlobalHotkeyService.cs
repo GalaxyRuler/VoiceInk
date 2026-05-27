@@ -24,6 +24,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private const uint ModControl = 0x0002;
     private const uint ModShift = 0x0004;
     private const uint ModNoRepeat = 0x4000;
+    private const int NotifyForThisSession = 0;
 
     private readonly HotkeyWindow hotkeyWindow;
     private readonly Dictionary<int, GlobalShortcutRegistration> registeredActions = [];
@@ -37,6 +38,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private int middleClickActivationDelayMilliseconds = 200;
     private IntPtr keyboardHook;
     private IntPtr mouseHook;
+    private bool sessionNotificationsRegistered;
     private bool disposed;
 
     public GlobalHotkeyService(IntPtr windowHandle)
@@ -48,6 +50,7 @@ public sealed class GlobalHotkeyService : IDisposable
 
         hotkeyWindow = new HotkeyWindow(this);
         hotkeyWindow.AssignHandle(windowHandle);
+        sessionNotificationsRegistered = WTSRegisterSessionNotification(hotkeyWindow.Handle, NotifyForThisSession);
         keyboardProc = KeyboardHookCallback;
         mouseProc = MouseHookCallback;
         middleClickTimer.Tick += MiddleClickTimer_Tick;
@@ -132,6 +135,12 @@ public sealed class GlobalHotkeyService : IDisposable
 
         UnregisterHotkeys();
 
+        if (sessionNotificationsRegistered)
+        {
+            WTSUnRegisterSessionNotification(hotkeyWindow.Handle);
+            sessionNotificationsRegistered = false;
+        }
+
         middleClickTimer.Tick -= MiddleClickTimer_Tick;
         middleClickTimer.Dispose();
         hotkeyWindow.ReleaseHandle();
@@ -165,6 +174,13 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         registeredActions.Clear();
+    }
+
+    private void ResetPressedShortcutState()
+    {
+        pressedRecordingShortcuts.Clear();
+        pressedMiniRecorderShortcuts.Clear();
+        middleClickTimer.Stop();
     }
 
     private void ConfigureMiddleClickRecording(int activationDelayMilliseconds)
@@ -450,6 +466,12 @@ public sealed class GlobalHotkeyService : IDisposable
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string? lpModuleName);
 
+    [DllImport("wtsapi32.dll", SetLastError = true)]
+    private static extern bool WTSRegisterSessionNotification(IntPtr hWnd, int dwFlags);
+
+    [DllImport("wtsapi32.dll", SetLastError = true)]
+    private static extern bool WTSUnRegisterSessionNotification(IntPtr hWnd);
+
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -477,6 +499,11 @@ public sealed class GlobalHotkeyService : IDisposable
                 }
 
                 return;
+            }
+
+            if (GlobalShortcutSessionChangePolicy.ShouldResetPressedState(m.Msg, m.WParam.ToInt32()))
+            {
+                owner.ResetPressedShortcutState();
             }
 
             base.WndProc(ref m);
