@@ -67,11 +67,11 @@ public static class TranscriptionProviderPresetCatalog
         [
             "voxtral-mini-latest"
         ],
-        "Mistral Voxtral model for fast multilingual audio transcription.",
+        "Mistral Voxtral model for fast multilingual audio transcription with live recorder preview.",
         "Multilingual",
         "Very fast",
         "Very high",
-        "Batch");
+        "Realtime preview");
 
     public static TranscriptionProviderPreset ElevenLabs { get; } = new(
         "elevenlabs",
