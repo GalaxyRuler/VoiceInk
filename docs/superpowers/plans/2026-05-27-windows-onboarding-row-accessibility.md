@@ -19,7 +19,7 @@
 - GREEN: focused `OnboardingChecklistPresenterTests` passed with 6 tests.
 - Full solution tests passed: Core 806/806 and Infrastructure 267/267.
 - Debug x64 build succeeded with 0 warnings and 0 errors.
-- `git diff --check` exited 0 with line-ending normalization warnings only.
+- `git diff --check` exited 0 with no warnings.
 
 ## Task 3: Docs, Verification, Review, Commit
 
