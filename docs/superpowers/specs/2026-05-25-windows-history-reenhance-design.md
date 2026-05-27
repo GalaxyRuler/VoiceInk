@@ -2,7 +2,7 @@
 
 ## Context
 
-The macOS VoiceInk history surface includes a re-enhance-only action so users can rerun AI cleanup with the current prompt, dictionary, provider, and context settings without retranscribing the saved audio. The Windows history surface already supports search, CSV export, paste last, retry from audio, audio playback, and deletion, but retry currently performs a full transcription retry and requires an audio file.
+The macOS VoiceInk history surface includes a re-enhance-only action so users can rerun AI enhancement with the current prompt, dictionary, provider, and context settings without retranscribing the saved audio. The Windows history surface already supports search, CSV export, paste last, retry from audio, audio playback, and deletion, but retry currently performs a full transcription retry and requires an audio file.
 
 Online grounding: upstream VoiceInk release notes mention history re-enhance and retry/retranscribe actions, so this is a real parity gap rather than a newly invented Windows workflow.
 

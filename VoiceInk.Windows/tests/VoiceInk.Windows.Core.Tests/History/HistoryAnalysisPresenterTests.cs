@@ -40,7 +40,7 @@ public sealed class HistoryAnalysisPresenterTests
             {
                 Assert.Equal("Enhancement", row.Title);
                 Assert.Equal("Enhanced", row.Value);
-                Assert.Equal("AI cleanup completed in 2s", row.Detail);
+                Assert.Equal("AI enhancement completed in 2s", row.Detail);
             },
             row =>
             {

@@ -778,6 +778,12 @@ History analysis overlay slice completed on 2026-05-26:
 - Rendered analysis rows in the History detail pane.
 - Kept history persistence, retry, re-enhance, copy, paste, delete, audio playback, and CSV export behavior unchanged.
 
+History enhancement terminology slice completed on 2026-05-27:
+
+- Updated History analysis detail copy from Windows-only `AI cleanup` wording to macOS-aligned `AI enhancement`.
+- Added focused presenter coverage for enhanced completed history items with enhancement duration.
+- Kept history persistence, retry, re-enhance, copy, paste, delete, audio playback, CSV export, and provider metadata behavior unchanged.
+
 ### Metrics
 
 macOS metrics include session metrics, model speed factors, enhancement timing, dashboard summaries, model performance panels, and system diagnostics.

@@ -100,8 +100,8 @@ public static partial class HistoryAnalysisPresenter
         if (!string.IsNullOrWhiteSpace(item.EnhancedText))
         {
             return item.EnhancementDuration is { } duration && duration > TimeSpan.Zero
-                ? $"AI cleanup completed in {FormatDuration(duration)}"
-                : "AI cleanup completed";
+                ? $"AI enhancement completed in {FormatDuration(duration)}"
+                : "AI enhancement completed";
         }
 
         return "No enhanced text saved";

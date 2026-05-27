@@ -6,7 +6,7 @@ Date: 2026-05-27
 
 - The macOS recorder pipeline filters, formats, and applies word replacements, then runs prompt detection/enhancement against that text before applying user cleanup preferences for saved original text.
 - The macOS audio-file transcription flow follows the same ordering: enhancement sees the formatted/replaced transcript, while saved history uses cleanup preferences.
-- Apple dictation documentation treats punctuation, formatting, and capitalization as meaningful dictated text features, so enhancement prompts should not lose them before the AI cleanup step.
+- Apple dictation documentation treats punctuation, formatting, and capitalization as meaningful dictated text features, so enhancement prompts should not lose them before the AI enhancement step.
 
 ## Requirements
 
