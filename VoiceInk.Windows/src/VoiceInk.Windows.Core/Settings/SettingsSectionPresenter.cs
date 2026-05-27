@@ -63,6 +63,10 @@ public static class SettingsSectionPresenter
                     "Record, paste, retry, cancel, history, dictionary, enhancement, and Power Mode actions.",
                     "Configure"),
                 new(
+                    "Find Settings",
+                    "Use grouped sections for shortcuts, feedback, interface, clipboard, cleanup, privacy, backup, and diagnostics.",
+                    "Grouped"),
+                new(
                     "Data Safety",
                     "Local cleanup and diagnostics stay on this Windows profile unless you export a file.",
                     "Local"),

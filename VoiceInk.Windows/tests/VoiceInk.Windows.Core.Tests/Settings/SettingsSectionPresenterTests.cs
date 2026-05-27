@@ -30,6 +30,12 @@ public sealed class SettingsSectionPresenterTests
             },
             row =>
             {
+                Assert.Equal("Find Settings", row.Title);
+                Assert.Equal("Use grouped sections for shortcuts, feedback, interface, clipboard, cleanup, privacy, backup, and diagnostics.", row.Description);
+                Assert.Equal("Grouped", row.StatusBadge);
+            },
+            row =>
+            {
                 Assert.Equal("Data Safety", row.Title);
                 Assert.Equal("Local cleanup and diagnostics stay on this Windows profile unless you export a file.", row.Description);
                 Assert.Equal("Local", row.StatusBadge);
