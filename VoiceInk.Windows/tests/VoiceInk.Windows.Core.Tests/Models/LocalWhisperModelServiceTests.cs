@@ -299,6 +299,34 @@ public sealed class LocalWhisperModelServiceTests
         Assert.Equal("Model is already imported.", error);
     }
 
+    [Fact]
+    public void ImportMany_AddsBinModelsAndReportsSkippedPaths()
+    {
+        var existing = new[]
+        {
+            new LocalWhisperModel("C:\\Models\\ggml-base.en.bin", "ggml-base.en", DateTimeOffset.UnixEpoch)
+        };
+        var importedAt = DateTimeOffset.Parse("2026-05-27T10:00:00Z");
+
+        var result = LocalWhisperModelService.ImportMany(
+            [
+                "C:\\Models\\ggml-small.en.bin",
+                "C:\\Models\\notes.txt",
+                "c:\\models\\GGML-BASE.EN.BIN",
+                "C:\\Models\\ggml-large-v3-turbo-q5_0.bin"
+            ],
+            existing,
+            importedAt);
+
+        Assert.Equal(2, result.ImportedCount);
+        Assert.Equal(1, result.SkippedDuplicateCount);
+        Assert.Equal(1, result.SkippedInvalidCount);
+        Assert.Equal(
+            ["ggml-base.en", "ggml-small.en", "ggml-large-v3-turbo-q5_0"],
+            result.ImportedModels.Select(model => model.DisplayName).ToArray());
+        Assert.All(result.ImportedModels.Skip(1), model => Assert.Equal(importedAt, model.ImportedAt));
+    }
+
     [Theory]
     [InlineData("", LocalWhisperModelHealthStatus.NotSelected, false, "No local model selected.")]
     [InlineData("C:\\Models\\model.txt", LocalWhisperModelHealthStatus.InvalidExtension, false, "Choose a whisper.cpp .bin model file.")]

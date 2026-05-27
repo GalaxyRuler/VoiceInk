@@ -1334,6 +1334,11 @@ public sealed partial class MainWindow : Window
         await ImportLocalModelAsync();
     }
 
+    private async void ImportModelFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ImportLocalModelFolderAsync();
+    }
+
     private async void UseSelectedModelButton_Click(object sender, RoutedEventArgs e)
     {
         await UseSelectedLocalModelAsync();
@@ -3616,6 +3621,106 @@ public sealed partial class MainWindow : Window
             isImportingModel = false;
             RefreshUiFromControllerState(statusOverride);
         }
+    }
+
+    private async Task ImportLocalModelFolderAsync()
+    {
+        if (!CanEditModelLibrary())
+        {
+            return;
+        }
+
+        var statusOverride = "Opening model folder picker";
+        isImportingModel = true;
+        RefreshUiFromControllerState(statusOverride);
+
+        try
+        {
+            var picker = new FolderPicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            picker.FileTypeFilter.Add("*");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+            var folder = await picker.PickSingleFolderAsync();
+            if (folder is null)
+            {
+                statusOverride = "Model folder import canceled";
+                return;
+            }
+
+            if (!CanEditModelLibrary(includeCurrentModelImport: false))
+            {
+                statusOverride = "Model folder import canceled because VoiceInk is busy";
+                return;
+            }
+
+            var modelPaths = Directory.Exists(folder.Path)
+                ? Directory.EnumerateFiles(folder.Path, "*.bin", SearchOption.TopDirectoryOnly)
+                    .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                    .ToArray()
+                : [];
+            if (modelPaths.Length == 0)
+            {
+                statusOverride = "No .bin models found in selected folder";
+                return;
+            }
+
+            var existingPaths = localWhisperModels
+                .Select(model => model.Path)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var result = LocalWhisperModelService.ImportMany(
+                modelPaths,
+                localWhisperModels,
+                DateTimeOffset.Now);
+            if (result.ImportedCount == 0)
+            {
+                statusOverride = ImportFolderStatus(folder.Path, result);
+                return;
+            }
+
+            localWhisperModels = result.ImportedModels;
+            if (string.IsNullOrWhiteSpace(ModelPathTextBox.Text))
+            {
+                var firstImported = result.ImportedModels.FirstOrDefault(model => !existingPaths.Contains(model.Path));
+                if (firstImported is not null)
+                {
+                    ModelPathTextBox.Text = firstImported.Path;
+                }
+            }
+
+            await SaveSettingsAsync(windowLifetime.Token);
+            RefreshModelChoices(ModelPathTextBox.Text);
+            statusOverride = ImportFolderStatus(folder.Path, result);
+        }
+        catch (OperationCanceledException) when (windowLifetime.IsCancellationRequested)
+        {
+            statusOverride = "Closing";
+        }
+        catch (Exception ex)
+        {
+            statusOverride = $"Model folder import failed: {ex.Message}";
+        }
+        finally
+        {
+            isImportingModel = false;
+            RefreshUiFromControllerState(statusOverride);
+        }
+    }
+
+    private static string ImportFolderStatus(
+        string folderPath,
+        LocalWhisperModelImportManyResult result)
+    {
+        var skipped = result.SkippedDuplicateCount + result.SkippedInvalidCount;
+        var suffix = skipped == 0
+            ? string.Empty
+            : $" ({result.SkippedDuplicateCount} duplicate, {result.SkippedInvalidCount} unsupported skipped)";
+
+        return result.ImportedCount == 0
+            ? $"No new .bin models imported from {folderPath}{suffix}"
+            : $"Imported {result.ImportedCount} model{(result.ImportedCount == 1 ? string.Empty : "s")} from {folderPath}{suffix}";
     }
 
     private async Task UseSelectedLocalModelAsync()
@@ -8721,6 +8826,7 @@ public sealed partial class MainWindow : Window
                     && CanUseModelPath(ModelPathTextBox.Text)));
         ModelComboBox.IsEnabled = modelControlsEnabled;
         ImportModelButton.IsEnabled = modelControlsEnabled;
+        ImportModelFolderButton.IsEnabled = modelControlsEnabled;
         UseSelectedModelButton.IsEnabled = modelControlsEnabled
             && CanUseModelPath(SelectedLocalWhisperModelChoice()?.Path);
         ShowSelectedModelButton.IsEnabled = modelControlsEnabled

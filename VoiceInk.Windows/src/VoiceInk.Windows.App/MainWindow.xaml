@@ -392,6 +392,10 @@
                                 Content="Import Model"
                                 Click="ImportModelButton_Click" />
                             <Button
+                                x:Name="ImportModelFolderButton"
+                                Content="Import Folder"
+                                Click="ImportModelFolderButton_Click" />
+                            <Button
                                 x:Name="UseSelectedModelButton"
                                 Content="Use Selected Model"
                                 Click="UseSelectedModelButton_Click" />

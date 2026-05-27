@@ -8,6 +8,12 @@ public sealed record LocalWhisperModelRemovalResult(
     string? FilePathToDelete,
     bool Removed);
 
+public sealed record LocalWhisperModelImportManyResult(
+    LocalWhisperModel[] ImportedModels,
+    int ImportedCount,
+    int SkippedDuplicateCount,
+    int SkippedInvalidCount);
+
 public static class LocalWhisperModelService
 {
     private const string ModelExtension = ".bin";
@@ -44,6 +50,49 @@ public static class LocalWhisperModelService
 
         error = null;
         return [.. existingModels, imported];
+    }
+
+    public static LocalWhisperModelImportManyResult ImportMany(
+        IEnumerable<string> paths,
+        IEnumerable<LocalWhisperModel> existing,
+        DateTimeOffset importedAt)
+    {
+        var models = existing.ToList();
+        var importedCount = 0;
+        var skippedDuplicateCount = 0;
+        var skippedInvalidCount = 0;
+        var knownPaths = models
+            .Select(model => model.Path)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var path in paths)
+        {
+            var trimmedPath = path.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedPath)
+                || !string.Equals(System.IO.Path.GetExtension(trimmedPath), ModelExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                skippedInvalidCount++;
+                continue;
+            }
+
+            if (!knownPaths.Add(trimmedPath))
+            {
+                skippedDuplicateCount++;
+                continue;
+            }
+
+            models.Add(new LocalWhisperModel(
+                trimmedPath,
+                System.IO.Path.GetFileNameWithoutExtension(trimmedPath),
+                importedAt));
+            importedCount++;
+        }
+
+        return new LocalWhisperModelImportManyResult(
+            [.. models],
+            importedCount,
+            skippedDuplicateCount,
+            skippedInvalidCount);
     }
 
     public static LocalWhisperModel[] BuildChoices(AppSettings settings)
