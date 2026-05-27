@@ -24,6 +24,7 @@ public sealed class TrayShellPresenterTests
         Assert.Equal(
             "If the tray icon is hidden, open Windows taskbar corner overflow and pin VoiceInk; the main window can always be opened from the tray menu.",
             state.VisibilityGuidance);
+        Assert.Equal("Taskbar settings: Other system tray icons", state.VisibilityMenuText);
     }
 
     [Fact]

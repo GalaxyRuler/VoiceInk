@@ -7,4 +7,5 @@ public sealed record TrayShellState(
     bool CanQuickAddDictionary,
     bool CanOpenHistory,
     bool CanUseQuickSettings,
-    string VisibilityGuidance);
+    string VisibilityGuidance,
+    string VisibilityMenuText);

@@ -22,7 +22,8 @@ public static class TrayShellPresenter
             CanQuickAddDictionary: canUseOperationalCommands && dictationState == DictationState.Idle,
             CanOpenHistory: canUseOperationalCommands,
             CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle,
-            VisibilityGuidance: "If the tray icon is hidden, open Windows taskbar corner overflow and pin VoiceInk; the main window can always be opened from the tray menu.");
+            VisibilityGuidance: "If the tray icon is hidden, open Windows taskbar corner overflow and pin VoiceInk; the main window can always be opened from the tray menu.",
+            VisibilityMenuText: "Taskbar settings: Other system tray icons");
     }
 
     private static string StatusText(

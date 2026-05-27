@@ -13,6 +13,7 @@ public sealed class TrayIconService : IDisposable
     private readonly ContextMenuStrip trayContextMenu;
     private readonly ToolStripMenuItem showItem;
     private readonly ToolStripMenuItem hideItem;
+    private readonly ToolStripMenuItem visibilityGuidanceItem;
     private readonly ToolStripMenuItem toggleRecordingItem;
     private readonly ToolStripMenuItem transcriptionModelMenu;
     private readonly ToolStripMenuItem transcriptionProviderMenu;
@@ -39,6 +40,7 @@ public sealed class TrayIconService : IDisposable
         icon = LoadIcon();
         showItem = new ToolStripMenuItem("Show VoiceInk", image: null, (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty));
         hideItem = new ToolStripMenuItem("Hide VoiceInk", image: null, (_, _) => HideRequested?.Invoke(this, EventArgs.Empty));
+        visibilityGuidanceItem = new ToolStripMenuItem("Taskbar settings: Other system tray icons") { Enabled = false };
         toggleRecordingItem = new ToolStripMenuItem("Start Recording", image: null, (_, _) => ToggleRecordingRequested?.Invoke(this, EventArgs.Empty));
         transcriptionModelMenu = new ToolStripMenuItem("Transcription Model");
         transcriptionProviderMenu = new ToolStripMenuItem("Transcription Provider");
@@ -65,6 +67,7 @@ public sealed class TrayIconService : IDisposable
         trayContextMenu = new ContextMenuStrip();
         trayContextMenu.Items.Add(showItem);
         trayContextMenu.Items.Add(hideItem);
+        trayContextMenu.Items.Add(visibilityGuidanceItem);
         trayContextMenu.Items.Add(new ToolStripSeparator());
         trayContextMenu.Items.Add(toggleRecordingItem);
         trayContextMenu.Items.Add(new ToolStripSeparator());
@@ -129,6 +132,7 @@ public sealed class TrayIconService : IDisposable
         quickAddDictionaryItem.Enabled = state.CanQuickAddDictionary;
         historyItem.Enabled = state.CanOpenHistory;
         SetQuickSettingsEnabled(state.CanUseQuickSettings);
+        visibilityGuidanceItem.Text = state.VisibilityMenuText;
         notifyIcon.Text = Truncate($"VoiceInk - {state.StatusText}", MaxTooltipLength);
     }
 
