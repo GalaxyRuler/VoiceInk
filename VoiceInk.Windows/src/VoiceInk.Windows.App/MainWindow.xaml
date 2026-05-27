@@ -1342,6 +1342,7 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Border
+                                        AutomationProperties.Name="{Binding AccessibleName}"
                                         BorderBrush="Gray"
                                         BorderThickness="1"
                                         CornerRadius="8"

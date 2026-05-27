@@ -7,4 +7,11 @@ public sealed record PermissionReadinessItem(
     bool IsReady,
     string ActionText,
     string ActionTarget,
-    string FallbackGuidance = "");
+    string FallbackGuidance = "")
+{
+    public string AccessibleName =>
+        string.Join(
+            ", ",
+            new[] { Title, Status, Description, FallbackGuidance }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
+}

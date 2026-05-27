@@ -73,4 +73,14 @@ public sealed class PermissionsReadinessPresenterTests
         Assert.Contains(status.Items, item => item.Title == "Microphone Access" && !item.IsReady);
         Assert.Contains(status.Items, item => item.Title == "Screen Context" && !item.IsReady);
     }
+
+    [Fact]
+    public void Build_ItemsExposeAccessibleNames()
+    {
+        var status = PermissionsReadinessPresenter.Build(new AppSettings(), hasAudioInputChoices: false);
+
+        Assert.Equal(
+            "Microphone Access, Check Windows microphone privacy, Allow Windows desktop apps to use your microphone for recording., Manual path: Settings > Privacy & security > Microphone.",
+            status.Items[1].AccessibleName);
+    }
 }
