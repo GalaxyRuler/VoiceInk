@@ -3541,14 +3541,14 @@ public sealed partial class MainWindow : Window
         if (onboardingActionListView is not null)
         {
             onboardingActionListView.ItemsSource = presentation.SetupActions
-                .Select(action => $"{action.StatusBadge}: {action.Title} - {action.CommandText}. {action.Description}")
+                .Select(action => action.DisplayText)
                 .ToArray();
         }
 
         if (onboardingSummaryListView is not null)
         {
             onboardingSummaryListView.ItemsSource = presentation.SummaryRows
-                .Select(row => $"{row.StatusBadge}: {row.Title} - {row.Description}")
+                .Select(row => row.DisplayText)
                 .ToArray();
         }
 
@@ -3562,7 +3562,7 @@ public sealed partial class MainWindow : Window
         if (onboardingTutorialListView is not null)
         {
             onboardingTutorialListView.ItemsSource = presentation.TutorialSteps
-                .Select(step => $"{step.StatusBadge}: {step.StepNumber}. {step.Title} - {step.Description}")
+                .Select(step => step.DisplayText)
                 .ToArray();
         }
 

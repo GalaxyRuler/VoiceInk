@@ -20,6 +20,12 @@ public sealed record OnboardingSetupStagePresentation(
 {
     public string DisplayText => $"{PrefixFor(State)} {StepNumber}. {Title} - {Description}";
 
+    public string AccessibleName => OnboardingRowAccessibleName.From(
+        StepNumber,
+        Title,
+        StateLabelFor(State),
+        Description);
+
     private static string PrefixFor(OnboardingChecklistItemState state) =>
         state switch
         {
@@ -27,24 +33,53 @@ public sealed record OnboardingSetupStagePresentation(
             OnboardingChecklistItemState.NeedsAttention => "[Needs attention]",
             _ => "[Review]"
         };
+
+    private static string StateLabelFor(OnboardingChecklistItemState state) =>
+        state switch
+        {
+            OnboardingChecklistItemState.Ready => "Ready",
+            OnboardingChecklistItemState.NeedsAttention => "Needs attention",
+            _ => "Review"
+        };
 }
 
 public sealed record OnboardingSummaryRowPresentation(
     string Title,
     string Description,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string DisplayText => $"{StatusBadge}: {Title} - {Description}";
+
+    public string AccessibleName => OnboardingRowAccessibleName.From(Title, StatusBadge, Description);
+}
 
 public sealed record OnboardingSetupActionPresentation(
     string Title,
     string Description,
     string CommandText,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string DisplayText => $"{StatusBadge}: {Title} - {CommandText}. {Description}";
+
+    public string AccessibleName => OnboardingRowAccessibleName.From(Title, StatusBadge, CommandText, Description);
+}
 
 public sealed record OnboardingTutorialStepPresentation(
     string StepNumber,
     string Title,
     string Description,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string DisplayText => $"{StatusBadge}: {StepNumber}. {Title} - {Description}";
+
+    public string AccessibleName => OnboardingRowAccessibleName.From(StepNumber, Title, StatusBadge, Description);
+}
+
+internal static class OnboardingRowAccessibleName
+{
+    public static string From(params string[] parts) =>
+        string.Join(", ", parts.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part.Trim()));
+}
 
 public sealed record OnboardingChecklistPresentation(
     string Title,

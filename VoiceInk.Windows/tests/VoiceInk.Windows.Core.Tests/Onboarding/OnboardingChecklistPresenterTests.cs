@@ -321,4 +321,43 @@ public sealed class OnboardingChecklistPresenterTests
             action => action.Title == "Manual Privacy Path"
                 && action.Description == "Use Settings > Privacy & security > Microphone, then check both Microphone access and 'Let desktop apps access your microphone' if VoiceInk is not listed.");
     }
+
+    [Fact]
+    public void Present_RowsExposeDisplayTextAndAccessibleNames()
+    {
+        var status = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Hotkey = "Ctrl+Shift+V"
+            },
+            hasAudioInputChoices: true);
+
+        var presentation = OnboardingChecklistPresenter.Present(status);
+
+        Assert.Equal(
+            "Ready: Choose Model - Browse or Download. Local Whisper model is selected for private offline transcription.",
+            presentation.SetupActions[0].DisplayText);
+        Assert.Equal(
+            "Choose Model, Ready, Browse or Download, Local Whisper model is selected for private offline transcription.",
+            presentation.SetupActions[0].AccessibleName);
+        Assert.Equal(
+            "Ready: Model - Local Whisper model selected.",
+            presentation.SummaryRows[0].DisplayText);
+        Assert.Equal(
+            "Model, Ready, Local Whisper model selected.",
+            presentation.SummaryRows[0].AccessibleName);
+        Assert.Equal(
+            "[Ready] 1. Choose Model - Local transcription model selected.",
+            presentation.Stages[0].DisplayText);
+        Assert.Equal(
+            "1, Choose Model, Ready, Local transcription model selected.",
+            presentation.Stages[0].AccessibleName);
+        Assert.Equal(
+            "Ready: 2. Press Ctrl+Shift+V - Start recording with your primary shortcut.",
+            presentation.TutorialSteps[1].DisplayText);
+        Assert.Equal(
+            "2, Press Ctrl+Shift+V, Ready, Start recording with your primary shortcut.",
+            presentation.TutorialSteps[1].AccessibleName);
+    }
 }
