@@ -192,7 +192,7 @@ public sealed class AudioInputDeviceSelectionTests
                 Assert.Equal("Microphone Privacy", row.Name);
                 Assert.Equal("Check Access", row.BadgeText);
                 Assert.Equal(AudioInputDeviceSelectionNoticeKind.Info, row.BadgeKind);
-                Assert.Equal("Open ms-settings:privacy-microphone if Windows blocks desktop microphone access.", row.Detail);
+                Assert.Equal("Open ms-settings:privacy-microphone and enable 'Let desktop apps access your microphone' if Windows blocks recording.", row.Detail);
                 Assert.False(row.IsSelected);
                 Assert.True(row.IsAvailable);
             });

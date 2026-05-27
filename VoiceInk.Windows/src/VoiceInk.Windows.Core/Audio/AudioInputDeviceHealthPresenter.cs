@@ -70,7 +70,7 @@ public static class AudioInputDeviceHealthPresenter
                     IsAvailable: true),
                 new AudioInputDeviceHealthRow(
                     "Microphone Privacy",
-                    "Open ms-settings:privacy-microphone if Windows blocks desktop microphone access.",
+                    "Open ms-settings:privacy-microphone and enable 'Let desktop apps access your microphone' if Windows blocks recording.",
                     "Check Access",
                     AudioInputDeviceSelectionNoticeKind.Info,
                     IsSelected: false,
