@@ -109,7 +109,12 @@ public static class ModelLibraryOverviewPresenter
             "Compatibility Check",
             "GGML header",
             "VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.",
-            "Preflight")
+            "Preflight"),
+        new(
+            "Fine-Tuned Models",
+            ".bin required",
+            "Import custom or fine-tuned models only after they have been converted to whisper.cpp-compatible GGML .bin files.",
+            "Convert first")
     ];
 
     private static IReadOnlyList<ModelLibraryActionRow> ActionRows(

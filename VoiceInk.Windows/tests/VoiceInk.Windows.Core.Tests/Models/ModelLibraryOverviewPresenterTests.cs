@@ -77,6 +77,13 @@ public sealed class ModelLibraryOverviewPresenterTests
                 Assert.Equal("GGML header", row.Value);
                 Assert.Equal("VoiceInk validates selected .bin files before warmup and rejects files that do not look like whisper.cpp GGML models.", row.Detail);
                 Assert.Equal("Preflight", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Fine-Tuned Models", row.Title);
+                Assert.Equal(".bin required", row.Value);
+                Assert.Equal("Import custom or fine-tuned models only after they have been converted to whisper.cpp-compatible GGML .bin files.", row.Detail);
+                Assert.Equal("Convert first", row.StatusBadge);
             });
         Assert.Collection(
             presentation.ActionRows,
@@ -146,6 +153,25 @@ public sealed class ModelLibraryOverviewPresenterTests
                 && row.Value == "whisper.cpp GGML"
                 && row.Detail == "Catalog downloads use open-source whisper.cpp GGML model files hosted on Hugging Face."
                 && row.StatusBadge == "Open source");
+    }
+
+    [Fact]
+    public void Present_ShowsFineTunedModelConversionGuidance()
+    {
+        var items = LocalWhisperModelService.BuildCatalogItems([], currentModelPath: string.Empty);
+
+        var presentation = ModelLibraryOverviewPresenter.Present(
+            items,
+            localModels: [],
+            selectedModelPath: string.Empty,
+            unavailableImportedModelCount: 0);
+
+        Assert.Contains(
+            presentation.StorageGuidanceRows,
+            row => row.Title == "Fine-Tuned Models"
+                && row.Value == ".bin required"
+                && row.Detail == "Import custom or fine-tuned models only after they have been converted to whisper.cpp-compatible GGML .bin files."
+                && row.StatusBadge == "Convert first");
     }
 
     [Fact]
