@@ -11,6 +11,7 @@ public sealed class LocalWhisperModelHealthPresenterTests
     [InlineData(LocalWhisperModelHealthStatus.Missing, "Model file is missing", "Re-import the model from its new location or download a fresh GGML model.", "Repair Model Path")]
     [InlineData(LocalWhisperModelHealthStatus.Empty, "Model file is empty", "Delete this broken file and download or import a complete GGML model.", "Replace Model")]
     [InlineData(LocalWhisperModelHealthStatus.SuspiciouslySmall, "Model file looks incomplete", "Replace it with a complete whisper.cpp GGML model before recording.", "Replace Model")]
+    [InlineData(LocalWhisperModelHealthStatus.InvalidHeader, "Model file is not GGML", "Replace it with a whisper.cpp GGML .bin model before recording.", "Replace Model")]
     [InlineData(LocalWhisperModelHealthStatus.Ready, "Local model is ready", "You can warm up this model to reduce first transcription latency.", "Warm Up Model")]
     public void Present_MapsHealthStatusToRepairGuidance(
         LocalWhisperModelHealthStatus status,

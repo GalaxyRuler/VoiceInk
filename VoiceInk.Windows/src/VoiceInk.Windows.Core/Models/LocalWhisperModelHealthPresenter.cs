@@ -60,6 +60,13 @@ public static class LocalWhisperModelHealthPresenter
                 CanWarmup: false,
                 LocalWhisperModelRepairAction.ImportReplacement,
                 GuidanceRows(health)),
+            LocalWhisperModelHealthStatus.InvalidHeader => new(
+                "Model file is not GGML",
+                "Replace it with a whisper.cpp GGML .bin model before recording.",
+                "Replace Model",
+                CanWarmup: false,
+                LocalWhisperModelRepairAction.ImportReplacement,
+                GuidanceRows(health)),
             LocalWhisperModelHealthStatus.Ready => new(
                 "Local model is ready",
                 "You can warm up this model to reduce first transcription latency.",

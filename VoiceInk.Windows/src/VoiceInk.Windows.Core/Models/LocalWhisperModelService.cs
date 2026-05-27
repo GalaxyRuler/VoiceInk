@@ -12,6 +12,8 @@ public static class LocalWhisperModelService
 {
     private const string ModelExtension = ".bin";
     private const long MinimumPlausibleModelBytes = 1024 * 1024;
+    private const int GgmlMagicByteCount = 4;
+    private const uint GgmlMagic = 0x67676d6c;
 
     public static LocalWhisperModel[] Import(
         string path,
@@ -66,7 +68,8 @@ public static class LocalWhisperModelService
     public static LocalWhisperModelHealth CheckPathHealth(
         string? modelPath,
         Func<string, bool> fileExists,
-        Func<string, long> fileLength)
+        Func<string, long> fileLength,
+        Func<string, byte[]>? readHeader = null)
     {
         var trimmedPath = modelPath?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(trimmedPath))
@@ -107,6 +110,14 @@ public static class LocalWhisperModelService
             return new LocalWhisperModelHealth(
                 LocalWhisperModelHealthStatus.SuspiciouslySmall,
                 $"Model file looks too small for a whisper.cpp model: {trimmedPath}",
+                CanUse: false);
+        }
+
+        if (readHeader is not null && !HasGgmlMagicHeader(readHeader(trimmedPath)))
+        {
+            return new LocalWhisperModelHealth(
+                LocalWhisperModelHealthStatus.InvalidHeader,
+                $"Model file is not a whisper.cpp GGML model: {trimmedPath}",
                 CanUse: false);
         }
 
@@ -241,4 +252,8 @@ public static class LocalWhisperModelService
             return false;
         }
     }
+
+    private static bool HasGgmlMagicHeader(byte[] header) =>
+        header.Length >= GgmlMagicByteCount
+        && System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(0, GgmlMagicByteCount)) == GgmlMagic;
 }

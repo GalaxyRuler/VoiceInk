@@ -7363,7 +7363,8 @@ public sealed partial class MainWindow : Window
         LocalWhisperModelService.CheckPathHealth(
             modelPath,
             File.Exists,
-            LocalModelFileLength);
+            LocalModelFileLength,
+            LocalModelHeader);
 
     private static long LocalModelFileLength(string path)
     {
@@ -7374,6 +7375,21 @@ public sealed partial class MainWindow : Window
         catch
         {
             return 0;
+        }
+    }
+
+    private static byte[] LocalModelHeader(string path)
+    {
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var header = new byte[4];
+            var bytesRead = stream.Read(header, 0, header.Length);
+            return bytesRead == header.Length ? header : [];
+        }
+        catch
+        {
+            return [];
         }
     }
 

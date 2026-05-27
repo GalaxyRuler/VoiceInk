@@ -330,6 +330,38 @@ public sealed class LocalWhisperModelServiceTests
     }
 
     [Fact]
+    public void CheckPathHealth_WithHeaderReaderRejectsLargeNonGgmlBin()
+    {
+        var path = "C:\\Models\\not-a-whisper-model.bin";
+
+        var health = LocalWhisperModelService.CheckPathHealth(
+            path,
+            fileExists: item => item == path,
+            fileLength: _ => 142L * 1024 * 1024,
+            readHeader: _ => [0x50, 0x4B, 0x03, 0x04]);
+
+        Assert.Equal(LocalWhisperModelHealthStatus.InvalidHeader, health.Status);
+        Assert.False(health.CanUse);
+        Assert.Equal("Model file is not a whisper.cpp GGML model: C:\\Models\\not-a-whisper-model.bin", health.Message);
+    }
+
+    [Fact]
+    public void CheckPathHealth_WithHeaderReaderAcceptsGgmlMagic()
+    {
+        var path = "C:\\Models\\ggml-base.en.bin";
+
+        var health = LocalWhisperModelService.CheckPathHealth(
+            path,
+            fileExists: item => item == path,
+            fileLength: _ => 142L * 1024 * 1024,
+            readHeader: _ => [0x6C, 0x6D, 0x67, 0x67]);
+
+        Assert.Equal(LocalWhisperModelHealthStatus.Ready, health.Status);
+        Assert.True(health.CanUse);
+        Assert.Equal("Default Model: ggml-base.en", health.Message);
+    }
+
+    [Fact]
     public void RemoveUnavailableImportedModels_RemovesOnlyUnusablePaths()
     {
         var usable = new LocalWhisperModel("C:\\Models\\ggml-base.en.bin", "ggml-base.en", DateTimeOffset.UnixEpoch);

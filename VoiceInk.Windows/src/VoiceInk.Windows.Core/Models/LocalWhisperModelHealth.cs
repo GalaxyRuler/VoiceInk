@@ -7,6 +7,7 @@ public enum LocalWhisperModelHealthStatus
     Missing,
     Empty,
     SuspiciouslySmall,
+    InvalidHeader,
     Ready
 }
 
