@@ -28,11 +28,10 @@ public sealed partial class FloatingRecorderWindow : Window
     private const int NotchRecorderLiveTranscriptHeight = 160;
     private const int NotchRecorderExpandedHeight = 328;
     private const int NotchRecorderExpandedWithLiveTranscriptHeight = 400;
-    private const double MinimumBarHeight = 8;
-    private const double MaximumBarHeight = 32;
     private static readonly TimeSpan PopoverDismissalDelay = TimeSpan.FromMilliseconds(250);
     private readonly DispatcherQueueTimer pulseTimer;
     private readonly DispatcherQueueTimer popoverDismissalTimer;
+    private readonly List<Border> waveformBars = [];
     private readonly FloatingRecorderPopoverHoverController promptPopoverHover = new();
     private readonly FloatingRecorderPopoverHoverController powerModePopoverHover = new();
     private readonly SubclassProc subclassProc;
@@ -51,6 +50,7 @@ public sealed partial class FloatingRecorderWindow : Window
     public FloatingRecorderWindow()
     {
         InitializeComponent();
+        InitializeWaveformBars();
         subclassProc = RecorderSubclassProc;
         ConfigureWindow();
         TryInstallNoActivateSubclass();
@@ -540,11 +540,10 @@ public sealed partial class FloatingRecorderWindow : Window
     private void SetPulseVisible(bool isVisible)
     {
         var visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
-        PulseBar1.Visibility = visibility;
-        PulseBar2.Visibility = visibility;
-        PulseBar3.Visibility = visibility;
-        PulseBar4.Visibility = visibility;
-        PulseBar5.Visibility = visibility;
+        foreach (var bar in waveformBars)
+        {
+            bar.Visibility = visibility;
+        }
 
         if (isVisible && !pulseTimer.IsRunning)
         {
@@ -564,28 +563,36 @@ public sealed partial class FloatingRecorderWindow : Window
 
     private void ApplyMeter()
     {
-        if (inputLevel > 0.01)
+        var bars = FloatingRecorderWaveformPresenter.Present(inputLevel, pulseStep);
+        for (var index = 0; index < waveformBars.Count && index < bars.Count; index++)
         {
-            ApplyLevelBar(PulseBar1, 0.65);
-            ApplyLevelBar(PulseBar2, 0.9);
-            ApplyLevelBar(PulseBar3, 1.0);
-            ApplyLevelBar(PulseBar4, 0.85);
-            ApplyLevelBar(PulseBar5, 0.6);
-            return;
+            ApplyPulse(waveformBars[index], bars[index].Height, bars[index].Opacity);
         }
-
-        ApplyPulse(PulseBar1, 10 + ((pulseStep + 0) % 3) * 7, 0.45 + ((pulseStep + 0) % 3) * 0.2);
-        ApplyPulse(PulseBar2, 10 + ((pulseStep + 1) % 3) * 7, 0.45 + ((pulseStep + 1) % 3) * 0.2);
-        ApplyPulse(PulseBar3, 10 + ((pulseStep + 2) % 3) * 7, 0.45 + ((pulseStep + 2) % 3) * 0.2);
-        ApplyPulse(PulseBar4, 10 + ((pulseStep + 1) % 3) * 7, 0.45 + ((pulseStep + 1) % 3) * 0.2);
-        ApplyPulse(PulseBar5, 10 + ((pulseStep + 0) % 3) * 7, 0.45 + ((pulseStep + 0) % 3) * 0.2);
     }
 
-    private void ApplyLevelBar(FrameworkElement bar, double weight)
+    private void InitializeWaveformBars()
     {
-        var normalized = Math.Clamp(inputLevel * weight, 0, 1);
-        var height = MinimumBarHeight + normalized * (MaximumBarHeight - MinimumBarHeight);
-        ApplyPulse(bar, height, 0.55 + normalized * 0.45);
+        var brushes = new[]
+        {
+            Brush(255, 76, 194, 255),
+            Brush(255, 124, 219, 138),
+            Brush(255, 255, 209, 102),
+            Brush(255, 255, 122, 144),
+            Brush(255, 185, 167, 255)
+        };
+        for (var index = 0; index < FloatingRecorderWaveformPresenter.BarCount; index++)
+        {
+            var bar = new Border
+            {
+                Width = 3,
+                Height = FloatingRecorderWaveformPresenter.MinimumHeight,
+                CornerRadius = new CornerRadius(1.5),
+                Background = brushes[index % brushes.Length],
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            waveformBars.Add(bar);
+            WaveformBarsStackPanel.Children.Add(bar);
+        }
     }
 
     private static void ApplyPulse(FrameworkElement bar, double height, double opacity)

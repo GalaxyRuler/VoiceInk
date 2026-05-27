@@ -16,7 +16,7 @@ VoiceInk Windows parity  [###################-] 96%
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 91% | `[##################--]` | Local recording/transcription/insertion, conservative default-on voice activity detection for silent recordings, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, Unicode normalization before dictionary replacement, macOS-default language/text-formatting/trailing-space settings, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Remaining work is deeper transcript polish and edge-case tuning. |
 | Shell and tray | 89% | `[##################--]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, Windows-native in-app notification InfoBar for actionable status/error/warning/success messages, visible tray menu guidance for Windows hidden-icon overflow, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
-| Floating recorder | 92% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
+| Floating recorder | 93% | `[###################-]` | Mini and top-center Notch styles show recording/processing state, elapsed time, presenter-driven footer hints for Stop/Cancel/transcribing/inserting, macOS-aligned 15-bar recorder waveform backed by testable Core presentation, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel with interim-result disclosure now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. More streaming providers and final visual polish remain. |
 | Shortcuts | 99% | `[####################]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, read-only recorder fields with explicit Record buttons, Windows-key rejection, documented F12 reserved-key rejection, duplicate assignment detection, and actionable native `RegisterHotKey` conflict diagnostics when another app owns a shortcut. Remaining work is rare edge-case polish around native shortcut registration lifecycle. |
 | Model management | 90% | `[##################--]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows including expected `ggml-*.bin` filename guidance, model path health checks with actionable repair and user-selected validation guidance, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
 | Cloud transcription | 99% | `[####################]` | OpenAI-compatible adapter with endpoint-query `response_format` support, secure key storage, Custom/Groq/Deepgram/AssemblyAI/Mistral/ElevenLabs/Soniox/Speechmatics/Gemini/xAI/Cartesia presets with provider metadata cards, metadata-only provider test requests for every named preset, direct Deepgram batch requests with advanced endpoint query option preservation, AssemblyAI upload/transcript polling, Soniox async upload/transcription polling plus realtime preview, Speechmatics Jobs API batch transcription plus realtime preview, Gemini inline-audio and Files API generateContent transcription, xAI Grok STT batch transcription, Cartesia Ink Whisper batch transcription, Mistral Voxtral batch transcription through the multipart adapter, ElevenLabs Scribe batch transcription, Deepgram/AssemblyAI/Soniox/Speechmatics/Cartesia live preview streaming, and a user-owned-key smoke runbook exist. Remaining cloud work is advanced provider-specific options. |
@@ -34,16 +34,16 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Voice activity detection  [####################] 100%
+Recorder waveform parity  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows voice activity detection spec and implementation plan.
-- Added Core VAD contracts, default-on settings, and no-speech skip behavior in `DictationController`.
-- Added a conservative native PCM16 WAV detector that fails open for unsupported/unreadable audio.
-- Added the macOS-style Voice Activity Detection toggle in the Windows model settings area.
-- Ran focused Core VAD tests, native detector/settings tests, app project build, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows recorder waveform parity spec and implementation plan.
+- Added a Core waveform presenter that matches the macOS 15-bar density and 4-28 px height range.
+- Replaced the Windows recorder's five hard-coded meter bars with presenter-driven waveform bars.
+- Preserved mini/notch recorder controls, live transcript preview, and no-activate behavior.
+- Ran focused Core waveform tests, app project build, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

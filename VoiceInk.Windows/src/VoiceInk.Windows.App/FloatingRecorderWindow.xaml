@@ -156,13 +156,11 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                        <Border x:Name="PulseBar1" Width="8" Height="12" CornerRadius="4" Background="#4CC2FF" />
-                        <Border x:Name="PulseBar2" Width="8" Height="16" CornerRadius="4" Background="#7CDB8A" />
-                        <Border x:Name="PulseBar3" Width="8" Height="20" CornerRadius="4" Background="#FFD166" />
-                        <Border x:Name="PulseBar4" Width="8" Height="16" CornerRadius="4" Background="#FF7A90" />
-                        <Border x:Name="PulseBar5" Width="8" Height="12" CornerRadius="4" Background="#B9A7FF" />
-                    </StackPanel>
+                    <StackPanel
+                        x:Name="WaveformBarsStackPanel"
+                        Orientation="Horizontal"
+                        Spacing="2"
+                        VerticalAlignment="Center" />
 
                     <TextBlock
                         x:Name="ElapsedTextBlock"
