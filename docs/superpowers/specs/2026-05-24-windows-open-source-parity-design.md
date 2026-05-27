@@ -769,6 +769,12 @@ Metrics realtime status slice completed on 2026-05-27:
 - Added focused presenter coverage for both faster and slower transcription model rows.
 - Kept enhancement metrics, SQLite persistence, CSV export, reset, and diagnostics behavior unchanged.
 
+Metrics model performance accessibility slice completed on 2026-05-27:
+
+- Added presenter-backed accessible names for transcription and enhancement model performance rows.
+- Bound the Metrics row templates to `AutomationProperties.Name` so assistive technologies receive a complete row summary.
+- Kept visible text, metric calculations, CSV export, filters, and performance status badges unchanged.
+
 Windows gaps:
 
 - Slide-over model performance panel styling.

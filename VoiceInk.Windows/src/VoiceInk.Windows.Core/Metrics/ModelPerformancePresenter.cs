@@ -14,6 +14,12 @@ public sealed record ModelPerformanceRow(
         string.IsNullOrWhiteSpace(Subtitle)
             ? $"{Title} - {Detail}"
             : $"{Title} - {Subtitle}; {Detail}";
+
+    public string AccessibleName =>
+        string.Join(
+            ", ",
+            new[] { Title, PrimaryValue, StatusBadge, Subtitle, Detail }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
 }
 
 public static class ModelPerformancePresenter

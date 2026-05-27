@@ -27,6 +27,9 @@ public sealed class ModelPerformancePresenterTests
             Assert.Equal("3s avg processing; 12s avg audio", row.Detail);
             Assert.Equal("4.2x", row.PrimaryValue);
             Assert.Equal("Faster than Real-time", row.StatusBadge);
+            Assert.Equal(
+                "ggml-base.en, 4.2x, Faster than Real-time, 3 sessions - 4.2x realtime, 3s avg processing; 12s avg audio",
+                row.AccessibleName);
         });
     }
 
@@ -67,6 +70,9 @@ public sealed class ModelPerformancePresenterTests
             Assert.Equal("2.5s avg enhancement processing", row.Detail);
             Assert.Equal("2.5s", row.PrimaryValue);
             Assert.Equal("Enhancement", row.StatusBadge);
+            Assert.Equal(
+                "gpt-4o-mini, 2.5s, Enhancement, 2 sessions, 2.5s avg enhancement processing",
+                row.AccessibleName);
         });
     }
 
@@ -79,6 +85,9 @@ public sealed class ModelPerformancePresenterTests
         Assert.Equal("Complete a local or cloud transcription to compare model speed.", row.Detail);
         Assert.Equal("No data", row.PrimaryValue);
         Assert.Equal("Waiting", row.StatusBadge);
+        Assert.Equal(
+            "No transcription model metrics yet, No data, Waiting, Complete a local or cloud transcription to compare model speed.",
+            row.AccessibleName);
         Assert.True(row.IsEmpty);
     }
 
