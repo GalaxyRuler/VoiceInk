@@ -1751,6 +1751,15 @@ public sealed class DictationControllerTests
             return Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(Items.Take(limit).ToList());
         }
 
+        public Task<HistoryPage> ListPageAsync(
+            string? query,
+            HistoryPageCursor? cursor,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HistoryPage(Items.Take(pageSize).ToArray(), NextCursor: null, HasMore: false));
+        }
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));

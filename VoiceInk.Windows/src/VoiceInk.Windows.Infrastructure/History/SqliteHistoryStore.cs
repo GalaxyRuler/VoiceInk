@@ -74,34 +74,7 @@ public sealed class SqliteHistoryStore : IHistoryStore
             throw new ArgumentOutOfRangeException(nameof(limit), limit, "Limit must be non-negative.");
         }
 
-        if (limit == 0)
-        {
-            return [];
-        }
-
-        await using var connection = new SqliteConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
-                   COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
-                   model_path, prompt_name, power_mode_name, power_mode_emoji, enhancement_duration_ms, error_message, audio_file_path,
-                   enhancement_provider_name, enhancement_model_name, ai_request_system_message, ai_request_user_message
-            FROM transcriptions
-            ORDER BY created_at_utc_ticks DESC
-            LIMIT $limit;
-            """;
-        command.Parameters.AddWithValue("$limit", limit);
-
-        var items = new List<TranscriptionHistoryItem>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            items.Add(ReadHistoryItem(reader));
-        }
-
-        return items;
+        return (await ListPageAsync(query: null, cursor: null, limit, cancellationToken)).Items;
     }
 
     public async Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(
@@ -109,51 +82,81 @@ public sealed class SqliteHistoryStore : IHistoryStore
         int limit,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return await ListRecentAsync(limit, cancellationToken);
-        }
-
         if (limit < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(limit), limit, "Limit must be non-negative.");
         }
 
-        if (limit == 0)
+        return (await ListPageAsync(query, cursor: null, limit, cancellationToken)).Items;
+    }
+
+    public async Task<HistoryPage> ListPageAsync(
+        string? query,
+        HistoryPageCursor? cursor,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        if (pageSize < 0)
         {
-            return [];
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be non-negative.");
+        }
+
+        if (pageSize == 0)
+        {
+            return new HistoryPage([], NextCursor: null, HasMore: false);
         }
 
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
 
         using var command = connection.CreateCommand();
-        command.CommandText = """
+        var conditions = new List<string>();
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            conditions.Add("""
+                (text LIKE $query ESCAPE '\'
+                    OR original_text LIKE $query ESCAPE '\'
+                    OR enhanced_text LIKE $query ESCAPE '\'
+                    OR provider_name LIKE $query ESCAPE '\'
+                    OR language LIKE $query ESCAPE '\'
+                    OR model_path LIKE $query ESCAPE '\'
+                    OR prompt_name LIKE $query ESCAPE '\'
+                    OR power_mode_name LIKE $query ESCAPE '\'
+                    OR power_mode_emoji LIKE $query ESCAPE '\'
+                    OR error_message LIKE $query ESCAPE '\'
+                    OR audio_file_path LIKE $query ESCAPE '\'
+                    OR enhancement_provider_name LIKE $query ESCAPE '\'
+                    OR enhancement_model_name LIKE $query ESCAPE '\'
+                    OR ai_request_system_message LIKE $query ESCAPE '\'
+                    OR ai_request_user_message LIKE $query ESCAPE '\')
+                """);
+            command.Parameters.AddWithValue("$query", $"%{EscapeLikePattern(query.Trim())}%");
+        }
+
+        if (cursor is not null)
+        {
+            conditions.Add("""
+                (created_at_utc_ticks < $cursor_ticks
+                    OR (created_at_utc_ticks = $cursor_ticks AND id < $cursor_id))
+                """);
+            command.Parameters.AddWithValue("$cursor_ticks", cursor.CreatedAtUtcTicks);
+            command.Parameters.AddWithValue("$cursor_id", cursor.Id);
+        }
+
+        var whereClause = conditions.Count == 0
+            ? string.Empty
+            : $"WHERE {string.Join($"{Environment.NewLine}              AND ", conditions)}";
+        command.CommandText = $"""
             SELECT id, created_at, text, provider_name, audio_duration_ms, transcription_duration_ms,
                    COALESCE(NULLIF(original_text, ''), text), enhanced_text, status, language,
                    model_path, prompt_name, power_mode_name, power_mode_emoji, enhancement_duration_ms, error_message, audio_file_path,
                    enhancement_provider_name, enhancement_model_name, ai_request_system_message, ai_request_user_message
             FROM transcriptions
-            WHERE text LIKE $query ESCAPE '\'
-               OR original_text LIKE $query ESCAPE '\'
-               OR enhanced_text LIKE $query ESCAPE '\'
-               OR provider_name LIKE $query ESCAPE '\'
-               OR language LIKE $query ESCAPE '\'
-               OR model_path LIKE $query ESCAPE '\'
-               OR prompt_name LIKE $query ESCAPE '\'
-               OR power_mode_name LIKE $query ESCAPE '\'
-               OR power_mode_emoji LIKE $query ESCAPE '\'
-               OR error_message LIKE $query ESCAPE '\'
-               OR audio_file_path LIKE $query ESCAPE '\'
-               OR enhancement_provider_name LIKE $query ESCAPE '\'
-               OR enhancement_model_name LIKE $query ESCAPE '\'
-               OR ai_request_system_message LIKE $query ESCAPE '\'
-               OR ai_request_user_message LIKE $query ESCAPE '\'
-            ORDER BY created_at_utc_ticks DESC
+            {whereClause}
+            ORDER BY created_at_utc_ticks DESC, id DESC
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue("$query", $"%{EscapeLikePattern(query.Trim())}%");
-        command.Parameters.AddWithValue("$limit", limit);
+        command.Parameters.AddWithValue("$limit", pageSize + 1);
 
         var items = new List<TranscriptionHistoryItem>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -162,7 +165,12 @@ public sealed class SqliteHistoryStore : IHistoryStore
             items.Add(ReadHistoryItem(reader));
         }
 
-        return items;
+        var pageItems = items.Take(pageSize).ToArray();
+        var hasMore = items.Count > pageSize;
+        var nextCursor = hasMore && pageItems.Length > 0
+            ? CursorFrom(pageItems[^1])
+            : null;
+        return new HistoryPage(pageItems, nextCursor, hasMore);
     }
 
     public async Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
@@ -407,6 +415,9 @@ public sealed class SqliteHistoryStore : IHistoryStore
 
     private static TimeSpan? GetNullableTimeSpan(SqliteDataReader reader, int ordinal) =>
         reader.IsDBNull(ordinal) ? null : TimeSpan.FromMilliseconds(reader.GetDouble(ordinal));
+
+    private static HistoryPageCursor CursorFrom(TranscriptionHistoryItem item) =>
+        new(item.CreatedAt.UtcDateTime.Ticks, item.Id.ToString());
 
     private static string StatusToStorage(TranscriptionHistoryStatus status) =>
         status switch

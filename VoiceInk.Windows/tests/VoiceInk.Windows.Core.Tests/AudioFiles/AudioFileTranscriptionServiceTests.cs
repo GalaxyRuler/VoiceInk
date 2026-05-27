@@ -321,6 +321,13 @@ public sealed class AudioFileTranscriptionServiceTests
         public Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(string query, int limit, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TranscriptionHistoryItem>>(Items.Take(limit).ToArray());
 
+        public Task<HistoryPage> ListPageAsync(
+            string? query,
+            HistoryPageCursor? cursor,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new HistoryPage(Items.Take(pageSize).ToArray(), NextCursor: null, HasMore: false));
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Items.FirstOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
 

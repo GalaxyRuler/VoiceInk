@@ -7,6 +7,11 @@ public interface IHistoryStore
     Task SaveAsync(TranscriptionHistoryItem item, CancellationToken cancellationToken);
     Task<IReadOnlyList<TranscriptionHistoryItem>> ListRecentAsync(int limit, CancellationToken cancellationToken);
     Task<IReadOnlyList<TranscriptionHistoryItem>> SearchAsync(string query, int limit, CancellationToken cancellationToken);
+    Task<HistoryPage> ListPageAsync(
+        string? query,
+        HistoryPageCursor? cursor,
+        int pageSize,
+        CancellationToken cancellationToken);
     Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken);
     Task<TranscriptionHistoryItem?> GetLatestCompletedWithAudioAsync(CancellationToken cancellationToken);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);

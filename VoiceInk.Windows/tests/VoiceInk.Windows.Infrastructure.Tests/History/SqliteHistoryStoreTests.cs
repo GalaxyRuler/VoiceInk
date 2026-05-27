@@ -165,6 +165,123 @@ public sealed class SqliteHistoryStoreTests
     }
 
     [Fact]
+    public async Task ListPageAsync_ReturnsFirstPageNewestFirst()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+        var oldest = HistoryItem("oldest", minutes: -3);
+        var middle = HistoryItem("middle", minutes: -2);
+        var newest = HistoryItem("newest", minutes: -1);
+        await store.SaveAsync(oldest, CancellationToken.None);
+        await store.SaveAsync(middle, CancellationToken.None);
+        await store.SaveAsync(newest, CancellationToken.None);
+
+        var page = await store.ListPageAsync(query: null, cursor: null, pageSize: 2, CancellationToken.None);
+
+        Assert.True(page.HasMore);
+        Assert.NotNull(page.NextCursor);
+        Assert.Collection(
+            page.Items,
+            item => Assert.Equal(newest, item),
+            item => Assert.Equal(middle, item));
+    }
+
+    [Fact]
+    public async Task ListPageAsync_ReturnsNextPageAfterCursor()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+        var oldest = HistoryItem("oldest", minutes: -3);
+        var middle = HistoryItem("middle", minutes: -2);
+        var newest = HistoryItem("newest", minutes: -1);
+        await store.SaveAsync(oldest, CancellationToken.None);
+        await store.SaveAsync(middle, CancellationToken.None);
+        await store.SaveAsync(newest, CancellationToken.None);
+
+        var first = await store.ListPageAsync(query: null, cursor: null, pageSize: 2, CancellationToken.None);
+        var second = await store.ListPageAsync(query: null, first.NextCursor, pageSize: 2, CancellationToken.None);
+
+        Assert.False(second.HasMore);
+        Assert.Null(second.NextCursor);
+        var item = Assert.Single(second.Items);
+        Assert.Equal(oldest, item);
+    }
+
+    [Fact]
+    public async Task ListPageAsync_WithSearchReturnsNextFilteredPage()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+        var miss = HistoryItem("unrelated", minutes: -1);
+        var newestMatch = HistoryItem("project alpha newest", minutes: -2);
+        var oldestMatch = HistoryItem("project alpha oldest", minutes: -3);
+        await store.SaveAsync(oldestMatch, CancellationToken.None);
+        await store.SaveAsync(newestMatch, CancellationToken.None);
+        await store.SaveAsync(miss, CancellationToken.None);
+
+        var first = await store.ListPageAsync("alpha", cursor: null, pageSize: 1, CancellationToken.None);
+        var second = await store.ListPageAsync("alpha", first.NextCursor, pageSize: 1, CancellationToken.None);
+
+        Assert.True(first.HasMore);
+        Assert.Equal(newestMatch, Assert.Single(first.Items));
+        Assert.False(second.HasMore);
+        Assert.Equal(oldestMatch, Assert.Single(second.Items));
+    }
+
+    [Fact]
+    public async Task ListPageAsync_UsesStableOrderingWhenCreatedAtTicksTie()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+        var createdAt = DateTimeOffset.Parse("2026-05-27T10:00:00Z");
+        var lowId = new TranscriptionHistoryItem(
+            Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            createdAt,
+            "low id",
+            "local-whisper",
+            TimeSpan.Zero,
+            TimeSpan.Zero);
+        var highId = lowId with
+        {
+            Id = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
+            Text = "high id",
+            OriginalText = "high id"
+        };
+        await store.SaveAsync(lowId, CancellationToken.None);
+        await store.SaveAsync(highId, CancellationToken.None);
+
+        var first = await store.ListPageAsync(query: null, cursor: null, pageSize: 1, CancellationToken.None);
+        var second = await store.ListPageAsync(query: null, first.NextCursor, pageSize: 1, CancellationToken.None);
+
+        Assert.Equal(highId, Assert.Single(first.Items));
+        Assert.Equal(lowId, Assert.Single(second.Items));
+    }
+
+    [Fact]
+    public async Task ListPageAsync_WithPageSizeZeroReturnsEmptyPage()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+        await store.SaveAsync(HistoryItem("sample", minutes: -1), CancellationToken.None);
+
+        var page = await store.ListPageAsync(query: null, cursor: null, pageSize: 0, CancellationToken.None);
+
+        Assert.Empty(page.Items);
+        Assert.False(page.HasMore);
+        Assert.Null(page.NextCursor);
+    }
+
+    [Fact]
+    public async Task ListPageAsync_WithNegativePageSizeThrowsArgumentOutOfRangeException()
+    {
+        using var temp = new TempDirectory();
+        var store = new SqliteHistoryStore(Path.Combine(temp.Path, "history.db"));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => store.ListPageAsync(query: null, cursor: null, pageSize: -1, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task SaveAndListRecentAsync_RoundTripsRichMetadata()
     {
         using var temp = new TempDirectory();
@@ -641,6 +758,15 @@ public sealed class SqliteHistoryStoreTests
             }
         }
     }
+
+    private static TranscriptionHistoryItem HistoryItem(string text, int minutes) =>
+        new(
+            Guid.NewGuid(),
+            DateTimeOffset.Parse("2026-05-27T10:00:00Z").AddMinutes(minutes),
+            text,
+            "local-whisper",
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromMilliseconds(100));
 
     private static void CreateMvpHistoryDatabase(string dbPath)
     {

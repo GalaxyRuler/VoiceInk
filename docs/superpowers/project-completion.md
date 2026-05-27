@@ -24,7 +24,7 @@ VoiceInk Windows parity  [###################-] 96%
 | Context features | 86% | `[#################---]` | Clipboard context, selected-text context with clipboard fallback, active-window process/title context, sanitized browser URL context, default-off local screen OCR context, region-aware OCR capture plumbing, visible numeric OCR region controls, a visual OCR region picker, display-targeted OCR region selection, Enhancement context readiness summary rows, provider-aware context privacy boundary rows, explicit OCR capture-scope privacy rows, Windows capture consent/border disclosure, unavailable-source graceful-skip disclosure, and context action guidance rows exist with graceful degradation. Deeper context visual polish remains. |
 | Power Mode | 92% | `[##################--]` | Rule model, process/title/browser URL matching, default fallback, page-level match and override precedence guidance, explicit recorder chooser selection, cycle shortcut, direct per-rule shortcuts, settings overlays, history metadata, editor UI, inline validation feedback, post-insertion auto-send keys, macOS-style page/empty-state copy, and rich rule rows for targets/overrides/shortcuts/status exist. Deeper visual layout polish remains. |
 | Dictionary | 92% | `[##################--]` | Vocabulary, replacements, sorting, quick add, import/export, pipeline integration, macOS-style section descriptions, counts, summary rows, rule application guidance rows including processing-order, import-conflict, and local backup workflow guidance, empty states, local overview guidance, disabled replacement row presentation, and richer vocabulary/replacement row details with status badges exist. Remaining work is deeper flow/layout polish. |
-| History | 95% | `[###################-]` | Dedicated History window, SQLite detail metadata, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing, audio storage state, retry/re-enhance provenance, and export-scope privacy disclosure, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
+| History | 96% | `[###################-]` | Dedicated History window, SQLite detail metadata, stable paginated loading with explicit Load More for normal and searched history, search, retry, re-enhance from saved original text, copy actions for original/final/enhanced/AI request, paste, audio playback/open with waveform and rate controls, selected-item local analysis rows with provider timing, audio storage state, retry/re-enhance provenance, and export-scope privacy disclosure, single and batch delete, single and selected CSV export, and privacy cleanup operations exist. Remaining work is deeper visual polish. |
 | Metrics | 91% | `[##################--]` | SQLite metrics, macOS-style hero/card dashboard presentation, filters, local action and diagnostics summary rows including audio-duration diagnostics and Windows Diagnostic Data Viewer separation guidance, metric data/formula guidance rows, local-only model performance interpretation guidance, presenter-backed model performance guidance, templated model performance rows with primary values/status badges, CSV export, and confirmed reset controls exist. Deeper visual diagnostics polish remains. |
 | Settings | 91% | `[##################--]` | Shortcut/cleanup/provider/audio controls, recorder style selection, default-on VAD toggle, Permissions readiness routing, local settings backup import/export, privacy cleanup, reset onboarding, clipboard restore delay, paste method choices, launch at login, diagnostic log export, recording feedback controls, custom start/stop sound import/reset/test, macOS-style section descriptions, local data-safety overview guidance, grouped-section find guidance, action summary rows, current-state rows for paste/clipboard/feedback/cleanup, backup/import guidance rows with manual Windows-profile export disclosure, and diagnostics privacy/export guidance rows including optional Windows diagnostic-data separation exist. Deeper form layout polish remains. |
 | Audio input | 94% | `[###################-]` | Device refresh, System Default/Custom/Prioritized modes, priority ordering with unavailable-device fallback, visible System Default fallback health rows with Windows Sound settings and microphone privacy diagnostics guidance, custom persistence, endpoint-ID backed identity, saved-name rebinding, unavailable fallback, startup capture rebinding, live Core Audio device-change refresh, persistent status notices, Device Health rows with Active/Available/Unavailable/Default badges, and a Permissions-page microphone privacy link exist. Remaining work is visual polish and endpoint-native diagnostics polish. |
@@ -34,16 +34,16 @@ VoiceInk Windows parity  [###################-] 96%
 ## Current Slice
 
 ```text
-Recorder waveform parity  [####################] 100%
+History pagination  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows recorder waveform parity spec and implementation plan.
-- Added a Core waveform presenter that matches the macOS 15-bar density and 4-28 px height range.
-- Replaced the Windows recorder's five hard-coded meter bars with presenter-driven waveform bars.
-- Preserved mini/notch recorder controls, live transcript preview, and no-activate behavior.
-- Ran focused Core waveform tests, app project build, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the Windows history pagination spec and implementation plan.
+- Added Core history page/cursor records and a stable SQLite cursor query ordered by `created_at_utc_ticks` plus `id`.
+- Added focused SQLite tests for first page, next page, search pagination, tied timestamp ordering, and page-size guards.
+- Added a Windows History Load More button that appends pages while preserving loaded selection.
+- Ran focused SQLite page tests, app project build, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 

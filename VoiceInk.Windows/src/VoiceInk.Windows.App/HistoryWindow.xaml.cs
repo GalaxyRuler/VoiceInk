@@ -20,6 +20,7 @@ namespace VoiceInk.Windows.App;
 
 public sealed partial class HistoryWindow : Window
 {
+    private const int HistoryPageSize = 100;
     private const int WaveformPeakCount = 64;
     private readonly IHistoryStore historyStore;
     private readonly HistoryRetryService historyRetryService;
@@ -29,6 +30,9 @@ public sealed partial class HistoryWindow : Window
     private readonly CancellationTokenSource lifetime = new();
     private IReadOnlyList<TranscriptionHistoryItem> historyItems = [];
     private IReadOnlyList<HistoryWindowListRow> historyRows = [];
+    private HistoryPageCursor? nextHistoryCursor;
+    private string currentHistoryQuery = string.Empty;
+    private bool hasMoreHistory;
     private bool isBusy;
 
     public HistoryWindow(
@@ -79,6 +83,11 @@ public sealed partial class HistoryWindow : Window
     private async void RefreshButton_Click(object sender, RoutedEventArgs e)
     {
         await RefreshHistoryAsync();
+    }
+
+    private async void LoadMoreHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadMoreHistoryAsync();
     }
 
     private async void ExportButton_Click(object sender, RoutedEventArgs e)
@@ -160,22 +169,51 @@ public sealed partial class HistoryWindow : Window
 
     private async Task RefreshHistoryAsync(Guid? selectId = null)
     {
+        await LoadHistoryPageAsync(reset: true, selectId);
+    }
+
+    private async Task LoadMoreHistoryAsync()
+    {
+        if (!hasMoreHistory || nextHistoryCursor is null)
+        {
+            SetStatus("All loaded history is visible");
+            return;
+        }
+
+        await LoadHistoryPageAsync(reset: false, selectId: null);
+    }
+
+    private async Task LoadHistoryPageAsync(bool reset, Guid? selectId)
+    {
         var selectedIds = selectId is null
             ? SelectedHistoryIds().ToHashSet()
             : [selectId.Value];
 
-        SetBusy(true, "Refreshing history");
+        if (reset)
+        {
+            currentHistoryQuery = SearchTextBox.Text.Trim();
+            nextHistoryCursor = null;
+            hasMoreHistory = false;
+        }
+
+        SetBusy(true, reset ? "Refreshing history" : "Loading more history");
         try
         {
-            var query = SearchTextBox.Text.Trim();
-            historyItems = string.IsNullOrWhiteSpace(query)
-                ? await historyStore.ListRecentAsync(100, lifetime.Token)
-                : await historyStore.SearchAsync(query, 100, lifetime.Token);
+            var page = await historyStore.ListPageAsync(
+                currentHistoryQuery,
+                reset ? null : nextHistoryCursor,
+                HistoryPageSize,
+                lifetime.Token);
+            historyItems = reset
+                ? page.Items
+                : historyItems.Concat(page.Items).ToArray();
+            nextHistoryCursor = page.NextCursor;
+            hasMoreHistory = page.HasMore;
             historyRows = historyItems
                 .Select(item => new HistoryWindowListRow(item.Id, HistoryListItem(item)))
                 .ToArray();
             HistoryListView.ItemsSource = historyRows;
-            ListHeaderTextBlock.Text = $"History ({historyItems.Count.ToString("N0", CultureInfo.CurrentCulture)})";
+            RefreshHistoryListHeader();
 
             HistoryListView.SelectedItems.Clear();
             foreach (var row in historyRows.Where(row => selectedIds.Contains(row.Id)))
@@ -184,7 +222,7 @@ public sealed partial class HistoryWindow : Window
             }
 
             RefreshSelectedHistoryDetails();
-            SetStatus(historyItems.Count == 0 ? "No transcriptions" : "History refreshed");
+            SetStatus(HistoryPageStatus(reset, page.Items.Count));
         }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
         {
@@ -683,12 +721,39 @@ public sealed partial class HistoryWindow : Window
         RefreshButton.IsEnabled = !busy;
         ExportButton.IsEnabled = !busy;
         HistoryListView.IsEnabled = !busy;
+        LoadMoreHistoryButton.IsEnabled = !busy && hasMoreHistory;
+        LoadMoreHistoryButton.Visibility = hasMoreHistory ? Visibility.Visible : Visibility.Collapsed;
         RefreshSelectedHistoryDetails();
     }
 
     private void SetStatus(string status)
     {
         StatusTextBlock.Text = status;
+    }
+
+    private void RefreshHistoryListHeader()
+    {
+        var loaded = historyItems.Count.ToString("N0", CultureInfo.CurrentCulture);
+        ListHeaderTextBlock.Text = hasMoreHistory
+            ? $"History ({loaded} loaded, more available)"
+            : $"History ({loaded} loaded)";
+    }
+
+    private string HistoryPageStatus(bool reset, int loadedCount)
+    {
+        if (historyItems.Count == 0)
+        {
+            return "No transcriptions";
+        }
+
+        if (!reset)
+        {
+            return $"Loaded {loadedCount.ToString("N0", CultureInfo.CurrentCulture)} more transcription(s)";
+        }
+
+        return hasMoreHistory
+            ? "History refreshed - more transcriptions available"
+            : "History refreshed";
     }
 
     private void TryDeleteAudioFile(TranscriptionHistoryItem item)

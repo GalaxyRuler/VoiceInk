@@ -45,6 +45,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <TextBlock x:Name="ListHeaderTextBlock" Text="History" FontSize="18" FontWeight="SemiBold" />
                 <StackPanel Grid.Row="1" Spacing="8">
@@ -63,6 +64,13 @@
                     Grid.Row="2"
                     SelectionChanged="HistoryListView_SelectionChanged"
                     SelectionMode="Multiple" />
+                <Button
+                    x:Name="LoadMoreHistoryButton"
+                    Grid.Row="3"
+                    HorizontalAlignment="Stretch"
+                    Content="Load More"
+                    Click="LoadMoreHistoryButton_Click"
+                    Visibility="Collapsed" />
             </Grid>
 
             <Grid Grid.Column="1" RowSpacing="8">

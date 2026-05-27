@@ -210,6 +210,15 @@ public sealed class LastTranscriptionActionServiceTests
             return Task.FromResult(items.Take(limit).ToArray() as IReadOnlyList<TranscriptionHistoryItem>);
         }
 
+        public Task<HistoryPage> ListPageAsync(
+            string? query,
+            HistoryPageCursor? cursor,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HistoryPage(items.Take(pageSize).ToArray(), NextCursor: null, HasMore: false));
+        }
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken)
         {
             GetLatestCompletedCalled = true;

@@ -290,6 +290,19 @@ public sealed class PrivacyCleanupServiceTests
             CancellationToken cancellationToken) =>
             ListRecentAsync(limit, cancellationToken);
 
+        public Task<HistoryPage> ListPageAsync(
+            string? query,
+            HistoryPageCursor? cursor,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new HistoryPage(
+                Items
+                    .OrderByDescending(item => item.CreatedAt.UtcDateTime.Ticks)
+                    .Take(pageSize)
+                    .ToArray(),
+                NextCursor: null,
+                HasMore: false));
+
         public Task<TranscriptionHistoryItem?> GetLatestCompletedAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Items.LastOrDefault(item => item.Status == TranscriptionHistoryStatus.Completed));
 
