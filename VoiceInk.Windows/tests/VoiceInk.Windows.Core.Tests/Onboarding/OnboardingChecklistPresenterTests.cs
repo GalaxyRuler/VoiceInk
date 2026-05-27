@@ -15,7 +15,7 @@ public sealed class OnboardingChecklistPresenterTests
 
         Assert.Equal("Welcome to VoiceInk", presentation.Title);
         Assert.Equal("Set up your local model, microphone, and shortcut once, then dictate anywhere from the tray or keyboard.", presentation.Description);
-        Assert.Equal("2 of 5 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("2 of 6 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Choose or download a local Whisper model to continue.", presentation.NextAction);
         Assert.False(presentation.CanSaveSetup);
         Assert.Collection(
@@ -80,6 +80,13 @@ public sealed class OnboardingChecklistPresenterTests
             },
             action =>
             {
+                Assert.Equal("Context Awareness", action.Title);
+                Assert.Equal("Optional local screen OCR and clipboard context are default-off. Enable them later when you want extra context for enhancement.", action.Description);
+                Assert.Equal("Review Later", action.CommandText);
+                Assert.Equal("Optional", action.StatusBadge);
+            },
+            action =>
+            {
                 Assert.Equal("Set Shortcut", action.Title);
                 Assert.Equal("Primary shortcut is configured for system-wide recording.", action.Description);
                 Assert.Equal("Edit Shortcut", action.CommandText);
@@ -111,6 +118,12 @@ public sealed class OnboardingChecklistPresenterTests
                 Assert.Equal("Windows Permission", row.Title);
                 Assert.Equal("Keep Windows microphone access and desktop app access enabled for recording.", row.Description);
                 Assert.Equal("Review", row.StatusBadge);
+            },
+            row =>
+            {
+                Assert.Equal("Context Awareness", row.Title);
+                Assert.Equal("Windows asks for capture consent when screen OCR context is enabled and used.", row.Description);
+                Assert.Equal("Optional", row.StatusBadge);
             },
             row =>
             {
@@ -176,6 +189,11 @@ public sealed class OnboardingChecklistPresenterTests
             },
             item =>
             {
+                Assert.Equal("Context awareness", item.Title);
+                Assert.Equal(OnboardingChecklistItemState.Advisory, item.State);
+            },
+            item =>
+            {
                 Assert.Equal("First dictation test", item.Title);
                 Assert.Equal(OnboardingChecklistItemState.Advisory, item.State);
             });
@@ -195,11 +213,11 @@ public sealed class OnboardingChecklistPresenterTests
         var presentation = OnboardingChecklistPresenter.Present(status);
 
         Assert.True(presentation.CanSaveSetup);
-        Assert.Equal("4 of 5 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("4 of 6 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal("Save setup, click a text field, press your shortcut, speak, then press it again to insert text.", presentation.NextAction);
-        Assert.Equal(["Ready", "Ready", "Review", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal(["Ready", "Ready", "Fallback", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
-        Assert.Equal("Click Field and Speak", presentation.SetupActions[4].CommandText);
+        Assert.Equal(["Ready", "Ready", "Review", "Optional", "Ready", "Try next"], presentation.SummaryRows.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal(["Ready", "Ready", "Fallback", "Optional", "Ready", "Ready"], presentation.SetupActions.Select(row => row.StatusBadge).ToArray());
+        Assert.Equal("Click Field and Speak", presentation.SetupActions[5].CommandText);
         Assert.Equal(["Ready", "Ready", "Ready", "Ready", "Ready"], presentation.TutorialSteps.Select(step => step.StatusBadge).ToArray());
         Assert.Equal("Press Ctrl+Alt+Space", presentation.TutorialSteps[1].Title);
         Assert.Equal("Press Ctrl+Alt+Space again", presentation.TutorialSteps[3].Title);
@@ -224,7 +242,7 @@ public sealed class OnboardingChecklistPresenterTests
         var microphoneItem = presentation.Items.Single(item => item.Title == "Microphone input");
 
         Assert.True(presentation.CanSaveSetup);
-        Assert.Equal("2 of 5 setup essentials ready", presentation.ProgressLabel);
+        Assert.Equal("2 of 6 setup essentials ready", presentation.ProgressLabel);
         Assert.Equal(OnboardingChecklistItemState.NeedsAttention, microphoneItem.State);
         Assert.Equal("No input is visible yet. Refresh devices or open Windows microphone privacy settings before your first recording.", microphoneItem.Description);
         Assert.Contains(
@@ -233,5 +251,38 @@ public sealed class OnboardingChecklistPresenterTests
                 && row.Description == "Open Windows microphone privacy settings if no input appears after refresh."
                 && row.StatusBadge == "Check");
         Assert.Equal("Save setup after checking your microphone, then run the first dictation test.", presentation.NextAction);
+    }
+
+    [Fact]
+    public void Present_AlwaysShowsOptionalContextAwarenessGuidance()
+    {
+        var status = OnboardingSetupStatusService.Build(
+            new AppSettings
+            {
+                ModelPath = "C:\\Models\\ggml-base.en.bin",
+                Hotkey = "Ctrl+Alt+Space"
+            },
+            hasAudioInputChoices: true);
+
+        var presentation = OnboardingChecklistPresenter.Present(status);
+
+        Assert.Contains(
+            presentation.SetupActions,
+            action => action.Title == "Context Awareness"
+                && action.Description == "Optional local screen OCR and clipboard context are default-off. Enable them later when you want extra context for enhancement."
+                && action.CommandText == "Review Later"
+                && action.StatusBadge == "Optional");
+        Assert.Contains(
+            presentation.SummaryRows,
+            row => row.Title == "Context Awareness"
+                && row.Description == "Windows asks for capture consent when screen OCR context is enabled and used."
+                && row.StatusBadge == "Optional");
+        Assert.Contains(
+            presentation.Items,
+            item => item.Title == "Context awareness"
+                && item.Description == "Optional local context stays default-off during setup; Windows will ask before screen OCR captures a window or display."
+                && item.State == OnboardingChecklistItemState.Advisory);
+        Assert.Equal("4 of 6 setup essentials ready", presentation.ProgressLabel);
+        Assert.True(presentation.CanSaveSetup);
     }
 }

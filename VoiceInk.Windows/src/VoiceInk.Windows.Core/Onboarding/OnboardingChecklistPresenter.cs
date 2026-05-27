@@ -100,6 +100,10 @@ public static class OnboardingChecklistPresenter
                 "If recording does not start, allow microphone access for desktop apps in Windows Settings.",
                 OnboardingChecklistItemState.Advisory),
             new OnboardingChecklistItemPresentation(
+                "Context awareness",
+                "Optional local context stays default-off during setup; Windows will ask before screen OCR captures a window or display.",
+                OnboardingChecklistItemState.Advisory),
+            new OnboardingChecklistItemPresentation(
                 "First dictation test",
                 "After saving, click a text field, press your shortcut, speak, then press it again.",
                 status.CanCompleteSetup && status.HasAudioInputChoices
@@ -128,6 +132,10 @@ public static class OnboardingChecklistPresenter
                     ? "Keep Windows microphone access and desktop app access enabled for recording."
                     : "Open Windows microphone privacy settings if no input appears after refresh.",
                 status.HasAudioInputChoices ? "Review" : "Check"),
+            new OnboardingSummaryRowPresentation(
+                "Context Awareness",
+                "Windows asks for capture consent when screen OCR context is enabled and used.",
+                "Optional"),
             new OnboardingSummaryRowPresentation(
                 "Shortcut",
                 status.HasPrimaryShortcut
@@ -162,6 +170,11 @@ public static class OnboardingChecklistPresenter
                 "Use Settings > Privacy & security > Microphone if the Windows privacy link does not open.",
                 "Open Manually",
                 "Fallback"),
+            new OnboardingSetupActionPresentation(
+                "Context Awareness",
+                "Optional local screen OCR and clipboard context are default-off. Enable them later when you want extra context for enhancement.",
+                "Review Later",
+                "Optional"),
             new OnboardingSetupActionPresentation(
                 "Set Shortcut",
                 status.HasPrimaryShortcut
