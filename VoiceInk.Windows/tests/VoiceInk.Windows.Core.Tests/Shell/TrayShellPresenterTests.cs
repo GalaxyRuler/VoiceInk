@@ -21,6 +21,9 @@ public sealed class TrayShellPresenterTests
         Assert.True(state.CanQuickAddDictionary);
         Assert.True(state.CanOpenHistory);
         Assert.True(state.CanUseQuickSettings);
+        Assert.Equal(
+            "If the tray icon is hidden, open Windows taskbar corner overflow and pin VoiceInk; the main window can always be opened from the tray menu.",
+            state.VisibilityGuidance);
     }
 
     [Fact]

@@ -21,7 +21,8 @@ public static class TrayShellPresenter
             canToggleRecording,
             CanQuickAddDictionary: canUseOperationalCommands && dictationState == DictationState.Idle,
             CanOpenHistory: canUseOperationalCommands,
-            CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle);
+            CanUseQuickSettings: canUseOperationalCommands && dictationState == DictationState.Idle,
+            VisibilityGuidance: "If the tray icon is hidden, open Windows taskbar corner overflow and pin VoiceInk; the main window can always be opened from the tray menu.");
     }
 
     private static string StatusText(

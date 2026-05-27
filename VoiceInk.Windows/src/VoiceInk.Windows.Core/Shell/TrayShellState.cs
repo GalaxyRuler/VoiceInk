@@ -6,4 +6,5 @@ public sealed record TrayShellState(
     bool CanToggleRecording,
     bool CanQuickAddDictionary,
     bool CanOpenHistory,
-    bool CanUseQuickSettings);
+    bool CanUseQuickSettings,
+    string VisibilityGuidance);

@@ -15,7 +15,7 @@ VoiceInk Windows parity  [###################-] 95%
 | Area | Completion | Bar | Status |
 | --- | ---: | --- | --- |
 | Core dictation pipeline | 88% | `[##################--]` | Local recording/transcription/insertion, Transcribe Audio picker/drag-drop/copy/save/per-file-enhance/restored-queue flow, cleanup, dictionary, enhancement fallback, prompt-trigger detection, completed/canceled/failed history writes, metrics, and canceling in-flight post-recording work are in place. Advanced formatting remains. |
-| Shell and tray | 86% | `[#################---]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
+| Shell and tray | 87% | `[#################---]` | Navigation shell, macOS-order Permissions route, tray icon, close-to-tray, hidden-icon overflow visibility guidance, open-source About/diagnostics, dedicated History window routing, and rich tray quick-setting submenus for model/provider/enhancement/language/audio/context/Power Mode are in place. Remaining work is visual polish and rare tray edge-case recovery. |
 | Floating recorder | 90% | `[##################--]` | Mini and top-center Notch styles show recording/processing state, elapsed time, live microphone level bars, non-activating Stop/Cancel controls, hover-dismissable no-activate Prompt/Power chooser panels, and a gated live transcript preview panel now backed by Deepgram, AssemblyAI, Soniox, Speechmatics, and Cartesia interim results. Waveform polish and more streaming providers remain. |
 | Shortcuts | 97% | `[###################-]` | Primary/secondary recording shortcuts now support key-based and modifier-only Toggle, Push to Talk, and Hybrid key-up modes; paste last, paste enhanced, retry, cancel, open history, quick add, toggle enhancement, cycle Power Mode, direct per-rule Power Mode selection, floating-recorder Ctrl/Alt digit prompt/Power Mode slots, and read-only recorder fields with explicit Record buttons. Remaining work is rare Windows-reserved-key conflict recovery. |
 | Model management | 88% | `[##################--]` | Local Whisper catalog cards, direct GGML downloads, imported `.bin` references, app-local model storage, default model selection, local library overview, action rows for download/import/default/repair/warmup, storage/import/backup/warmup guidance rows, model path health checks with actionable repair guidance, selected-model health rows with `ggml-*.bin` filename guidance, a direct repair/warmup action button, stale imported model cleanup, model-aware language selection, cloud provider metadata cards, and nonblocking warmup/preload exist. Deeper model lifecycle polish remains. |
@@ -34,15 +34,15 @@ VoiceInk Windows parity  [###################-] 95%
 ## Current Slice
 
 ```text
-Windows History export-scope row  [####################] 100%
+Windows tray visibility guidance  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the History export-scope row spec and implementation plan.
-- Added failing History analysis presenter assertions for local copy/paste/export disclosure.
-- Added the `Export Scope` analysis row to `HistoryAnalysisPresenter`.
-- Ran focused History analysis presenter tests, full solution tests, Debug x64 build, and whitespace checking.
+- Wrote the tray visibility guidance spec and implementation plan.
+- Added a failing tray shell presenter assertion for Windows taskbar corner overflow guidance.
+- Added `VisibilityGuidance` to `TrayShellState` and populated it in `TrayShellPresenter`.
+- Ran focused tray shell presenter tests, full solution tests, Debug x64 build, and whitespace checking.
 
 ## Near-Term Priority
 
