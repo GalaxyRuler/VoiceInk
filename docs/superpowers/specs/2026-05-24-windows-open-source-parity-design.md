@@ -138,6 +138,12 @@ Tray status menu row slice completed on 2026-05-27:
 - Kept tooltip status, command enablement, quick settings, and notification-area visibility guidance unchanged.
 - Kept the row local and non-interactive with no notifications, telemetry, network behavior, or commercial surfaces.
 
+Tray taskbar settings action slice completed on 2026-05-27:
+
+- Made the tray visibility guidance row actionable so users can open Windows Taskbar settings for notification-area/system-tray icon visibility.
+- Routed the tray item through `OpenTaskbarSettingsRequested` and the WinUI shell's `ms-settings:taskbar` launcher.
+- Kept the action local-only with no notifications, telemetry, network behavior, or commercial surfaces.
+
 Navigation-settings-shell slice completed on 2026-05-25:
 
 - Use WinUI `NavigationView` as the Windows-native adaptation of macOS `NavigationSplitView`.

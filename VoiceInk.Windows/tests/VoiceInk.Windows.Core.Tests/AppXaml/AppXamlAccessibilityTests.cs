@@ -281,6 +281,20 @@ public sealed class AppXamlAccessibilityTests
         Assert.Contains("AutomationProperties.SetHelpText(RecorderChrome, state.AccessibleHelpText)", code);
     }
 
+    [Fact]
+    public void TrayIcon_ExposesTaskbarSettingsAction()
+    {
+        var trayCode = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.Native", "Tray", "TrayIconService.cs"));
+        var mainWindowCode = File.ReadAllText(SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("OpenTaskbarSettingsRequested", trayCode);
+        Assert.Contains("visibilityGuidanceItem = new ToolStripMenuItem", trayCode);
+        Assert.Contains("Enabled = true", trayCode);
+        Assert.Contains("ms-settings:taskbar", mainWindowCode);
+        Assert.Contains("UseShellExecute = true", mainWindowCode);
+        Assert.Contains("TrayIconService_OpenTaskbarSettingsRequested", mainWindowCode);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

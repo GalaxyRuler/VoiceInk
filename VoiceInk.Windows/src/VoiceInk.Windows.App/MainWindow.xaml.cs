@@ -607,6 +607,9 @@ public sealed partial class MainWindow : Window
     private void TrayIconService_OpenSettingsRequested(object? sender, EventArgs e) =>
         RestoreAndShowSection(SettingsSectionTag);
 
+    private void TrayIconService_OpenTaskbarSettingsRequested(object? sender, EventArgs e) =>
+        OpenWindowsTaskbarSettings();
+
     private void TrayIconService_ExitRequested(object? sender, EventArgs e)
     {
         exitRequested = true;
@@ -3604,6 +3607,22 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             RefreshUiFromControllerState($"Microphone settings failed: {ex.Message}");
+        }
+    }
+
+    private void OpenWindowsTaskbarSettings()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-settings:taskbar",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            RefreshUiFromControllerState($"Taskbar settings failed: {ex.Message}");
         }
     }
 
@@ -10204,6 +10223,7 @@ public sealed partial class MainWindow : Window
         trayIconService.OpenEnhancementRequested += TrayIconService_OpenEnhancementRequested;
         trayIconService.OpenAudioInputRequested += TrayIconService_OpenAudioInputRequested;
         trayIconService.OpenSettingsRequested += TrayIconService_OpenSettingsRequested;
+        trayIconService.OpenTaskbarSettingsRequested += TrayIconService_OpenTaskbarSettingsRequested;
         trayIconService.QuickAddDictionaryRequested += TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested += TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested += TrayIconService_ExitRequested;
@@ -10276,6 +10296,7 @@ public sealed partial class MainWindow : Window
         trayIconService.OpenEnhancementRequested -= TrayIconService_OpenEnhancementRequested;
         trayIconService.OpenAudioInputRequested -= TrayIconService_OpenAudioInputRequested;
         trayIconService.OpenSettingsRequested -= TrayIconService_OpenSettingsRequested;
+        trayIconService.OpenTaskbarSettingsRequested -= TrayIconService_OpenTaskbarSettingsRequested;
         trayIconService.QuickAddDictionaryRequested -= TrayIconService_QuickAddDictionaryRequested;
         trayIconService.OpenHistoryRequested -= TrayIconService_OpenHistoryRequested;
         trayIconService.ExitRequested -= TrayIconService_ExitRequested;

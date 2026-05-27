@@ -45,7 +45,10 @@ public sealed class TrayIconService : IDisposable
         showItem = new ToolStripMenuItem("Show VoiceInk", image: null, (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty));
         hideItem = new ToolStripMenuItem("Hide VoiceInk", image: null, (_, _) => HideRequested?.Invoke(this, EventArgs.Empty));
         statusItem = new ToolStripMenuItem("Status: Loading settings") { Enabled = false };
-        visibilityGuidanceItem = new ToolStripMenuItem("Taskbar settings: Other system tray icons") { Enabled = false };
+        visibilityGuidanceItem = new ToolStripMenuItem("Taskbar settings: Other system tray icons", image: null, (_, _) => OpenTaskbarSettingsRequested?.Invoke(this, EventArgs.Empty))
+        {
+            Enabled = true
+        };
         toggleRecordingItem = new ToolStripMenuItem("Start Recording", image: null, (_, _) => ToggleRecordingRequested?.Invoke(this, EventArgs.Empty));
         transcriptionModelMenu = new ToolStripMenuItem("Transcription Model");
         transcriptionProviderMenu = new ToolStripMenuItem("Transcription Provider");
@@ -129,6 +132,7 @@ public sealed class TrayIconService : IDisposable
     public event EventHandler? OpenEnhancementRequested;
     public event EventHandler? OpenAudioInputRequested;
     public event EventHandler? OpenSettingsRequested;
+    public event EventHandler? OpenTaskbarSettingsRequested;
     public event EventHandler? QuickAddDictionaryRequested;
     public event EventHandler? OpenHistoryRequested;
     public event EventHandler? ExitRequested;
