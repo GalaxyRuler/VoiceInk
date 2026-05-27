@@ -302,6 +302,7 @@ public static class EnhancementContextReadinessPresenter
         if (settings.UseOcrContext)
         {
             rows.Add(OcrCaptureScopeRow(settings));
+            rows.Add(ScreenshotLifetimeRow());
             rows.Add(OcrCaptureConsentRow());
             rows.Add(OcrLanguageSupportRow());
         }
@@ -315,6 +316,13 @@ public static class EnhancementContextReadinessPresenter
             "Windows recognizers",
             "Screen text recognition uses installed Windows OCR language packs; add missing packs in Windows Settings if unsupported languages produce empty or partial context.",
             "Local");
+
+    private static EnhancementContextPrivacyRow ScreenshotLifetimeRow() =>
+        new(
+            "Screenshot Lifetime",
+            "One-time",
+            "The captured image is used only for local OCR during enhancement, then discarded; VoiceInk sends extracted text, not the image, when a cloud provider is selected.",
+            "Image local");
 
     private static EnhancementContextPrivacyRow OcrCaptureConsentRow() =>
         new(

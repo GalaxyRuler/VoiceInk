@@ -233,6 +233,23 @@ public sealed class EnhancementContextReadinessPresenterTests
     }
 
     [Fact]
+    public void Present_WithOcrContext_ShowsOneTimeScreenshotLifetimeBoundary()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(
+            new AppSettings
+            {
+                UseOcrContext = true
+            });
+
+        Assert.Contains(
+            presentation.PrivacyRows,
+            row => row.Title == "Screenshot Lifetime"
+                && row.Value == "One-time"
+                && row.Detail == "The captured image is used only for local OCR during enhancement, then discarded; VoiceInk sends extracted text, not the image, when a cloud provider is selected."
+                && row.StatusBadge == "Image local");
+    }
+
+    [Fact]
     public void Present_WithValidOcrRegion_ShowsRegionSize()
     {
         var presentation = EnhancementContextReadinessPresenter.Present(

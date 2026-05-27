@@ -590,6 +590,12 @@ OCR language support guidance slice completed on 2026-05-27:
 - Explained that unsupported languages may produce empty or partial context while keeping existing graceful degradation.
 - Kept OCR capture, prompt rendering, provider selection, fallback, and history behavior unchanged.
 
+Screenshot lifetime guidance slice completed on 2026-05-27:
+
+- Added presenter-backed Enhancement privacy guidance that OCR screenshot capture is one-time and discarded after local text recognition.
+- Clarified that VoiceInk sends extracted text, not the captured image, when a cloud enhancement provider is selected.
+- Kept OCR capture, prompt rendering, provider selection, fallback, and history behavior unchanged.
+
 Windows gaps:
 
 - Deeper context visual polish and permission diagnostics for edge-case Windows display/browser configurations.
