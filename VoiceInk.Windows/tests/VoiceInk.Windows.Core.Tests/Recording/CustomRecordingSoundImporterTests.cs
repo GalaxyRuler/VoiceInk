@@ -10,12 +10,34 @@ public sealed class CustomRecordingSoundImporterTests
     [InlineData("", "systemDefault")]
     [InlineData("  ", "systemDefault")]
     [InlineData("SYSTEMDEFAULT", "systemDefault")]
+    [InlineData("asterisk", "asterisk")]
+    [InlineData("Asterisk", "asterisk")]
+    [InlineData("beep", "beep")]
+    [InlineData("exclamation", "exclamation")]
+    [InlineData("hand", "hand")]
+    [InlineData("question", "question")]
     [InlineData("custom", "custom")]
     [InlineData("Custom", "custom")]
     [InlineData("unknown", "systemDefault")]
     public void Normalize_ReturnsSupportedSoundModes(string? mode, string expected)
     {
         Assert.Equal(expected, RecordingSoundModeSettings.Normalize(mode));
+    }
+
+    [Fact]
+    public void SelectableModes_ExposeBuiltInWindowsSoundChoices()
+    {
+        Assert.Equal(
+            [
+                new RecordingSoundModeChoice("systemDefault", "System Default"),
+                new RecordingSoundModeChoice("asterisk", "Asterisk"),
+                new RecordingSoundModeChoice("beep", "Beep"),
+                new RecordingSoundModeChoice("exclamation", "Exclamation"),
+                new RecordingSoundModeChoice("hand", "Hand"),
+                new RecordingSoundModeChoice("question", "Question"),
+                new RecordingSoundModeChoice("custom", "Custom Sound")
+            ],
+            RecordingSoundModeSettings.SelectableModes);
     }
 
     [Fact]

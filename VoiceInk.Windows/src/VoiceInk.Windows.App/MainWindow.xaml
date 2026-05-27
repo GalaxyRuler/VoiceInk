@@ -2331,8 +2331,13 @@
                                 Header="Start Sound"
                                 SelectedIndex="0"
                                 SelectionChanged="RecordingFeedbackSettingComboBox_SelectionChanged">
-                                <ComboBoxItem Content="System Default" />
-                                <ComboBoxItem x:Name="StartCustomSoundComboBoxItem" Content="Custom Sound" />
+                                <ComboBoxItem Content="System Default" Tag="systemDefault" />
+                                <ComboBoxItem Content="Asterisk" Tag="asterisk" />
+                                <ComboBoxItem Content="Beep" Tag="beep" />
+                                <ComboBoxItem Content="Exclamation" Tag="exclamation" />
+                                <ComboBoxItem Content="Hand" Tag="hand" />
+                                <ComboBoxItem Content="Question" Tag="question" />
+                                <ComboBoxItem x:Name="StartCustomSoundComboBoxItem" Content="Custom Sound" Tag="custom" />
                             </ComboBox>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button
@@ -2358,8 +2363,13 @@
                                 Header="Stop Sound"
                                 SelectedIndex="0"
                                 SelectionChanged="RecordingFeedbackSettingComboBox_SelectionChanged">
-                                <ComboBoxItem Content="System Default" />
-                                <ComboBoxItem x:Name="StopCustomSoundComboBoxItem" Content="Custom Sound" />
+                                <ComboBoxItem Content="System Default" Tag="systemDefault" />
+                                <ComboBoxItem Content="Asterisk" Tag="asterisk" />
+                                <ComboBoxItem Content="Beep" Tag="beep" />
+                                <ComboBoxItem Content="Exclamation" Tag="exclamation" />
+                                <ComboBoxItem Content="Hand" Tag="hand" />
+                                <ComboBoxItem Content="Question" Tag="question" />
+                                <ComboBoxItem x:Name="StopCustomSoundComboBoxItem" Content="Custom Sound" Tag="custom" />
                             </ComboBox>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button

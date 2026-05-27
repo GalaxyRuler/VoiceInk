@@ -2944,13 +2944,13 @@ public sealed partial class MainWindow : Window
             if (kind == RecordingSoundKind.Start)
             {
                 customStartSoundPath = result.CustomSoundPath;
-                StartSoundComboBox.SelectedIndex = 1;
+                SelectRecordingSoundMode(StartSoundComboBox, RecordingSoundModeSettings.Custom);
                 RefreshRecordingSoundControls(startStatus: $"Custom sound: {result.FileName}");
             }
             else
             {
                 customStopSoundPath = result.CustomSoundPath;
-                StopSoundComboBox.SelectedIndex = 1;
+                SelectRecordingSoundMode(StopSoundComboBox, RecordingSoundModeSettings.Custom);
                 RefreshRecordingSoundControls(stopStatus: $"Custom sound: {result.FileName}");
             }
 
@@ -2982,13 +2982,13 @@ public sealed partial class MainWindow : Window
             if (kind == RecordingSoundKind.Start)
             {
                 customStartSoundPath = string.Empty;
-                StartSoundComboBox.SelectedIndex = 0;
+                SelectRecordingSoundMode(StartSoundComboBox, RecordingSoundModeSettings.SystemDefault);
                 RefreshRecordingSoundControls(startStatus: "No custom sound");
             }
             else
             {
                 customStopSoundPath = string.Empty;
-                StopSoundComboBox.SelectedIndex = 0;
+                SelectRecordingSoundMode(StopSoundComboBox, RecordingSoundModeSettings.SystemDefault);
                 RefreshRecordingSoundControls(stopStatus: "No custom sound");
             }
 
@@ -9419,25 +9419,50 @@ public sealed partial class MainWindow : Window
             : RecorderStyleSettings.Mini;
 
     private string SelectedStartSoundMode() =>
-        StartSoundComboBox.SelectedIndex == 1
-            ? RecordingSoundModeSettings.Custom
-            : RecordingSoundModeSettings.SystemDefault;
+        SelectedRecordingSoundMode(StartSoundComboBox);
 
     private string SelectedStopSoundMode() =>
-        StopSoundComboBox.SelectedIndex == 1
-            ? RecordingSoundModeSettings.Custom
-            : RecordingSoundModeSettings.SystemDefault;
+        SelectedRecordingSoundMode(StopSoundComboBox);
 
     private RecordingSoundPlaybackSettings CurrentRecordingSoundPlaybackSettings(RecordingSoundKind kind) =>
         kind == RecordingSoundKind.Start
             ? new RecordingSoundPlaybackSettings(SelectedStartSoundMode(), customStartSoundPath)
             : new RecordingSoundPlaybackSettings(SelectedStopSoundMode(), customStopSoundPath);
 
-    private static int RecordingSoundModeToSelectedIndex(string? mode, string customSoundPath) =>
-        RecordingSoundModeSettings.Normalize(mode) == RecordingSoundModeSettings.Custom
-            && !string.IsNullOrWhiteSpace(customSoundPath)
-                ? 1
-                : 0;
+    private static string SelectedRecordingSoundMode(ComboBox comboBox) =>
+        RecordingSoundModeSettings.Normalize(
+            comboBox.SelectedItem is ComboBoxItem item
+                ? item.Tag?.ToString()
+                : null);
+
+    private static int RecordingSoundModeToSelectedIndex(string? mode, string customSoundPath)
+    {
+        var normalized = RecordingSoundModeSettings.Normalize(mode);
+        if (normalized == RecordingSoundModeSettings.Custom && string.IsNullOrWhiteSpace(customSoundPath))
+        {
+            normalized = RecordingSoundModeSettings.SystemDefault;
+        }
+
+        var choices = RecordingSoundModeSettings.SelectableModes;
+        var index = choices.ToList().FindIndex(choice => choice.Mode == normalized);
+        return index >= 0 ? index : 0;
+    }
+
+    private static void SelectRecordingSoundMode(ComboBox comboBox, string mode)
+    {
+        var normalized = RecordingSoundModeSettings.Normalize(mode);
+        for (var index = 0; index < comboBox.Items.Count; index++)
+        {
+            if (comboBox.Items[index] is ComboBoxItem item
+                && string.Equals(item.Tag?.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
+            {
+                comboBox.SelectedIndex = index;
+                return;
+            }
+        }
+
+        comboBox.SelectedIndex = 0;
+    }
 
     private static string RecordingSoundStatus(
         RecordingSoundKind kind,
@@ -9575,14 +9600,14 @@ public sealed partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        if (!hasStartCustomSound && StartSoundComboBox.SelectedIndex == 1)
+        if (!hasStartCustomSound && SelectedStartSoundMode() == RecordingSoundModeSettings.Custom)
         {
-            StartSoundComboBox.SelectedIndex = 0;
+            SelectRecordingSoundMode(StartSoundComboBox, RecordingSoundModeSettings.SystemDefault);
         }
 
-        if (!hasStopCustomSound && StopSoundComboBox.SelectedIndex == 1)
+        if (!hasStopCustomSound && SelectedStopSoundMode() == RecordingSoundModeSettings.Custom)
         {
-            StopSoundComboBox.SelectedIndex = 0;
+            SelectRecordingSoundMode(StopSoundComboBox, RecordingSoundModeSettings.SystemDefault);
         }
 
         StartSoundStatusTextBlock.Text = startStatus

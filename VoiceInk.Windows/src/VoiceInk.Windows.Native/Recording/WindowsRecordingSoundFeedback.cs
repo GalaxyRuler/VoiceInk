@@ -24,7 +24,7 @@ public sealed class WindowsRecordingSoundFeedback : IRecordingSoundFeedback, IDi
             return;
         }
 
-        PlaySystemSound(fallbackSound);
+        PlaySystemSound(SystemSoundFor(settings.Mode, fallbackSound));
     }
 
     private bool TryPlayCustomSound(string filePath)
@@ -88,6 +88,17 @@ public sealed class WindowsRecordingSoundFeedback : IRecordingSoundFeedback, IDi
             // Sound feedback should never block recording.
         }
     }
+
+    private static SystemSound SystemSoundFor(string mode, SystemSound fallbackSound) =>
+        RecordingSoundModeSettings.Normalize(mode) switch
+        {
+            RecordingSoundModeSettings.Asterisk => SystemSounds.Asterisk,
+            RecordingSoundModeSettings.Beep => SystemSounds.Beep,
+            RecordingSoundModeSettings.Exclamation => SystemSounds.Exclamation,
+            RecordingSoundModeSettings.Hand => SystemSounds.Hand,
+            RecordingSoundModeSettings.Question => SystemSounds.Question,
+            _ => fallbackSound
+        };
 
     public void Dispose()
     {

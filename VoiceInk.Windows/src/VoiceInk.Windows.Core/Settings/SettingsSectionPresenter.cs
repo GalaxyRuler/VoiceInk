@@ -203,6 +203,9 @@ public static class SettingsSectionPresenter
         var detail = start == RecordingSoundModeSettings.Custom
             || stop == RecordingSoundModeSettings.Custom
                 ? "Start/stop sounds include custom local cues."
+                : RecordingSoundModeSettings.IsBuiltInWindowsSound(start)
+                    || RecordingSoundModeSettings.IsBuiltInWindowsSound(stop)
+                        ? "Start/stop sounds use selected Windows sound scheme cues."
                 : "Start/stop sounds use System Default cues.";
 
         return new(

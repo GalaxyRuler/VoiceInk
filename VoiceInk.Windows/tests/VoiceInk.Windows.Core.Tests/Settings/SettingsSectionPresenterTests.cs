@@ -243,4 +243,23 @@ public sealed class SettingsSectionPresenterTests
                 Assert.Equal("Auto", row.StatusBadge);
             });
     }
+
+    [Fact]
+    public void Present_WithBuiltInRecordingSounds_DescribesWindowsSoundSchemeCues()
+    {
+        var presentation = SettingsSectionPresenter.Present(
+            new AppSettings
+            {
+                IsSoundFeedbackEnabled = true,
+                StartSoundMode = RecordingSoundModeSettings.Asterisk,
+                StopSoundMode = RecordingSoundModeSettings.Beep
+            });
+
+        var row = Assert.Single(
+            presentation.PreferenceSummaries,
+            row => row.Title == "Recording Feedback");
+        Assert.Equal("Sounds on", row.Value);
+        Assert.Equal("Start/stop sounds use selected Windows sound scheme cues.", row.Detail);
+        Assert.Equal("Audible", row.StatusBadge);
+    }
 }
