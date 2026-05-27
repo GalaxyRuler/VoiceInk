@@ -13,19 +13,36 @@ public sealed record EnhancementContextReadinessRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => EnhancementContextAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record EnhancementContextActionRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => EnhancementContextAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
 
 public sealed record EnhancementContextPrivacyRow(
     string Title,
     string Value,
     string Detail,
-    string StatusBadge);
+    string StatusBadge)
+{
+    public string AccessibleName => EnhancementContextAccessibleName.From(Title, Value, StatusBadge, Detail);
+}
+
+internal static class EnhancementContextAccessibleName
+{
+    public static string From(params string?[] parts) =>
+        string.Join(
+            ", ",
+            parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+}
 
 public static class EnhancementContextReadinessPresenter
 {

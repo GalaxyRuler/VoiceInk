@@ -124,6 +124,22 @@ public sealed class EnhancementContextReadinessPresenterTests
     }
 
     [Fact]
+    public void Present_RowsExposeAccessibleNames()
+    {
+        var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
+
+        Assert.Equal(
+            "Clipboard Context, Off, Off, Clipboard text is skipped unless you enable it.",
+            presentation.Rows[0].AccessibleName);
+        Assert.Equal(
+            "Capture Timing, During enhancement, Local first, Context is requested only while building an enhancement prompt, not while idle.",
+            presentation.PrivacyRows[0].AccessibleName);
+        Assert.Equal(
+            "Enhancement Pipeline, Off, Enable, Enable Enhancement before context is appended to prompts.",
+            presentation.ActionRows[0].AccessibleName);
+    }
+
+    [Fact]
     public void Present_ShowsBrowserUrlSanitizationPrivacyBoundary()
     {
         var presentation = EnhancementContextReadinessPresenter.Present(new AppSettings());
