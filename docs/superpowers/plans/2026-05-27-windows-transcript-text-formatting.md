@@ -42,7 +42,7 @@ Expected: compile failure because the new options and settings properties do not
 
 - [x] **Step 1: Add `ApplyTextFormatting` option**
 
-Add a default-false option at the end of the `TextPostProcessingOptions` record.
+Add a default-false option at the end of the `TextPostProcessingOptions` record. Keep the app-level setting default enabled for macOS parity.
 
 - [x] **Step 2: Implement formatter**
 

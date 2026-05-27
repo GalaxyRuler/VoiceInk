@@ -11,12 +11,12 @@ Port the original macOS VoiceInk transcript formatting behavior into the Windows
 
 ## Requirements
 
-- Add an opt-in transcript formatting setting to Windows.
+- Add a transcript formatting setting to Windows that defaults on like the macOS app.
 - Format long transcripts into readable paragraphs using the macOS constants:
   - target word count: 50
   - maximum significant sentences per paragraph: 4
   - significant sentence threshold: 4 words
-- Keep formatting off by default to preserve existing behavior.
+- Keep the low-level formatter explicit in `TextPostProcessingOptions`, but default the persisted app setting on for macOS parity.
 - Run dictionary replacements before formatting so replacement text participates in final output.
 - Run formatting before punctuation cleanup so sentence punctuation can still guide paragraph splitting.
 - Keep the logic UI-independent and testable in Core.

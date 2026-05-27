@@ -26,6 +26,7 @@ public sealed class JsonSettingsStoreTests
         var reloaded = await store.LoadAsync(CancellationToken.None);
         Assert.Equal(new AppSettings(), reloaded);
         Assert.True(reloaded.PrewarmModelOnWake);
+        Assert.True(reloaded.IsTextFormattingEnabled);
     }
 
     [Fact]

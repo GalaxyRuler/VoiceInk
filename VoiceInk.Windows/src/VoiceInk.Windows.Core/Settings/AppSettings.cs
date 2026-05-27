@@ -73,7 +73,7 @@ public sealed record AppSettings
     public int OcrCaptureRegionWidth { get; init; }
     public int OcrCaptureRegionHeight { get; init; }
     public bool RemoveFillerWords { get; init; } = true;
-    public bool IsTextFormattingEnabled { get; init; }
+    public bool IsTextFormattingEnabled { get; init; } = true;
     public PunctuationCleanupMode PunctuationCleanupMode { get; init; } = PunctuationCleanupMode.Keep;
     public bool LowercaseTranscription { get; init; }
     public Guid? SelectedPowerModeRuleId { get; init; }
