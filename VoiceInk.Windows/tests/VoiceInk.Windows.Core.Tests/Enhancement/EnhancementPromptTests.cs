@@ -125,6 +125,36 @@ public sealed class EnhancementPromptTests
     }
 
     [Fact]
+    public void PromptLibrary_PromptChoiceLabelShowsFirstTriggerWord()
+    {
+        var prompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            "Standup",
+            "Format as a terse standup update.",
+            "list.bullet",
+            "Daily update",
+            "standup mode",
+            useSystemInstructions: true);
+
+        Assert.Equal("Standup - \"standup mode...\"", EnhancementPromptLibrary.PromptChoiceLabel(prompt));
+    }
+
+    [Fact]
+    public void PromptLibrary_PromptChoiceLabelShowsAdditionalTriggerCount()
+    {
+        var prompt = EnhancementPromptLibrary.CreateCustomPrompt(
+            Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            "Assistant",
+            "Answer the request.",
+            "sparkles",
+            "Assistant mode",
+            "assistant, ask ai, answer this",
+            useSystemInstructions: false);
+
+        Assert.Equal("Assistant - \"assistant...\" +2", EnhancementPromptLibrary.PromptChoiceLabel(prompt));
+    }
+
+    [Fact]
     public void PromptLibrary_DeletePromptRemovesOnlyCustomPrompts()
     {
         var customPrompt = EnhancementPromptLibrary.CreateCustomPrompt(

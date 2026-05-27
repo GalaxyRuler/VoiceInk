@@ -487,6 +487,12 @@ Enhancement behavior guidance slice completed on 2026-05-27:
 - Renamed the Windows list heading from `Context Actions` to `Enhancement Behavior` so the rows cover both prompt context and enhancement execution behavior.
 - Kept the enhancement pipeline, provider request construction, prompt rendering, settings persistence, and secret storage unchanged.
 
+Prompt trigger label slice completed on 2026-05-27:
+
+- Added Core prompt choice labels that show the first trigger word and additional trigger count, matching the macOS prompt-card affordance.
+- Bound the Enhancement prompt picker and Power Mode prompt override picker to those labels.
+- Kept trigger-word detection, prompt persistence, prompt rendering, and selected prompt IDs unchanged.
+
 Windows gaps:
 
 - Visual polish and advanced assistant niceties.

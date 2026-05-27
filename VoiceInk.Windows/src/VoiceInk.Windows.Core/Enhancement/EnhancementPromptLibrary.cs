@@ -173,6 +173,19 @@ public static class EnhancementPromptLibrary
     public static string TriggerWordsText(EnhancementPrompt prompt) =>
         string.Join(", ", NormalizeTriggerWords(prompt.TriggerWords));
 
+    public static string PromptChoiceLabel(EnhancementPrompt prompt)
+    {
+        var triggerWords = NormalizeTriggerWords(prompt.TriggerWords);
+        if (triggerWords.Count == 0)
+        {
+            return prompt.Title;
+        }
+
+        return triggerWords.Count == 1
+            ? $"{prompt.Title} - \"{triggerWords[0]}...\""
+            : $"{prompt.Title} - \"{triggerWords[0]}...\" +{triggerWords.Count - 1}";
+    }
+
     public static IReadOnlyList<string> TriggerWordsFromText(string text) =>
         NormalizeTriggerWords(ParseTriggerWords(text));
 

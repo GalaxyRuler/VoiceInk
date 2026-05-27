@@ -7776,7 +7776,7 @@ public sealed partial class MainWindow : Window
     {
         suppressEnhancementPromptChanged = true;
         EnhancementPromptComboBox.ItemsSource = enhancementPrompts
-            .Select(prompt => prompt.Title)
+            .Select(EnhancementPromptLibrary.PromptChoiceLabel)
             .ToArray();
 
         var promptId = EnhancementPromptLibrary.ResolveSelectedPromptId(selectedPromptId, enhancementPrompts);
@@ -7835,7 +7835,7 @@ public sealed partial class MainWindow : Window
     private void RefreshPowerModePromptChoices(Guid? selectedPromptId)
     {
         PowerModePromptOverrideComboBox.ItemsSource = new[] { "Keep base" }
-            .Concat(enhancementPrompts.Select(prompt => prompt.Title))
+            .Concat(enhancementPrompts.Select(EnhancementPromptLibrary.PromptChoiceLabel))
             .ToArray();
         if (selectedPromptId is null)
         {
