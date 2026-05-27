@@ -46,6 +46,7 @@ Write-ReadinessCheck "MSIX manifest" (Join-Path $windowsRoot "src\VoiceInk.Windo
 Write-ReadinessCheck "MSIX package script" (Join-Path $scriptRoot "package-msix.ps1")
 Write-ReadinessCheck "MSIX artifact validator" (Join-Path $scriptRoot "test-msix-package.ps1")
 Write-ReadinessCheck "MSIX install smoke helper" (Join-Path $scriptRoot "smoke-msix-install.ps1")
+Write-ReadinessCheck "MSIX GUI smoke helper" (Join-Path $scriptRoot "smoke-msix-gui.ps1")
 Write-ReadinessCheck "App Installer manifest generator" (Join-Path $scriptRoot "write-appinstaller.ps1")
 Write-ReadinessCheck "App Installer manifest validator" (Join-Path $scriptRoot "test-appinstaller.ps1")
 Write-ReadinessCheck "WinGet manifest generator" (Join-Path $scriptRoot "write-winget-manifest.ps1")
@@ -69,13 +70,14 @@ Write-Host '  .\VoiceInk.Windows\scripts\write-winget-manifest.ps1 -InstallerUrl
 Write-Host '  .\VoiceInk.Windows\scripts\test-winget-manifest.ps1 -ManifestDirectory <path-to-winget-manifest-directory>'
 Write-Host '  .\VoiceInk.Windows\scripts\write-release-checksums.ps1 -ArtifactPath <artifact1>,<artifact2>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
-Write-Host '  .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path-to-installer-smoke-evidence> -RequireInstallSmoke -RequireWackReport'
+Write-Host '  .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path-to-installer-smoke-evidence> -RequireInstallSmoke -RequireWackReport -RequireGuiSmoke'
 
 Write-Host ""
 Write-Host "Maintainer-gated signed release commands:"
 Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -DotNetPath "..\.dotnet-sdk-10\dotnet.exe" -PackageCertificateKeyFile <maintainer-owned.pfx> -TimestampServerUrl "https://timestamp.acs.microsoft.com" -TimestampDigestAlgorithm SHA256 -ValidateAfterBuild'
 Write-Host '  .\VoiceInk.Windows\scripts\package-msix.ps1 -ValidateAfterBuild -PackageCertificateKeyFile <maintainer-owned.pfx> -TimestampServerUrl "https://timestamp.acs.microsoft.com" -TimestampDigestAlgorithm SHA256'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix> -Execute'
+Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-gui.ps1 -PackagePath <path-to-msix> -EvidenceRoot <artifact-root>'
 Write-Host ""
 Write-Host "Release signing checklist:"
 Write-Host "  [ ] Publisher/certificate subject match: Package.appxmanifest Publisher must match the signing certificate subject, currently CN=VoiceInkOpenSource."
@@ -87,6 +89,7 @@ Write-Host "  [ ] ActivityID diagnostics: if Add-AppxPackage or Remove-AppxPacka
 Write-Host "  [ ] App Installer diagnostics: inspect Microsoft-Windows-AppInstaller/Operational when .appinstaller launch or update checks fail before package deployment starts."
 Write-Host "  [ ] Installed identity smoke: after Add-AppxPackage, use Get-AppxPackageManifest -Package to verify application id VoiceInk.Windows.App."
 Write-Host "  [ ] Launch identity reference: shell:AppsFolder\<PackageFamilyName>!VoiceInk.Windows.App can be used manually after install on the disposable runner."
+Write-Host "  [ ] GUI smoke evidence: run smoke-msix-gui.ps1 only on a disposable runner with an active user session to capture gui-smoke-log.txt, gui-smoke-window.json, and gui-smoke-screenshot.png."
 Write-Host ""
 Write-Host "WinApp CLI local signing reference:"
 Write-Host "  [ ] Optional local development certificate flow can use winapp cert generate against Package.appxmanifest on a disposable test machine."
@@ -127,6 +130,12 @@ Write-Host "  [ ] Run appcert.exe test -packagefullname <package-full-name> -rep
 Write-Host "  [ ] If the package is not installed, run appcert.exe test -appxpackagepath <path-to-msix> -reportoutputpath <artifact-root>\wack-report.xml instead."
 Write-Host "  [ ] Upload wack-report.xml with installer smoke evidence and review deployment, launch, manifest, and capability failures before release."
 Write-Host "  [ ] This readiness report does not run appcert.exe, install packages, launch packages, sign packages, create certificates, import certificates, or trust certificates."
+Write-Host ""
+Write-Host "Manual self-hosted GUI smoke workflow reference:"
+Write-Host "  [ ] Dispatch Windows Installer Smoke with execute_install_smoke=true and run_gui_smoke=true on a disposable self-hosted Windows runner."
+Write-Host "  [ ] The workflow installs the signed MSIX, launches shell:AppsFolder\<PackageFamilyName>!VoiceInk.Windows.App, captures GUI evidence, and uninstalls the package."
+Write-Host "  [ ] Upload gui-smoke-log.txt, gui-smoke-window.json, and gui-smoke-screenshot.png with installer smoke evidence."
+Write-Host "  [ ] This readiness report does not launch VoiceInk locally or run GUI automation on active WHITEDRAGON."
 Write-Host ""
 Write-Host "Run the signed install smoke only on a disposable or prepared test machine where the signing certificate is already trusted."
 

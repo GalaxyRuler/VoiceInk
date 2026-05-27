@@ -15,6 +15,8 @@ GitHub Actions supports `workflow_dispatch` inputs for manually triggered workfl
   - generate and validate optional `.appinstaller` metadata;
   - print the signed install smoke plan;
   - execute `smoke-msix-install.ps1 -Execute` only when `execute_install_smoke` is true;
+  - run GUI launch/screenshot evidence only when both `execute_install_smoke` and `run_gui_smoke` are true;
+  - upload GUI evidence next to installer/WACK evidence when requested;
   - state that it does not create/import signing certificates.
 
 ## Non-Goals
@@ -23,3 +25,4 @@ GitHub Actions supports `workflow_dispatch` inputs for manually triggered workfl
 - No certificate generation/import.
 - No signing-secret storage in source.
 - No active WHITEDRAGON install smoke.
+- No GUI launch/screenshot smoke outside an explicitly dispatched disposable self-hosted Windows runner.

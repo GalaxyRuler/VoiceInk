@@ -32,6 +32,11 @@ on:
         required: true
         type: boolean
         default: false
+      run_gui_smoke:
+        description: Launch VoiceInk, capture GUI evidence, and uninstall on the disposable runner. Requires execute_install_smoke.
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   installer-smoke:
@@ -58,8 +63,18 @@ jobs:
             "Install smoke executed: ${{ inputs.execute_install_smoke }}"
             "Windows App Certification Kit requested: ${{ inputs.run_wack }}"
             "WACK report path: ${{ inputs.wack_report_path }}"
+            "GUI smoke requested: ${{ inputs.run_gui_smoke }}"
+            "GUI smoke log: gui-smoke-log.txt"
+            "GUI smoke window evidence: gui-smoke-window.json"
+            "GUI smoke screenshot: gui-smoke-screenshot.png"
             "No signing certificates are created or imported by this workflow."
           ) | Set-Content -LiteralPath (Join-Path $evidenceRoot "installer-smoke-summary.txt") -Encoding UTF8
+
+      - name: Validate GUI smoke inputs
+        if: ${{ inputs.run_gui_smoke && !inputs.execute_install_smoke }}
+        shell: pwsh
+        run: |
+          throw "run_gui_smoke requires execute_install_smoke because GUI smoke installs, launches, captures evidence, and uninstalls the signed package on the disposable runner."
 
       - name: Validate signed MSIX package contents
         shell: pwsh
@@ -115,10 +130,18 @@ jobs:
           .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}"
 
       - name: Execute signed install smoke
-        if: ${{ inputs.execute_install_smoke }}
+        if: ${{ inputs.execute_install_smoke && !inputs.run_gui_smoke }}
         shell: pwsh
         run: |
           .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}" -Execute
+
+      - name: Execute signed GUI smoke
+        if: ${{ inputs.execute_install_smoke && inputs.run_gui_smoke }}
+        shell: pwsh
+        run: |
+          .\VoiceInk.Windows\scripts\smoke-msix-gui.ps1 `
+            -PackagePath "${{ inputs.signed_package_path }}" `
+            -EvidenceRoot "VoiceInk.Windows\artifacts\gha-installer-smoke"
 
       - name: Safety boundary
         shell: pwsh
@@ -126,6 +149,8 @@ jobs:
           Write-Host "No signing certificates are created or imported by this workflow."
           Write-Host "The install step runs only when execute_install_smoke is true on a disposable self-hosted Windows runner."
           Write-Host "The Windows App Certification Kit step runs only when run_wack is true in an active user session."
+          Write-Host "The GUI smoke step runs only when execute_install_smoke and run_gui_smoke are both true on a disposable self-hosted Windows runner."
+          Write-Host "GUI evidence files: gui-smoke-log.txt, gui-smoke-window.json, gui-smoke-screenshot.png."
 
       - name: Upload installer smoke evidence
         if: ${{ always() }}

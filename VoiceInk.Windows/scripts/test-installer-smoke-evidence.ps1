@@ -2,6 +2,7 @@ param(
     [string]$EvidenceRoot = "",
     [switch]$RequireInstallSmoke,
     [switch]$RequireWackReport,
+    [switch]$RequireGuiSmoke,
     [switch]$Help
 )
 
@@ -9,7 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 if ($Help) {
-    Write-Host "Usage: .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path> [-RequireInstallSmoke] [-RequireWackReport]"
+    Write-Host "Usage: .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path> [-RequireInstallSmoke] [-RequireWackReport] [-RequireGuiSmoke]"
     Write-Host ""
     Write-Host "Validates uploaded installer-smoke evidence without installing, uninstalling, signing, trusting certificates, launching the app, or running WACK."
     exit 0
@@ -55,7 +56,8 @@ $requiredSummaryFragments = @(
     "Signed package path:",
     "Install smoke executed:",
     "Windows App Certification Kit requested:",
-    "WACK report path:"
+    "WACK report path:",
+    "GUI smoke requested:"
 )
 
 foreach ($fragment in $requiredSummaryFragments) {
@@ -92,6 +94,48 @@ if ($RequireWackReport) {
 
     if ($null -eq $wackReportDocument.DocumentElement) {
         throw "WACK report XML has no document element at $wackReportPath."
+    }
+}
+
+if ($RequireGuiSmoke) {
+    if ($summaryText.IndexOf("GUI smoke requested: true", [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        throw "Installer smoke evidence does not show GUI smoke requested: true."
+    }
+
+    if ($summaryText.IndexOf("Install smoke executed: true", [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        throw "GUI smoke evidence requires Install smoke executed: true."
+    }
+
+    $requiredGuiEvidenceFiles = @(
+        "gui-smoke-log.txt",
+        "gui-smoke-window.json",
+        "gui-smoke-screenshot.png"
+    )
+
+    foreach ($guiEvidenceFile in $requiredGuiEvidenceFiles) {
+        $guiEvidencePath = Join-Path $resolvedEvidenceRoot $guiEvidenceFile
+        if (!(Test-Path -LiteralPath $guiEvidencePath -PathType Leaf)) {
+            throw "Missing GUI smoke evidence file at $guiEvidencePath."
+        }
+
+        $guiEvidenceItem = Get-Item -LiteralPath $guiEvidencePath
+        if ($guiEvidenceItem.Length -le 0) {
+            throw "GUI smoke evidence file is empty at $guiEvidencePath."
+        }
+    }
+
+    $guiWindowEvidencePath = Join-Path $resolvedEvidenceRoot "gui-smoke-window.json"
+    try {
+        $guiWindowEvidence = Get-Content -LiteralPath $guiWindowEvidencePath -Raw | ConvertFrom-Json
+    }
+    catch {
+        throw "GUI smoke window evidence is not valid JSON at $guiWindowEvidencePath. $($_.Exception.Message)"
+    }
+
+    if ([string]::IsNullOrWhiteSpace([string]$guiWindowEvidence.packageFullName) -or
+        [string]::IsNullOrWhiteSpace([string]$guiWindowEvidence.launchReference) -or
+        [string]::IsNullOrWhiteSpace([string]$guiWindowEvidence.applicationId)) {
+        throw "GUI smoke window evidence is missing packageFullName, launchReference, or applicationId."
     }
 }
 

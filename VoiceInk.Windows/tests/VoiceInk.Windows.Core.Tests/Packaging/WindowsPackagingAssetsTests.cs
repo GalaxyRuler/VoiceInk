@@ -476,9 +476,14 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("installer-smoke-summary.txt", script);
         Assert.Contains("RequireInstallSmoke", script);
         Assert.Contains("RequireWackReport", script);
+        Assert.Contains("RequireGuiSmoke", script);
         Assert.Contains("Install smoke executed: true", script);
         Assert.Contains("Windows App Certification Kit requested: true", script);
+        Assert.Contains("GUI smoke requested: true", script);
         Assert.Contains("wack-report.xml", script);
+        Assert.Contains("gui-smoke-log.txt", script);
+        Assert.Contains("gui-smoke-window.json", script);
+        Assert.Contains("gui-smoke-screenshot.png", script);
         Assert.Contains("Resolve-WackReportPath", script);
         Assert.Contains("Split-Path -Leaf $summaryWackReportPath", script);
         Assert.Contains("[xml]", script);
@@ -494,6 +499,36 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void MsixGuiSmokeScript_InstallsLaunchesCapturesEvidenceAndCleansUp()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "smoke-msix-gui.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("VoiceInk GUI smoke", script);
+        Assert.Contains("EvidenceRoot", script);
+        Assert.Contains("gui-smoke-log.txt", script);
+        Assert.Contains("gui-smoke-window.json", script);
+        Assert.Contains("gui-smoke-screenshot.png", script);
+        Assert.Contains("Start-Transcript", script);
+        Assert.Contains("Get-AuthenticodeSignature -FilePath", script);
+        Assert.Contains("Refusing to execute GUI smoke because Authenticode signature status is", script);
+        Assert.Contains("Add-AppxPackage -Path", script);
+        Assert.Contains("shell:AppsFolder", script);
+        Assert.Contains("Start-Process", script);
+        Assert.Contains("MainWindowHandle", script);
+        Assert.Contains("System.Windows.Forms", script);
+        Assert.Contains("System.Drawing", script);
+        Assert.Contains("ConvertTo-Json", script);
+        Assert.Contains("Remove-AppxPackage -Package", script);
+        Assert.Contains("GUI smoke evidence captured", script);
+
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("cert:\\", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ReleaseReadinessScript_PrintsNonMutatingPackagingChecklist()
     {
         var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-release-readiness.ps1");
@@ -504,6 +539,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("package-msix.ps1 -ValidateAfterBuild", script);
         Assert.Contains("test-msix-package.ps1", script);
         Assert.Contains("smoke-msix-install.ps1", script);
+        Assert.Contains("smoke-msix-gui.ps1", script);
         Assert.Contains("write-appinstaller.ps1", script);
         Assert.Contains("test-appinstaller.ps1", script);
         Assert.Contains("write-winget-manifest.ps1", script);
@@ -554,6 +590,12 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Get-AppxPackageManifest -Package", script);
         Assert.Contains("VoiceInk.Windows.App", script);
         Assert.Contains("shell:AppsFolder", script);
+        Assert.Contains("GUI smoke evidence", script);
+        Assert.Contains("gui-smoke-log.txt", script);
+        Assert.Contains("gui-smoke-window.json", script);
+        Assert.Contains("gui-smoke-screenshot.png", script);
+        Assert.Contains("run_gui_smoke=true", script);
+        Assert.Contains("active WHITEDRAGON", script);
         Assert.Contains("This script does not create or import certificates", script);
         Assert.Contains("Release readiness report passed", script);
 
@@ -576,17 +618,27 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("windows", workflow);
         Assert.Contains("runner_label", workflow);
         Assert.Contains("execute_install_smoke", workflow);
+        Assert.Contains("run_gui_smoke", workflow);
         Assert.Contains("default: false", workflow);
         Assert.Contains("test-msix-package.ps1", workflow);
         Assert.Contains("write-appinstaller.ps1", workflow);
         Assert.Contains("test-appinstaller.ps1", workflow);
         Assert.Contains("smoke-msix-install.ps1", workflow);
-        Assert.Contains("if: ${{ inputs.execute_install_smoke }}", workflow);
+        Assert.Contains("smoke-msix-gui.ps1", workflow);
+        Assert.Contains("Validate GUI smoke inputs", workflow);
+        Assert.Contains("run_gui_smoke requires execute_install_smoke", workflow);
+        Assert.Contains("if: ${{ inputs.run_gui_smoke && !inputs.execute_install_smoke }}", workflow);
+        Assert.Contains("if: ${{ inputs.execute_install_smoke && !inputs.run_gui_smoke }}", workflow);
+        Assert.Contains("if: ${{ inputs.execute_install_smoke && inputs.run_gui_smoke }}", workflow);
         Assert.Contains("signed_package_path", workflow);
         Assert.Contains("main_package_uri", workflow);
         Assert.Contains("No signing certificates are created or imported by this workflow", workflow);
         Assert.Contains("VoiceInk.Windows\\artifacts\\gha-installer-smoke", workflow);
         Assert.Contains("installer-smoke-summary.txt", workflow);
+        Assert.Contains("GUI smoke requested:", workflow);
+        Assert.Contains("gui-smoke-log.txt", workflow);
+        Assert.Contains("gui-smoke-window.json", workflow);
+        Assert.Contains("gui-smoke-screenshot.png", workflow);
         Assert.Contains("wack_report_path", workflow);
         Assert.Contains("run_wack", workflow);
         Assert.Contains("default: false", workflow);
