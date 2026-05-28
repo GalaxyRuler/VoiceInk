@@ -11,6 +11,7 @@ public sealed class WindowsPackagingAssetsTests
     {
         var manifestPath = SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "Package.appxmanifest");
         var projectPath = SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "VoiceInk.Windows.App.csproj");
+        var appXamlPath = SourcePath("VoiceInk.Windows", "src", "VoiceInk.Windows.App", "App.xaml");
 
         var document = XDocument.Load(manifestPath);
         XNamespace appx = "http://schemas.microsoft.com/appx/manifest/foundation/windows10";
@@ -66,6 +67,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("LICENSE.txt", projectText);
         Assert.Contains("CopyToOutputDirectory", projectText);
         Assert.Contains("<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>", projectText);
+
+        var appXamlText = File.ReadAllText(appXamlPath);
+        Assert.Contains("XamlControlsResources", appXamlText);
     }
 
     [Fact]
