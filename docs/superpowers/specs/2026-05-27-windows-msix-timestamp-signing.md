@@ -11,13 +11,13 @@ Close the signed MSIX release-readiness gap by exposing timestamped signing in t
 
 ## Online Grounding
 
-- Microsoft MSIX signing guide uses `/tr "https://timestamp.acs.microsoft.com"` with SHA-256 timestamping (`/td SHA256`): https://learn.microsoft.com/en-us/windows/msix/package/sign-msix-package-guide
+- Microsoft SignTool and Azure Trusted Signing guidance use `/tr "http://timestamp.acs.microsoft.com"` with SHA-256 timestamping (`/td SHA256`) for RFC 3161 timestamping.
 - Microsoft App Installer schema documents the `.appinstaller` `MainPackage` release path separately from signing/trust operations: https://learn.microsoft.com/en-us/uwp/schemas/appinstallerschema/schema-root
 
 ## Requirements
 
 - Add a `TimestampServerUrl` parameter to `package-msix.ps1`.
-- Default the timestamp URL to `https://timestamp.acs.microsoft.com`.
+- Default the timestamp URL to `http://timestamp.acs.microsoft.com`.
 - Default the timestamp digest algorithm to `SHA256`.
 - Pass the URL to MSIX signing through `AppxPackageSigningTimestampServerUrl`.
 - Pass the digest algorithm through `AppxPackageSigningTimestampDigestAlgorithm`.

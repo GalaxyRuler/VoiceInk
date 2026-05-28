@@ -166,7 +166,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Timestamp server: $TimestampServerUrl", script);
         Assert.Contains("Timestamp digest algorithm: $TimestampDigestAlgorithm", script);
         Assert.Contains("[string]$TimestampDigestAlgorithm = \"SHA256\"", script);
-        Assert.Contains("https://timestamp.acs.microsoft.com", script);
+        Assert.Contains("http://timestamp.acs.microsoft.com", script);
 
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
@@ -603,7 +603,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Timestamp signed packages", script);
         Assert.Contains("TimestampServerUrl", script);
         Assert.Contains("TimestampDigestAlgorithm", script);
-        Assert.Contains("https://timestamp.acs.microsoft.com", script);
+        Assert.Contains("http://timestamp.acs.microsoft.com", script);
         Assert.Contains("Trusted People", script);
         Assert.Contains(@"Cert:\LocalMachine\TrustedPeople", script);
         Assert.Contains("0x800B0109", script);

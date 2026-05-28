@@ -12,7 +12,7 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$PackageCertificateThumbprint,
     [switch]$UseLocalMachineCertificateStore,
-    [string]$TimestampServerUrl = "https://timestamp.acs.microsoft.com",
+    [string]$TimestampServerUrl = "http://timestamp.acs.microsoft.com",
     [string]$TimestampDigestAlgorithm = "SHA256",
     [string]$MakeAppxPath,
     [string]$SignToolPath,
@@ -34,7 +34,7 @@ function Show-Usage {
     Write-Host "Preflight validates paths, project files, packaging tools, staging rules, and manual smoke commands without requiring a certificate or running dotnet publish."
     Write-Host "Relative DotNetPath, OutputRoot, PackageCertificateKeyFile, MakeAppxPath, SignToolPath, and WindowsAppRuntimePackageRoot values are resolved from the repository root."
     Write-Host "OutputRoot must be inside VoiceInk.Windows\artifacts."
-    Write-Host "TimestampServerUrl defaults to https://timestamp.acs.microsoft.com and TimestampDigestAlgorithm defaults to SHA256 for timestamped package signatures."
+    Write-Host "TimestampServerUrl defaults to http://timestamp.acs.microsoft.com and TimestampDigestAlgorithm defaults to SHA256 for timestamped package signatures."
     Write-Host "This script does not create certificates or import certificates into Windows. Provide a maintainer-owned signing certificate."
 }
 
