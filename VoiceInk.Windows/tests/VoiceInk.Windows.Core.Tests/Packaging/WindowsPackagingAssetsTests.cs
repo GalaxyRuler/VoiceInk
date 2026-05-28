@@ -80,7 +80,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>", projectText);
 
         var appXamlText = File.ReadAllText(appXamlPath);
-        Assert.DoesNotContain("XamlControlsResources", appXamlText);
+        Assert.Contains("ResourceDictionary.MergedDictionaries", appXamlText);
+        Assert.Contains("XamlControlsResources", appXamlText);
     }
 
     [Fact]
