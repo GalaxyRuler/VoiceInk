@@ -652,6 +652,11 @@ public sealed partial class MainWindow : Window
 
     private void AudioInputModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (AudioInputPriorityPanel is null || AudioInputPriorityListView is null)
+        {
+            return;
+        }
+
         RefreshAudioInputPriorityControls();
         RefreshAudioInputHealthRows();
         if (controller is null)
@@ -664,6 +669,11 @@ public sealed partial class MainWindow : Window
 
     private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (AudioInputPriorityPanel is null || AudioInputPriorityListView is null)
+        {
+            return;
+        }
+
         RefreshAudioInputHealthRows();
         if (controller is null)
         {
