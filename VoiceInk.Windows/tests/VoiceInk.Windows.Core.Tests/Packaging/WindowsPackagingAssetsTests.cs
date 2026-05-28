@@ -608,6 +608,27 @@ public sealed class WindowsPackagingAssetsTests
     }
 
     [Fact]
+    public void ProjectCompletionScript_PrintsBarAndExternalGateWithoutMutation()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "show-project-completion.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("project-completion.md", script);
+        Assert.Contains("VoiceInk Windows parity", script);
+        Assert.Contains("Current Slice", script);
+        Assert.Contains("External release gate", script);
+        Assert.Contains("signed MSIX install/WACK/GUI smoke", script);
+        Assert.Contains("disposable Windows runner", script);
+        Assert.Contains("This script does not install", script);
+
+        Assert.DoesNotContain("Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void InstallerSmokeWorkflow_IsManualAndRequiresExplicitInstallExecution()
     {
         var workflowPath = SourcePath(".github", "workflows", "windows-installer-smoke.yml");

@@ -34,15 +34,15 @@ VoiceInk Windows parity  [####################] 99%
 ## Current Slice
 
 ```text
-History Detail Accessibility  [####################] 100%
+Project Completion Reporter  [####################] 100%
 ```
 
 Completed:
 
-- Wrote the Windows History Detail Accessibility spec and implementation plan.
-- Added focused XAML accessibility coverage for embedded History search, transcript, playback-rate, and audio-player controls.
-- Added explicit `AutomationProperties.Name` values for the embedded History detail workflow.
-- Preserved visible History layout, copy/retry/delete/export behavior, audio playback behavior, and the dedicated History window.
+- Wrote the Windows Project Completion Reporter spec and implementation plan.
+- Added a read-only `show-project-completion.ps1` helper that prints the overall parity bar, current slice, and external release gate.
+- Added packaging asset coverage that prevents the helper from becoming an install, launch, signing, or certificate mutation path.
+- Verified the helper prints `VoiceInk Windows parity  [####################] 99%` from the tracker.
 
 ## Near-Term Priority
 
