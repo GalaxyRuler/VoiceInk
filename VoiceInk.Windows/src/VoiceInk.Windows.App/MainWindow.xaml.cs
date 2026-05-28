@@ -237,8 +237,11 @@ public sealed partial class MainWindow : Window
 
     public MainWindow(bool startHiddenToTray = false)
     {
+        App.LogStartupTrace("MainWindow constructor entered");
         this.startHiddenToTray = startHiddenToTray;
+        App.LogStartupTrace("MainWindow InitializeComponent starting");
         InitializeComponent();
+        App.LogStartupTrace("MainWindow InitializeComponent completed");
         CloudTranscriptionPresetComboBox.ItemsSource = TranscriptionProviderPresetCatalog.All;
         EnhancementProviderPresetComboBox.ItemsSource = EnhancementProviderPresetCatalog.All;
         PowerModeAutoSendComboBox.ItemsSource = PowerModeAutoSendKeyPresenter.Choices;

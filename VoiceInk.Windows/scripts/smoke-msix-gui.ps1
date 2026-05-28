@@ -187,6 +187,7 @@ $logPath = Join-Path $resolvedEvidenceRoot "gui-smoke-log.txt"
 $windowEvidencePath = Join-Path $resolvedEvidenceRoot "gui-smoke-window.json"
 $screenshotPath = Join-Path $resolvedEvidenceRoot "gui-smoke-screenshot.png"
 $startupCrashLogEvidencePath = Join-Path $resolvedEvidenceRoot "startup-crash.log"
+$startupTraceLogEvidencePath = Join-Path $resolvedEvidenceRoot "startup-trace.log"
 $transcriptStarted = $false
 $installedPackageFullName = ""
 
@@ -251,6 +252,10 @@ finally {
     $startupCrashLogPath = Join-Path $env:LOCALAPPDATA "VoiceInk\startup-crash.log"
     if (Test-Path -LiteralPath $startupCrashLogPath -PathType Leaf) {
         Copy-Item -LiteralPath $startupCrashLogPath -Destination $startupCrashLogEvidencePath -Force
+    }
+    $startupTraceLogPath = Join-Path $env:LOCALAPPDATA "VoiceInk\startup-trace.log"
+    if (Test-Path -LiteralPath $startupTraceLogPath -PathType Leaf) {
+        Copy-Item -LiteralPath $startupTraceLogPath -Destination $startupTraceLogEvidencePath -Force
     }
 
     if (![string]::IsNullOrWhiteSpace($installedPackageFullName)) {

@@ -13,13 +13,16 @@ public partial class App : Application
 
     public App()
     {
+        LogStartupTrace("App constructor entered");
         AppDomain.CurrentDomain.UnhandledException += (_, args) => LogStartupFailure(args.ExceptionObject as Exception);
         UnhandledException += (_, args) => LogStartupFailure(args.Exception);
         TaskScheduler.UnobservedTaskException += (_, args) => LogStartupFailure(args.Exception);
 
         try
         {
+            LogStartupTrace("App InitializeComponent starting");
             InitializeComponent();
+            LogStartupTrace("App InitializeComponent completed");
         }
         catch (Exception ex)
         {
@@ -32,16 +35,22 @@ public partial class App : Application
     {
         try
         {
+            LogStartupTrace("OnLaunched entered");
             if (RedirectDuplicateActivation())
             {
+                LogStartupTrace("OnLaunched redirected duplicate activation");
                 return;
             }
 
             var isLoginStartup = StartupLaunchMode.IsLoginStartup(Environment.GetCommandLineArgs().Skip(1));
+            LogStartupTrace($"Creating MainWindow. isLoginStartup={isLoginStartup}");
             window = new MainWindow(isLoginStartup);
+            LogStartupTrace("MainWindow created");
             if (!isLoginStartup)
             {
+                LogStartupTrace("MainWindow Activate starting");
                 window.Activate();
+                LogStartupTrace("MainWindow Activate completed");
             }
         }
         catch (Exception ex)
@@ -71,6 +80,25 @@ public partial class App : Application
         if (window is MainWindow mainWindow)
         {
             mainWindow.DispatcherQueue.TryEnqueue(mainWindow.RestoreFromExternalActivation);
+        }
+    }
+
+    internal static void LogStartupTrace(string message)
+    {
+        try
+        {
+            var logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "VoiceInk");
+            Directory.CreateDirectory(logDirectory);
+            var logPath = Path.Combine(logDirectory, "startup-trace.log");
+            File.AppendAllText(
+                logPath,
+                $"{DateTimeOffset.UtcNow:O} {message}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Startup breadcrumbs must never affect application launch.
         }
     }
 

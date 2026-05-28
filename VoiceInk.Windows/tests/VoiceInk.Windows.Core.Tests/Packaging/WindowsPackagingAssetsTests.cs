@@ -519,6 +519,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("gui-smoke-window.json", script);
         Assert.Contains("gui-smoke-screenshot.png", script);
         Assert.Contains("startup-crash.log", script);
+        Assert.Contains("startup-trace.log", script);
         Assert.Contains("Start-Transcript", script);
         Assert.Contains("Get-AuthenticodeSignature -FilePath", script);
         Assert.Contains("Refusing to execute GUI smoke because Authenticode signature status is", script);
