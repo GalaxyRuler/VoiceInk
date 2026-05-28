@@ -89,7 +89,7 @@ function Get-SignerTrustStatus {
         return "Signer thumbprint not found in $trustedPeoplePath."
     }
     catch {
-        return "Unable to read $trustedPeoplePath: $($_.Exception.Message)"
+        return "Unable to read ${trustedPeoplePath}: $($_.Exception.Message)"
     }
 }
 
