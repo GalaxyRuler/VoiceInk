@@ -22,6 +22,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.NotNull(identity);
         Assert.Equal("VoiceInk.Windows", identity.Attribute("Name")?.Value);
         Assert.Equal("CN=VoiceInkOpenSource", identity.Attribute("Publisher")?.Value);
+        Assert.Equal("x64", identity.Attribute("ProcessorArchitecture")?.Value);
 
         var displayName = document.Root?
             .Element(appx + "Properties")?
