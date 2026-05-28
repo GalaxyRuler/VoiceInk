@@ -540,6 +540,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("test-msix-package.ps1", script);
         Assert.Contains("smoke-msix-install.ps1", script);
         Assert.Contains("smoke-msix-gui.ps1", script);
+        Assert.Contains("test-installer-dispatch-readiness.ps1", script);
         Assert.Contains("write-appinstaller.ps1", script);
         Assert.Contains("test-appinstaller.ps1", script);
         Assert.Contains("write-winget-manifest.ps1", script);
@@ -595,6 +596,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("gui-smoke-window.json", script);
         Assert.Contains("gui-smoke-screenshot.png", script);
         Assert.Contains("run_gui_smoke=true", script);
+        Assert.Contains("runner_label=voiceink-windows-qa", script);
+        Assert.Contains("windows-disposable-runner-setup-packet.md", script);
+        Assert.Contains("windows-release-evidence-operator-runbook.md", script);
         Assert.Contains("active WHITEDRAGON", script);
         Assert.Contains("This script does not create or import certificates", script);
         Assert.Contains("Release readiness report passed", script);
@@ -605,6 +609,87 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void InstallerDispatchReadinessScript_ChecksGitHubWorkflowAndPrintsDispatchCommandWithoutMutation()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "test-installer-dispatch-readiness.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("GalaxyRuler", script);
+        Assert.Contains("VoiceInk", script);
+        Assert.Contains("windows-installer-smoke.yml", script);
+        Assert.Contains("voiceink-windows-qa", script);
+        Assert.Contains("gh auth status", script);
+        Assert.Contains("gh workflow view", script);
+        Assert.Contains("gh api", script);
+        Assert.Contains("actions/runners", script);
+        Assert.Contains("RequireRunner", script);
+        Assert.Contains("none are online", script);
+        Assert.Contains("gh workflow run windows-installer-smoke.yml", script);
+        Assert.Contains("runner_label=voiceink-windows-qa", script);
+        Assert.Contains("execute_install_smoke=true", script);
+        Assert.Contains("run_wack=true", script);
+        Assert.Contains("run_gui_smoke=true", script);
+        Assert.Contains("This script does not dispatch", script);
+
+        Assert.DoesNotContain("& gh workflow run", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Start-Process", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RunnerSetupPacket_DocumentsDisposableWindowsRunnerWithoutSecrets()
+    {
+        var docPath = SourcePath("docs", "superpowers", "windows-disposable-runner-setup-packet.md");
+        var doc = File.ReadAllText(docPath);
+
+        Assert.Contains("GalaxyRuler/VoiceInk", doc);
+        Assert.Contains("voiceink-windows-qa", doc);
+        Assert.Contains("self-hosted", doc);
+        Assert.Contains("windows", doc);
+        Assert.Contains("active user session", doc);
+        Assert.Contains("Windows App Certification Kit", doc);
+        Assert.Contains("Trusted People", doc);
+        Assert.Contains("C:\\VoiceInkQa", doc);
+        Assert.Contains("run.cmd", doc);
+        Assert.Contains("Do not run as a Windows service", doc);
+        Assert.Contains("Do not paste registration tokens into committed files", doc);
+        Assert.Contains("docs.github.com", doc);
+        Assert.Contains("learn.microsoft.com", doc);
+
+        Assert.DoesNotContain("BEGIN PRIVATE KEY", doc, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("PackageCertificatePassword", doc, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ReleaseEvidenceRunbook_DocumentsDispatchDownloadAndValidation()
+    {
+        var docPath = SourcePath("docs", "superpowers", "windows-release-evidence-operator-runbook.md");
+        var doc = File.ReadAllText(docPath);
+
+        Assert.Contains("test-installer-dispatch-readiness.ps1", doc);
+        Assert.Contains("gh workflow run windows-installer-smoke.yml", doc);
+        Assert.Contains("execute_install_smoke=true", doc);
+        Assert.Contains("run_wack=true", doc);
+        Assert.Contains("run_gui_smoke=true", doc);
+        Assert.Contains("gh run download", doc);
+        Assert.Contains("test-installer-smoke-evidence.ps1", doc);
+        Assert.Contains("RequireInstallSmoke", doc);
+        Assert.Contains("RequireWackReport", doc);
+        Assert.Contains("RequireGuiSmoke", doc);
+        Assert.Contains("gui-smoke-log.txt", doc);
+        Assert.Contains("gui-smoke-window.json", doc);
+        Assert.Contains("gui-smoke-screenshot.png", doc);
+        Assert.Contains("wack-report.xml", doc);
+        Assert.Contains("Do not run this on active WHITEDRAGON", doc);
+
+        Assert.DoesNotContain("BEGIN PRIVATE KEY", doc, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("PackageCertificatePassword=", doc, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

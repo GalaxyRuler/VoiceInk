@@ -53,10 +53,13 @@ Write-ReadinessCheck "WinGet manifest generator" (Join-Path $scriptRoot "write-w
 Write-ReadinessCheck "WinGet manifest validator" (Join-Path $scriptRoot "test-winget-manifest.ps1")
 Write-ReadinessCheck "Release checksum manifest generator" (Join-Path $scriptRoot "write-release-checksums.ps1")
 Write-ReadinessCheck "Installer smoke evidence validator" (Join-Path $scriptRoot "test-installer-smoke-evidence.ps1")
+Write-ReadinessCheck "Installer dispatch readiness helper" (Join-Path $scriptRoot "test-installer-dispatch-readiness.ps1")
 Write-ReadinessCheck "Dev ZIP package script" (Join-Path $scriptRoot "package-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP smoke validator" (Join-Path $scriptRoot "test-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user install helper" (Join-Path $scriptRoot "install-dev-zip.ps1")
 Write-ReadinessCheck "Dev ZIP per-user uninstall helper" (Join-Path $scriptRoot "uninstall-dev-zip.ps1")
+Write-ReadinessCheck "Disposable runner setup packet" (Join-Path $repoRoot "docs\superpowers\windows-disposable-runner-setup-packet.md")
+Write-ReadinessCheck "Release evidence operator runbook" (Join-Path $repoRoot "docs\superpowers\windows-release-evidence-operator-runbook.md")
 
 Write-Host ""
 Write-Host "Non-mutating validation commands from the repository root:"
@@ -71,6 +74,7 @@ Write-Host '  .\VoiceInk.Windows\scripts\test-winget-manifest.ps1 -ManifestDirec
 Write-Host '  .\VoiceInk.Windows\scripts\write-release-checksums.ps1 -ArtifactPath <artifact1>,<artifact2>'
 Write-Host '  .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath <path-to-msix>'
 Write-Host '  .\VoiceInk.Windows\scripts\test-installer-smoke-evidence.ps1 -EvidenceRoot <path-to-installer-smoke-evidence> -RequireInstallSmoke -RequireWackReport -RequireGuiSmoke'
+Write-Host '  .\VoiceInk.Windows\scripts\test-installer-dispatch-readiness.ps1 -SignedPackagePath <path-on-runner-to-signed-msix>'
 
 Write-Host ""
 Write-Host "Maintainer-gated signed release commands:"
@@ -133,6 +137,9 @@ Write-Host "  [ ] This readiness report does not run appcert.exe, install packag
 Write-Host ""
 Write-Host "Manual self-hosted GUI smoke workflow reference:"
 Write-Host "  [ ] Dispatch Windows Installer Smoke with execute_install_smoke=true and run_gui_smoke=true on a disposable self-hosted Windows runner."
+Write-Host "  [ ] Use runner_label=voiceink-windows-qa with the GalaxyRuler/VoiceInk fork workflow on main."
+Write-Host "  [ ] Read docs/superpowers/windows-disposable-runner-setup-packet.md before registering the runner."
+Write-Host "  [ ] Read docs/superpowers/windows-release-evidence-operator-runbook.md before dispatching the release evidence workflow."
 Write-Host "  [ ] The workflow installs the signed MSIX, launches shell:AppsFolder\<PackageFamilyName>!VoiceInk.Windows.App, captures GUI evidence, and uninstalls the package."
 Write-Host "  [ ] Upload gui-smoke-log.txt, gui-smoke-window.json, and gui-smoke-screenshot.png with installer smoke evidence."
 Write-Host "  [ ] This readiness report does not launch VoiceInk locally or run GUI automation on active WHITEDRAGON."
