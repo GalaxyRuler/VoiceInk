@@ -50,5 +50,5 @@ Completed:
 ## Near-Term Priority
 
 1. Maintain the disposable-runner release evidence lane for future releases.
-2. Refresh GitHub Actions dependencies before Node 20 action retirement affects `actions/checkout@v4` or `actions/upload-artifact@v4`.
+2. Refresh GitHub Actions dependencies before GitHub's Node 24 default rollout begins on June 16, 2026.
 3. Continue optional post-parity polish only when it improves usability without changing the open-source/free scope.
