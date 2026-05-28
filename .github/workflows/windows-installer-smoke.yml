@@ -151,7 +151,8 @@ jobs:
         run: |
           .\VoiceInk.Windows\scripts\smoke-msix-gui.ps1 `
             -PackagePath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix" `
-            -EvidenceRoot "VoiceInk.Windows\artifacts\gha-installer-smoke"
+            -EvidenceRoot "VoiceInk.Windows\artifacts\gha-installer-smoke" `
+            -TimeoutSeconds 90
 
       - name: Safety boundary
         shell: pwsh
