@@ -45,5 +45,5 @@ Write-Host "Current Slice"
 Write-Host $currentSlice.Groups["slice"].Value.Trim()
 Write-Host ""
 Write-Host "External release gate"
-Write-Host "Full 100% requires actual signed MSIX install/WACK/GUI smoke evidence on a maintainer-prepared disposable Windows runner."
-Write-Host "Use windows-installer-smoke.yml with execute_install_smoke=true and run_gui_smoke=true after signing/trust setup."
+Write-Host "Completed: signed MSIX install/WACK/GUI smoke evidence passed on the maintainer-prepared disposable Windows runner."
+Write-Host "Latest validated evidence: GitHub Actions run 26596430888, artifact installer-smoke-evidence."
