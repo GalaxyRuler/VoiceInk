@@ -1196,8 +1196,7 @@
                                 </ComboBox>
                                 <ComboBox
                                     x:Name="PowerModeAutoSendComboBox"
-                                    Header="Auto-send key"
-                                    SelectedIndex="0" />
+                                    Header="Auto-send key" />
                                 <Grid ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
