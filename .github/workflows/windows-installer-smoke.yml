@@ -70,6 +70,16 @@ jobs:
             "No signing certificates are created or imported by this workflow."
           ) | Set-Content -LiteralPath (Join-Path $evidenceRoot "installer-smoke-summary.txt") -Encoding UTF8
 
+      - name: Stage signed MSIX package
+        shell: pwsh
+        run: |
+          $evidenceRoot = "VoiceInk.Windows\artifacts\gha-installer-smoke"
+          $stagedPackagePath = Join-Path $evidenceRoot "VoiceInk.Windows.signed.msix"
+          $sourcePackagePath = (Resolve-Path -LiteralPath "${{ inputs.signed_package_path }}").Path
+          Copy-Item -LiteralPath $sourcePackagePath -Destination $stagedPackagePath -Force
+          "Staged signed package path: $stagedPackagePath" |
+            Add-Content -LiteralPath (Join-Path $evidenceRoot "installer-smoke-summary.txt") -Encoding UTF8
+
       - name: Validate GUI smoke inputs
         if: ${{ inputs.run_gui_smoke && !inputs.execute_install_smoke }}
         shell: pwsh
@@ -79,7 +89,7 @@ jobs:
       - name: Validate signed MSIX package contents
         shell: pwsh
         run: |
-          .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath "${{ inputs.signed_package_path }}"
+          .\VoiceInk.Windows\scripts\test-msix-package.ps1 -PackagePath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix"
 
       - name: Run Windows App Certification Kit
         if: ${{ inputs.run_wack }}
@@ -91,7 +101,7 @@ jobs:
             throw "Windows App Certification Kit appcert.exe was not found at $appCert."
           }
 
-          $packagePath = (Resolve-Path -LiteralPath "${{ inputs.signed_package_path }}").Path
+          $packagePath = (Resolve-Path -LiteralPath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix").Path
           $reportPath = [System.IO.Path]::GetFullPath("${{ inputs.wack_report_path }}")
           $reportDirectory = Split-Path -Parent $reportPath
           New-Item -ItemType Directory -Force -Path $reportDirectory | Out-Null
@@ -127,20 +137,20 @@ jobs:
       - name: Signed install smoke plan
         shell: pwsh
         run: |
-          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}"
+          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix"
 
       - name: Execute signed install smoke
         if: ${{ inputs.execute_install_smoke && !inputs.run_gui_smoke }}
         shell: pwsh
         run: |
-          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "${{ inputs.signed_package_path }}" -Execute
+          .\VoiceInk.Windows\scripts\smoke-msix-install.ps1 -PackagePath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix" -Execute
 
       - name: Execute signed GUI smoke
         if: ${{ inputs.execute_install_smoke && inputs.run_gui_smoke }}
         shell: pwsh
         run: |
           .\VoiceInk.Windows\scripts\smoke-msix-gui.ps1 `
-            -PackagePath "${{ inputs.signed_package_path }}" `
+            -PackagePath "VoiceInk.Windows\artifacts\gha-installer-smoke\VoiceInk.Windows.signed.msix" `
             -EvidenceRoot "VoiceInk.Windows\artifacts\gha-installer-smoke"
 
       - name: Safety boundary
