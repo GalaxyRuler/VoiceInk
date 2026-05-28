@@ -43,7 +43,7 @@ jobs:
     name: Signed MSIX and App Installer smoke
     runs-on:
       - self-hosted
-      - windows
+      - Windows
       - ${{ inputs.runner_label }}
     timeout-minutes: 30
 
