@@ -186,6 +186,7 @@ New-Item -ItemType Directory -Force -Path $resolvedEvidenceRoot | Out-Null
 $logPath = Join-Path $resolvedEvidenceRoot "gui-smoke-log.txt"
 $windowEvidencePath = Join-Path $resolvedEvidenceRoot "gui-smoke-window.json"
 $screenshotPath = Join-Path $resolvedEvidenceRoot "gui-smoke-screenshot.png"
+$startupCrashLogEvidencePath = Join-Path $resolvedEvidenceRoot "startup-crash.log"
 $transcriptStarted = $false
 $installedPackageFullName = ""
 
@@ -247,6 +248,11 @@ try {
 }
 finally {
     $cleanupError = $null
+    $startupCrashLogPath = Join-Path $env:LOCALAPPDATA "VoiceInk\startup-crash.log"
+    if (Test-Path -LiteralPath $startupCrashLogPath -PathType Leaf) {
+        Copy-Item -LiteralPath $startupCrashLogPath -Destination $startupCrashLogEvidencePath -Force
+    }
+
     if (![string]::IsNullOrWhiteSpace($installedPackageFullName)) {
         try {
             Write-Host "Removing installed package $installedPackageFullName"
