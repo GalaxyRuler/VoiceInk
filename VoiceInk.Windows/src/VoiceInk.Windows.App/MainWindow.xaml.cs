@@ -1877,6 +1877,11 @@ public sealed partial class MainWindow : Window
 
     private void HistoryPlaybackRateComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (HistoryAudioPlayer is null)
+        {
+            return;
+        }
+
         ApplyHistoryPlaybackRate();
     }
 
