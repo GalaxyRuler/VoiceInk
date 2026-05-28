@@ -6382,6 +6382,11 @@ public sealed partial class MainWindow : Window
 
     private void ApplyHistoryPlaybackRate()
     {
+        if (HistoryAudioPlayer?.MediaPlayer?.PlaybackSession is null)
+        {
+            return;
+        }
+
         var rate = HistoryPlaybackRatePresenter.ChoiceAtOrDefault(HistoryPlaybackRateComboBox.SelectedIndex).Value;
         HistoryAudioPlayer.MediaPlayer.PlaybackSession.PlaybackRate = rate;
     }
