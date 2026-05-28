@@ -91,13 +91,16 @@ public sealed class WindowsPackagingAssetsTests
         var script = File.ReadAllText(scriptPath);
 
         Assert.Contains("PackageCertificateKeyFile", script);
+        Assert.Contains("PackageCertificateThumbprint", script);
+        Assert.Contains("UseLocalMachineCertificateStore", script);
         Assert.Contains("OutputRoot must be inside VoiceInk.Windows\\artifacts", script);
-        Assert.Contains("WindowsPackageType=MSIX", script);
+        Assert.Contains("WindowsPackageType=None", script);
         Assert.Contains("WindowsAppSDKSelfContained=false", script);
         Assert.Contains("WindowsAppSdkBootstrapInitialize=false", script);
         Assert.Contains("WindowsAppSdkDeploymentManagerInitialize=false", script);
-        Assert.Contains("GenerateAppxPackageOnBuild=true", script);
-        Assert.Contains("AppxBundle=Never", script);
+        Assert.Contains("PublishSingleFile=false", script);
+        Assert.Contains("MakeAppx pack", script);
+        Assert.Contains("SignTool sign", script);
         Assert.Contains("PackageCertificatePassword", script);
         Assert.Contains("Add-AppxPackage", script);
         Assert.Contains("Remove-AppxPackage", script);
@@ -120,6 +123,8 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("Add-AppxPackage -Path", script);
         Assert.Contains("Remove-AppxPackage -Package", script);
         Assert.Contains("dotnet publish", script);
+        Assert.Contains("MakeAppx path", script);
+        Assert.Contains("SignTool path", script);
 
         Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("& Remove-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
@@ -136,10 +141,10 @@ public sealed class WindowsPackagingAssetsTests
         var script = File.ReadAllText(scriptPath);
 
         Assert.Contains("ValidateAfterBuild", script);
-        Assert.Contains("Find-BuiltMsixPackage", script);
+        Assert.Contains("VoiceInk.Windows.signed.msix", script);
         Assert.Contains("test-msix-package.ps1", script);
         Assert.Contains("Validating signed MSIX artifact", script);
-        Assert.Contains("& $msixValidator -PackagePath $builtPackagePath", script);
+        Assert.Contains("& $msixValidator -PackagePath $packagePath", script);
         Assert.Contains("Validated signed MSIX artifact", script);
 
         Assert.DoesNotContain("& Add-AppxPackage", script, StringComparison.OrdinalIgnoreCase);
@@ -156,8 +161,8 @@ public sealed class WindowsPackagingAssetsTests
         var script = File.ReadAllText(scriptPath);
 
         Assert.Contains("TimestampServerUrl", script);
-        Assert.Contains("AppxPackageSigningTimestampServerUrl", script);
-        Assert.Contains("AppxPackageSigningTimestampDigestAlgorithm", script);
+        Assert.Contains("/tr $TimestampServerUrl", script);
+        Assert.Contains("/td $TimestampDigestAlgorithm", script);
         Assert.Contains("Timestamp server: $TimestampServerUrl", script);
         Assert.Contains("Timestamp digest algorithm: $TimestampDigestAlgorithm", script);
         Assert.Contains("[string]$TimestampDigestAlgorithm = \"SHA256\"", script);
@@ -166,6 +171,28 @@ public sealed class WindowsPackagingAssetsTests
         Assert.DoesNotContain("New-SelfSignedCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-PfxCertificate", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Import-Certificate", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void MsixPackagingScript_StagesRunnerProvenPackagedWinUiResources()
+    {
+        var scriptPath = SourcePath("VoiceInk.Windows", "scripts", "package-msix.ps1");
+        var script = File.ReadAllText(scriptPath);
+
+        Assert.Contains("Copy-XamlBinaryFiles", script);
+        Assert.Contains("App.xbf", script);
+        Assert.Contains("MainWindow.xbf", script);
+        Assert.Contains("FloatingRecorderWindow.xbf", script);
+        Assert.Contains("HistoryWindow.xbf", script);
+        Assert.Contains("OcrRegionPickerWindow.xbf", script);
+        Assert.Contains("AppxManifest.xml", script);
+        Assert.Contains("resources.pri", script);
+        Assert.Contains("VoiceInk.Windows.App.pri", script);
+        Assert.Contains("Microsoft.UI.pri", script);
+        Assert.Contains("Microsoft.UI.Xaml.Controls.pri", script);
+        Assert.Contains("Microsoft.WindowsAppRuntime.pri", script);
+        Assert.Contains("Find-WindowsAppRuntimeRoot", script);
+        Assert.Contains("Microsoft.WindowsAppRuntime.1.8_*_x64__8wekyb3d8bbwe", script);
     }
 
     [Fact]
