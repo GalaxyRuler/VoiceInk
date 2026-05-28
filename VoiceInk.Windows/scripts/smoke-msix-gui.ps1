@@ -124,6 +124,68 @@ function Save-DesktopScreenshot {
     }
 }
 
+function Save-WindowScreenshot {
+    param(
+        [IntPtr]$WindowHandle,
+        [string]$OutputPath
+    )
+
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class VoiceInkWindowCapture
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+
+    [DllImport("user32.dll")]
+    public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);
+}
+"@
+
+    $windowRect = New-Object VoiceInkWindowCapture+Rect
+    if (![VoiceInkWindowCapture]::GetWindowRect($WindowHandle, [ref]$windowRect)) {
+        throw "Unable to read window bounds for screenshot capture. Window handle: $($WindowHandle.ToInt64())"
+    }
+
+    $width = $windowRect.Right - $windowRect.Left
+    $height = $windowRect.Bottom - $windowRect.Top
+    if ($width -le 0 -or $height -le 0) {
+        throw "Window bounds are invalid for screenshot capture. Width: $width Height: $height"
+    }
+
+    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    try {
+        $hdc = $graphics.GetHdc()
+        try {
+            if (![VoiceInkWindowCapture]::PrintWindow($WindowHandle, $hdc, 2)) {
+                throw "PrintWindow failed for screenshot capture. Window handle: $($WindowHandle.ToInt64())"
+            }
+        }
+        finally {
+            $graphics.ReleaseHdc($hdc)
+        }
+
+        $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    }
+    finally {
+        $graphics.Dispose()
+        $bitmap.Dispose()
+    }
+}
+
 if ($Help) {
     Show-Usage
     exit 0
@@ -243,7 +305,7 @@ try {
     }
     $windowEvidence | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $windowEvidencePath -Encoding UTF8
 
-    Save-DesktopScreenshot -OutputPath $screenshotPath
+    Save-WindowScreenshot -WindowHandle $launchedProcess.MainWindowHandle -OutputPath $screenshotPath
     Write-Host "GUI smoke evidence captured:"
     Write-Host "  Log: $logPath"
     Write-Host "  Window: $windowEvidencePath"
