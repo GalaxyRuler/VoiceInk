@@ -111,7 +111,7 @@ function Write-MsixPublishProperties {
     Write-Host "MSIX publish properties:"
     Write-Host "  -p:Platform=x64"
     Write-Host "  -p:WindowsPackageType=MSIX"
-    Write-Host "  -p:WindowsAppSDKSelfContained=true"
+    Write-Host "  -p:WindowsAppSDKSelfContained=false"
     Write-Host "  -p:WindowsAppSdkBootstrapInitialize=false"
     Write-Host "  -p:WindowsAppSdkDeploymentManagerInitialize=false"
     Write-Host "  -p:AppxManifest=Package.appxmanifest"
@@ -243,10 +243,10 @@ Write-MsixPublishProperties -CertificatePath $PackageCertificateKeyFile
 & $dotnet publish $appProject `
     -c $Configuration `
     -r $RuntimeIdentifier `
-    --self-contained true `
+    --self-contained false `
     -p:Platform=x64 `
     -p:WindowsPackageType=MSIX `
-    -p:WindowsAppSDKSelfContained=true `
+    -p:WindowsAppSDKSelfContained=false `
     -p:WindowsAppSdkBootstrapInitialize=false `
     -p:WindowsAppSdkDeploymentManagerInitialize=false `
     -p:AppxManifest=Package.appxmanifest `

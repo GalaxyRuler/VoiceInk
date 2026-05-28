@@ -38,6 +38,16 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Equal("10.0.19041.0", targetDeviceFamily.Attribute("MinVersion")?.Value);
         Assert.Equal("10.0.26100.0", targetDeviceFamily.Attribute("MaxVersionTested")?.Value);
 
+        var windowsAppRuntimeDependency = document.Root?
+            .Element(appx + "Dependencies")?
+            .Elements(appx + "PackageDependency")
+            .SingleOrDefault(item => item.Attribute("Name")?.Value == "Microsoft.WindowsAppRuntime.1.8");
+        Assert.NotNull(windowsAppRuntimeDependency);
+        Assert.Equal(
+            "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+            windowsAppRuntimeDependency.Attribute("Publisher")?.Value);
+        Assert.Equal("8000.859.21.0", windowsAppRuntimeDependency.Attribute("MinVersion")?.Value);
+
         var application = document.Descendants(appx + "Application").Single();
         Assert.Equal("VoiceInk.Windows.App", application.Attribute("Id")?.Value);
         Assert.Equal("VoiceInk.Windows.App.exe", application.Attribute("Executable")?.Value);
@@ -82,7 +92,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("PackageCertificateKeyFile", script);
         Assert.Contains("OutputRoot must be inside VoiceInk.Windows\\artifacts", script);
         Assert.Contains("WindowsPackageType=MSIX", script);
-        Assert.Contains("WindowsAppSDKSelfContained=true", script);
+        Assert.Contains("WindowsAppSDKSelfContained=false", script);
         Assert.Contains("WindowsAppSdkBootstrapInitialize=false", script);
         Assert.Contains("WindowsAppSdkDeploymentManagerInitialize=false", script);
         Assert.Contains("GenerateAppxPackageOnBuild=true", script);
