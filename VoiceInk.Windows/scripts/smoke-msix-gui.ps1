@@ -83,7 +83,12 @@ function Wait-ForProcessWindow {
     )
 
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds($ResolvedTimeoutSeconds)
-    $queryProcessName = [System.IO.Path]::GetFileNameWithoutExtension($ResolvedProcessName)
+    $queryProcessName = if ($ResolvedProcessName.EndsWith(".exe", [System.StringComparison]::OrdinalIgnoreCase)) {
+        [System.IO.Path]::GetFileNameWithoutExtension($ResolvedProcessName)
+    }
+    else {
+        $ResolvedProcessName
+    }
     while ([DateTimeOffset]::UtcNow -lt $deadline) {
         $candidateProcess = Get-Process -Name $queryProcessName -ErrorAction SilentlyContinue |
             Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero } |
