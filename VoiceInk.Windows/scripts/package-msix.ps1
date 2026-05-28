@@ -420,7 +420,38 @@ Copy-RequiredFile -SourcePath $appManifest -DestinationPath (Join-Path $publishR
 Copy-Item -LiteralPath $assetsRoot -Destination (Join-Path $publishRoot "Assets") -Recurse -Force
 Copy-XamlBinaryFiles -AppProjectDirectory $appProjectDirectory -PublishRoot $publishRoot
 
-$appPriPath = Find-NewestFile -SearchRoot $appProjectDirectory -Filter "resources.pri" -Description "app resources.pri"
+$appPriSearchRoots = @(
+    $publishRoot,
+    (Join-Path $appProjectDirectory "bin"),
+    (Join-Path $appProjectDirectory "obj")
+)
+$appPriPath = $null
+foreach ($searchRoot in $appPriSearchRoots) {
+    if (!(Test-Path -LiteralPath $searchRoot)) {
+        continue
+    }
+
+    $appPriCandidate = Get-ChildItem -LiteralPath $searchRoot -Recurse -File -Filter "VoiceInk.Windows.App.pri" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 1
+    if ($null -ne $appPriCandidate) {
+        $appPriPath = $appPriCandidate.FullName
+        break
+    }
+
+    $resourcesPriCandidate = Get-ChildItem -LiteralPath $searchRoot -Recurse -File -Filter "resources.pri" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 1
+    if ($null -ne $resourcesPriCandidate) {
+        $appPriPath = $resourcesPriCandidate.FullName
+        break
+    }
+}
+
+if ($null -eq $appPriPath) {
+    throw "Could not find app PRI under publish, bin, or obj outputs."
+}
+
 Copy-Item -LiteralPath $appPriPath -Destination (Join-Path $publishRoot "resources.pri") -Force
 Copy-Item -LiteralPath $appPriPath -Destination (Join-Path $publishRoot "VoiceInk.Windows.App.pri") -Force
 
