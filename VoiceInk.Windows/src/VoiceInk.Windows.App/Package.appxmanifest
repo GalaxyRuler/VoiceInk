@@ -42,7 +42,7 @@
   </Applications>
 
   <Capabilities>
-    <DeviceCapability Name="microphone" />
     <rescap:Capability Name="runFullTrust" />
+    <DeviceCapability Name="microphone" />
   </Capabilities>
 </Package>
