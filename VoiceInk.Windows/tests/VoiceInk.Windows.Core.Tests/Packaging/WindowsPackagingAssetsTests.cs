@@ -65,6 +65,7 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("..\\..\\..\\LICENSE", projectText);
         Assert.Contains("LICENSE.txt", projectText);
         Assert.Contains("CopyToOutputDirectory", projectText);
+        Assert.Contains("<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>", projectText);
     }
 
     [Fact]
@@ -76,6 +77,9 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("PackageCertificateKeyFile", script);
         Assert.Contains("OutputRoot must be inside VoiceInk.Windows\\artifacts", script);
         Assert.Contains("WindowsPackageType=MSIX", script);
+        Assert.Contains("WindowsAppSDKSelfContained=true", script);
+        Assert.Contains("WindowsAppSdkBootstrapInitialize=false", script);
+        Assert.Contains("WindowsAppSdkDeploymentManagerInitialize=false", script);
         Assert.Contains("GenerateAppxPackageOnBuild=true", script);
         Assert.Contains("AppxBundle=Never", script);
         Assert.Contains("PackageCertificatePassword", script);
