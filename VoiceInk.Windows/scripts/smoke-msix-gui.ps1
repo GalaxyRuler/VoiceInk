@@ -168,14 +168,32 @@ public static class VoiceInkWindowCapture
     $bitmap = [System.Drawing.Bitmap]::new($width, $height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
+        $capturedWithPrintWindow = $false
         $hdc = $graphics.GetHdc()
         try {
             if (![VoiceInkWindowCapture]::PrintWindow($WindowHandle, $hdc, 2)) {
                 throw "PrintWindow failed for screenshot capture. Window handle: $($WindowHandle.ToInt64())"
             }
+
+            $capturedWithPrintWindow = $true
         }
         finally {
             $graphics.ReleaseHdc($hdc)
+        }
+
+        try {
+            $graphics.CopyFromScreen(
+                [System.Drawing.Point]::new($windowRect.Left, $windowRect.Top),
+                [System.Drawing.Point]::Empty,
+                [System.Drawing.Size]::new($width, $height))
+            Write-Host "Captured active desktop window rectangle for GUI screenshot."
+        }
+        catch {
+            if (!$capturedWithPrintWindow) {
+                throw
+            }
+
+            Write-Warning "Active desktop screenshot fallback failed; keeping PrintWindow capture. $($_.Exception.Message)"
         }
 
         $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)

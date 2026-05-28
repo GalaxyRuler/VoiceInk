@@ -567,6 +567,10 @@ public sealed class WindowsPackagingAssetsTests
         Assert.Contains("MainWindowHandle", script);
         Assert.Contains("System.Windows.Forms", script);
         Assert.Contains("System.Drawing", script);
+        Assert.Contains("PrintWindow", script);
+        Assert.Contains("CopyFromScreen", script);
+        Assert.Contains("Captured active desktop window rectangle", script);
+        Assert.Contains("keeping PrintWindow capture", script);
         Assert.Contains("ConvertTo-Json", script);
         Assert.Contains("Remove-AppxPackage -Package", script);
         Assert.Contains("GUI smoke evidence captured", script);
