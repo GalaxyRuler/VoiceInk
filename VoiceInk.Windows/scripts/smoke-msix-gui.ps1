@@ -190,6 +190,7 @@ $startupCrashLogEvidencePath = Join-Path $resolvedEvidenceRoot "startup-crash.lo
 $startupTraceLogEvidencePath = Join-Path $resolvedEvidenceRoot "startup-trace.log"
 $transcriptStarted = $false
 $installedPackageFullName = ""
+$installedPackageFamilyName = ""
 
 Start-Transcript -LiteralPath $logPath -Force | Out-Null
 $transcriptStarted = $true
@@ -214,6 +215,7 @@ try {
 
     $installedPackage = $installedPackages[0]
     $installedPackageFullName = $installedPackage.PackageFullName
+    $installedPackageFamilyName = $installedPackage.PackageFamilyName
     $installedManifest = Get-AppxPackageManifest -Package $installedPackage.PackageFullName
     $installedApplications = @($installedManifest.Package.Applications.Application)
     $voiceInkApplication = $installedApplications |
@@ -256,6 +258,18 @@ finally {
     $startupTraceLogPath = Join-Path $env:LOCALAPPDATA "VoiceInk\startup-trace.log"
     if (Test-Path -LiteralPath $startupTraceLogPath -PathType Leaf) {
         Copy-Item -LiteralPath $startupTraceLogPath -Destination $startupTraceLogEvidencePath -Force
+    }
+    if (![string]::IsNullOrWhiteSpace($installedPackageFamilyName)) {
+        $packagedLogRoot = Join-Path $env:LOCALAPPDATA "Packages\$installedPackageFamilyName\LocalCache\Local\VoiceInk"
+        $packagedCrashLogPath = Join-Path $packagedLogRoot "startup-crash.log"
+        if (Test-Path -LiteralPath $packagedCrashLogPath -PathType Leaf) {
+            Copy-Item -LiteralPath $packagedCrashLogPath -Destination $startupCrashLogEvidencePath -Force
+        }
+
+        $packagedTraceLogPath = Join-Path $packagedLogRoot "startup-trace.log"
+        if (Test-Path -LiteralPath $packagedTraceLogPath -PathType Leaf) {
+            Copy-Item -LiteralPath $packagedTraceLogPath -Destination $startupTraceLogEvidencePath -Force
+        }
     }
 
     if (![string]::IsNullOrWhiteSpace($installedPackageFullName)) {
